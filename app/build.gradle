@@ -47,13 +47,18 @@ dependencies {
 
     compile 'org.jsoup:jsoup:1.8.3'
     compile 'com.pawegio.kandroid:kandroid:0.3.8@aar'
+    compile 'com.yqritc:recyclerview-flexibledivider:1.2.6'
+
     compile 'io.reactivex:rxkotlin:0.30.1'
+    compile 'io.reactivex:rxandroid:1.0.1'
 
     compile 'com.squareup.okhttp:okhttp:2.6.0'
     compile 'com.squareup.okhttp:okhttp-urlconnection:2.6.0'
+
     compile 'com.squareup.retrofit:retrofit:2.0.0-beta2'
     compile 'com.squareup.retrofit:converter-gson:2.0.0-beta2'
-    compile 'com.yqritc:recyclerview-flexibledivider:1.2.6'
+    compile 'com.squareup.retrofit:adapter-rxjava:2.0.0-beta2'
+
 
     testCompile 'junit:junit:4.12'
     testCompile 'org.robolectric:robolectric:3.0'
