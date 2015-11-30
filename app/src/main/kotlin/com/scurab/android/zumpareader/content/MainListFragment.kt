@@ -122,6 +122,7 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
     }
 
     public fun onThreadItemClick(item: ZumpaThread) {
+        isLoading = false
         openFragment(SubListFragment.newInstance(item.id.toString()), true, true)
     }
 

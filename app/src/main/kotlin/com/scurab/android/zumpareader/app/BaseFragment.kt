@@ -50,6 +50,7 @@ open public abstract class BaseFragment : Fragment() {
 
     public open fun openFragment(fragment: BaseFragment, addToBackStack: Boolean = true, replace: Boolean = true) {
         mainActivity?.openFragment(fragment, addToBackStack, replace)
+        isLoading = false
     }
 
     override fun onAttach(context: Context?) {
