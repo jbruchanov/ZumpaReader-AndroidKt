@@ -35,6 +35,19 @@ public class MainActivity : AppCompatActivity() {
     private val navImageView by lazy { find<ImageView>(R.id.navigation_header_image_view) }
     private val progressBar by lazy { find<ProgressBar>(R.id.progress_bar) }
 
+    public val zumpaApp: ZumpaReaderApp
+        get() {
+            return getApplication() as ZumpaReaderApp
+        }
+
+    public var progressBarVisible: Boolean
+        get() {
+            return progressBar.visibility == View.VISIBLE
+        }
+        set(value) {
+            progressBar.visibility = if (value) View.VISIBLE else View.GONE
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -61,11 +74,6 @@ public class MainActivity : AppCompatActivity() {
         toast(item.title)
     }
 
-    public val zumpaApp: ZumpaReaderApp
-        get() {
-            return getApplication() as ZumpaReaderApp
-        }
-
     public fun openFragment(fragment: BaseFragment, addToBackStack: Boolean = true, replace: Boolean = true) {
         val tr = supportFragmentManager.beginTransaction()
         if (addToBackStack) {
@@ -79,12 +87,4 @@ public class MainActivity : AppCompatActivity() {
         }
         tr.commit()
     }
-
-    public var progressBarVisible: Boolean
-        get() {
-            return progressBar.visibility == View.VISIBLE
-        }
-        set(value) {
-            progressBar.visibility = if (value) View.VISIBLE else View.GONE
-        }
 }
