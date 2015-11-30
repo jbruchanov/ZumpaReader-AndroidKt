@@ -6,13 +6,20 @@ import android.view.ViewGroup
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.model.ZumpaThreadItem
 import java.text.SimpleDateFormat
+import java.util.*
 
 /**
  * Created by JBruchanov on 27/11/2015.
  */
-public class SubListAdapter(private var items: List<ZumpaThreadItem>) : RecyclerView.Adapter<ZumpaItemViewHolder>() {
+public class SubListAdapter : RecyclerView.Adapter<ZumpaItemViewHolder> {
 
     private val dateFormat = SimpleDateFormat("HH:mm.ss")
+    private var items: ArrayList<ZumpaThreadItem>
+
+    constructor(items: List<ZumpaThreadItem>) {
+        this.items = ArrayList(items)
+    }
+
 
     override fun getItemCount(): Int {
         return items.size
@@ -30,6 +37,13 @@ public class SubListAdapter(private var items: List<ZumpaThreadItem>) : Recycler
         return parent.let {
             var li = LayoutInflater.from(it!!.context)
             ZumpaItemViewHolder(li.inflate(R.layout.item_sub_list, parent, false))
+        }
+    }
+
+    fun updateItems(updated: List<ZumpaThreadItem>) {
+        if (items.size != updated.size) {
+            items.addAll(updated.subList(items.size, updated.size))
+            notifyItemInserted(items.size)
         }
     }
 }

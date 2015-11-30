@@ -17,9 +17,9 @@ import com.scurab.android.zumpareader.util.asListOfValues
 import com.scurab.android.zumpareader.util.exec
 import com.scurab.android.zumpareader.util.execIfNull
 import com.yqritc.recyclerviewflexibledivider.HorizontalDividerItemDecoration
-import retrofit.Callback
-import retrofit.Response
-import retrofit.Retrofit
+import rx.Observer
+import rx.android.schedulers.AndroidSchedulers
+import rx.schedulers.Schedulers
 
 /**
  * Created by JBruchanov on 24/11/2015.
@@ -30,17 +30,11 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
     private var recyclerView: RecyclerView? = null
     private var swipeToRefresh: SwipeRefreshLayout? = null
     private var nextPageId: String? = null
-    private var _isLoading: Boolean = false
-    private var isLoading: Boolean
-        get() {
-            return _isLoading
-        }
+    override var isLoading: Boolean
+        get() = super.isLoading
         set(value) {
-            if (!value) {
-                swipeToRefresh?.isRefreshing = value
-            }
+            super.isLoading = value
             progressBarVisible = value
-            _isLoading = value
         }
 
     override val title: CharSequence get() = getString(R.string.app_name)
@@ -86,45 +80,45 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
         if (isLoading) {
             return
         }
-
-        var call = if (fromThread == null) {
-            zumpaApp?.zumpaAPI?.getMainPage()
-        } else {
-            zumpaApp?.zumpaAPI?.getMainPage(fromThread)
-        }
-
         isLoading = true
-        call?.enqueue(object : Callback<ZumpaMainPageResult> {
-            override fun onFailure(t: Throwable?) {
-                t?.message.exec {
-                    toast(it)
+        val mainPage = if (fromThread != null) zumpaApp?.zumpaAPI?.getMainPage(fromThread) else zumpaApp?.zumpaAPI?.getMainPage()
+        mainPage.exec{
+            it.observeOn(AndroidSchedulers.mainThread())
+            .subscribeOn(Schedulers.io())
+            .subscribe(object : Observer<ZumpaMainPageResult?> {
+                override fun onNext(t: ZumpaMainPageResult?) {
+                    t.exec {
+                        onResultLoaded(it)
+                    }
                 }
-                isLoading = false
-            }
 
-            override fun onResponse(response: Response<ZumpaMainPageResult>?, retrofit: Retrofit?) {
-                response?.body()?.exec {
-                    zumpaData.putAll(it.items)
-                    nextPageId = it.nextPage
-                    val values = it.items.asListOfValues()
-                    recyclerView.exec {
-                        if (it.adapter != null) {
-                            (it.adapter as MainListAdapter).addItems(values)
-                        } else {
-                            val mainListAdapter = MainListAdapter(values)
-                            mainListAdapter.setOnShowItemListener(this@MainListFragment, 30)
-                            mainListAdapter.onItemClickListener = object : MainListAdapter.OnItemClickListener {
-                                override fun onItemClick(item: ZumpaThread) {
-                                    onThreadItemClick(item)
-                                }
-                            }
-                            it.adapter = mainListAdapter
+                override fun onError(e: Throwable?) { e?.message?.exec { toast(it) } }
+                override fun onCompleted() { isLoading = false }
+            })
+        }
+    }
+
+    protected fun onResultLoaded(response: ZumpaMainPageResult?) {
+        response?.exec {
+            zumpaData.putAll(it.items)
+            nextPageId = it.nextPage
+            val values = it.items.asListOfValues()
+            recyclerView.exec {
+                if (it.adapter != null) {
+                    (it.adapter as MainListAdapter).addItems(values)
+                } else {
+                    val mainListAdapter = MainListAdapter(values)
+                    mainListAdapter.setOnShowItemListener(this@MainListFragment, 30)
+                    mainListAdapter.onItemClickListener = object : MainListAdapter.OnItemClickListener {
+                        override fun onItemClick(item: ZumpaThread) {
+                            onThreadItemClick(item)
                         }
                     }
-                    isLoading = false
+                    it.adapter = mainListAdapter
                 }
             }
-        })
+            isLoading = false
+        }
     }
 
     public fun onThreadItemClick(item: ZumpaThread) {

@@ -6,6 +6,7 @@ import com.scurab.android.zumpareader.ZR
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import retrofit.Retrofit
+import retrofit.RxJavaCallAdapterFactory
 import java.util.*
 
 /**
@@ -23,6 +24,7 @@ public class ZumpaReaderApp:Application(){
         val retrofit = Retrofit.Builder()
                 .baseUrl(ZR.Constants.ZUMPA_MAIN_URL)
                 .addConverterFactory(ZumpaConverterFactory(zumpaParser))
+                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
                 .build()
 
         retrofit.create(ZumpaAPI::class.java)

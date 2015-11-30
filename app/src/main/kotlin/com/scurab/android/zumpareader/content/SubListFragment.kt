@@ -1,6 +1,5 @@
 package com.scurab.android.zumpareader.content
 
-import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
@@ -14,9 +13,9 @@ import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.app.BaseFragment
 import com.scurab.android.zumpareader.model.ZumpaThreadResult
 import com.scurab.android.zumpareader.util.exec
-import retrofit.Callback
-import retrofit.Response
-import retrofit.Retrofit
+import rx.Observer
+import rx.android.schedulers.AndroidSchedulers
+import rx.schedulers.Schedulers
 
 /**
  * Created by JBruchanov on 27/11/2015.
@@ -50,18 +49,41 @@ public class SubListFragment : BaseFragment() {
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        loadData()
+    }
 
-        val call = zumpaApp?.zumpaAPI?.getThreadPage(threadId, threadId)
-        call?.enqueue(object: Callback<ZumpaThreadResult?> {
-            override fun onResponse(response: Response<ZumpaThreadResult?>?, retrofit: Retrofit?) {
-                response?.body()?.items.exec {
-                    recyclerView?.adapter = SubListAdapter(it)
+    public fun loadData() {
+        if (isLoading) {
+            return
+        }
+        isLoading = true
+        var tid = threadId
+        zumpaApp?.zumpaAPI?.getThreadPage(tid, tid).exec{
+            it.observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(object : Observer<ZumpaThreadResult?> {
+                        override fun onNext(t: ZumpaThreadResult?) {
+                            t.exec {
+                                onResultLoaded(it)
+                            }
+                        }
+
+                        override fun onError(e: Throwable?) { e?.message?.exec { toast(it) } }
+                        override fun onCompleted() { isLoading = false }
+                    })
+        }
+    }
+
+    private fun onResultLoaded(it: ZumpaThreadResult) {
+        it.items.exec {
+            var items = it
+            recyclerView.exec {
+                if (it.adapter == null) {
+                    recyclerView?.adapter = SubListAdapter(items)
+                } else {
+                    (recyclerView?.adapter as SubListAdapter).updateItems(items)
                 }
             }
-
-            override fun onFailure(t: Throwable?) {
-                toast(t?.message ?: "Null")
-            }
-        })
+        }
     }
 }
