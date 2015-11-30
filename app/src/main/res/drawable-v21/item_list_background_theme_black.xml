@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+        android:color="@color/yellow_orange">
+    <item>
+        <level-list>
+            <item android:maxLevel="0" android:minLevel="0">
+                <shape>
+                    <solid android:color="?primaryBackgroundColor"/>
+                </shape>
+            </item>
+            <item android:maxLevel="1" android:minLevel="1">
+                <shape>
+                    <solid android:color="?secondaryBackgroundColor"/>
+                </shape>
+            </item>
+        </level-list>
+    </item>
+</ripple>

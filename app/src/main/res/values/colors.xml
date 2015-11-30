@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">@color/yellow_orange</color>
+
+
+    <color name="black">#000</color>
+    <color name="dark">#202020</color>
+    <color name="black_yellow_pressed">#503405</color>
+    <color name="dark_yellow_pressed">#654A1A</color>
+    <color name="white">#FFF</color>
+    <color name="gray">#202020</color>
+    <color name="yellow_orange">#FFA710</color>
+    <color name="yellow_orange_50p">#80FFA710</color>
+</resources>

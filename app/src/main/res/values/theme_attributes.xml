@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="contextColor" format="color" />
+    <attr name="contextColor50p" format="color" />
+    <attr name="primaryTextColor" format="color" />
+    <attr name="primaryBackgroundColor" format="color" />
+    <attr name="secondaryBackgroundColor" format="color" />
+
+    <attr name="listItemPadding" format="dimension"/>
+    <attr name="threadItemBackground" format="reference"/>
+    <attr name="nickNameColor" format="color"/>
+    <attr name="nickTextSize" format="dimension"/>
+    <attr name="subjectColor" format="color"/>
+    <attr name="subjectTextSize" format="dimension"/>
+    <attr name="authorColor" format="color"/>
+    <attr name="scrollbarColor" format="color"/>
+    <attr name="authorTextSize" format="dimension"/>
+    <attr name="dateColor" format="color"/>
+    <attr name="dateTextSize" format="dimension"/>
+    <attr name="threadsColor" format="color"/>
+    <attr name="threadsTextSize" format="dimension"/>
+</resources>

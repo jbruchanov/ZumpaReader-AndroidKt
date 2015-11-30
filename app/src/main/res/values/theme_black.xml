@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="ThemeBlack" parent="AppTheme.NoActionBar">
+        <item name="contextColor">@color/yellow_orange</item>
+        <item name="contextColor50p">@color/yellow_orange_50p</item>
+        <item name="primaryTextColor">@color/white</item>
+        <item name="primaryBackgroundColor">@color/black</item>
+        <item name="secondaryBackgroundColor">@color/dark</item>
+
+        <item name="listItemPadding">@dimen/gap_mid</item>
+        <item name="threadItemBackground">@drawable/item_list_background_theme_black</item>
+        <item name="nickNameColor">?contextColor</item>
+        <item name="nickTextSize">@dimen/text_small</item>
+        <item name="subjectColor">?primaryTextColor</item>
+        <item name="subjectTextSize">@dimen/text_mid</item>
+        <item name="authorColor">?contextColor</item>
+        <item name="scrollbarColor">?contextColor50p</item>
+        <item name="authorTextSize">@dimen/text_small</item>
+        <item name="dateColor">@color/white</item>
+        <item name="dateTextSize">@dimen/text_small</item>
+        <item name="threadsColor">?primaryTextColor</item>
+        <item name="threadsTextSize">@dimen/text_normal</item>
+    </style>
+
+</resources>
