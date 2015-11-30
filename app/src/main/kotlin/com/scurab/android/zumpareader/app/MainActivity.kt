@@ -18,6 +18,7 @@ import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.content.MainListFragment
 import com.scurab.android.zumpareader.model.ZumpaThread
+import com.scurab.android.zumpareader.ui.DelayClickListener
 import com.scurab.android.zumpareader.util.exec
 import com.scurab.android.zumpareader.util.execIfNull
 import java.util.*
@@ -54,8 +55,7 @@ public class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         setSupportActionBar(toolbar)
-        floatingButton.setOnClickListener { view -> Toast.makeText(view.context, "Replace with your own action", Toast.LENGTH_LONG).show() }
-
+        floatingButton.setOnClickListener { DelayClickListener { view -> Toast.makeText(view.context, "Replace with your own action", Toast.LENGTH_LONG).show() } }
         supportFragmentManager.findFragmentById(R.id.fragment_container).execIfNull {
             openFragment(MainListFragment(), false)
         }

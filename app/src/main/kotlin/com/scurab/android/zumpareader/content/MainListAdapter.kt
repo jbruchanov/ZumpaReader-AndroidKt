@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.model.ZumpaThread
+import com.scurab.android.zumpareader.ui.DelayClickListener
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -68,7 +69,7 @@ public class MainListAdapter : RecyclerView.Adapter<ZumpaItemViewHolder> {
         return parent.let {
             var li = LayoutInflater.from(it!!.context)
             ZumpaItemViewHolder(li.inflate(R.layout.item_main_list, parent, false)).apply {
-                itemView.setOnClickListener { dispatchItemClick(items[adapterPosition]) }
+                itemView.setOnClickListener(DelayClickListener { dispatchItemClick(items[adapterPosition]) })
             }
         }
     }
