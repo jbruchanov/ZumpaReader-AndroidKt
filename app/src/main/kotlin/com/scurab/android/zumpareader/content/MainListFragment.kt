@@ -1,12 +1,13 @@
 package com.scurab.android.zumpareader.content
 
 import android.os.Bundle
-import android.support.v4.widget.SwipeRefreshLayout
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
+import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection
 import com.pawegio.kandroid.find
 import com.pawegio.kandroid.toast
 import com.scurab.android.zumpareader.R
@@ -26,26 +27,31 @@ import rx.schedulers.Schedulers
  */
 public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener {
 
-    private var content : View? = null
-    private var recyclerView: RecyclerView? = null
-    private var swipeToRefresh: SwipeRefreshLayout? = null
+    private var content: View? = null
+    private val recyclerView by lazy { content!!.find<RecyclerView>(R.id.recycler_view) }
+    private val swipeToRefresh by lazy { content!!.find<SwipyRefreshLayout>(R.id.swipe_refresh_layout) }
+
     private var nextPageId: String? = null
     override var isLoading: Boolean
         get() = super.isLoading
         set(value) {
             super.isLoading = value
             progressBarVisible = value
+            swipeToRefresh?.exec {
+                if (it.isRefreshing) {
+                    it.isRefreshing = value
+                }
+            }
         }
 
     override val title: CharSequence get() = getString(R.string.app_name)
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup, savedInstanceState: Bundle?): View? {
-        recyclerView.execIfNull {
-            content = inflater.inflate(R.layout.view_recycler, container, false)
+        content.execIfNull {
+            content = inflater.inflate(R.layout.view_recycler_refreshable, container, false)
             content.exec {
-                swipeToRefresh = it.find(R.id.swipe_refresh_layout)
-                recyclerView = it.find(R.id.recycler_view)
-                recyclerView?.apply {
+                swipeToRefresh.direction = SwipyRefreshLayoutDirection.TOP
+                recyclerView.apply {
                     layoutManager = LinearLayoutManager(inflater.context, LinearLayoutManager.VERTICAL, false)
                     addItemDecoration(HorizontalDividerItemDecoration.Builder(inflater.context)
                             .color(resources.getColor(R.color.gray))
@@ -70,8 +76,8 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        swipeToRefresh?.setOnRefreshListener { loadPage() }
-        recyclerView?.adapter.execIfNull {
+        swipeToRefresh.setOnRefreshListener { loadPage() }
+        recyclerView.adapter.execIfNull {
             loadPage()
         }
     }

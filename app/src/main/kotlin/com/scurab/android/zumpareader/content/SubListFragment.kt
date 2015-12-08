@@ -7,6 +7,8 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
+import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection
 import com.pawegio.kandroid.find
 import com.pawegio.kandroid.toast
 import com.scurab.android.zumpareader.R
@@ -37,19 +39,39 @@ public class SubListFragment : BaseFragment() {
     override val title: CharSequence get() = zumpaData[threadId]?.subject ?: ""
     protected val threadId: String by lazy { arguments!!.getString(THREAD_ID) }
 
-    private var recyclerView : RecyclerView? = null
+    private val recyclerView by lazy { view!!.find<RecyclerView>(R.id.recycler_view) }
+    private val swipyRefreshLayout by lazy { view!!.find<SwipyRefreshLayout>(R.id.swipe_refresh_layout) }
+
+    override var isLoading: Boolean
+        get() = super.isLoading
+        set(value) {
+            super.isLoading = value
+            progressBarVisible = value
+            swipyRefreshLayout.exec {
+                if (it.isRefreshing) {
+                    it.isRefreshing = value
+                }
+            }
+        }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup, savedInstanceState: Bundle?): View? {
-        var content = inflater.inflate(R.layout.view_recycler, container, false)
+        var content = inflater.inflate(R.layout.view_recycler_refreshable, container, false)
         content.setBackgroundColor(Color.BLACK)
-        recyclerView = content.find(R.id.recycler_view)
-        recyclerView?.layoutManager = LinearLayoutManager(inflater.context, LinearLayoutManager.VERTICAL, false)
         return content
     }
 
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        recyclerView.layoutManager = LinearLayoutManager(view.context, LinearLayoutManager.VERTICAL, false)
+        swipyRefreshLayout.direction = SwipyRefreshLayoutDirection.BOTTOM
+        swipyRefreshLayout.setOnRefreshListener { loadData() }
         loadData()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        isLoading = false
     }
 
     public fun loadData() {

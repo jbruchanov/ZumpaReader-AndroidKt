@@ -1,18 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v4.widget.SwipeRefreshLayout
-    android:id="@+id/swipe_refresh_layout"
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/recycler_view"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/recycler_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scrollbars="vertical"
-        android:scrollbarThumbVertical="?scrollbarColor"
-        android:scrollbarSize="@dimen/scrollBarSize"
-        tools:listitem="@layout/item_main_list"
-        />
-</android.support.v4.widget.SwipeRefreshLayout>
+    android:layout_height="match_parent"
+    android:scrollbarSize="@dimen/scrollBarSize"
+    android:scrollbarThumbVertical="?scrollbarColor"
+    android:scrollbars="vertical"
+    tools:listitem="@layout/item_main_list" />
