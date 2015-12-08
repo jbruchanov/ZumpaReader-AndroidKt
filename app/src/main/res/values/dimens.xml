@@ -17,4 +17,5 @@
     <dimen name="text_mid">16sp</dimen>
     <dimen name="divider">1dp</dimen>
     <dimen name="scrollBarSize">3dp</dimen>
+    <dimen name="edit_text_background_radius">@dimen/gap_tiny</dimen>
 </resources>
