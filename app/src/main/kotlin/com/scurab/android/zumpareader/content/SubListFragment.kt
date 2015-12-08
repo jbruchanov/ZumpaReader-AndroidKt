@@ -56,7 +56,7 @@ public class SubListFragment : BaseFragment() {
         }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup, savedInstanceState: Bundle?): View? {
-        var content = inflater.inflate(R.layout.view_recycler_refreshable, container, false)
+        var content = inflater.inflate(R.layout.view_recycler_refreshable_thread, container, false)
         content.setBackgroundColor(Color.BLACK)
         return content
     }
