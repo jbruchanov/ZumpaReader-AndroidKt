@@ -1,6 +1,7 @@
 package com.scurab.android.zumpareader.app
 
 import android.os.Bundle
+import android.support.design.widget.CoordinatorLayout
 import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.NavigationView
 import android.support.v4.app.FragmentTransaction
@@ -19,6 +20,8 @@ import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.content.MainListFragment
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.ui.DelayClickListener
+import com.scurab.android.zumpareader.ui.QuickHideBehavior
+import com.scurab.android.zumpareader.ui.hideAnimated
 import com.scurab.android.zumpareader.util.exec
 import com.scurab.android.zumpareader.util.execIfNull
 import java.util.*
@@ -29,12 +32,15 @@ import java.util.*
 
 public class MainActivity : AppCompatActivity() {
 
-    private val floatingButton by lazy { find<FloatingActionButton>(R.id.fab) }
     private val toolbar by lazy { find<Toolbar>(R.id.toolbar) }
     private val navigationView by lazy { find<NavigationView>(R.id.navigation_view) }
     private val drawerLayout by lazy { find<DrawerLayout>(R.id.drawer_layout) }
     private val navImageView by lazy { find<ImageView>(R.id.navigation_header_image_view) }
     private val progressBar by lazy { find<ProgressBar>(R.id.progress_bar) }
+    private val coordinatorLayout by lazy { find<CoordinatorLayout>(R.id.coordinator_layout) }
+
+    private val _floatingButton by lazy { find<FloatingActionButton>(R.id.fab) }
+    public val floatingButton: FloatingActionButton  get() = _floatingButton
 
     public val zumpaApp: ZumpaReaderApp
         get() {
@@ -86,5 +92,16 @@ public class MainActivity : AppCompatActivity() {
             tr.add(R.id.fragment_container, fragment, fragment.javaClass.canonicalName)
         }
         tr.commit()
+    }
+
+    fun hideFloatingButton() {
+        floatingButton.hideAnimated()
+        ((floatingButton.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior as QuickHideBehavior?)?.enabled = false;
+
+    }
+
+    fun reenableScrollStrategy() {
+        floatingButton.hideAnimated()
+        ((floatingButton.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior as QuickHideBehavior?)?.enabled = true;
     }
 }

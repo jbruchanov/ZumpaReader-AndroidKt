@@ -14,6 +14,7 @@ import com.pawegio.kandroid.toast
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.app.BaseFragment
 import com.scurab.android.zumpareader.model.ZumpaThreadResult
+import com.scurab.android.zumpareader.ui.hideAnimated
 import com.scurab.android.zumpareader.util.exec
 import rx.Observer
 import rx.android.schedulers.AndroidSchedulers
@@ -69,7 +70,13 @@ public class SubListFragment : BaseFragment() {
         loadData()
     }
 
+    override fun onResume() {
+        super.onResume()
+        mainActivity?.hideFloatingButton()
+    }
+
     override fun onPause() {
+        mainActivity?.reenableScrollStrategy()
         super.onPause()
         isLoading = false
     }

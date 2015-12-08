@@ -28,6 +28,7 @@ public class QuickHideBehavior : CoordinatorLayout.Behavior<FloatingActionButton
     private var scrollDistance = 0
     private var scrollThreshold = 0;
     private var animator : Animator? = null;
+    public var enabled = true
 
     //Required to attach behavior via XML
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
@@ -56,6 +57,10 @@ public class QuickHideBehavior : CoordinatorLayout.Behavior<FloatingActionButton
                                 target: View,
                                 dxConsumed: Int, dyConsumed: Int,
                                 dxUnconsumed: Int, dyUnconsumed: Int) {
+
+        if (!enabled) {
+            return;
+        }
         //Consumed distance is the actual distance traveled by the scrolling view
         scrollDistance += dyConsumed;
         if (scrollDistance > scrollThreshold
@@ -76,6 +81,9 @@ public class QuickHideBehavior : CoordinatorLayout.Behavior<FloatingActionButton
                                target: View,
                                velocityX: Float, velocityY: Float,
                                consumed: Boolean): Boolean {
+        if (!enabled) {
+            return false;
+        }
         if (consumed) {
             if (velocityY > 0 && scrollTrigger != DIRECTION_UP) {
                 scrollTrigger = DIRECTION_UP;
