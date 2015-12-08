@@ -34,7 +34,7 @@ public class SubListFragment : BaseFragment() {
         }
     }
 
-    override val title: CharSequence get() = zumpaData?.get(threadId)?.subject ?: ""
+    override val title: CharSequence get() = zumpaData[threadId]?.subject ?: ""
     protected val threadId: String by lazy { arguments!!.getString(THREAD_ID) }
 
     private var recyclerView : RecyclerView? = null

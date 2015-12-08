@@ -10,7 +10,7 @@ import java.util.*
 /**
  * Created by JBruchanov on 25/11/2015.
  */
-open public abstract class BaseFragment : Fragment() {
+public abstract class BaseFragment : Fragment() {
 
     public val mainActivity: MainActivity?
         get() {
