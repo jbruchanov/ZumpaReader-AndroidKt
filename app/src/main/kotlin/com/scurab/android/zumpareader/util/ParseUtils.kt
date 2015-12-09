@@ -1,6 +1,6 @@
 package com.scurab.android.zumpareader.util
 
-import java.util.regex.Matcher
+import com.squareup.okhttp.Headers
 import java.util.regex.Pattern
 
 /**
@@ -14,6 +14,8 @@ public class ParseUtils {
                 Pattern.compile("(http[s]?://[^\\s]*)", Pattern.CASE_INSENSITIVE),
                 android.util.Patterns.WEB_URL)
 
+        private val phpSessionPattern = Pattern.compile("PHPSESSID=(\\w+);")
+
         /**
          * Parse single link from content
          */
@@ -22,6 +24,38 @@ public class ParseUtils {
                 it.matcher(content).run {
                     if (find()) {
                         return group(1)
+                    }
+                }
+            }
+            return null
+        }
+
+        public fun hasPHPSessionId(value: String?): Boolean {
+            return value?.contains("PHPSESSID") ?: false
+        }
+
+        public fun extractPHPSessionId(headers: Headers?) : String? {
+            headers.exec {
+                for (i in 0..it.size()) {
+                    if ("Set-Cookie".equals(it.name(i), true)) {
+                        val value = it.value(i)
+                        if (ParseUtils.hasPHPSessionId(value)) {
+                            val sessionId = Companion.extractPHPSessionId(value)
+                            if (sessionId != null) {
+                                return sessionId
+                            }
+                        }
+                    }
+                }
+            }
+            return null
+        }
+
+        public fun extractPHPSessionId(value: String?): String? {
+            value.exec {
+                phpSessionPattern.matcher(value).exec {
+                    if (it.find()) {
+                        return it.group(1)
                     }
                 }
             }
