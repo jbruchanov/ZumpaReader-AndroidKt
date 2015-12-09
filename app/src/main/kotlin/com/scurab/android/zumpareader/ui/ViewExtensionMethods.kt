@@ -22,6 +22,18 @@ public fun <T : View> T.showAnimated() {
     changeVisibilityAnimated(true)
 }
 
+public fun <T : View> T.isVisible(): Boolean {
+    return visibility == View.VISIBLE;
+}
+
+public fun <T : View> T.isHidden(): Boolean {
+    return visibility == View.INVISIBLE;
+}
+
+public fun <T : View> T.isGone(): Boolean {
+    return visibility == View.GONE;
+}
+
 public fun <T : View> T.changeVisibilityAnimated(show: Boolean) {
     val visible = visibility == View.VISIBLE;
     if (visible != show) {
