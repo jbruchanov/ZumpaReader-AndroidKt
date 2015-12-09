@@ -3,6 +3,7 @@ package com.scurab.android.zumpareader.util
 import android.support.annotation.IdRes
 import android.support.v7.widget.RecyclerView
 import android.view.View
+import java.net.URLEncoder
 import java.util.*
 
 /**
@@ -26,6 +27,10 @@ public fun <T> T?.execIfNull(f: () -> Unit) {
     if (this == null) {
         f()
     }
+}
+
+public fun String.encodeHttp(): String {
+    return URLEncoder.encode(this, "utf-8")
 }
 
 public fun <K, V> Map<K, V>.asListOfValues(): ArrayList<V> = ArrayList(this.values);
