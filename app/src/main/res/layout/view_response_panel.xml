@@ -17,6 +17,7 @@
         android:maxLines="5"
         android:minHeight="@dimen/response_edit_text_min_height"
         android:minLines="2"
+        android:scrollbars="vertical"
         android:padding="@dimen/gap_small"
         android:textSize="@dimen/text_message" />
 
@@ -39,6 +40,13 @@
             android:background="@drawable/image_button_background"
             android:padding="@dimen/gap_normal"
             android:src="@drawable/ic_camera" />
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/image_button_background"
+            android:padding="@dimen/gap_normal"
+            android:src="@drawable/ic_survey" />
 
         <View
             tools:ignore="NewApi"
