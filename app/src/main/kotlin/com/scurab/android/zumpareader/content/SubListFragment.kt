@@ -15,6 +15,8 @@ import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.app.BaseFragment
 import com.scurab.android.zumpareader.model.ZumpaThreadResult
 import com.scurab.android.zumpareader.ui.hideAnimated
+import com.scurab.android.zumpareader.ui.isVisible
+import com.scurab.android.zumpareader.ui.showAnimated
 import com.scurab.android.zumpareader.util.exec
 import rx.Observer
 import rx.android.schedulers.AndroidSchedulers
@@ -42,6 +44,7 @@ public class SubListFragment : BaseFragment() {
 
     private val recyclerView by lazy { view!!.find<RecyclerView>(R.id.recycler_view) }
     private val swipyRefreshLayout by lazy { view!!.find<SwipyRefreshLayout>(R.id.swipe_refresh_layout) }
+    private val responsePanel by lazy { view!!.find<View>(R.id.response_panel) }
 
     override var isLoading: Boolean
         get() = super.isLoading
@@ -64,6 +67,7 @@ public class SubListFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        responsePanel.visibility = View.INVISIBLE
         recyclerView.layoutManager = LinearLayoutManager(view.context, LinearLayoutManager.VERTICAL, false)
         swipyRefreshLayout.direction = SwipyRefreshLayoutDirection.BOTTOM
         swipyRefreshLayout.setOnRefreshListener { loadData() }
@@ -72,11 +76,17 @@ public class SubListFragment : BaseFragment() {
 
     override fun onResume() {
         super.onResume()
-        mainActivity?.hideFloatingButton()
+        mainActivity.exec {
+            it.setScrollStrategyEnabled(false)
+            it.floatingButton.showAnimated()
+        }
+        view.post {//set padding for response panel
+            recyclerView.setPadding(recyclerView.paddingLeft, recyclerView.paddingTop, recyclerView.paddingRight, responsePanel.height)
+        }
     }
 
     override fun onPause() {
-        mainActivity?.reenableScrollStrategy()
+        mainActivity?.setScrollStrategyEnabled(true)
         super.onPause()
         isLoading = false
     }
@@ -101,6 +111,22 @@ public class SubListFragment : BaseFragment() {
                         override fun onCompleted() { isLoading = false }
                     })
         }
+    }
+
+    override fun onFloatingButtonClick() {
+        if (!responsePanel.isVisible()) {
+            responsePanel.showAnimated()
+            mainActivity?.floatingButton?.hideAnimated()
+        }
+    }
+
+    override fun onBackButtonClick(): Boolean {
+        if (responsePanel.isVisible()) {
+            responsePanel.hideAnimated()
+            mainActivity?.floatingButton?.showAnimated()
+            return true
+        }
+        return super.onBackButtonClick()
     }
 
     private fun onResultLoaded(it: ZumpaThreadResult) {

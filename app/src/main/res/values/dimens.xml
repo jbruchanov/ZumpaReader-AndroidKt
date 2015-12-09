@@ -18,4 +18,5 @@
     <dimen name="divider">1dp</dimen>
     <dimen name="scrollBarSize">3dp</dimen>
     <dimen name="edit_text_background_radius">@dimen/gap_tiny</dimen>
+    <dimen name="response_edit_text_min_height">48dp</dimen>
 </resources>
