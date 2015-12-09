@@ -61,7 +61,7 @@ public class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         setSupportActionBar(toolbar)
-        floatingButton.setOnClickListener { DelayClickListener { view -> Toast.makeText(view.context, "Replace with your own action", Toast.LENGTH_LONG).show() } }
+        floatingButton.setOnClickListener(DelayClickListener() { onFloatingButtonClick() })
         supportFragmentManager.findFragmentById(R.id.fragment_container).execIfNull {
             openFragment(MainListFragment(), false)
         }
@@ -94,14 +94,30 @@ public class MainActivity : AppCompatActivity() {
         tr.commit()
     }
 
+    fun onFloatingButtonClick() {
+        (supportFragmentManager.fragments.lastOrNull() as? BaseFragment).exec {
+            it.onFloatingButtonClick();
+        }
+    }
+
+    override fun onBackPressed() {
+        (supportFragmentManager.fragments.lastOrNull() as? BaseFragment).exec {
+            if (!it.onBackButtonClick()) {
+                super.onBackPressed()
+            }
+            return
+        }
+        super.onBackPressed()
+    }
+
     fun hideFloatingButton() {
         floatingButton.hideAnimated()
         ((floatingButton.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior as QuickHideBehavior?)?.enabled = false;
 
     }
 
-    fun reenableScrollStrategy() {
-        floatingButton.hideAnimated()
-        ((floatingButton.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior as QuickHideBehavior?)?.enabled = true;
+
+    public fun setScrollStrategyEnabled(enabled: Boolean) {
+        ((floatingButton.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior as QuickHideBehavior?)?.enabled = enabled;
     }
 }

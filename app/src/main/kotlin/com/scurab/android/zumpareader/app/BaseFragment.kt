@@ -62,4 +62,12 @@ public abstract class BaseFragment : Fragment() {
         super.onResume()
         mainActivity?.title = title
     }
+
+    public open fun onFloatingButtonClick() {
+
+    }
+
+    public open fun onBackButtonClick(): Boolean {
+        return false;
+    }
 }
