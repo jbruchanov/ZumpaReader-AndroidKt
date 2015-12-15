@@ -19,4 +19,7 @@
     <attr name="dateTextSize" format="dimension"/>
     <attr name="threadsColor" format="color"/>
     <attr name="threadsTextSize" format="dimension"/>
+    <attr name="buttonTextColor" format="color" />
+    <attr name="buttonTextSize" format="dimension" />
+    <attr name="buttonBackground" format="reference" />
 </resources>

@@ -19,4 +19,6 @@
     <dimen name="scrollBarSize">3dp</dimen>
     <dimen name="edit_text_background_radius">@dimen/gap_tiny</dimen>
     <dimen name="response_edit_text_min_height">48dp</dimen>
+    <dimen name="url_button_radius_corners_theme_black">5dp</dimen>
+    <dimen name="url_button_stroke_width_theme_black">1dp</dimen>
 </resources>
