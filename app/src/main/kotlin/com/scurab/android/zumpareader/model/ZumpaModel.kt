@@ -35,12 +35,12 @@ public constructor(val id: String,
 
 public data class ZumpaThreadItem(val author: CharSequence,
                                   val body: CharSequence,
-                                  val time: Long,
-                                  val urls: List<String>?) {
+                                  val time: Long) {
     public var hasResponseForYou: Boolean = false
     public var authorReal: String? = null
     public var isOwnThread: Boolean? = null
     public var survey: Survey? = null
+    public var urls: List<String>? = null
 
     public val date by lazy { Date(time) }
 }

@@ -321,7 +321,8 @@ public class ZumpaSimpleParser {
                 body = "";
             }
 
-            zti = new ZumpaThreadItem(author, body, date, urls);
+            zti = new ZumpaThreadItem(author, body, date);
+            zti.setUrls(urls);
             if (!TextUtils.isEmpty(userName)) {
                 zti.setHasResponseForYou(body.contains(createToMeTemplate(userName)));
             }
