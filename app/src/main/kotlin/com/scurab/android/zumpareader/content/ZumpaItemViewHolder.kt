@@ -9,7 +9,7 @@ import com.scurab.android.zumpareader.util.find
 /**
  * Created by JBruchanov on 27/11/2015.
  */
-public class ZumpaItemViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+public open class ZumpaItemViewHolder(view: View) : RecyclerView.ViewHolder(view) {
     internal val title by lazy { find<TextView>(R.id.subject) }
     internal val author by lazy { find<TextView>(R.id.author) }
     internal val time by lazy { find<TextView>(R.id.time) }
