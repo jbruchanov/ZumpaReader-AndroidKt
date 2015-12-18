@@ -1,58 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:tools="http://schemas.android.com/tools"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:background="?threadItemBackground"
-              android:clickable="true"
-              android:orientation="vertical"
-              android:padding="?listItemPadding"
-              tools:ignore="RtlHardcoded">
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="?threadItemBackground"
+    android:clickable="true"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
 
-    <TextView
-        android:id="@+id/subject"
+    <View
+        android:id="@+id/item_state"
+        android:layout_width="?itemStateWidth"
+        android:layout_height="match_parent"
+        android:background="@drawable/item_left_bar_background" />
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="?attr/subjectColor"
-        android:textSize="?attr/subjectTextSize"
-        tools:text="@string/dummy_long"/>
+        android:orientation="vertical"
+        android:padding="?listItemPadding"
+        tools:ignore="RtlHardcoded">
 
-    <RelativeLayout
-        android:layout_marginTop="@dimen/gap_small"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        s<TextView
-            android:id="@+id/author"
-            android:layout_width="wrap_content"
+        <TextView
+            android:id="@+id/subject"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_toLeftOf="@+id/threads"
-            android:ellipsize="end"
-            android:singleLine="true"
-            android:textColor="?attr/authorColor"
-            android:textSize="?attr/authorTextSize"
+            android:textColor="?attr/subjectColor"
+            android:textSize="?attr/subjectTextSize"
             tools:text="@string/dummy_long"/>
 
-        <TextView
-            android:id="@+id/threads"
-            android:layout_width="wrap_content"
+        <RelativeLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="@dimen/gap_normal"
-            android:layout_marginRight="@dimen/gap_normal"
-            android:layout_toLeftOf="@+id/time"
-            android:textColor="?attr/dateColor"
-            android:textSize="?attr/dateTextSize"
-            android:textStyle="bold"
-            tools:text="99"/>
+            android:layout_marginTop="@dimen/gap_small">
 
-        <TextView
-            android:id="@+id/time"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:textColor="?attr/dateColor"
-            android:textSize="?attr/dateTextSize"
-            tools:text="20:28:17 25.11."/>
-    </RelativeLayout>
+            <TextView
+                android:id="@+id/author"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_toLeftOf="@+id/threads"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textColor="?attr/authorColor"
+                android:textSize="?attr/authorTextSize"
+                tools:text="@string/dummy_long"/>
+
+            <TextView
+                android:id="@+id/threads"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/gap_normal"
+                android:layout_marginRight="@dimen/gap_normal"
+                android:layout_toLeftOf="@+id/time"
+                android:textColor="?attr/dateColor"
+                android:textSize="?attr/dateTextSize"
+                android:textStyle="bold"
+                tools:text="99"/>
+
+            <TextView
+                android:id="@+id/time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:textColor="?attr/dateColor"
+                android:textSize="?attr/dateTextSize"
+                tools:text="20:28:17 25.11."/>
+        </RelativeLayout>
+    </LinearLayout>
 </LinearLayout>
