@@ -114,7 +114,7 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
                     (it.adapter as MainListAdapter).addItems(values)
                 } else {
                     val mainListAdapter = MainListAdapter(values)
-                    mainListAdapter.setOnShowItemListener(this@MainListFragment, 30)
+                    mainListAdapter.setOnShowItemListener(this@MainListFragment, 15)
                     mainListAdapter.onItemClickListener = object : MainListAdapter.OnItemClickListener {
                         override fun onItemClick(item: ZumpaThread) {
                             onThreadItemClick(item)

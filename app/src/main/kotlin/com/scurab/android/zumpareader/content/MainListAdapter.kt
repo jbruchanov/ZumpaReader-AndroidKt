@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.ui.DelayClickListener
+import com.scurab.android.zumpareader.util.exec
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -24,27 +25,31 @@ public class MainListAdapter : RecyclerView.Adapter<ZumpaItemViewHolder> {
 
     public var onItemClickListener: OnItemClickListener? = null
 
-    public val items: ArrayList<ZumpaThread> = ArrayList()
-    private val dataMap: HashSet<ZumpaThread> = HashSet()
+    public var items: ArrayList<ZumpaThread>
+    private val dataMap: HashMap<String, ZumpaThread> = HashMap()
     private var ownerRecyclerView: RecyclerView? = null
     private val dateFormat = SimpleDateFormat("HH:mm.ss dd.MM.")
     private var onShowItemListener: OnShowItemListener? = null
     private var onShoItemListenerEndOffset: Int = 0
 
-    constructor(items: ArrayList<ZumpaThread>) : super() {
-        this.items.addAll(items)
-        dataMap.addAll(items)
+    constructor(data: ArrayList<ZumpaThread>) : super() {
+        items = ArrayList(data)
+        dataMap.putAll(items.toMapBy { it.id })
     }
 
     public fun addItems(newItems: ArrayList<ZumpaThread>) {
-        var oldSize = dataMap.size
-        dataMap.addAll(newItems)
-        items.clear()
-        items.addAll(dataMap)
-        items.sortByDescending { it.idLong }
-        if (dataMap.size != oldSize) {
-            notifyItemRangeInserted(oldSize, dataMap.size - oldSize)
+        for (newItem in newItems) {
+            val item = dataMap.get(newItem.id)
+            if (item != null) {
+                item.threads = newItem.threads
+            } else {
+                dataMap.put(newItem.id, newItem);
+            }
         }
+        items.clear()
+        items.addAll(dataMap.values)
+        items.sortByDescending { it.idLong }
+        notifyDataSetChanged()
     }
 
     override fun getItemCount(): Int {
