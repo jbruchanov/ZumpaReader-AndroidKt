@@ -34,6 +34,7 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
     private val dateFormat = SimpleDateFormat("HH:mm.ss")
     private val items: ArrayList<ZumpaThreadItem>
     private val dataItems: ArrayList<SubListItem>
+
     @ColorInt
     private var contextColor: Int = 0
 
@@ -77,6 +78,11 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
 
     override fun getItemViewType(position: Int): Int {
         return dataItems[position].type
+    }
+
+    internal fun updateItemForUrl(position: Int) {
+        dataItems[position].type = TYPE_URL
+        notifyItemChanged(position)
     }
 
     override fun onBindViewHolder(holder: ZumpaSubItemViewHolder, position: Int) {
@@ -125,9 +131,9 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
     }
 }
 
-private data class SubListItem(val item: ZumpaThreadItem, val itemPosition: Int, val type: Int, val data: String?)
+private data class SubListItem(val item: ZumpaThreadItem, val itemPosition: Int, var type: Int, val data: String?)
 
-public class ZumpaSubItemViewHolder(adapter: RecyclerView.Adapter<ZumpaSubItemViewHolder>, view: View) : ZumpaItemViewHolder(view) {
+public class ZumpaSubItemViewHolder(adapter: SubListAdapter, view: View) : ZumpaItemViewHolder(view) {
     internal val button by lazy { find<Button>(R.id.button) }
     internal val imageView by lazy { view as ImageView }
     internal val imageTarget by lazy { ItemTarget(adapter, this) }
@@ -144,7 +150,7 @@ public class ZumpaSubItemViewHolder(adapter: RecyclerView.Adapter<ZumpaSubItemVi
     }
 }
 
-internal class ItemTarget(val adapter: RecyclerView.Adapter<ZumpaSubItemViewHolder>, val holder: ZumpaSubItemViewHolder) : com.squareup.picasso.Target {
+internal class ItemTarget(val adapter: SubListAdapter, val holder: ZumpaSubItemViewHolder) : com.squareup.picasso.Target {
     var loading = 0
 
     var itemChangedNotifyAction = Runnable { adapter.notifyItemChanged(holder.adapterPosition) }
@@ -164,7 +170,7 @@ internal class ItemTarget(val adapter: RecyclerView.Adapter<ZumpaSubItemViewHold
     }
 
     override fun onBitmapFailed(errorDrawable: Drawable?) {
-
+        adapter.updateItemForUrl(holder.adapterPosition)
     }
 }
 
