@@ -35,7 +35,7 @@ public fun <T : View> T.isGone(): Boolean {
 }
 
 public fun <T : View> T.changeVisibilityAnimated(show: Boolean) {
-    val visible = visibility == View.VISIBLE;
+    val visible = visibility == View.VISIBLE && translationY == 0f && translationX == 0f;
     if (visible != show) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && isAttachedToWindow) {
             var init = 0f
@@ -58,6 +58,9 @@ public fun <T : View> T.changeVisibilityAnimated(show: Boolean) {
                 it.start()
             }
         } else {
+            translationY = 0f
+            translationX = 0f
+            alpha = if(show) 0f else 1f
             ViewCompat.animate(this).alpha(if (show) 1f else 0f).setDuration(250).start()
         }
     }
