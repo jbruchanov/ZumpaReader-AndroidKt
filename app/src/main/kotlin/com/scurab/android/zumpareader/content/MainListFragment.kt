@@ -116,8 +116,8 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
                     val mainListAdapter = MainListAdapter(values)
                     mainListAdapter.setOnShowItemListener(this@MainListFragment, 15)
                     mainListAdapter.onItemClickListener = object : MainListAdapter.OnItemClickListener {
-                        override fun onItemClick(item: ZumpaThread) {
-                            onThreadItemClick(item)
+                        override fun onItemClick(item: ZumpaThread, position: Int) {
+                            onThreadItemClick(item, position)
                         }
                     }
                     it.adapter = mainListAdapter
@@ -127,8 +127,12 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
         }
     }
 
-    public fun onThreadItemClick(item: ZumpaThread) {
+    public fun onThreadItemClick(item: ZumpaThread, position: Int) {
         isLoading = false
+        item.state = ZumpaThread.STATE_NONE
+        recyclerView?.adapter.exec {
+            it.notifyItemChanged(position)
+        }
         openFragment(SubListFragment.newInstance(item.id.toString()), true, true)
     }
 
