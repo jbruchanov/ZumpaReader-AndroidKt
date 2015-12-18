@@ -21,4 +21,5 @@
     <dimen name="response_edit_text_min_height">48dp</dimen>
     <dimen name="url_button_radius_corners_theme_black">5dp</dimen>
     <dimen name="url_button_stroke_width_theme_black">1dp</dimen>
+    <dimen name="item_left_bar_width">2dp</dimen>
 </resources>
