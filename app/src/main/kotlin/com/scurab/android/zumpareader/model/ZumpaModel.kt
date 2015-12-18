@@ -13,6 +13,12 @@ public data class ZumpaThread
 public constructor(val id: String,
                    var subject: CharSequence) {
 
+    companion object{
+        public val STATE_NONE = 0
+        public val STATE_NEW = 1
+        public val STATE_UPDATED = 2
+        public val STATE_OWN = 3
+    }
     public constructor(id: String,
                        subject: CharSequence,
                        author: String,
@@ -26,9 +32,20 @@ public constructor(val id: String,
     var author: String = ""
     var contentUrl: String = ""
     var time: Long = 0L
-    var threads: Int = 0
+    private var _items = 0
+    var items: Int
+        get() = _items
+        set(value) {
+            if (state == STATE_NONE && _items != 0 && value > _items) {
+                state = STATE_UPDATED
+            } else if (_items == value) {
+                //no update
+            }
+            _items = value
+        }
     var isFavorite: Boolean = false
     val idLong by lazy { id.toLong() }
+    var state: Int = STATE_NEW
 
     public val date by lazy { Date(time) }
 }
