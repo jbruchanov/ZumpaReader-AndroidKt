@@ -2,11 +2,14 @@ package com.scurab.android.zumpareader.content
 
 import android.app.Activity
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.support.annotation.ColorInt
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
@@ -38,29 +41,30 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
     @ColorInt
     private var contextColor: Int = 0
 
-    constructor(items: List<ZumpaThreadItem>) {
-        this.items = ArrayList(items)
-        this.dataItems = buildItems(items)
+    constructor(data: List<ZumpaThreadItem>) {
+        items = ArrayList(data)
+        dataItems = ArrayList((items.size * 1.3/*some bigger values for links etc*/).toInt())
+        buildAdapterItems(items, dataItems)
     }
 
-    private fun buildItems(items: List<ZumpaThreadItem>): ArrayList<SubListItem> {
-        val data = ArrayList<SubListItem>(items.size)
+    private fun buildAdapterItems(items: List<ZumpaThreadItem>, outDataItems: ArrayList<SubListItem>) {
+        val pos = outDataItems.lastOrNull()?.itemPosition
+        var lastIndex = if (pos != null) pos + 1 else 0//empty start with 0, otherwise with first newOne
+
         val sub = ArrayList<SubListItem>()
-        var position = 0
-        for (item in items) {
-            data.add(SubListItem(item, position, TYPE_ITEM, null))
+        for (i in lastIndex..items.size - 1) {
+            val item = items[i]
+            outDataItems.add(SubListItem(item, i, TYPE_ITEM, null))
             sub.clear()
             item.urls.exec {
                 for (url in it) {
-                    val element = SubListItem(item, position, if (url.isImage()) TYPE_IMAGE else TYPE_URL, url)
+                    val element = SubListItem(item, i, if (url.isImage()) TYPE_IMAGE else TYPE_URL, url)
                     sub.add(element)
                 }
                 sub.sortBy { it.type }
-                data.addAll(sub)
+                outDataItems.addAll(sub)
             }
-            position++
         }
-        return data
     }
 
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
@@ -103,6 +107,7 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
             }
             TYPE_IMAGE -> holder.loadImage(dataItem.data!!)
         }
+        itemView.postInvalidate()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): ZumpaSubItemViewHolder? {
@@ -125,8 +130,10 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
 
     fun updateItems(updated: List<ZumpaThreadItem>) {
         if (items.size != updated.size) {
+            val oldSize = dataItems.size
             items.addAll(updated.subList(items.size, updated.size))
-            notifyItemInserted(items.size)
+            buildAdapterItems(items, dataItems)
+            notifyItemRangeInserted(oldSize, dataItems.size - oldSize - 1)
         }
     }
 }
