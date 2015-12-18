@@ -12,7 +12,7 @@
         android:id="@+id/item_state"
         android:layout_width="?itemStateWidth"
         android:layout_height="match_parent"
-        android:background="@drawable/item_left_bar_background" />
+        android:background="@drawable/item_status_bar_background" />
 
     <LinearLayout
         android:layout_width="match_parent"
