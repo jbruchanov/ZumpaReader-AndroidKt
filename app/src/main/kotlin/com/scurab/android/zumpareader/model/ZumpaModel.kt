@@ -36,7 +36,9 @@ public constructor(val id: String,
     var items: Int
         get() = _items
         set(value) {
-            if (state == STATE_NONE && _items != 0 && value > _items) {
+            if ("JtS".equals(author)) {
+                state = STATE_OWN
+            } else if (state == STATE_NONE && _items != 0 && value > _items) {
                 state = STATE_UPDATED
             } else if (_items == value) {
                 //no update
