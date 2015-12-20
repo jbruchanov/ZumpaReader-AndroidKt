@@ -65,7 +65,6 @@ public class MainListAdapter : RecyclerView.Adapter<ZumpaThreadViewHolder> {
         holder.title.text = item.subject
         holder.author.text = item.author
         holder.threads.text = item.items.toString()
-//        holder.threads.text = position.toString()
         holder.time.text = dateFormat.format(item.date)
         (holder.stateBar.background as? LevelListDrawable).exec {
             it.setLevel(item.state)
@@ -79,7 +78,11 @@ public class MainListAdapter : RecyclerView.Adapter<ZumpaThreadViewHolder> {
         return parent.let {
             var li = LayoutInflater.from(it!!.context)
             ZumpaThreadViewHolder(li.inflate(R.layout.item_main_list, parent, false)).apply {
-                itemView.setOnClickListener(DelayClickListener { dispatchItemClick(items[adapterPosition], adapterPosition) })
+                itemView.setOnClickListener(DelayClickListener {
+                    if (adapterPosition < items.size) {
+                        dispatchItemClick(items[adapterPosition], adapterPosition)
+                    }
+                })
             }
         }
     }
