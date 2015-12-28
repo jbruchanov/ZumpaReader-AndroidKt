@@ -1,8 +1,11 @@
 package com.scurab.android.zumpareader.drawable
 
+import android.content.Context
 import android.content.res.Resources
 import android.graphics.*
 import android.graphics.drawable.Drawable
+import com.scurab.android.zumpareader.R
+import com.scurab.android.zumpareader.util.obtainStyledColor
 
 /**
  * Created by JBruchanov on 15/12/2015.
@@ -13,17 +16,18 @@ class SimpleProgressDrawable : Drawable {
     private val paint: Paint
     private val dispSize : Int
     private val rect : RectF
-    private var radius : Float = 100f
+    private var diam: Float = 100f
+    private var radius: Float = diam / 2
     private var rotation : Float = 0f
     private var rotation2 : Float = 0f
 
-    constructor(res: Resources) : super() {
+    constructor(context: Context) : super() {
         paint = Paint(Paint.ANTI_ALIAS_FLAG)
         paint.strokeWidth = 10f
         paint.style = Paint.Style.STROKE
-//        paint.color = Color.RED
+        val res = context.resources
         dispSize = Math.min(res.displayMetrics.widthPixels, res.displayMetrics.heightPixels)
-        paint.setShader(SweepGradient (radius / 2, radius / 2, Color.argb(127, 255, 0, 0), Color.TRANSPARENT))
+        paint.setShader(SweepGradient (radius, radius, context.obtainStyledColor(R.attr.contextColor50p), Color.TRANSPARENT))
         rect = RectF()
         rect.set(0f, 0f, 100f, 100f);
     }
@@ -38,13 +42,13 @@ class SimpleProgressDrawable : Drawable {
 
         canvas.save()
         canvas.translate(cx, cy)
-        canvas.rotate(rotation, radius / 2, radius / 2)
+        canvas.rotate(rotation, radius, radius)
         canvas.drawArc(rect, -90f, 360f, false, paint);
         canvas.restore()
 
         canvas.save()
         canvas.translate(cx, cy)
-        canvas.rotate(180 - rotation, radius / 2, radius / 2)
+        canvas.rotate(180 - rotation, radius, radius)
         canvas.drawArc(rect, 180f, 360f, false, paint);
         canvas.restore()
 
@@ -53,7 +57,7 @@ class SimpleProgressDrawable : Drawable {
     }
 
     override fun getIntrinsicHeight(): Int {
-        return 200
+        return (0.5f + diam).toInt()
     }
 
     override fun getIntrinsicWidth(): Int {
