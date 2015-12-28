@@ -54,7 +54,7 @@ public class ZumpaSimpleParser {
     private boolean mShowLastUser;
     private static final SimpleDateFormat FULL_DATE_FORMAT = new SimpleDateFormat("dd. MM. yyyy HH:mm:ss");
     private static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm");
-    private static final Pattern URL_PATTERN = Pattern.compile("<a[^>]*>(.*)</a>", Pattern.CASE_INSENSITIVE);
+    private static final Pattern URL_PATTERN = Pattern.compile("(http[s]?://[^\\s]*)", Pattern.CASE_INSENSITIVE);
     private static final Pattern DATE_PATTERN = Pattern.compile("Datum:&nbsp;([^<]+)", Pattern.CASE_INSENSITIVE);
     private static final Pattern AUTHOR_PATTERN = Pattern.compile("Autor:&nbsp;([^<]+)", Pattern.CASE_INSENSITIVE);
     private static final Pattern AUTHOR_PATTERN1 = Pattern.compile("Autor:&nbsp;<a[^>]*>([^<]+)</a>", Pattern.CASE_INSENSITIVE);
@@ -481,7 +481,7 @@ public class ZumpaSimpleParser {
 
     public static CharSequence parseBody(String body, Context context) {
         SpannableString ssb = new SpannableString(body);
-        Matcher matcher = android.util.Patterns.WEB_URL.matcher(body);
+        Matcher matcher = URL_PATTERN.matcher(body);
         List<Pair<Integer, Integer>> links = new ArrayList<>();
         while (matcher.find()) {
             int start = matcher.start();
@@ -530,9 +530,10 @@ public class ZumpaSimpleParser {
         static HashMap<Integer, Pattern> DATA = new HashMap<>();
 
         static {
-            DATA.put(R.drawable.emoji_hm, Pattern.compile(":[-o]?/"));
+            DATA.put(R.drawable.emoji_hm, Pattern.compile(":[-o]?[/\\\\]"));
             DATA.put(R.drawable.emoji_lol, Pattern.compile(":[-o]?D+"));
             DATA.put(R.drawable.emoji_o_o, Pattern.compile("[oO]_[oO]"));
+            DATA.put(R.drawable.emoji_p, Pattern.compile(":[-o]?[pP]"));
             DATA.put(R.drawable.emoji_sad, Pattern.compile(":[-o]?\\(+"));
             DATA.put(R.drawable.emoji_smiley, Pattern.compile(":[-o]?\\)+"));
             DATA.put(R.drawable.emoji_speechless, Pattern.compile(":[-o]?\\|"));
