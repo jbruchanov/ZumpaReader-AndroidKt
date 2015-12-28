@@ -6,6 +6,7 @@
     <attr name="primaryBackgroundColor" format="color" />
     <attr name="secondaryBackgroundColor" format="color" />
 
+    <attr name="imageButtonBackground" format="reference" />
     <attr name="listItemPadding" format="dimension"/>
     <attr name="threadItemBackground" format="reference"/>
     <attr name="nickNameColor" format="color"/>

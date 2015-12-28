@@ -28,23 +28,26 @@
         android:orientation="horizontal">
 
         <ImageButton
+            android:id="@+id/photo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/image_button_background"
+            android:background="?imageButtonBackground"
             android:padding="@dimen/gap_normal"
             android:src="@drawable/ic_photo" />
 
         <ImageButton
+            android:id="@+id/camera"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/image_button_background"
+            android:background="?imageButtonBackground"
             android:padding="@dimen/gap_normal"
             android:src="@drawable/ic_camera" />
 
         <ImageButton
+            android:id="@+id/survey"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/image_button_background"
+            android:background="?imageButtonBackground"
             android:padding="@dimen/gap_normal"
             android:src="@drawable/ic_survey" />
 
@@ -55,9 +58,10 @@
             android:layout_weight="1" />
 
         <ImageButton
+            android:id="@+id/send"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/image_button_background"
+            android:background="?imageButtonBackground"
             android:padding="@dimen/gap_normal"
             android:src="@drawable/ic_send" />
     </LinearLayout>

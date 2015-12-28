@@ -7,6 +7,7 @@
         <item name="primaryBackgroundColor">@color/black</item>
         <item name="secondaryBackgroundColor">@color/dark</item>
 
+        <item name="imageButtonBackground">@drawable/image_button_background_theme_black</item>
         <item name="listItemPadding">@dimen/gap_mid</item>
         <item name="threadItemBackground">@drawable/item_list_background_theme_black</item>
         <item name="nickNameColor">?contextColor</item>
