@@ -45,6 +45,7 @@ public class ZumpaSimpleParser {
     private static final Pattern URL_PATTERN = Pattern.compile("<a[^>]*>(.*)</a>", Pattern.CASE_INSENSITIVE);
     private static final Pattern DATE_PATTERN = Pattern.compile("Datum:&nbsp;([^<]+)", Pattern.CASE_INSENSITIVE);
     private static final Pattern AUTHOR_PATTERN = Pattern.compile("Autor:&nbsp;([^<]+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern AUTHOR_PATTERN1 = Pattern.compile("Autor:&nbsp;<a[^>]*>([^<]+)</a>", Pattern.CASE_INSENSITIVE);
     private static final Pattern AUTHOR_PATTERN2 = Pattern.compile("Autor:&nbsp;(.+)<br>Datum:", Pattern.CASE_INSENSITIVE);
     private static Pattern SURVEY_RESPONSE_PATTERN = Pattern.compile("\\((\\d*) odp.\\)", Pattern.CASE_INSENSITIVE);
     private static final String TAG_NBSP = "&nbsp;";
@@ -348,10 +349,13 @@ public class ZumpaSimpleParser {
     }
 
     private CharSequence getAuthorName(String html) {
-        String name = getGroup(AUTHOR_PATTERN, html, 1);
+        String name = getGroup(AUTHOR_PATTERN, html, 1, null);
+        if (name == null) {
+            name = getGroup(AUTHOR_PATTERN1, html, 1, null);
+        }
         CharSequence result = name;
         if (name != null && name.contains("(")) {
-            String htmlName = getGroup(AUTHOR_PATTERN2, html, 1);
+            String htmlName = getGroup(AUTHOR_PATTERN2, html, 1, "");
             result = Html.fromHtml(htmlName);
         }
         return result;
@@ -360,7 +364,7 @@ public class ZumpaSimpleParser {
     private long getTime(String data) {
         long date = 0;
         try {
-            String dateString = getGroup(DATE_PATTERN, data, 1);
+            String dateString = getGroup(DATE_PATTERN, data, 1, "");
             date = FULL_DATE_FORMAT.parse(dateString).getTime();
         } catch (ParseException e) {
             e.printStackTrace();
@@ -368,12 +372,12 @@ public class ZumpaSimpleParser {
         return date;
     }
 
-    private String getGroup(Pattern pattern, String value, int group) {
+    private String getGroup(Pattern pattern, String value, int group, String defValue) {
         Matcher matcher = pattern.matcher(value);
         if (matcher.find()) {
             return matcher.group(group);
         }
-        return "";
+        return defValue;
     }
     //endregion thread
 
