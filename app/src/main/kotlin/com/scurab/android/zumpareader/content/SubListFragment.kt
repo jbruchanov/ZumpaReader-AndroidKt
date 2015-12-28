@@ -19,6 +19,7 @@ import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.app.BaseFragment
 import com.scurab.android.zumpareader.model.ZumpaThreadItem
 import com.scurab.android.zumpareader.model.ZumpaThreadResult
+import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.ui.hideAnimated
 import com.scurab.android.zumpareader.ui.isVisible
 import com.scurab.android.zumpareader.ui.showAnimated
@@ -182,7 +183,12 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener 
                 context.toast(R.string.saved_into_clipboard)
             }
         } else {
-            startLinkActivity(url)
+            val id = ZumpaSimpleParser.getZumpaThreadId(url)
+            if (id != 0) {
+                openFragment(SubListFragment.newInstance(id.toString()), true, true)
+            } else {
+                startLinkActivity(url)
+            }
         }
     }
 }

@@ -48,6 +48,7 @@ public class ZumpaSimpleParser {
     private static final Pattern AUTHOR_PATTERN1 = Pattern.compile("Autor:&nbsp;<a[^>]*>([^<]+)</a>", Pattern.CASE_INSENSITIVE);
     private static final Pattern AUTHOR_PATTERN2 = Pattern.compile("Autor:&nbsp;(.+)<br>Datum:", Pattern.CASE_INSENSITIVE);
     private static Pattern SURVEY_RESPONSE_PATTERN = Pattern.compile("\\((\\d*) odp.\\)", Pattern.CASE_INSENSITIVE);
+    private static Pattern ZUMPA_LINK = Pattern.compile("portal2.dkm.cz/phorum/read.php.*t=(\\d+)", Pattern.CASE_INSENSITIVE);
     private static final String TAG_NBSP = "&nbsp;";
 
     public ZumpaMainPageResult parseMainPage(@NonNull String html) {
@@ -372,7 +373,7 @@ public class ZumpaSimpleParser {
         return date;
     }
 
-    private String getGroup(Pattern pattern, String value, int group, String defValue) {
+    private static String getGroup(Pattern pattern, String value, int group, String defValue) {
         Matcher matcher = pattern.matcher(value);
         if (matcher.find()) {
             return matcher.group(group);
@@ -453,4 +454,16 @@ public class ZumpaSimpleParser {
         return result;
     }
     //endregion survey
+
+    public static int getZumpaThreadId(String link) {
+        if (link != null) {
+            try {
+                String value = getGroup(ZUMPA_LINK, link, 1, null);
+                return value != null ? Integer.parseInt(value) : 0;
+            } catch (Throwable t) {
+                t.printStackTrace();
+            }
+        }
+        return 0;
+    }
 }
