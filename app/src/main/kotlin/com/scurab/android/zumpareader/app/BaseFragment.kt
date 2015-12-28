@@ -1,10 +1,17 @@
 package com.scurab.android.zumpareader.app
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.support.v4.app.Fragment
 import android.view.MenuItem
+import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.model.ZumpaThread
+import com.scurab.android.zumpareader.util.execOn
+import com.scurab.android.zumpareader.util.toast
 import java.util.*
 
 /**
@@ -69,5 +76,31 @@ public abstract class BaseFragment : Fragment() {
 
     public open fun onBackButtonClick(): Boolean {
         return false;
+    }
+
+    public fun startLinkActivity(url: String) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW)
+            intent.setData(Uri.parse(url))
+            startActivity(intent)
+        } catch(e: Throwable) {
+            e.printStackTrace()
+            context.execOn {
+                toast(R.string.unable_to_finish_operation)
+            }
+        }
+    }
+
+    public fun saveIntoClipboard(url: String): Boolean {
+        try {
+            context.execOn {
+                var clip = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                clip.primaryClip = ClipData.newRawUri(url, Uri.parse(url))
+                return true
+            }
+        } catch(e: Exception) {
+            e.printStackTrace()
+        }
+        return false
     }
 }
