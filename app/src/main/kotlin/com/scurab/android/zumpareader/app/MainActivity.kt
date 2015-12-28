@@ -91,6 +91,8 @@ public class MainActivity : AppCompatActivity() {
         } else {
             tr.add(R.id.fragment_container, fragment, fragment.javaClass.canonicalName)
         }
+
+        tr.setTransitionStyle(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
         tr.commit()
     }
 
