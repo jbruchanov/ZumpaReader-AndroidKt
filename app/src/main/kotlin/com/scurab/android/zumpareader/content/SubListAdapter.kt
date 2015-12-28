@@ -130,8 +130,8 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
                 }
                 TYPE_URL -> {
                     var vh = ZumpaSubItemViewHolder(this, li.inflate(R.layout.item_sub_list_button, parent, false))
-                    vh.button.setOnClickListener { vh.loadedUrl.exec { dispatchClick(it) } }
-                    vh.button.setOnLongClickListener { vh.loadedUrl.exec { dispatchClick(it, true) }; true }
+                    vh.button.setOnClickListener { dispatchClick(vh.button.text.toString()) }
+                    vh.button.setOnLongClickListener { dispatchClick(vh.button.text.toString(), true); true }
                     vh
                 }
                 TYPE_IMAGE -> {
