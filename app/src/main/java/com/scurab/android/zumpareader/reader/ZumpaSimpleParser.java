@@ -1,12 +1,23 @@
 package com.scurab.android.zumpareader.reader;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.util.Pair;
 import android.text.Html;
+import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.ImageSpan;
+import android.text.style.RelativeSizeSpan;
+import android.text.style.TypefaceSpan;
 
+import com.scurab.android.zumpareader.R;
 import com.scurab.android.zumpareader.model.Survey;
 import com.scurab.android.zumpareader.model.SurveyItem;
 import com.scurab.android.zumpareader.model.ZumpaMainPageResult;
@@ -26,6 +37,7 @@ import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -465,5 +477,66 @@ public class ZumpaSimpleParser {
             }
         }
         return 0;
+    }
+
+    public static CharSequence parseBody(String body, Context context) {
+        SpannableString ssb = new SpannableString(body);
+        Matcher matcher = android.util.Patterns.WEB_URL.matcher(body);
+        List<Pair<Integer, Integer>> links = new ArrayList<>();
+        while (matcher.find()) {
+            int start = matcher.start();
+            int end = matcher.end();
+            links.add(new Pair<>(start, end));
+            setSpans(ssb, start, end,
+                    new RelativeSizeSpan(0.5f),
+                    new TypefaceSpan("monospace"));
+        }
+        //smileys
+        for (Integer drawable : SmileRes.DATA.keySet()) {
+            Pattern pattern = SmileRes.DATA.get(drawable);
+            matcher = pattern.matcher(body);
+            while (matcher.find()) {
+                int start = matcher.start();
+                int end = matcher.end();
+                if (!ignore(links, start)) {
+                    Drawable draw = context.getResources().getDrawable(drawable);
+                    draw.setBounds(0, 0, (int) (draw.getIntrinsicWidth() / 1.5f), (int) (draw.getIntrinsicHeight() / 1.5f));
+                    setSpans(ssb, start, end,
+                            new ImageSpan(draw));
+                }
+            }
+        }
+        return ssb;
+    }
+
+    private static  boolean ignore(List<Pair<Integer, Integer>> pairs, int value) {
+        for (Pair<Integer, Integer> p : pairs) {
+            if (p.first <= value && value <= p.second) {
+                return true;
+            } else if (p.first > value) {
+                break;
+            }
+        }
+        return false;
+    }
+
+    private static void setSpans(SpannableString ssb, int start, int end, Object... spannables) {
+        for (Object spannable : spannables) {
+            ssb.setSpan(spannable, start, end, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+        }
+    }
+
+    public static class SmileRes {
+        static HashMap<Integer, Pattern> DATA = new HashMap<>();
+
+        static {
+            DATA.put(R.drawable.emoji_hm, Pattern.compile(":[-o]?/"));
+            DATA.put(R.drawable.emoji_lol, Pattern.compile(":[-o]?D+"));
+            DATA.put(R.drawable.emoji_o_o, Pattern.compile("[oO]_[oO]"));
+            DATA.put(R.drawable.emoji_sad, Pattern.compile(":[-o]?\\(+"));
+            DATA.put(R.drawable.emoji_smiley, Pattern.compile(":[-o]?\\)+"));
+            DATA.put(R.drawable.emoji_speechless, Pattern.compile(":[-o]?\\|"));
+            DATA.put(R.drawable.emoji_wink, Pattern.compile(";[-o]?\\)+"));
+        }
     }
 }
