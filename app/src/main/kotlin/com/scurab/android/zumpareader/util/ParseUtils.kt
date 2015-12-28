@@ -1,7 +1,12 @@
 package com.scurab.android.zumpareader.util
 
+import android.content.res.Resources
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.text.Html
 import com.squareup.okhttp.Headers
+import java.net.URLDecoder
+import java.net.URLEncoder
 import java.util.regex.Pattern
 
 /**
@@ -61,6 +66,22 @@ public class ParseUtils {
                 }
             }
             return null
+        }
+
+        public fun resizeImageIfNecessary(byteArray: ByteArray, res: Resources): Bitmap {
+            var opts = BitmapFactory.Options()
+            opts.inJustDecodeBounds = true
+            BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size, opts)
+            var imWidth = opts.outWidth
+            var dispWidth = res.displayMetrics.widthPixels
+            var resize = 1
+            while (imWidth > 0 && imWidth > 1.5f * dispWidth) {
+                resize *= 2
+                imWidth /= 2
+            }
+            opts.inJustDecodeBounds = false
+            opts.inSampleSize = resize
+            return BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size, opts)
         }
     }
 }
