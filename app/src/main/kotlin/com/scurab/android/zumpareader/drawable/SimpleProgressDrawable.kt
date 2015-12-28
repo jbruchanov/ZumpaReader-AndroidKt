@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.res.Resources
 import android.graphics.*
 import android.graphics.drawable.Drawable
+import android.util.TypedValue
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.util.obtainStyledColor
 
@@ -16,20 +17,23 @@ class SimpleProgressDrawable : Drawable {
     private val paint: Paint
     private val dispSize : Int
     private val rect : RectF
-    private var diam: Float = 100f
-    private var radius: Float = diam / 2
+    private var diam: Float
+    private var radius: Float
     private var rotation : Float = 0f
     private var rotation2 : Float = 0f
 
     constructor(context: Context) : super() {
-        paint = Paint(Paint.ANTI_ALIAS_FLAG)
-        paint.strokeWidth = 10f
-        paint.style = Paint.Style.STROKE
         val res = context.resources
-        dispSize = Math.min(res.displayMetrics.widthPixels, res.displayMetrics.heightPixels)
+        val dm = res.displayMetrics
+        diam = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 50f, dm)
+        radius = diam / 2
+        paint = Paint(Paint.ANTI_ALIAS_FLAG)
+        paint.strokeWidth = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5f, dm)
+        paint.style = Paint.Style.STROKE
+        dispSize = Math.min(dm.widthPixels, dm.heightPixels)
         paint.setShader(SweepGradient (radius, radius, context.obtainStyledColor(R.attr.contextColor50p), Color.TRANSPARENT))
         rect = RectF()
-        rect.set(0f, 0f, 100f, 100f);
+        rect.set(0f, 0f, diam, diam);
     }
 
     override fun getOpacity(): Int {
