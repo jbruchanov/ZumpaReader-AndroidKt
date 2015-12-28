@@ -170,14 +170,27 @@ internal class ItemTarget(val adapter: SubListAdapter, val holder: ZumpaSubItemV
     override fun onBitmapLoaded(bitmap: Bitmap, from: Picasso.LoadedFrom?) {
         if (--loading == 0) {
             holder.loadedUrl = holder.url
-            holder.imageView.setImageDrawable(BitmapDrawable(holder.itemView.context.resources, bitmap))
-            holder.imageView.setOnClickListener { }
+            holder.imageView.setImageDrawable(createDrawable(holder.itemView.context.resources, bitmap))
             holder.imageView.post(itemChangedNotifyAction)
         }
     }
 
     override fun onBitmapFailed(errorDrawable: Drawable?) {
         adapter.updateItemForUrl(holder.adapterPosition)
+    }
+
+    fun createDrawable(res: Resources, bitmap: Bitmap): Drawable {
+        val img = BitmapDrawable(res, bitmap)
+        var result: Drawable
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            result = RippleDrawable(ColorStateList.valueOf(contextColor), img, null)
+        } else {
+            var pressed = LayerDrawable(arrayOf(img, ColorDrawable(contextColor)))
+            result = StateListDrawable()
+            result.addState(intArrayOf(android.R.attr.state_pressed), pressed)
+            result.addState(intArrayOf(), img)
+        }
+        return result
     }
 }
 
