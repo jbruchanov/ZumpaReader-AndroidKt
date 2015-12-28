@@ -104,7 +104,7 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
         when (getItemViewType(position)) {
             TYPE_ITEM -> {
                 var item = dataItem.item
-                holder.title.text = item.body
+                holder.title.text = item.styledBody(itemView.context)
                 holder.author.text = item.author
                 holder.time.text = dateFormat.format(item.date)
             }
