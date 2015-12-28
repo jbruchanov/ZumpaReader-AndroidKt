@@ -35,33 +35,35 @@ public fun <T : View> T.isGone(): Boolean {
 }
 
 public fun <T : View> T.changeVisibilityAnimated(show: Boolean) {
-    val visible = visibility == View.VISIBLE && translationY == 0f && translationX == 0f;
+    val visible = visibility == View.VISIBLE && translationY == 0f && translationX == 0f && alpha == 1f;
     if (visible != show) {
+        val animListener: AnimatorListener = object : AnimatorListener() {
+            override fun onAnimationStart(view: View?, animation: Animator?) {
+                if (show) {
+                    visibility = View.VISIBLE
+                }
+            }
+
+            override fun onAnimationEnd(view: View?, animation: Animator?) {
+                if (!show) {
+                    visibility = View.INVISIBLE
+                }
+            }
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && isAttachedToWindow) {
             var init = 0f
             var max = Math.max(width, height).toFloat()
             var animator = ViewAnimationUtils.createCircularReveal(this, width / 2, height / 2, if (show) init else max, if (show) max else init)
             animator.exec {
-                it.addListener(object : AnimatorListener() {
-                    override fun onAnimationStart(animation: Animator?) {
-                        if (show) {
-                            visibility = View.VISIBLE
-                        }
-                    }
-
-                    override fun onAnimationEnd(animation: Animator?) {
-                        if (!show) {
-                            visibility = View.INVISIBLE
-                        }
-                    }
-                });
+                it.addListener(animListener);
                 it.start()
             }
         } else {
             translationY = 0f
             translationX = 0f
             alpha = if(show) 0f else 1f
-            ViewCompat.animate(this).alpha(if (show) 1f else 0f).setDuration(250).start()
+            visibility = View.VISIBLE
+            ViewCompat.animate(this).alpha(if (show) 1f else 0f).setDuration(250).setListener(animListener).start()
         }
     }
 }
