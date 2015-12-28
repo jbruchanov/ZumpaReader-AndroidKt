@@ -1,12 +1,16 @@
 package com.scurab.android.zumpareader.content
 
+import android.content.res.ColorStateList
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
+import android.support.v4.graphics.drawable.DrawableCompat
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection
 import com.pawegio.kandroid.find
@@ -19,6 +23,7 @@ import com.scurab.android.zumpareader.ui.hideAnimated
 import com.scurab.android.zumpareader.ui.isVisible
 import com.scurab.android.zumpareader.ui.showAnimated
 import com.scurab.android.zumpareader.util.exec
+import com.scurab.android.zumpareader.util.obtainStyledColor
 import com.scurab.android.zumpareader.util.toast
 import rx.Observer
 import rx.android.schedulers.AndroidSchedulers
@@ -63,7 +68,24 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup, savedInstanceState: Bundle?): View? {
         var content = inflater.inflate(R.layout.view_recycler_refreshable_thread, container, false)
         content.setBackgroundColor(Color.BLACK)
+        initIcons(content)
         return content
+    }
+
+    private fun initIcons(content: View) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            val color = context.obtainStyledColor(R.attr.contextColor)
+            updateTint(content.find(R.id.photo), color)
+            updateTint(content.find(R.id.camera), color)
+            updateTint(content.find(R.id.survey), color)
+            updateTint(content.find(R.id.send), color)
+        }
+    }
+
+    private fun updateTint(imageView: ImageView, color: Int) {
+        var drawable = DrawableCompat.wrap(imageView.drawable);
+        DrawableCompat.setTintList(drawable, ColorStateList.valueOf(color));
+        imageView.setImageDrawable(drawable)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
