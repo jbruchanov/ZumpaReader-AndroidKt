@@ -28,8 +28,8 @@ import rx.schedulers.Schedulers
 public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener {
 
     private var content: View? = null
-    private val recyclerView by lazy { content!!.find<RecyclerView>(R.id.recycler_view) }
-    private val swipeToRefresh by lazy { content!!.find<SwipyRefreshLayout>(R.id.swipe_refresh_layout) }
+    private val recyclerView: RecyclerView get() = content!!.find<RecyclerView>(R.id.recycler_view)
+    private val swipeToRefresh: SwipyRefreshLayout get() = content!!.find<SwipyRefreshLayout>(R.id.swipe_refresh_layout)
 
     private var nextPageId: String? = null
     override var isLoading: Boolean

@@ -49,9 +49,9 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener 
     override val title: CharSequence get() = zumpaData[threadId]?.subject ?: ""
     protected val threadId: String by lazy { arguments!!.getString(THREAD_ID) }
 
-    private val recyclerView by lazy { view!!.find<RecyclerView>(R.id.recycler_view) }
-    private val swipyRefreshLayout by lazy { view!!.find<SwipyRefreshLayout>(R.id.swipe_refresh_layout) }
-    private val responsePanel by lazy { view!!.find<View>(R.id.response_panel) }
+    private val recyclerView: RecyclerView get() = view!!.find<RecyclerView>(R.id.recycler_view)
+    private val swipyRefreshLayout: SwipyRefreshLayout get() = view!!.find<SwipyRefreshLayout>(R.id.swipe_refresh_layout)
+    private val responsePanel: View get() = view!!.find<View>(R.id.response_panel)
 
     override var isLoading: Boolean
         get() = super.isLoading
