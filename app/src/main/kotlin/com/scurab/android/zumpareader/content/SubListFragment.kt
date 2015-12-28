@@ -13,11 +13,13 @@ import com.pawegio.kandroid.find
 import com.pawegio.kandroid.toast
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.app.BaseFragment
+import com.scurab.android.zumpareader.model.ZumpaThreadItem
 import com.scurab.android.zumpareader.model.ZumpaThreadResult
 import com.scurab.android.zumpareader.ui.hideAnimated
 import com.scurab.android.zumpareader.ui.isVisible
 import com.scurab.android.zumpareader.ui.showAnimated
 import com.scurab.android.zumpareader.util.exec
+import com.scurab.android.zumpareader.util.toast
 import rx.Observer
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
@@ -25,7 +27,7 @@ import rx.schedulers.Schedulers
 /**
  * Created by JBruchanov on 27/11/2015.
  */
-public class SubListFragment : BaseFragment() {
+public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener {
 
     companion object {
         private val THREAD_ID: String = "THREAD_ID"
@@ -134,11 +136,31 @@ public class SubListFragment : BaseFragment() {
             var items = it
             recyclerView.exec {
                 if (it.adapter == null) {
-                    recyclerView?.adapter = SubListAdapter(items)
+                    recyclerView?.adapter = SubListAdapter(items).apply {
+                        itemClickListener = this@SubListFragment
+                    }
                 } else {
                     (recyclerView?.adapter as SubListAdapter).updateItems(items)
                 }
             }
+        }
+    }
+
+    override fun onItemClick(item: ZumpaThreadItem, longClick: Boolean) {
+        if (longClick) {
+
+        } else {
+
+        }
+    }
+
+    override fun onItemClick(url: String, longClick: Boolean) {
+        if (longClick) {
+            if (saveIntoClipboard(url)) {
+                context.toast(R.string.saved_into_clipboard)
+            }
+        } else {
+            startLinkActivity(url)
         }
     }
 }

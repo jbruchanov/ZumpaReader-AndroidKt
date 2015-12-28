@@ -30,6 +30,11 @@ import java.util.*
  */
 public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
 
+    public interface ItemClickListener {
+        fun onItemClick(item: ZumpaThreadItem, longClick: Boolean)
+        fun onItemClick(url: String, longClick: Boolean)
+    }
+
     private val TYPE_ITEM = 1
     private val TYPE_IMAGE = 2
     private val TYPE_URL = 3
@@ -37,6 +42,7 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
     private val dateFormat = SimpleDateFormat("HH:mm.ss")
     private val items: ArrayList<ZumpaThreadItem>
     private val dataItems: ArrayList<SubListItem>
+    public var itemClickListener: ItemClickListener? = null
 
     @ColorInt
     private var contextColor: Int = 0
@@ -117,19 +123,36 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
             var li = LayoutInflater.from(it!!.context)
             when (viewType) {
                 TYPE_ITEM -> {
-                    ZumpaSubItemViewHolder(this, li.inflate(R.layout.item_sub_list, parent, false))
+                    var vh = ZumpaSubItemViewHolder(this, li.inflate(R.layout.item_sub_list, parent, false))
+                    vh.itemView.setOnClickListener { dispatchClick(dataItems[vh.adapterPosition].item) }
+                    vh.itemView.setOnLongClickListener { dispatchClick(dataItems[vh.adapterPosition].item, true); true }
+                    vh
                 }
-                TYPE_URL -> ZumpaSubItemViewHolder(this, li.inflate(R.layout.item_sub_list_button, parent, false))
+                TYPE_URL -> {
+                    var vh = ZumpaSubItemViewHolder(this, li.inflate(R.layout.item_sub_list_button, parent, false))
+                    vh.button.setOnClickListener { vh.loadedUrl.exec { dispatchClick(it) } }
+                    vh.button.setOnLongClickListener { vh.loadedUrl.exec { dispatchClick(it, true) }; true }
+                    vh
+                }
                 TYPE_IMAGE -> {
                     val view = li.inflate(R.layout.item_sub_list_image, parent, false) as ImageView
                     view.adjustViewBounds = true
                     val vh = ZumpaSubItemViewHolder(this, view)
-                    view.setOnClickListener { view.context.toast(vh.loadedUrl) }
+                    view.setOnClickListener { vh.loadedUrl.exec { dispatchClick(it) } }
+                    view.setOnLongClickListener { vh.loadedUrl.exec { dispatchClick(it, true) }; true }
                     vh
                 }
                 else -> throw IllegalStateException("Invalid view type:" + viewType)
             }
         }
+    }
+
+    protected fun dispatchClick(item: ZumpaThreadItem, longClick : Boolean = false) {
+        itemClickListener.exec { it.onItemClick(item, longClick) }
+    }
+
+    protected fun dispatchClick(url: String, longClick : Boolean = false) {
+        itemClickListener.exec { it.onItemClick(url, longClick) }
     }
 
     fun updateItems(updated: List<ZumpaThreadItem>) {
