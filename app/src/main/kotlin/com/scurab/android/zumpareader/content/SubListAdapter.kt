@@ -1,12 +1,13 @@
 package com.scurab.android.zumpareader.content
 
 import android.app.Activity
+import android.content.res.ColorStateList
+import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Color
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.ColorDrawable
-import android.graphics.drawable.Drawable
+import android.graphics.drawable.*
 import android.net.Uri
+import android.os.Build
 import android.support.annotation.ColorInt
 import android.support.v7.widget.RecyclerView
 import android.util.Log
@@ -19,8 +20,7 @@ import android.widget.ImageView
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.drawable.SimpleProgressDrawable
 import com.scurab.android.zumpareader.model.ZumpaThreadItem
-import com.scurab.android.zumpareader.util.exec
-import com.scurab.android.zumpareader.util.find
+import com.scurab.android.zumpareader.util.*
 import com.squareup.picasso.Picasso
 import java.text.SimpleDateFormat
 import java.util.*
@@ -92,7 +92,9 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
     override fun onBindViewHolder(holder: ZumpaSubItemViewHolder, position: Int) {
         var dataItem = dataItems[position]
         val itemView = holder.itemView
-        itemView.background.setLevel(dataItem.itemPosition % 2)
+        itemView.background.execOn {
+            setLevel(dataItem.itemPosition % 2)
+        }
         when (getItemViewType(position)) {
             TYPE_ITEM -> {
                 var item = dataItem.item
@@ -121,7 +123,9 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
                 TYPE_IMAGE -> {
                     val view = li.inflate(R.layout.item_sub_list_image, parent, false) as ImageView
                     view.adjustViewBounds = true
-                    ZumpaSubItemViewHolder(this, view)
+                    val vh = ZumpaSubItemViewHolder(this, view)
+                    view.setOnClickListener { view.context.toast(vh.loadedUrl) }
+                    vh
                 }
                 else -> throw IllegalStateException("Invalid view type:" + viewType)
             }
@@ -143,7 +147,7 @@ private data class SubListItem(val item: ZumpaThreadItem, val itemPosition: Int,
 public class ZumpaSubItemViewHolder(adapter: SubListAdapter, view: View) : ZumpaItemViewHolder(view) {
     internal val button by lazy { find<Button>(R.id.button) }
     internal val imageView by lazy { view as ImageView }
-    internal val imageTarget by lazy { ItemTarget(adapter, this) }
+    internal val imageTarget by lazy { ItemTarget(adapter, this, view.context.obtainStyledColor(R.attr.contextColor50p)) }
     internal var url : String? = null
     internal var loadedUrl : String? = null
 
@@ -157,11 +161,11 @@ public class ZumpaSubItemViewHolder(adapter: SubListAdapter, view: View) : Zumpa
     }
 }
 
-internal class ItemTarget(val adapter: SubListAdapter, val holder: ZumpaSubItemViewHolder) : com.squareup.picasso.Target {
+internal class ItemTarget(val adapter: SubListAdapter, val holder: ZumpaSubItemViewHolder, @ColorInt val contextColor:Int) : com.squareup.picasso.Target {
     var loading = 0
 
     var itemChangedNotifyAction = Runnable { adapter.notifyItemChanged(holder.adapterPosition) }
-    val progressDrawable by lazy { SimpleProgressDrawable(holder.itemView.resources) }
+    val progressDrawable by lazy { SimpleProgressDrawable(holder.itemView.context) }
 
     override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
         holder.imageView.setImageDrawable(progressDrawable)
