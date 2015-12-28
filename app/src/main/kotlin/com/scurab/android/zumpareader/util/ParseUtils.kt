@@ -73,7 +73,7 @@ public class ParseUtils {
             opts.inJustDecodeBounds = true
             BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size, opts)
             var imWidth = opts.outWidth
-            var dispWidth = res.displayMetrics.widthPixels
+            var dispWidth = Math.min(res.displayMetrics.widthPixels, res.displayMetrics.heightPixels)
             var resize = 1
             while (imWidth > 0 && imWidth > 1.5f * dispWidth) {
                 resize *= 2
