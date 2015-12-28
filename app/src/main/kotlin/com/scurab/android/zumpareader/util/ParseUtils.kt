@@ -1,5 +1,6 @@
 package com.scurab.android.zumpareader.util
 
+import android.text.Html
 import com.squareup.okhttp.Headers
 import java.util.regex.Pattern
 
@@ -23,7 +24,7 @@ public class ParseUtils {
             linkPatterns.forEach {
                 it.matcher(content).run {
                     if (find()) {
-                        return group(1)
+                        return Html.fromHtml(group(1)).toString()
                     }
                 }
             }
