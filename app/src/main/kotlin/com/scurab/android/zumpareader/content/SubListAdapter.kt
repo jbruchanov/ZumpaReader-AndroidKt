@@ -167,10 +167,9 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
 
 private data class SubListItem(val item: ZumpaThreadItem, val itemPosition: Int, var type: Int, val data: String?)
 
-public class ZumpaSubItemViewHolder(adapter: SubListAdapter, view: View) : ZumpaItemViewHolder(view) {
+public class ZumpaSubItemViewHolder(val adapter: SubListAdapter, val view: View) : ZumpaItemViewHolder(view) {
     internal val button by lazy { find<Button>(R.id.button) }
     internal val imageView by lazy { view as ImageView }
-    internal val imageTarget by lazy { ItemTarget(adapter, this, view.context.obtainStyledColor(R.attr.contextColor50p)) }
     internal var url : String? = null
     internal var loadedUrl : String? = null
 
@@ -178,16 +177,13 @@ public class ZumpaSubItemViewHolder(adapter: SubListAdapter, view: View) : Zumpa
         if (url.equals(loadedUrl)) {
             return
         }
-        imageTarget.loading++
         this.url = url
-        Picasso.with(imageView.context).load(url).into(imageTarget)
+        Picasso.with(imageView.context).load(url).into(ItemTarget(adapter, this, view.context.obtainStyledColor(R.attr.contextColor50p)))
     }
 }
 
 internal class ItemTarget(val adapter: SubListAdapter, val holder: ZumpaSubItemViewHolder, @ColorInt val contextColor:Int) : com.squareup.picasso.Target {
-    var loading = 0
-
-    var itemChangedNotifyAction = Runnable { adapter.notifyItemChanged(holder.adapterPosition) }
+    var itemChangedNotifyAction = Runnable { adapter.notifyDataSetChanged() }
     val progressDrawable by lazy { SimpleProgressDrawable(holder.itemView.context) }
 
     override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
@@ -195,11 +191,9 @@ internal class ItemTarget(val adapter: SubListAdapter, val holder: ZumpaSubItemV
     }
 
     override fun onBitmapLoaded(bitmap: Bitmap, from: Picasso.LoadedFrom?) {
-        if (--loading == 0) {
-            holder.loadedUrl = holder.url
-            holder.imageView.setImageDrawable(createDrawable(holder.itemView.context.resources, bitmap))
-            holder.imageView.post(itemChangedNotifyAction)
-        }
+        holder.loadedUrl = holder.url
+        holder.imageView.setImageDrawable(createDrawable(holder.itemView.context.resources, bitmap))
+        holder.imageView.post(itemChangedNotifyAction)
     }
 
     override fun onBitmapFailed(errorDrawable: Drawable?) {
