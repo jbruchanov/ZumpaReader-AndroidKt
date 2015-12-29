@@ -1,12 +1,13 @@
 package com.scurab.android.zumpareader.content
 
 import android.app.Activity
+import android.content.res.ColorStateList
+import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Color
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.ColorDrawable
-import android.graphics.drawable.Drawable
+import android.graphics.drawable.*
 import android.net.Uri
+import android.os.Build
 import android.support.annotation.ColorInt
 import android.support.v7.widget.RecyclerView
 import android.util.Log
@@ -19,8 +20,7 @@ import android.widget.ImageView
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.drawable.SimpleProgressDrawable
 import com.scurab.android.zumpareader.model.ZumpaThreadItem
-import com.scurab.android.zumpareader.util.exec
-import com.scurab.android.zumpareader.util.find
+import com.scurab.android.zumpareader.util.*
 import com.squareup.picasso.Picasso
 import java.text.SimpleDateFormat
 import java.util.*
@@ -30,6 +30,11 @@ import java.util.*
  */
 public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
 
+    public interface ItemClickListener {
+        fun onItemClick(item: ZumpaThreadItem, longClick: Boolean)
+        fun onItemClick(url: String, longClick: Boolean)
+    }
+
     private val TYPE_ITEM = 1
     private val TYPE_IMAGE = 2
     private val TYPE_URL = 3
@@ -37,12 +42,15 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
     private val dateFormat = SimpleDateFormat("HH:mm.ss")
     private val items: ArrayList<ZumpaThreadItem>
     private val dataItems: ArrayList<SubListItem>
+    public var itemClickListener: ItemClickListener? = null
+    public var loadImages : Boolean
 
     @ColorInt
     private var contextColor: Int = 0
 
-    constructor(data: List<ZumpaThreadItem>) {
+    constructor(data: List<ZumpaThreadItem>, loadImages : Boolean = true) {
         items = ArrayList(data)
+        this.loadImages = loadImages
         dataItems = ArrayList((items.size * 1.3/*some bigger values for links etc*/).toInt())
         buildAdapterItems(items, dataItems)
     }
@@ -58,7 +66,7 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
             sub.clear()
             item.urls.exec {
                 for (url in it) {
-                    val element = SubListItem(item, i, if (url.isImage()) TYPE_IMAGE else TYPE_URL, url)
+                    val element = SubListItem(item, i, if (url.isImage() && loadImages) TYPE_IMAGE else TYPE_URL, url)
                     sub.add(element)
                 }
                 sub.sortBy { it.type }
@@ -92,11 +100,13 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
     override fun onBindViewHolder(holder: ZumpaSubItemViewHolder, position: Int) {
         var dataItem = dataItems[position]
         val itemView = holder.itemView
-        itemView.background.setLevel(dataItem.itemPosition % 2)
+        itemView.background.execOn {
+            setLevel(dataItem.itemPosition % 2)
+        }
         when (getItemViewType(position)) {
             TYPE_ITEM -> {
                 var item = dataItem.item
-                holder.title.text = item.body
+                holder.title.text = item.styledBody(itemView.context)
                 holder.author.text = item.author
                 holder.time.text = dateFormat.format(item.date)
             }
@@ -115,17 +125,36 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
             var li = LayoutInflater.from(it!!.context)
             when (viewType) {
                 TYPE_ITEM -> {
-                    ZumpaSubItemViewHolder(this, li.inflate(R.layout.item_sub_list, parent, false))
+                    var vh = ZumpaSubItemViewHolder(this, li.inflate(R.layout.item_sub_list, parent, false))
+                    vh.itemView.setOnClickListener { dispatchClick(dataItems[vh.adapterPosition].item) }
+                    vh.itemView.setOnLongClickListener { dispatchClick(dataItems[vh.adapterPosition].item, true); true }
+                    vh
                 }
-                TYPE_URL -> ZumpaSubItemViewHolder(this, li.inflate(R.layout.item_sub_list_button, parent, false))
+                TYPE_URL -> {
+                    var vh = ZumpaSubItemViewHolder(this, li.inflate(R.layout.item_sub_list_button, parent, false))
+                    vh.button.setOnClickListener { dispatchClick(vh.button.text.toString()) }
+                    vh.button.setOnLongClickListener { dispatchClick(vh.button.text.toString(), true); true }
+                    vh
+                }
                 TYPE_IMAGE -> {
                     val view = li.inflate(R.layout.item_sub_list_image, parent, false) as ImageView
                     view.adjustViewBounds = true
-                    ZumpaSubItemViewHolder(this, view)
+                    val vh = ZumpaSubItemViewHolder(this, view)
+                    view.setOnClickListener { vh.loadedUrl.exec { dispatchClick(it) } }
+                    view.setOnLongClickListener { vh.loadedUrl.exec { dispatchClick(it, true) }; true }
+                    vh
                 }
                 else -> throw IllegalStateException("Invalid view type:" + viewType)
             }
         }
+    }
+
+    protected fun dispatchClick(item: ZumpaThreadItem, longClick : Boolean = false) {
+        itemClickListener.exec { it.onItemClick(item, longClick) }
+    }
+
+    protected fun dispatchClick(url: String, longClick : Boolean = false) {
+        itemClickListener.exec { it.onItemClick(url, longClick) }
     }
 
     fun updateItems(updated: List<ZumpaThreadItem>) {
@@ -140,10 +169,9 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
 
 private data class SubListItem(val item: ZumpaThreadItem, val itemPosition: Int, var type: Int, val data: String?)
 
-public class ZumpaSubItemViewHolder(adapter: SubListAdapter, view: View) : ZumpaItemViewHolder(view) {
+public class ZumpaSubItemViewHolder(val adapter: SubListAdapter, val view: View) : ZumpaItemViewHolder(view) {
     internal val button by lazy { find<Button>(R.id.button) }
     internal val imageView by lazy { view as ImageView }
-    internal val imageTarget by lazy { ItemTarget(adapter, this) }
     internal var url : String? = null
     internal var loadedUrl : String? = null
 
@@ -151,33 +179,41 @@ public class ZumpaSubItemViewHolder(adapter: SubListAdapter, view: View) : Zumpa
         if (url.equals(loadedUrl)) {
             return
         }
-        imageTarget.loading++
         this.url = url
-        Picasso.with(imageView.context).load(url).into(imageTarget)
+        Picasso.with(imageView.context).load(url).into(ItemTarget(adapter, this, view.context.obtainStyledColor(R.attr.contextColor50p)))
     }
 }
 
-internal class ItemTarget(val adapter: SubListAdapter, val holder: ZumpaSubItemViewHolder) : com.squareup.picasso.Target {
-    var loading = 0
-
-    var itemChangedNotifyAction = Runnable { adapter.notifyItemChanged(holder.adapterPosition) }
-    val progressDrawable by lazy { SimpleProgressDrawable(holder.itemView.resources) }
+internal class ItemTarget(val adapter: SubListAdapter, val holder: ZumpaSubItemViewHolder, @ColorInt val contextColor:Int) : com.squareup.picasso.Target {
+    var itemChangedNotifyAction = Runnable { adapter.notifyDataSetChanged() }
+    val progressDrawable by lazy { SimpleProgressDrawable(holder.itemView.context) }
 
     override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
         holder.imageView.setImageDrawable(progressDrawable)
     }
 
     override fun onBitmapLoaded(bitmap: Bitmap, from: Picasso.LoadedFrom?) {
-        if (--loading == 0) {
-            holder.loadedUrl = holder.url
-            holder.imageView.setImageDrawable(BitmapDrawable(holder.itemView.context.resources, bitmap))
-            holder.imageView.setOnClickListener { }
-            holder.imageView.post(itemChangedNotifyAction)
-        }
+        holder.loadedUrl = holder.url
+        holder.imageView.setImageDrawable(createDrawable(holder.itemView.context.resources, bitmap))
+        holder.imageView.post(itemChangedNotifyAction)
     }
 
     override fun onBitmapFailed(errorDrawable: Drawable?) {
         adapter.updateItemForUrl(holder.adapterPosition)
+    }
+
+    fun createDrawable(res: Resources, bitmap: Bitmap): Drawable {
+        val img = BitmapDrawable(res, bitmap)
+        var result: Drawable
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            result = RippleDrawable(ColorStateList.valueOf(contextColor), img, null)
+        } else {
+            var pressed = LayerDrawable(arrayOf(img, ColorDrawable(contextColor)))
+            result = StateListDrawable()
+            result.addState(intArrayOf(android.R.attr.state_pressed), pressed)
+            result.addState(intArrayOf(), img)
+        }
+        return result
     }
 }
 

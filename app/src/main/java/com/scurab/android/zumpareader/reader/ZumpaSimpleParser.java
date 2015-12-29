@@ -1,12 +1,23 @@
 package com.scurab.android.zumpareader.reader;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.util.Pair;
 import android.text.Html;
+import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.ImageSpan;
+import android.text.style.RelativeSizeSpan;
+import android.text.style.TypefaceSpan;
 
+import com.scurab.android.zumpareader.R;
 import com.scurab.android.zumpareader.model.Survey;
 import com.scurab.android.zumpareader.model.SurveyItem;
 import com.scurab.android.zumpareader.model.ZumpaMainPageResult;
@@ -26,6 +37,7 @@ import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -42,11 +54,13 @@ public class ZumpaSimpleParser {
     private boolean mShowLastUser;
     private static final SimpleDateFormat FULL_DATE_FORMAT = new SimpleDateFormat("dd. MM. yyyy HH:mm:ss");
     private static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm");
-    private static final Pattern URL_PATTERN = Pattern.compile("<a[^>]*>(.*)</a>", Pattern.CASE_INSENSITIVE);
+    private static final Pattern URL_PATTERN = Pattern.compile("(http[s]?://[^\\s]*)", Pattern.CASE_INSENSITIVE);
     private static final Pattern DATE_PATTERN = Pattern.compile("Datum:&nbsp;([^<]+)", Pattern.CASE_INSENSITIVE);
     private static final Pattern AUTHOR_PATTERN = Pattern.compile("Autor:&nbsp;([^<]+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern AUTHOR_PATTERN1 = Pattern.compile("Autor:&nbsp;<a[^>]*>([^<]+)</a>", Pattern.CASE_INSENSITIVE);
     private static final Pattern AUTHOR_PATTERN2 = Pattern.compile("Autor:&nbsp;(.+)<br>Datum:", Pattern.CASE_INSENSITIVE);
     private static Pattern SURVEY_RESPONSE_PATTERN = Pattern.compile("\\((\\d*) odp.\\)", Pattern.CASE_INSENSITIVE);
+    private static Pattern ZUMPA_LINK = Pattern.compile("portal2.dkm.cz/phorum/read.php.*t=(\\d+)", Pattern.CASE_INSENSITIVE);
     private static final String TAG_NBSP = "&nbsp;";
 
     public ZumpaMainPageResult parseMainPage(@NonNull String html) {
@@ -348,10 +362,13 @@ public class ZumpaSimpleParser {
     }
 
     private CharSequence getAuthorName(String html) {
-        String name = getGroup(AUTHOR_PATTERN, html, 1);
+        String name = getGroup(AUTHOR_PATTERN, html, 1, null);
+        if (name == null) {
+            name = getGroup(AUTHOR_PATTERN1, html, 1, null);
+        }
         CharSequence result = name;
         if (name != null && name.contains("(")) {
-            String htmlName = getGroup(AUTHOR_PATTERN2, html, 1);
+            String htmlName = getGroup(AUTHOR_PATTERN2, html, 1, "");
             result = Html.fromHtml(htmlName);
         }
         return result;
@@ -360,7 +377,7 @@ public class ZumpaSimpleParser {
     private long getTime(String data) {
         long date = 0;
         try {
-            String dateString = getGroup(DATE_PATTERN, data, 1);
+            String dateString = getGroup(DATE_PATTERN, data, 1, "");
             date = FULL_DATE_FORMAT.parse(dateString).getTime();
         } catch (ParseException e) {
             e.printStackTrace();
@@ -368,12 +385,12 @@ public class ZumpaSimpleParser {
         return date;
     }
 
-    private String getGroup(Pattern pattern, String value, int group) {
+    private static String getGroup(Pattern pattern, String value, int group, String defValue) {
         Matcher matcher = pattern.matcher(value);
         if (matcher.find()) {
             return matcher.group(group);
         }
-        return "";
+        return defValue;
     }
     //endregion thread
 
@@ -449,4 +466,78 @@ public class ZumpaSimpleParser {
         return result;
     }
     //endregion survey
+
+    public static int getZumpaThreadId(String link) {
+        if (link != null) {
+            try {
+                String value = getGroup(ZUMPA_LINK, link, 1, null);
+                return value != null ? Integer.parseInt(value) : 0;
+            } catch (Throwable t) {
+                t.printStackTrace();
+            }
+        }
+        return 0;
+    }
+
+    public static CharSequence parseBody(String body, Context context) {
+        SpannableString ssb = new SpannableString(body);
+        Matcher matcher = URL_PATTERN.matcher(body);
+        List<Pair<Integer, Integer>> links = new ArrayList<>();
+        while (matcher.find()) {
+            int start = matcher.start();
+            int end = matcher.end();
+            links.add(new Pair<>(start, end));
+            setSpans(ssb, start, end,
+                    new RelativeSizeSpan(0.5f),
+                    new TypefaceSpan("monospace"));
+        }
+        //smileys
+        for (Integer drawable : SmileRes.DATA.keySet()) {
+            Pattern pattern = SmileRes.DATA.get(drawable);
+            matcher = pattern.matcher(body);
+            while (matcher.find()) {
+                int start = matcher.start();
+                int end = matcher.end();
+                if (!ignore(links, start)) {
+                    Drawable draw = context.getResources().getDrawable(drawable);
+                    draw.setBounds(0, 0, (int) (draw.getIntrinsicWidth() / 1.5f), (int) (draw.getIntrinsicHeight() / 1.5f));
+                    setSpans(ssb, start, end,
+                            new ImageSpan(draw));
+                }
+            }
+        }
+        return ssb;
+    }
+
+    private static  boolean ignore(List<Pair<Integer, Integer>> pairs, int value) {
+        for (Pair<Integer, Integer> p : pairs) {
+            if (p.first <= value && value <= p.second) {
+                return true;
+            } else if (p.first > value) {
+                break;
+            }
+        }
+        return false;
+    }
+
+    private static void setSpans(SpannableString ssb, int start, int end, Object... spannables) {
+        for (Object spannable : spannables) {
+            ssb.setSpan(spannable, start, end, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+        }
+    }
+
+    public static class SmileRes {
+        static HashMap<Integer, Pattern> DATA = new HashMap<>();
+
+        static {
+            DATA.put(R.drawable.emoji_hm, Pattern.compile(":[-o]?[/\\\\]"));
+            DATA.put(R.drawable.emoji_lol, Pattern.compile(":[-o]?D+"));
+            DATA.put(R.drawable.emoji_o_o, Pattern.compile("[oO]_[oO]"));
+            DATA.put(R.drawable.emoji_p, Pattern.compile(":[-o]?[pP]"));
+            DATA.put(R.drawable.emoji_sad, Pattern.compile(":[-o]?\\(+"));
+            DATA.put(R.drawable.emoji_smiley, Pattern.compile(":[-o]?\\)+"));
+            DATA.put(R.drawable.emoji_speechless, Pattern.compile(":[-o]?\\|"));
+            DATA.put(R.drawable.emoji_wink, Pattern.compile(";[-o]?\\)+"));
+        }
+    }
 }

@@ -1,23 +1,31 @@
 package com.scurab.android.zumpareader.content
 
+import android.content.res.ColorStateList
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
+import android.support.v4.graphics.drawable.DrawableCompat
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection
 import com.pawegio.kandroid.find
 import com.pawegio.kandroid.toast
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.app.BaseFragment
+import com.scurab.android.zumpareader.model.ZumpaThreadItem
 import com.scurab.android.zumpareader.model.ZumpaThreadResult
+import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.ui.hideAnimated
 import com.scurab.android.zumpareader.ui.isVisible
 import com.scurab.android.zumpareader.ui.showAnimated
 import com.scurab.android.zumpareader.util.exec
+import com.scurab.android.zumpareader.util.obtainStyledColor
+import com.scurab.android.zumpareader.util.toast
 import rx.Observer
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
@@ -25,7 +33,7 @@ import rx.schedulers.Schedulers
 /**
  * Created by JBruchanov on 27/11/2015.
  */
-public class SubListFragment : BaseFragment() {
+public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener {
 
     companion object {
         private val THREAD_ID: String = "THREAD_ID"
@@ -39,12 +47,16 @@ public class SubListFragment : BaseFragment() {
         }
     }
 
-    override val title: CharSequence get() = zumpaData[threadId]?.subject ?: ""
+    override val title: CharSequence get() {
+        val subject = zumpaData[threadId]?.subject
+        return if (subject != null) ZumpaSimpleParser.parseBody(subject, context) else ""
+    }
+    
     protected val threadId: String by lazy { arguments!!.getString(THREAD_ID) }
 
-    private val recyclerView by lazy { view!!.find<RecyclerView>(R.id.recycler_view) }
-    private val swipyRefreshLayout by lazy { view!!.find<SwipyRefreshLayout>(R.id.swipe_refresh_layout) }
-    private val responsePanel by lazy { view!!.find<View>(R.id.response_panel) }
+    private val recyclerView: RecyclerView get() = view!!.find<RecyclerView>(R.id.recycler_view)
+    private val swipyRefreshLayout: SwipyRefreshLayout get() = view!!.find<SwipyRefreshLayout>(R.id.swipe_refresh_layout)
+    private val responsePanel: View get() = view!!.find<View>(R.id.response_panel)
 
     override var isLoading: Boolean
         get() = super.isLoading
@@ -61,7 +73,24 @@ public class SubListFragment : BaseFragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup, savedInstanceState: Bundle?): View? {
         var content = inflater.inflate(R.layout.view_recycler_refreshable_thread, container, false)
         content.setBackgroundColor(Color.BLACK)
+        initIcons(content)
         return content
+    }
+
+    private fun initIcons(content: View) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            val color = context.obtainStyledColor(R.attr.contextColor)
+            updateTint(content.find(R.id.photo), color)
+            updateTint(content.find(R.id.camera), color)
+            updateTint(content.find(R.id.survey), color)
+            updateTint(content.find(R.id.send), color)
+        }
+    }
+
+    private fun updateTint(imageView: ImageView, color: Int) {
+        var drawable = DrawableCompat.wrap(imageView.drawable);
+        DrawableCompat.setTintList(drawable, ColorStateList.valueOf(color));
+        imageView.setImageDrawable(drawable)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -134,10 +163,35 @@ public class SubListFragment : BaseFragment() {
             var items = it
             recyclerView.exec {
                 if (it.adapter == null) {
-                    recyclerView?.adapter = SubListAdapter(items)
+                    recyclerView?.adapter = SubListAdapter(items).apply {
+                        itemClickListener = this@SubListFragment
+                    }
                 } else {
                     (recyclerView?.adapter as SubListAdapter).updateItems(items)
                 }
+            }
+        }
+    }
+
+    override fun onItemClick(item: ZumpaThreadItem, longClick: Boolean) {
+        if (longClick) {
+
+        } else {
+
+        }
+    }
+
+    override fun onItemClick(url: String, longClick: Boolean) {
+        if (longClick) {
+            if (saveIntoClipboard(url)) {
+                context.toast(R.string.saved_into_clipboard)
+            }
+        } else {
+            val id = ZumpaSimpleParser.getZumpaThreadId(url)
+            if (id != 0) {
+                openFragment(SubListFragment.newInstance(id.toString()), true, true)
+            } else {
+                startLinkActivity(url)
             }
         }
     }

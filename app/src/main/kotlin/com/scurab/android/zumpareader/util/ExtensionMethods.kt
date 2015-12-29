@@ -1,8 +1,12 @@
 package com.scurab.android.zumpareader.util
 
+import android.content.Context
 import android.support.annotation.IdRes
+import android.support.annotation.StringRes
 import android.support.v7.widget.RecyclerView
+import android.util.TypedValue
 import android.view.View
+import android.widget.Toast
 import java.net.URLEncoder
 import java.util.*
 
@@ -23,6 +27,12 @@ public inline fun <T> T?.exec(f: (T) -> Unit) {
     }
 }
 
+public inline fun <T> T?.execOn(f: T.() -> Unit) {
+    if (this != null) {
+        f(this)
+    }
+}
+
 public fun <T> T?.execIfNull(f: () -> Unit) {
     if (this == null) {
         f()
@@ -35,3 +45,20 @@ public fun String.encodeHttp(): String {
 
 public fun <K, V> Map<K, V>.asListOfValues(): ArrayList<V> = ArrayList(this.values);
 public fun <K, V> Map<K, V>.asListOfKeys(): ArrayList<K> = ArrayList(this.keys);
+
+
+private val typedValue = TypedValue();
+public fun Context.obtainStyledColor(attr: Int): Int {
+    theme.resolveAttribute(attr, typedValue, true);
+    return typedValue.data;
+}
+
+public fun Context.toast(@StringRes msgRes: Int) {
+    toast(resources.getString(msgRes))
+}
+
+public fun Context.toast(msg: String?) {
+    if (msg != null) {
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+    }
+}

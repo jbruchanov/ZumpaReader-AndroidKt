@@ -1,5 +1,8 @@
 package com.scurab.android.zumpareader.model
 
+import android.content.Context
+import android.content.res.Resources
+import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.util.encodeHttp
 import com.scurab.android.zumpareader.util.exec
 import com.squareup.okhttp.MediaType
@@ -11,7 +14,7 @@ import java.util.*
 
 public data class ZumpaThread
 public constructor(val id: String,
-                   var subject: CharSequence) {
+                   var subject: String) {
 
     companion object{
         public val STATE_NONE = 0
@@ -20,7 +23,7 @@ public constructor(val id: String,
         public val STATE_OWN = 3
     }
     public constructor(id: String,
-                       subject: CharSequence,
+                       subject: String,
                        author: String,
                        contentUrl: String,
                        time: Long) : this(id, subject) {
@@ -36,7 +39,9 @@ public constructor(val id: String,
     var items: Int
         get() = _items
         set(value) {
-            if (state == STATE_NONE && _items != 0 && value > _items) {
+            if ("JtS".equals(author)) {
+                state = STATE_OWN
+            } else if (state == STATE_NONE && _items != 0 && value > _items) {
                 state = STATE_UPDATED
             } else if (_items == value) {
                 //no update
@@ -48,10 +53,18 @@ public constructor(val id: String,
     var state: Int = STATE_NEW
 
     public val date by lazy { Date(time) }
+
+    private var _styledSubject: CharSequence? = null
+    public fun styledSubject(context: Context): CharSequence {
+        if (_styledSubject == null) {
+            _styledSubject = ZumpaSimpleParser.parseBody(subject, context)
+        }
+        return _styledSubject!!
+    }
 }
 
 public data class ZumpaThreadItem(val author: CharSequence,
-                                  val body: CharSequence,
+                                  val body: String,
                                   val time: Long) {
     public var hasResponseForYou: Boolean = false
     public var authorReal: String? = null
@@ -60,6 +73,14 @@ public data class ZumpaThreadItem(val author: CharSequence,
     public var urls: List<String>? = null
 
     public val date by lazy { Date(time) }
+
+    private var _styledBody: CharSequence? = null
+    public fun styledBody(context: Context): CharSequence {
+        if (_styledBody == null) {
+            _styledBody = ZumpaSimpleParser.parseBody(body, context)
+        }
+        return _styledBody!!
+    }
 }
 
 public data class Survey(val id: String,

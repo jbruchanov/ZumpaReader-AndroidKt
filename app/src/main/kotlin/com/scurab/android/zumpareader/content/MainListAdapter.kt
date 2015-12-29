@@ -62,7 +62,7 @@ public class MainListAdapter : RecyclerView.Adapter<ZumpaThreadViewHolder> {
     override fun onBindViewHolder(holder: ZumpaThreadViewHolder, position: Int) {
         var item = items[position]
         holder.itemView.background.setLevel(position % 2)
-        holder.title.text = item.subject
+        holder.title.text = item.styledSubject(holder.itemView.context)
         holder.author.text = item.author
         holder.threads.text = item.items.toString()
         holder.time.text = dateFormat.format(item.date)

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <drawable name="url_button_background_theme_black">@drawable/url_button_background</drawable>
+    <drawable name="image_button_background_theme_black">@drawable/image_button_background</drawable>
 </resources>

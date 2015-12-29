@@ -1,6 +1,14 @@
 package com.scurab.android.zumpareader.util
 
+import android.content.res.Resources
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.text.Html
+import com.pawegio.kandroid.i
 import com.squareup.okhttp.Headers
+import java.net.URLDecoder
+import java.net.URLEncoder
+import java.security.MessageDigest
 import java.util.regex.Pattern
 
 /**
@@ -23,7 +31,7 @@ public class ParseUtils {
             linkPatterns.forEach {
                 it.matcher(content).run {
                     if (find()) {
-                        return group(1)
+                        return Html.fromHtml(group(1)).toString()
                     }
                 }
             }
@@ -60,6 +68,37 @@ public class ParseUtils {
                 }
             }
             return null
+        }
+
+        public fun resizeImageIfNecessary(byteArray: ByteArray, res: Resources): Bitmap {
+            var opts = BitmapFactory.Options()
+            opts.inJustDecodeBounds = true
+            BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size, opts)
+            var imWidth = opts.outWidth
+            var dispWidth = Math.min(res.displayMetrics.widthPixels, res.displayMetrics.heightPixels)
+            var resize = 1
+            while (imWidth > 0 && imWidth > 1.5f * dispWidth) {
+                resize *= 2
+                imWidth /= 2
+            }
+            opts.inJustDecodeBounds = false
+            opts.inSampleSize = resize
+            return BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size, opts)
+        }
+
+        public fun MD5(value: String): String? {
+            try {
+                val md = MessageDigest.getInstance("MD5");
+                val array = md.digest(value.toByteArray());
+                val sb = StringBuffer();
+                for (i in array) {
+                    sb.append(Integer.toHexString((i.toInt() and 0xFF) or 0x100).substring(1, 3));
+                }
+                return sb.toString();
+            } catch (e: Throwable) {
+                e.printStackTrace()
+            }
+            return null;
         }
     }
 }
