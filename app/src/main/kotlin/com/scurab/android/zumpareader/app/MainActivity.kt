@@ -1,5 +1,6 @@
 package com.scurab.android.zumpareader.app
 
+import android.os.Build
 import android.os.Bundle
 import android.support.design.widget.CoordinatorLayout
 import android.support.design.widget.FloatingActionButton
@@ -10,6 +11,7 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
 import android.view.MenuItem
 import android.view.View
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.Toast
@@ -24,6 +26,8 @@ import com.scurab.android.zumpareader.ui.QuickHideBehavior
 import com.scurab.android.zumpareader.ui.hideAnimated
 import com.scurab.android.zumpareader.util.exec
 import com.scurab.android.zumpareader.util.execIfNull
+import com.scurab.android.zumpareader.util.obtainStyledColor
+import com.scurab.android.zumpareader.util.wrapWithTint
 import java.util.*
 
 /**
@@ -33,14 +37,14 @@ import java.util.*
 public class MainActivity : AppCompatActivity() {
 
     private val toolbar by lazy { find<Toolbar>(R.id.toolbar) }
-    private val navigationView by lazy { find<NavigationView>(R.id.navigation_view) }
-    private val drawerLayout by lazy { find<DrawerLayout>(R.id.drawer_layout) }
-    private val navImageView by lazy { find<ImageView>(R.id.navigation_header_image_view) }
     private val progressBar by lazy { find<ProgressBar>(R.id.progress_bar) }
     private val coordinatorLayout by lazy { find<CoordinatorLayout>(R.id.coordinator_layout) }
-
     private val _floatingButton by lazy { find<FloatingActionButton>(R.id.fab) }
+
     public val floatingButton: FloatingActionButton  get() = _floatingButton
+
+    private val _settingsButton by lazy { find<ImageButton>(R.id.settings) }
+    public val settingsButton: ImageButton get() = _settingsButton
 
     public val zumpaApp: ZumpaReaderApp
         get() {
@@ -66,18 +70,10 @@ public class MainActivity : AppCompatActivity() {
             openFragment(MainListFragment(), false)
         }
 
-        navigationView.setNavigationItemSelectedListener { item -> onMenuItemClick(item); false }
-
-    }
-
-    protected fun onMenuItemClick(item: MenuItem) {
-        (supportFragmentManager.findFragmentById(R.id.fragment_container) as? BaseFragment).exec {
-            if (it.onMenuItemClick(item)) {
-                return
-            }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            val color = obtainStyledColor(R.attr.contextColor)
+            _settingsButton.setImageDrawable(_settingsButton.drawable.wrapWithTint(color))
         }
-        drawerLayout.closeDrawers()
-        toast(item.title)
     }
 
     public fun openFragment(fragment: BaseFragment, addToBackStack: Boolean = true, replace: Boolean = true) {
@@ -115,7 +111,6 @@ public class MainActivity : AppCompatActivity() {
     fun hideFloatingButton() {
         floatingButton.hideAnimated()
         ((floatingButton.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior as QuickHideBehavior?)?.enabled = false;
-
     }
 
 

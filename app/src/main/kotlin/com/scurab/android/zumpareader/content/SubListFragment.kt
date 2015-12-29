@@ -1,10 +1,8 @@
 package com.scurab.android.zumpareader.content
 
-import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
-import android.support.v4.graphics.drawable.DrawableCompat
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
@@ -26,6 +24,7 @@ import com.scurab.android.zumpareader.ui.showAnimated
 import com.scurab.android.zumpareader.util.exec
 import com.scurab.android.zumpareader.util.obtainStyledColor
 import com.scurab.android.zumpareader.util.toast
+import com.scurab.android.zumpareader.util.wrapWithTint
 import rx.Observer
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
@@ -88,9 +87,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener 
     }
 
     private fun updateTint(imageView: ImageView, color: Int) {
-        var drawable = DrawableCompat.wrap(imageView.drawable);
-        DrawableCompat.setTintList(drawable, ColorStateList.valueOf(color));
-        imageView.setImageDrawable(drawable)
+        imageView.setImageDrawable(imageView.drawable.wrapWithTint(color))
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -108,6 +105,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener 
         mainActivity.exec {
             it.setScrollStrategyEnabled(false)
             it.floatingButton.showAnimated()
+            it.settingsButton.visibility = View.GONE
         }
         view.post {//set padding for response panel
             recyclerView.setPadding(recyclerView.paddingLeft, recyclerView.paddingTop, recyclerView.paddingRight, responsePanel.height)
@@ -116,6 +114,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener 
 
     override fun onPause() {
         mainActivity?.setScrollStrategyEnabled(true)
+        mainActivity?.settingsButton?.visibility = View.VISIBLE
         super.onPause()
         isLoading = false
     }

@@ -1,11 +1,16 @@
 package com.scurab.android.zumpareader.util
 
 import android.content.Context
+import android.content.res.ColorStateList
+import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.support.annotation.IdRes
 import android.support.annotation.StringRes
+import android.support.v4.graphics.drawable.DrawableCompat
 import android.support.v7.widget.RecyclerView
 import android.util.TypedValue
 import android.view.View
+import android.widget.ImageView
 import android.widget.Toast
 import java.net.URLEncoder
 import java.util.*
@@ -61,4 +66,10 @@ public fun Context.toast(msg: String?) {
     if (msg != null) {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
     }
+}
+
+public fun Drawable.wrapWithTint(color: Int): Drawable {
+    var drawable = DrawableCompat.wrap(this);
+    DrawableCompat.setTintList(drawable, ColorStateList.valueOf(color));
+    return drawable
 }
