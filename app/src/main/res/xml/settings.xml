@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="@string/credentials">
+        <EditTextPreference
+            android:key="prefUser"
+            android:title="@string/user"/>
+        <EditTextPreference
+            android:inputType="textPassword"
+            android:key="prefPassword"
+            android:title="@string/password"/>
+    </PreferenceCategory>
+    <com.scurab.android.zumpareader.preferences.ButtonPreference
+        android:key="prefLogin"
+        android:title="@string/login"/>
+    <PreferenceCategory android:title="@string/settings">
+        <CheckBoxPreference
+            android:checked="true"
+            android:key="KEY_LOAD_IMAGES"
+            android:title="@string/load_images"/>
+    </PreferenceCategory>
+</PreferenceScreen>
