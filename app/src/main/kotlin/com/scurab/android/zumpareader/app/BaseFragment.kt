@@ -103,4 +103,6 @@ public abstract class BaseFragment : Fragment() {
         }
         return false
     }
+
+    protected val isLoggedIn = zumpaApp?.zumpaPrefs?.isLoggedIn ?: false
 }

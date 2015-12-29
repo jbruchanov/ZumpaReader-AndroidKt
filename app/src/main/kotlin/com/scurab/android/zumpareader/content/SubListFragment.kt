@@ -103,8 +103,10 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener 
     override fun onResume() {
         super.onResume()
         mainActivity.exec {
-            it.setScrollStrategyEnabled(false)
-            it.floatingButton.showAnimated()
+            if (isLoggedIn) {
+                it.setScrollStrategyEnabled(false)
+                it.floatingButton.showAnimated()
+            }
             it.settingsButton.visibility = View.GONE
         }
         view.post {//set padding for response panel
@@ -142,17 +144,21 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener 
     }
 
     override fun onFloatingButtonClick() {
-        if (!responsePanel.isVisible()) {
-            responsePanel.showAnimated()
-            mainActivity?.floatingButton?.hideAnimated()
+        if (isLoggedIn) {
+            if (!responsePanel.isVisible()) {
+                responsePanel.showAnimated()
+                mainActivity?.floatingButton?.hideAnimated()
+            }
         }
     }
 
     override fun onBackButtonClick(): Boolean {
-        if (responsePanel.isVisible()) {
-            responsePanel.hideAnimated()
-            mainActivity?.floatingButton?.showAnimated()
-            return true
+        if (isLoggedIn) {
+            if (responsePanel.isVisible()) {
+                responsePanel.hideAnimated()
+                mainActivity?.floatingButton?.showAnimated()
+                return true
+            }
         }
         return super.onBackButtonClick()
     }

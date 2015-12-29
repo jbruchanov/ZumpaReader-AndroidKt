@@ -1,5 +1,6 @@
 package com.scurab.android.zumpareader.app
 
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.support.design.widget.CoordinatorLayout
@@ -72,8 +73,10 @@ public class MainActivity : AppCompatActivity() {
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             val color = obtainStyledColor(R.attr.contextColor)
-            _settingsButton.setImageDrawable(_settingsButton.drawable.wrapWithTint(color))
+            settingsButton.setImageDrawable(_settingsButton.drawable.wrapWithTint(color))
         }
+
+        settingsButton.setOnClickListener { startActivity(Intent(this@MainActivity, SettingsActivity::class.java)) }
     }
 
     public fun openFragment(fragment: BaseFragment, addToBackStack: Boolean = true, replace: Boolean = true) {
@@ -90,6 +93,11 @@ public class MainActivity : AppCompatActivity() {
 
         tr.setTransitionStyle(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
         tr.commit()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        floatingButton.visibility = if (zumpaApp.zumpaPrefs.isLoggedIn) View.VISIBLE else View.GONE
     }
 
     fun onFloatingButtonClick() {
