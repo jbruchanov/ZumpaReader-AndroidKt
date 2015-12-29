@@ -43,12 +43,14 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
     private val items: ArrayList<ZumpaThreadItem>
     private val dataItems: ArrayList<SubListItem>
     public var itemClickListener: ItemClickListener? = null
+    public var loadImages : Boolean
 
     @ColorInt
     private var contextColor: Int = 0
 
-    constructor(data: List<ZumpaThreadItem>) {
+    constructor(data: List<ZumpaThreadItem>, loadImages : Boolean = true) {
         items = ArrayList(data)
+        this.loadImages = loadImages
         dataItems = ArrayList((items.size * 1.3/*some bigger values for links etc*/).toInt())
         buildAdapterItems(items, dataItems)
     }
@@ -64,7 +66,7 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
             sub.clear()
             item.urls.exec {
                 for (url in it) {
-                    val element = SubListItem(item, i, if (url.isImage()) TYPE_IMAGE else TYPE_URL, url)
+                    val element = SubListItem(item, i, if (url.isImage() && loadImages) TYPE_IMAGE else TYPE_URL, url)
                     sub.add(element)
                 }
                 sub.sortBy { it.type }
