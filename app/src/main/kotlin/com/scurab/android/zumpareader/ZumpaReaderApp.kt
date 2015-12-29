@@ -10,8 +10,10 @@ import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.retrofit.ZumpaConverterFactory
 import com.scurab.android.zumpareader.util.ParseUtils
+import com.scurab.android.zumpareader.util.ZumpaPrefs
 import com.scurab.android.zumpareader.util.exec
 import com.squareup.okhttp.OkHttpClient
+import com.squareup.okhttp.logging.HttpLoggingInterceptor
 import com.squareup.picasso.Downloader
 import com.squareup.picasso.OkHttpDownloader
 import com.squareup.picasso.Picasso
@@ -27,6 +29,9 @@ import java.util.concurrent.TimeUnit
  * Created by JBruchanov on 24/11/2015.
  */
 public class ZumpaReaderApp:Application(){
+
+    public val zumpaParser : ZumpaSimpleParser by lazy { ZumpaSimpleParser() }
+    public val zumpaPrefs: ZumpaPrefs by lazy { ZumpaPrefs(this) }
 
     override fun onCreate() {
         super.onCreate()
@@ -65,13 +70,26 @@ public class ZumpaReaderApp:Application(){
         Picasso.setSingletonInstance(picasso)
     }
 
-    public val zumpaParser : ZumpaSimpleParser by lazy { ZumpaSimpleParser() }
-
     public val zumpaAPI: ZumpaAPI by lazy {
+
+        var logging = HttpLoggingInterceptor();
+        // set your desired log level
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+        val httpClient = OkHttpClient();
+        httpClient.followRedirects = false
+        httpClient.setConnectTimeout(2000L, TimeUnit.MILLISECONDS)
+        httpClient.setReadTimeout(2000L, TimeUnit.MILLISECONDS)
+        httpClient.setWriteTimeout(2000L, TimeUnit.MILLISECONDS)
+        if (BuildConfig.DEBUG) {
+            httpClient.interceptors().add(logging)
+        }
+
+
         val retrofit = Retrofit.Builder()
                 .baseUrl(ZR.Constants.ZUMPA_MAIN_URL)
                 .addConverterFactory(ZumpaConverterFactory(zumpaParser))
                 .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+                .client(httpClient)
                 .build()
 
         retrofit.create(ZumpaAPI::class.java)
@@ -84,7 +102,6 @@ public class ZumpaReaderApp:Application(){
         path.exec {
             var file = File(path.absolutePath + "/" + md5)
             val exists = file.exists() && file.isFile && file.length() > 0
-            Log.d("Disk", "Loading image md5:%s exists:%s".format(file.absolutePath, exists))
             if (exists) {
                 return BitmapFactory.decodeFile(file.absolutePath)
             }
@@ -98,7 +115,6 @@ public class ZumpaReaderApp:Application(){
             path.exec {
                 var file = File(path.absolutePath + "/" + md5)
                 image.compress(Bitmap.CompressFormat.JPEG, 85, FileOutputStream(file));
-                Log.d("Disk", "Saving image md5:%s ".format(file.absolutePath))
             }
         } catch(e: Exception) {
             e.printStackTrace()
