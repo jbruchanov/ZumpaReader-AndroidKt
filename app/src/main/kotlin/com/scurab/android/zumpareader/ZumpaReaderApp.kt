@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit
  */
 public class ZumpaReaderApp:Application(){
 
-    public val zumpaParser : ZumpaSimpleParser by lazy { ZumpaSimpleParser() }
+    public val zumpaParser: ZumpaSimpleParser by lazy { ZumpaSimpleParser().apply { userName = zumpaPrefs.loggedUserName } }
     public val zumpaPrefs: ZumpaPrefs by lazy { ZumpaPrefs(this) }
     public val zumpaData: TreeMap<String, ZumpaThread> = TreeMap()
 

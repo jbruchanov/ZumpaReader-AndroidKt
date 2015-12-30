@@ -94,6 +94,7 @@ public class SettingsActivity : PreferenceActivity() {
     override fun onPause() {
         super.onPause()
         hideProgressDialog()
+        zumpaApp.zumpaParser.userName = zumpaApp.zumpaPrefs.loggedUserName
     }
 
     private fun showProgressDialog() {

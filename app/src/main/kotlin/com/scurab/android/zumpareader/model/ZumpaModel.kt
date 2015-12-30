@@ -38,16 +38,20 @@ public constructor(val id: String,
     private var _items = 0
     var items: Int
         get() = _items
-        set(value) {
-            if ("JtS".equals(author)) {
-                state = STATE_OWN
-            } else if (state == STATE_NONE && _items != 0 && value > _items) {
-                state = STATE_UPDATED
-            } else if (_items == value) {
-                //no update
-            }
-            _items = value
+        private set(value) {
+            setItems(value, null)
         }
+
+    public fun setItems(value: Int, userName: String?) {
+        if (userName != null && userName.equals(author)) {
+            state = STATE_OWN
+        } else if (state == STATE_NONE && _items != 0 && value > _items) {
+            state = STATE_UPDATED
+        } else if (_items == value) {
+            //no update
+        }
+        _items = value
+    }
     var isFavorite: Boolean = false
     val idLong by lazy { id.toLong() }
     var state: Int = STATE_NEW

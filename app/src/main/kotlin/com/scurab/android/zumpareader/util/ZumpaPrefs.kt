@@ -36,6 +36,8 @@ public class ZumpaPrefs(context: Context) {
             sharedPrefs.edit().putBoolean(KEY_IS_LOGGED_IN, value).apply()
         }
 
+    public val loggedUserName: String? get() = if (isLoggedIn) sharedPrefs.getString("prefUser", null) else null
+
     public val loadImages: Boolean
         get() {
             return sharedPrefs.getBoolean(KEY_LOAD_IMAGES, false)

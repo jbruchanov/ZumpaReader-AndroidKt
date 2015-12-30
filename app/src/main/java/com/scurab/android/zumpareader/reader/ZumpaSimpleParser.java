@@ -63,6 +63,7 @@ public class ZumpaSimpleParser {
     private static Pattern ZUMPA_LINK = Pattern.compile("portal2.dkm.cz/phorum/read.php.*t=(\\d+)", Pattern.CASE_INSENSITIVE);
     private static Pattern IMG_OBJECT = Pattern.compile("<img.*src=\"([^\"]*)\"", Pattern.CASE_INSENSITIVE);
     private static final String TAG_NBSP = "&nbsp;";
+    private String mUserName;
 
     public ZumpaMainPageResult parseMainPage(@NonNull String html) {
         return parseMainPage(Jsoup.parse(html));
@@ -181,7 +182,7 @@ public class ZumpaSimpleParser {
         zumpaThread.setAuthor(author);
         zumpaThread.setContentUrl(contentUrl);
         zumpaThread.setTime(timeValue);
-        zumpaThread.setItems(responses);
+        zumpaThread.setItems(responses, mUserName);
         zumpaThread.setFavorite(isFavourite);
         return zumpaThread;
     }
@@ -530,6 +531,14 @@ public class ZumpaSimpleParser {
     @Nullable
     public static String tryParseImage(String content) {
         return (content != null) ? getGroup(IMG_OBJECT, content, 1, null) : null;
+    }
+
+    public String getUserName() {
+        return mUserName;
+    }
+
+    public void setUserName(String userName) {
+        mUserName = userName;
     }
 
     public static class SmileRes {

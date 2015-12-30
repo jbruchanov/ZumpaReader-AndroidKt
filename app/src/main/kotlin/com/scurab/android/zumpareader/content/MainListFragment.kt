@@ -111,7 +111,7 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
             val values = it.items.asListOfValues()
             recyclerView.exec {
                 if (it.adapter != null) {
-                    (it.adapter as MainListAdapter).addItems(values)
+                    (it.adapter as MainListAdapter).addItems(values, zumpaApp?.zumpaPrefs?.loggedUserName)
                 } else {
                     val mainListAdapter = MainListAdapter(values)
                     mainListAdapter.setOnShowItemListener(this@MainListFragment, 15)
