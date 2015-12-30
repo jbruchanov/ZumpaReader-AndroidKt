@@ -172,7 +172,7 @@ public data class ZumpaThreadBody(
 
 public class ZumpaResponse(val data: ByteArray, val mediaType: MediaType) {
 
-    public fun asString() = String(data, "utf-8")
+    public fun asString() = String(data, "iso-8859-2")
 }
 
 //
