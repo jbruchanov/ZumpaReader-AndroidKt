@@ -1,14 +1,10 @@
 package com.scurab.android.zumpareader.util
 
-import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Point
 import android.text.Html
-import com.pawegio.kandroid.i
 import com.squareup.okhttp.Headers
-import java.net.URLDecoder
-import java.net.URLEncoder
 import java.security.MessageDigest
 import java.util.regex.Pattern
 

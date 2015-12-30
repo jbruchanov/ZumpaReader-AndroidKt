@@ -61,6 +61,7 @@ public class ZumpaSimpleParser {
     private static final Pattern AUTHOR_PATTERN2 = Pattern.compile("Autor:&nbsp;(.+)<br>Datum:", Pattern.CASE_INSENSITIVE);
     private static Pattern SURVEY_RESPONSE_PATTERN = Pattern.compile("\\((\\d*) odp.\\)", Pattern.CASE_INSENSITIVE);
     private static Pattern ZUMPA_LINK = Pattern.compile("portal2.dkm.cz/phorum/read.php.*t=(\\d+)", Pattern.CASE_INSENSITIVE);
+    private static Pattern IMG_OBJECT = Pattern.compile("<img.*src=\"([^\"]*)\"", Pattern.CASE_INSENSITIVE);
     private static final String TAG_NBSP = "&nbsp;";
 
     public ZumpaMainPageResult parseMainPage(@NonNull String html) {
@@ -524,6 +525,11 @@ public class ZumpaSimpleParser {
         for (Object spannable : spannables) {
             ssb.setSpan(spannable, start, end, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
         }
+    }
+
+    @Nullable
+    public static String tryParseImage(String content) {
+        return (content != null) ? getGroup(IMG_OBJECT, content, 1, null) : null;
     }
 
     public static class SmileRes {
