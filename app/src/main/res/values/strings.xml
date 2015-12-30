@@ -22,5 +22,6 @@
 
     <string name="err_no_username">No Username!</string>
     <string name="err_no_password">No Password!</string>
-    <string name="err_fail">Fail :(!</string>
+    <string name="err_fail">Fail :(</string>
+    <string name="err_empty_msg">Empty message</string>
 </resources>

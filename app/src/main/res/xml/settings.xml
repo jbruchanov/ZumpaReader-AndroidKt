@@ -14,7 +14,7 @@
         android:title="@string/login"/>
     <PreferenceCategory android:title="@string/settings">
         <CheckBoxPreference
-            android:checked="true"
+            android:defaultValue="true"
             android:key="KEY_LOAD_IMAGES"
             android:title="@string/load_images"/>
     </PreferenceCategory>
