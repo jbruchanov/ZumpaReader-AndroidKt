@@ -1,6 +1,6 @@
-package com.scurab.android.zumpareader.retrofit
+package com.scurab.android.zumpareader.data
 
-import com.scurab.android.zumpareader.model.ZumpaMainPageResult
+import com.scurab.android.zumpareader.model.ZumpaThreadResult
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.squareup.okhttp.ResponseBody
 import retrofit.Converter
@@ -9,13 +9,13 @@ import java.io.IOException
 /**
  * Created by JBruchanov on 24/11/2015.
  */
-public class ZumpaMainPageConverter(private val parser: ZumpaSimpleParser) : Converter<ResponseBody, ZumpaMainPageResult> {
+public class ZumpaThreadPageConverter(private val parser: ZumpaSimpleParser) : Converter<ResponseBody, ZumpaThreadResult> {
 
     @Throws(IOException::class)
-    override fun convert(value: ResponseBody): ZumpaMainPageResult {
+    override fun convert(value: ResponseBody): ZumpaThreadResult? {
         val stream = value.byteStream()
         try {
-            return parser.parseMainPage(stream)
+            return parser.parseThread(stream, null)
         } finally {
             closeQuietly(stream)
         }

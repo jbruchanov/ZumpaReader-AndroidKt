@@ -1,4 +1,4 @@
-package com.scurab.android.zumpareader.retrofit
+package com.scurab.android.zumpareader.data
 
 import com.scurab.android.zumpareader.model.ZumpaResponse
 import com.squareup.okhttp.ResponseBody
