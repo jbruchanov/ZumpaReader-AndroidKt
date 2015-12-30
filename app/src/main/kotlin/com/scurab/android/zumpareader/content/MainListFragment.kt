@@ -17,7 +17,6 @@ import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.util.asListOfValues
 import com.scurab.android.zumpareader.util.exec
 import com.scurab.android.zumpareader.util.execIfNull
-import com.yqritc.recyclerviewflexibledivider.HorizontalDividerItemDecoration
 import rx.Observer
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
@@ -53,11 +52,6 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
                 swipeToRefresh.direction = SwipyRefreshLayoutDirection.TOP
                 recyclerView.apply {
                     layoutManager = LinearLayoutManager(inflater.context, LinearLayoutManager.VERTICAL, false)
-                    addItemDecoration(HorizontalDividerItemDecoration.Builder(inflater.context)
-                            .color(resources.getColor(R.color.gray))
-                            .sizeResId(R.dimen.divider)
-                            .showLastDivider()
-                            .build())
                     //itemAnimator = DefaultItemAnimator()
                 }
             }
