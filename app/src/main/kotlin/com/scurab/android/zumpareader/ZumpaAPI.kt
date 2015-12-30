@@ -22,7 +22,7 @@ public interface ZumpaAPI {
     fun getThreadPage(@Query(value = "i") id: String, @Query(value = "t") id2: String): Observable<ZumpaThreadResult>
 
     @POST("/phorum/post.php")
-    fun sendResponse(@Query(value = "i") id: String, @Query(value = "t") id2: String, @Body body: ZumpaThreadBody): Call<ZumpaThreadResult>
+    fun sendResponse(@Query(value = "i") id: String, @Query(value = "t") id2: String, @Body body: ZumpaThreadBody): Observable<ZumpaThreadResult>
 
     @POST("/phorum/post.php")
     fun sendThread(@Body body: ZumpaThreadBody): Call<ZumpaThreadResult>

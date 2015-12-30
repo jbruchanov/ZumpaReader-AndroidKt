@@ -1,5 +1,6 @@
 package com.scurab.android.zumpareader.content
 
+import android.app.ProgressDialog
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
@@ -8,6 +9,8 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.ImageView
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection
@@ -15,6 +18,7 @@ import com.pawegio.kandroid.find
 import com.pawegio.kandroid.toast
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.app.BaseFragment
+import com.scurab.android.zumpareader.model.ZumpaThreadBody
 import com.scurab.android.zumpareader.model.ZumpaThreadItem
 import com.scurab.android.zumpareader.model.ZumpaThreadResult
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
@@ -52,7 +56,10 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener 
 
     private val recyclerView: RecyclerView get() = view!!.find<RecyclerView>(R.id.recycler_view)
     private val swipyRefreshLayout: SwipyRefreshLayout get() = view!!.find<SwipyRefreshLayout>(R.id.swipe_refresh_layout)
-    private val responsePanel: View get() = view!!.find<View>(R.id.response_panel)
+    private val responsePanel: View? get() = view?.find<View>(R.id.response_panel)
+    private val sendButton: ImageButton get() = view!!.find<ImageButton>(R.id.send)
+    private val message: EditText get() = view!!.find<EditText>(R.id.message)
+    private var scrollDownAfterLoad : Boolean = false
 
     override var isLoading: Boolean
         get() = super.isLoading
@@ -65,6 +72,27 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener 
                 }
             }
         }
+
+    private var sendingDialog: ProgressDialog? = null
+    private var isSending: Boolean
+        get() {
+            return sendingDialog != null
+        }
+        set(value) {
+            if (value != isSending) {
+                if (value) {
+                    context.exec {
+                        sendingDialog = ProgressDialog.show(context, null, it.resources.getString(R.string.wheeeee), true, false)
+                    }
+                } else {
+                    sendingDialog.exec {
+                        it.dismiss()
+                    }
+                    sendingDialog = null
+                }
+            }
+        }
+
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup, savedInstanceState: Bundle?): View? {
         var content = inflater.inflate(R.layout.view_recycler_refreshable_thread, container, false)
@@ -90,10 +118,11 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        responsePanel.visibility = View.INVISIBLE
+        responsePanel?.visibility = View.INVISIBLE
         recyclerView.layoutManager = LinearLayoutManager(view.context, LinearLayoutManager.VERTICAL, false)
         swipyRefreshLayout.direction = SwipyRefreshLayoutDirection.BOTTOM
         swipyRefreshLayout.setOnRefreshListener { loadData() }
+        sendButton.setOnClickListener { dispatchSend() }
         loadData()
     }
 
@@ -107,15 +136,52 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener 
             it.settingsButton.visibility = View.GONE
         }
         view.post {//set padding for response panel
-            recyclerView.setPadding(recyclerView.paddingLeft, recyclerView.paddingTop, recyclerView.paddingRight, responsePanel.height)
+            recyclerView.setPadding(recyclerView.paddingLeft, recyclerView.paddingTop, recyclerView.paddingRight, responsePanel?.height ?: 0)
         }
     }
 
     override fun onPause() {
         mainActivity?.setScrollStrategyEnabled(true)
         mainActivity?.settingsButton?.visibility = View.VISIBLE
-        super.onPause()
         isLoading = false
+        isSending = false
+        super.onPause()
+    }
+
+    protected fun dispatchSend() {
+        var msg = message.text.toString()
+        if (msg.length == 0) {
+            context.toast(R.string.err_empty_msg)
+            return
+        }
+
+        zumpaApp?.zumpaAPI.exec {
+            val app = zumpaApp!!
+            val body = ZumpaThreadBody(app.zumpaPrefs.nickName, app.zumpaData[threadId]?.subject ?: "", msg, threadId)
+            val observable = it.sendResponse(threadId, threadId, body)
+            isSending = true
+            hideKeyboard()
+            observable
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(object : Observer<ZumpaThreadResult?> {
+                        override fun onNext(t: ZumpaThreadResult?) {
+                            t.exec {
+                                view.post {
+                                    hideMessagePanel(true)
+                                    isSending = false
+                                    isLoading = false
+                                    scrollDownAfterLoad = true
+                                    loadData()
+                                }
+                            }
+                        }
+                        override fun onError(e: Throwable?) {
+                            e?.message?.exec { toast(it) }
+                            isSending = false
+                        }
+                        override fun onCompleted() { }
+                    })
+        }
     }
 
     public fun loadData() {
@@ -131,6 +197,10 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener 
                         override fun onNext(t: ZumpaThreadResult?) {
                             t.exec {
                                 onResultLoaded(it)
+                                if (scrollDownAfterLoad) {
+                                    scrollDownAfterLoad = false
+                                    recyclerView.scrollToPosition(recyclerView.adapter.itemCount)
+                                }
                             }
                         }
 
@@ -141,21 +211,35 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener 
     }
 
     override fun onFloatingButtonClick() {
-        if (!responsePanel.isVisible()) {
-            responsePanel.showAnimated()
+        responsePanel.exec {
+            if (!it.isVisible()) {
+                it.showAnimated()
+            }
             mainActivity?.floatingButton?.hideAnimated()
         }
     }
 
     override fun onBackButtonClick(): Boolean {
         if (isLoggedIn) {
-            if (responsePanel.isVisible()) {
-                responsePanel.hideAnimated()
-                mainActivity?.floatingButton?.showAnimated()
+            if (hideMessagePanel()) {
                 return true
             }
         }
         return super.onBackButtonClick()
+    }
+
+    fun hideMessagePanel(clearText: Boolean = false) : Boolean {
+        if (clearText) {
+            message.text = null
+        }
+        responsePanel.exec {
+            if (it.isVisible()) {
+                it.hideAnimated()
+                mainActivity?.floatingButton?.showAnimated()
+                return true
+            }
+        }
+        return false
     }
 
     private fun onResultLoaded(it: ZumpaThreadResult) {
