@@ -7,9 +7,11 @@ import android.content.Intent
 import android.net.Uri
 import android.support.v4.app.Fragment
 import android.view.MenuItem
+import android.view.inputmethod.InputMethodManager
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.model.ZumpaThread
+import com.scurab.android.zumpareader.util.exec
 import com.scurab.android.zumpareader.util.execOn
 import com.scurab.android.zumpareader.util.toast
 import java.util.*
@@ -21,7 +23,7 @@ public abstract class BaseFragment : Fragment() {
 
     public val mainActivity: MainActivity?
         get() {
-            return getActivity() as MainActivity?
+            return activity as MainActivity?
         }
 
     public val zumpaApp: ZumpaReaderApp?
@@ -108,4 +110,21 @@ public abstract class BaseFragment : Fragment() {
         get() {
             return zumpaApp?.zumpaPrefs?.isLoggedIn ?: false
         }
+
+    protected fun hideKeyboard() {
+        context.exec {
+            var imm = it.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager;
+            imm.exec {
+                var focused = view?.findFocus() ?: null;
+                if (focused == null) {
+                    imm.hideSoftInputFromInputMethod(null, 0);
+                } else {
+                    if (!imm.hideSoftInputFromWindow(focused.windowToken, InputMethodManager.HIDE_IMPLICIT_ONLY)) {
+                        imm.hideSoftInputFromWindow(focused.windowToken, 0);
+                    }
+                }
+            }
+            it.getSystemService(Context.INPUT_METHOD_SERVICE)
+        }
+    }
 }
