@@ -101,8 +101,10 @@ public class MainActivity : AppCompatActivity() {
     }
 
     fun onFloatingButtonClick() {
-        (supportFragmentManager.fragments.lastOrNull() as? BaseFragment).exec {
-            it.onFloatingButtonClick();
+        if (zumpaApp.zumpaPrefs.isLoggedIn) {
+            (supportFragmentManager.fragments.lastOrNull() as? BaseFragment).exec {
+                it.onFloatingButtonClick();
+            }
         }
     }
 

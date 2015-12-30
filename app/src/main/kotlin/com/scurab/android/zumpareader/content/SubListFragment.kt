@@ -141,11 +141,9 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener 
     }
 
     override fun onFloatingButtonClick() {
-        if (isLoggedIn) {
-            if (!responsePanel.isVisible()) {
-                responsePanel.showAnimated()
-                mainActivity?.floatingButton?.hideAnimated()
-            }
+        if (!responsePanel.isVisible()) {
+            responsePanel.showAnimated()
+            mainActivity?.floatingButton?.hideAnimated()
         }
     }
 
