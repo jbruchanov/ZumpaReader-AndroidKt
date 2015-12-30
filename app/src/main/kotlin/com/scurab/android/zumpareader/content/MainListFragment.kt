@@ -98,7 +98,10 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
                     }
                 }
 
-                override fun onError(e: Throwable?) { e?.message?.exec { toast(it) } }
+                override fun onError(e: Throwable?) {
+                    isLoading = false
+                    e?.message?.exec { toast(it) }
+                }
                 override fun onCompleted() { isLoading = false }
             })
         }
