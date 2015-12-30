@@ -174,18 +174,19 @@ public class ZumpaSubItemViewHolder(val adapter: SubListAdapter, val view: View)
     internal val imageView by lazy { view as ImageView }
     internal var url : String? = null
     internal var loadedUrl : String? = null
+    internal var imageTarget : ItemTarget? = null
 
     public fun loadImage(url: String) {
         if (url.equals(loadedUrl)) {
             return
         }
         this.url = url
-        Picasso.with(imageView.context).load(url).into(ItemTarget(adapter, this, view.context.obtainStyledColor(R.attr.contextColor50p)))
+        imageTarget = ItemTarget(adapter, this, view.context.obtainStyledColor(R.attr.contextColor50p));
+        Picasso.with(imageView.context).load(url).into(imageTarget)
     }
 }
 
 internal class ItemTarget(val adapter: SubListAdapter, val holder: ZumpaSubItemViewHolder, @ColorInt val contextColor:Int) : com.squareup.picasso.Target {
-    var itemChangedNotifyAction = Runnable { adapter.notifyDataSetChanged() }
     val progressDrawable by lazy { SimpleProgressDrawable(holder.itemView.context) }
 
     override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
@@ -195,7 +196,7 @@ internal class ItemTarget(val adapter: SubListAdapter, val holder: ZumpaSubItemV
     override fun onBitmapLoaded(bitmap: Bitmap, from: Picasso.LoadedFrom?) {
         holder.loadedUrl = holder.url
         holder.imageView.setImageDrawable(createDrawable(holder.itemView.context.resources, bitmap))
-        holder.imageView.post(itemChangedNotifyAction)
+        holder.imageView.invalidate()
     }
 
     override fun onBitmapFailed(errorDrawable: Drawable?) {
