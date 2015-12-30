@@ -7,6 +7,7 @@ import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.model.ZumpaLoginBody
 import com.scurab.android.zumpareader.model.ZumpaResponse
+import com.scurab.android.zumpareader.util.ParseUtils
 import com.scurab.android.zumpareader.util.exec
 import com.scurab.android.zumpareader.util.toast
 import retrofit.Callback
@@ -45,8 +46,9 @@ public class SettingsActivity : PreferenceActivity() {
     protected fun dispatchLogoutClicked() {
         val prefs = zumpaApp.zumpaPrefs
         prefs.isLoggedIn = false
-        prefs.phpSessionId = null
+        prefs.cookies = null
         buttonPref.title = resources.getString(R.string.login)
+        zumpaApp.resetCookies()
         toast(R.string.done)
     }
 
@@ -76,10 +78,10 @@ public class SettingsActivity : PreferenceActivity() {
                         hideProgressDialog()
                         if (!isFinishing) {
                             response.exec {
-                                val success = it.code() == 302
+                                val success = response?.code() == 302//response?.body()?.asString()?.contains("/logout.php") ?: false
                                 zumpaApp.zumpaPrefs.isLoggedIn = success
-                                var sessionId: String? = extractSessionId(it)
-                                zumpaApp.zumpaPrefs.phpSessionId = sessionId
+                                var sessionId: String? = ParseUtils.extractSessionId(it)
+                                zumpaApp.zumpaPrefs.cookies = ParseUtils.extractCookies(it)
                                 toast(if (success) R.string.ok else R.string.err_fail)
                                 if (success) {
                                     buttonPref.title = resources.getString(R.string.logout)
@@ -106,20 +108,5 @@ public class SettingsActivity : PreferenceActivity() {
     private fun hideProgressDialog() {
         progressDialog?.cancel()
         progressDialog = null
-    }
-
-    private fun extractSessionId(it: Response<ZumpaResponse?>): String? {
-        var cookies = it.headers().toMultimap().get("Set-Cookie") as List<String>
-        var sessionId: String? = null
-        for (c in cookies) {
-            if (c.contains("PHPSESSID")) {
-                val matcher = Pattern.compile("PHPSESSID=([^;]+);").matcher(c)
-                if (matcher.find()) {
-                    sessionId = matcher.group(1)
-                    break
-                }
-            }
-        }
-        return sessionId
     }
 }
