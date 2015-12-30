@@ -3,6 +3,7 @@ package com.scurab.android.zumpareader.util
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Point
 import android.text.Html
 import com.pawegio.kandroid.i
 import com.squareup.okhttp.Headers
@@ -70,12 +71,12 @@ public class ParseUtils {
             return null
         }
 
-        public fun resizeImageIfNecessary(byteArray: ByteArray, res: Resources): Bitmap {
+        public fun resizeImageIfNecessary(byteArray: ByteArray, displaySize: Point): Bitmap? {
             var opts = BitmapFactory.Options()
             opts.inJustDecodeBounds = true
             BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size, opts)
             var imWidth = opts.outWidth
-            var dispWidth = Math.min(res.displayMetrics.widthPixels, res.displayMetrics.heightPixels)
+            var dispWidth = Math.min(displaySize.x, displaySize.y)
             var resize = 1
             while (imWidth > 0 && imWidth > 1.5f * dispWidth) {
                 resize *= 2
