@@ -21,10 +21,7 @@ import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.ui.hideAnimated
 import com.scurab.android.zumpareader.ui.isVisible
 import com.scurab.android.zumpareader.ui.showAnimated
-import com.scurab.android.zumpareader.util.exec
-import com.scurab.android.zumpareader.util.obtainStyledColor
-import com.scurab.android.zumpareader.util.toast
-import com.scurab.android.zumpareader.util.wrapWithTint
+import com.scurab.android.zumpareader.util.*
 import rx.Observer
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
@@ -167,12 +164,16 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener 
         it.items.exec {
             var items = it
             recyclerView.exec {
+                val loadImages = zumpaApp?.zumpaPrefs?.loadImages ?: true
                 if (it.adapter == null) {
-                    recyclerView?.adapter = SubListAdapter(items).apply {
+                    recyclerView?.adapter = SubListAdapter(items, loadImages).apply {
                         itemClickListener = this@SubListFragment
                     }
                 } else {
-                    (recyclerView?.adapter as SubListAdapter).updateItems(items)
+                    (recyclerView?.adapter as SubListAdapter).execOn {
+                        this.loadImages = loadImages
+                        updateItems(items)
+                    }
                 }
             }
         }
