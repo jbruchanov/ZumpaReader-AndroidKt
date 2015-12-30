@@ -103,8 +103,8 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener 
     override fun onResume() {
         super.onResume()
         mainActivity.exec {
+            it.setScrollStrategyEnabled(false)
             if (isLoggedIn) {
-                it.setScrollStrategyEnabled(false)
                 it.floatingButton.showAnimated()
             }
             it.settingsButton.visibility = View.GONE
