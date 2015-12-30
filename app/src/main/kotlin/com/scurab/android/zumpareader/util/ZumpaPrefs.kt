@@ -12,6 +12,8 @@ public class ZumpaPrefs(context: Context) {
     private val KEY_COOKIES = "KEY_COOKIES"
     private val KEY_IS_LOGGED_IN = "KEY_IS_LOGGED_IN"
     private val KEY_LOAD_IMAGES = "KEY_LOAD_IMAGES"
+    private val KEY_NICK_NAME = "KEY_NICK_NAME"
+    private val KEY_USER_NAME = "prefUser"
 
     private val sharedPrefs: SharedPreferences
 
@@ -48,10 +50,15 @@ public class ZumpaPrefs(context: Context) {
             sharedPrefs.edit().putBoolean(KEY_IS_LOGGED_IN, value).apply()
         }
 
-    public val loggedUserName: String? get() = if (isLoggedIn) sharedPrefs.getString("prefUser", null) else null
+    public val loggedUserName: String? get() = if (isLoggedIn) sharedPrefs.getString(KEY_USER_NAME, null) else null
 
     public val loadImages: Boolean
         get() {
-            return sharedPrefs.getBoolean(KEY_LOAD_IMAGES, false)
+            return sharedPrefs.getBoolean(KEY_LOAD_IMAGES, true)
+        }
+
+    public val nickName:String
+        get() {
+            return sharedPrefs.getString(KEY_NICK_NAME, sharedPrefs.getString(KEY_USER_NAME, ""))
         }
 }
