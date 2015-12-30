@@ -79,7 +79,7 @@ public class MainListAdapter : RecyclerView.Adapter<ZumpaThreadViewHolder> {
             var li = LayoutInflater.from(it!!.context)
             ZumpaThreadViewHolder(li.inflate(R.layout.item_main_list, parent, false)).apply {
                 itemView.setOnClickListener(DelayClickListener {
-                    if (adapterPosition < items.size) {
+                    if (adapterPosition < items.size && adapterPosition >= 0) {
                         dispatchItemClick(items[adapterPosition], adapterPosition)
                     }
                 })

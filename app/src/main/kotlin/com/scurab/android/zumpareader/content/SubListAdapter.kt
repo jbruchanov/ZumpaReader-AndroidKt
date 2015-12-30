@@ -93,8 +93,10 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
     }
 
     internal fun updateItemForUrl(position: Int) {
-        dataItems[position].type = TYPE_URL
-        notifyItemChanged(position)
+        if (position >= 0 && position < dataItems.size) {
+            dataItems[position].type = TYPE_URL
+            notifyItemChanged(position)
+        }
     }
 
     override fun onBindViewHolder(holder: ZumpaSubItemViewHolder, position: Int) {

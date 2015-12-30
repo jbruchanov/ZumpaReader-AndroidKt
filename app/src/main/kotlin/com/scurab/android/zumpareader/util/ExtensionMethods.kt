@@ -45,7 +45,7 @@ public fun <T> T?.execIfNull(f: () -> Unit) {
 }
 
 public fun String.encodeHttp(): String {
-    return URLEncoder.encode(this, "utf-8")
+    return URLEncoder.encode(this, "iso-8859-2")
 }
 
 public fun <K, V> Map<K, V>.asListOfValues(): ArrayList<V> = ArrayList(this.values);

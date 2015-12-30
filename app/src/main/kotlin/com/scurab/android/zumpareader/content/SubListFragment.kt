@@ -149,7 +149,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener 
     }
 
     protected fun dispatchSend() {
-        var msg = message.text.toString()
+        var msg = message.text.toString().trim()
         if (msg.length == 0) {
             context.toast(R.string.err_empty_msg)
             return
