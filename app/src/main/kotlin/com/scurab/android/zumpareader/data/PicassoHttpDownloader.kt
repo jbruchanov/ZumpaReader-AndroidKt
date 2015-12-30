@@ -50,19 +50,21 @@ public class PicassoHttpDownloader(private val imageStorage: File, private val d
 
             if (byteArray.size > 0) {
                 if (byteArray[0] == htmlStart) {
-                    //we have here potentially HTML
-                    if (byteArray.size <= maxHtmlCheck) {
-                        var content = String(byteArray)
-                        var innerUrl = ZumpaSimpleParser.tryParseImage(content)
-                        if (innerUrl != null) {
-                            mem.reset()//clear current memory
-                            response = super.load(Uri.parse(innerUrl), networkPolicy)
-                            response.inputStream.copyTo(mem)
-                            byteArray = mem.toByteArray()
-                            resultBitmap = ParseUtils.resizeImageIfNecessary(byteArray, displaySize)
-                            if (resultBitmap != null) {
-                                saveImage(resultBitmap, md5Uri)
-                                touchFile = false
+                    if (!uri!!.path.endsWith(".gif")) {//ignore gifs for now
+                        //we have here potentially HTML
+                        if (byteArray.size <= maxHtmlCheck) {
+                            var content = String(byteArray)
+                            var innerUrl = ZumpaSimpleParser.tryParseImage(content)
+                            if (innerUrl != null) {
+                                mem.reset()//clear current memory
+                                response = super.load(Uri.parse(innerUrl), networkPolicy)
+                                response.inputStream.copyTo(mem)
+                                byteArray = mem.toByteArray()
+                                resultBitmap = ParseUtils.resizeImageIfNecessary(byteArray, displaySize)
+                                if (resultBitmap != null) {
+                                    saveImage(resultBitmap, md5Uri)
+                                    touchFile = false
+                                }
                             }
                         }
                     }
