@@ -3,12 +3,13 @@ package com.scurab.android.zumpareader.util
 import android.content.Context
 import android.content.SharedPreferences
 import com.pawegio.kandroid.defaultSharedPreferences
+import java.util.*
 
 /**
  * Created by JBruchanov on 29/12/2015.
  */
 public class ZumpaPrefs(context: Context) {
-    private val KEY_PHPSESSION_ID = "KEY_PHPSESSION_ID"
+    private val KEY_COOKIES = "KEY_COOKIES"
     private val KEY_IS_LOGGED_IN = "KEY_IS_LOGGED_IN"
     private val KEY_LOAD_IMAGES = "KEY_LOAD_IMAGES"
 
@@ -18,13 +19,24 @@ public class ZumpaPrefs(context: Context) {
         sharedPrefs = context.defaultSharedPreferences
     }
 
-    public var phpSessionId: String?
+    public var cookies: Set<String>?
         get() {
-            return sharedPrefs.getString(KEY_PHPSESSION_ID, null)
+            return sharedPrefs.getStringSet(KEY_COOKIES, null)
         }
 
         set(value) {
-            sharedPrefs.edit().putString(KEY_PHPSESSION_ID, value).apply()
+            sharedPrefs.edit().putStringSet(KEY_COOKIES, value).apply()
+        }
+
+    public val cookiesMap : MutableMap<String, MutableList<String>>
+        get() {
+            var map: MutableMap<String, MutableList<String>> = HashMap()
+            cookies.exec {
+                var list: MutableList<String> = ArrayList()
+                list.addAll(it)
+                map.put("Set-Cookie", list)
+            }
+            return map
         }
 
     public var isLoggedIn: Boolean
