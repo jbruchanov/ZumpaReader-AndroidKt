@@ -41,6 +41,12 @@ public class SettingsActivity : PreferenceActivity() {
             true
         }
         buttonPref.title = resources.getString(if (zumpaApp.zumpaPrefs.isLoggedIn) R.string.logout else R.string.login)
+        zumpaApp.followRedirects = false
+    }
+
+    override fun onDestroy() {
+        zumpaApp.followRedirects = true
+        super.onDestroy()
     }
 
     protected fun dispatchLogoutClicked() {

@@ -63,7 +63,7 @@ public class ZumpaReaderApp:Application(){
         logging.setLevel(HttpLoggingInterceptor.Level.BODY);
         zumpaHttpClient = OkHttpClient()
         zumpaHttpClient.execOn {
-            followRedirects = false
+            followRedirects = true//false for logging
             setConnectTimeout(2000L, TimeUnit.MILLISECONDS)
             setReadTimeout(2000L, TimeUnit.MILLISECONDS)
             setWriteTimeout(2000L, TimeUnit.MILLISECONDS)
@@ -88,4 +88,11 @@ public class ZumpaReaderApp:Application(){
             setCookieHandler(CookieManager())
         }
     }
+
+    public var followRedirects: Boolean
+        get() = zumpaHttpClient?.followRedirects ?: false
+        set(value) {
+            zumpaHttpClient?.followRedirects = value
+        }
+
 }
