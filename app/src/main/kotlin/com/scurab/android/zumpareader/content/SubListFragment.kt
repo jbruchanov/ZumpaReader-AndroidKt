@@ -96,22 +96,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup, savedInstanceState: Bundle?): View? {
         var content = inflater.inflate(R.layout.view_recycler_refreshable_thread, container, false)
         content.setBackgroundColor(Color.BLACK)
-        initIcons(content)
         return content
-    }
-
-    private fun initIcons(content: View) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            val color = context.obtainStyledColor(R.attr.contextColor)
-            updateTint(content.find(R.id.photo), color)
-            updateTint(content.find(R.id.camera), color)
-            updateTint(content.find(R.id.survey), color)
-            updateTint(content.find(R.id.send), color)
-        }
-    }
-
-    private fun updateTint(imageView: ImageView, color: Int) {
-        imageView.setImageDrawable(imageView.drawable.wrapWithTint(color))
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
