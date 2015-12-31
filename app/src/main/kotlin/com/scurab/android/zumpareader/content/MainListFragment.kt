@@ -14,6 +14,7 @@ import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.app.BaseFragment
 import com.scurab.android.zumpareader.model.ZumpaMainPageResult
 import com.scurab.android.zumpareader.model.ZumpaThread
+import com.scurab.android.zumpareader.ui.hideAnimated
 import com.scurab.android.zumpareader.util.asListOfValues
 import com.scurab.android.zumpareader.util.exec
 import com.scurab.android.zumpareader.util.execIfNull
@@ -140,6 +141,13 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
                 loadPage(v.id)
             }
 
+        }
+    }
+
+    override fun onFloatingButtonClick() {
+        activity?.supportFragmentManager.exec {
+            PostMessageDialog().show(it, PostMessageDialog::class.java.name)
+            mainActivity?.floatingButton?.hideAnimated()
         }
     }
 }
