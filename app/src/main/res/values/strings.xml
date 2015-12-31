@@ -24,4 +24,6 @@
     <string name="err_no_password">No Password!</string>
     <string name="err_fail">Fail :(</string>
     <string name="err_empty_msg">Empty message</string>
+    <string name="subject">Subject</string>
+    <string name="message">Message</string>
 </resources>
