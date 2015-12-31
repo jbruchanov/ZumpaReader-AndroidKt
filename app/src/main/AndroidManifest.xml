@@ -30,6 +30,10 @@
             android:configChanges="orientation|screenSize"
             android:theme="@style/AppTheme.Settings"
             android:label="@string/app_name"/>
+
+        <meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="1dcf380e1e5890c2c982152db1933ee9d7e8bde8" />
     </application>
 
 </manifest>

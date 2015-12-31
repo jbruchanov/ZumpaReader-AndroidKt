@@ -16,6 +16,7 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.Toast
+import com.crashlytics.android.Crashlytics
 import com.pawegio.kandroid.find
 import com.pawegio.kandroid.toast
 import com.scurab.android.zumpareader.R
@@ -29,6 +30,7 @@ import com.scurab.android.zumpareader.util.exec
 import com.scurab.android.zumpareader.util.execIfNull
 import com.scurab.android.zumpareader.util.obtainStyledColor
 import com.scurab.android.zumpareader.util.wrapWithTint
+import io.fabric.sdk.android.Fabric
 import java.util.*
 
 /**
@@ -62,6 +64,8 @@ public class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        Fabric.with(this, Crashlytics());
 
         setContentView(R.layout.activity_main)
 

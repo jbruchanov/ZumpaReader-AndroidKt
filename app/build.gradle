@@ -3,17 +3,21 @@ buildscript {
     ext.supportLibraryVersion = "23.1.1"
 
     repositories {
+        maven { url 'https://maven.fabric.io/public' }
         jcenter()
         mavenCentral()
     }
+
     dependencies {
         classpath 'com.android.tools.build:gradle:2.0.0-alpha3'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'io.fabric.tools:gradle:1.+'
     }
 }
 
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
+apply plugin: 'io.fabric'
 
 android {
     compileSdkVersion 23
@@ -24,7 +28,7 @@ android {
         minSdkVersion 9
         targetSdkVersion 23
         versionCode 1
-        versionName "1.0"
+        versionName "0.1"
     }
     buildTypes {
         release {
@@ -37,6 +41,12 @@ android {
         main.java.srcDirs += 'src/main/java'
         main.java.srcDirs += 'src/main/kotlin'
     }
+}
+
+repositories {
+    maven { url 'https://maven.fabric.io/public' }
+    jcenter()
+    mavenCentral()
 }
 
 dependencies {
@@ -63,6 +73,10 @@ dependencies {
     compile 'com.github.orangegangsters:swipy:1.2.1@aar'
 
     compile 'com.squareup.picasso:picasso:2.5.2'
+
+    compile('com.crashlytics.sdk.android:crashlytics:2.5.5@aar') {
+        transitive = true;
+    }
 
     testCompile 'junit:junit:4.12'
     testCompile 'org.robolectric:robolectric:3.0'
