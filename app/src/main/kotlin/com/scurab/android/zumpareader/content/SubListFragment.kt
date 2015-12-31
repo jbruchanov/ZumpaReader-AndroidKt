@@ -26,6 +26,7 @@ import com.scurab.android.zumpareader.ui.hideAnimated
 import com.scurab.android.zumpareader.ui.isVisible
 import com.scurab.android.zumpareader.ui.showAnimated
 import com.scurab.android.zumpareader.util.*
+import com.scurab.android.zumpareader.widget.PostMessageView
 import rx.Observer
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
@@ -56,9 +57,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener 
 
     private val recyclerView: RecyclerView get() = view!!.find<RecyclerView>(R.id.recycler_view)
     private val swipyRefreshLayout: SwipyRefreshLayout get() = view!!.find<SwipyRefreshLayout>(R.id.swipe_refresh_layout)
-    private val responsePanel: View? get() = view?.find<View>(R.id.response_panel)
-    private val sendButton: ImageButton get() = view!!.find<ImageButton>(R.id.send)
-    private val message: EditText get() = view!!.find<EditText>(R.id.message)
+    private val postMessageView: PostMessageView get() = view!!.find<PostMessageView>(R.id.response_panel)
     private var scrollDownAfterLoad : Boolean = false
 
     override var isLoading: Boolean
@@ -118,11 +117,11 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        responsePanel?.visibility = View.INVISIBLE
+        postMessageView.visibility = View.INVISIBLE
         recyclerView.layoutManager = LinearLayoutManager(view.context, LinearLayoutManager.VERTICAL, false)
         swipyRefreshLayout.direction = SwipyRefreshLayoutDirection.BOTTOM
         swipyRefreshLayout.setOnRefreshListener { loadData() }
-        sendButton.setOnClickListener { dispatchSend() }
+        postMessageView.sendButton.setOnClickListener { dispatchSend() }
         loadData()
     }
 
@@ -136,7 +135,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener 
             it.settingsButton.visibility = View.GONE
         }
         view.post {//set padding for response panel
-            recyclerView.setPadding(recyclerView.paddingLeft, recyclerView.paddingTop, recyclerView.paddingRight, responsePanel?.height ?: 0)
+            recyclerView.setPadding(recyclerView.paddingLeft, recyclerView.paddingTop, recyclerView.paddingRight, postMessageView?.height ?: 0)
         }
     }
 
@@ -149,7 +148,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener 
     }
 
     protected fun dispatchSend() {
-        var msg = message.text.toString().trim()
+        var msg = postMessageView.message.text.toString().trim()
         if (msg.length == 0) {
             context.toast(R.string.err_empty_msg)
             return
@@ -211,7 +210,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener 
     }
 
     override fun onFloatingButtonClick() {
-        responsePanel.exec {
+        postMessageView.exec {
             if (!it.isVisible()) {
                 it.showAnimated()
             }
@@ -230,9 +229,9 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener 
 
     fun hideMessagePanel(clearText: Boolean = false) : Boolean {
         if (clearText) {
-            message.text = null
+            postMessageView.message.text = null
         }
-        responsePanel.exec {
+        postMessageView.exec {
             if (it.isVisible()) {
                 it.hideAnimated()
                 mainActivity?.floatingButton?.showAnimated()
