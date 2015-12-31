@@ -128,4 +128,9 @@ public class MainActivity : AppCompatActivity() {
     public fun setScrollStrategyEnabled(enabled: Boolean) {
         ((floatingButton.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior as QuickHideBehavior?)?.enabled = enabled;
     }
+
+    fun reloadData() {
+        var fragment = supportFragmentManager.fragments.firstOrNull { it -> it is MainListFragment } as? MainListFragment
+        fragment.execOn { reloadData() }
+    }
 }

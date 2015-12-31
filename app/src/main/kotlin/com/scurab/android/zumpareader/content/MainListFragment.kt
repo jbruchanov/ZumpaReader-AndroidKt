@@ -77,6 +77,10 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
         }
     }
 
+    public fun reloadData() {
+        loadPage()
+    }
+
     private fun loadPage(fromThread: String? = null) {
         if (isLoading) {
             return
