@@ -110,21 +110,4 @@ public abstract class BaseFragment : Fragment() {
         get() {
             return zumpaApp?.zumpaPrefs?.isLoggedIn ?: false
         }
-
-    protected fun hideKeyboard() {
-        context.exec {
-            var imm = it.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager;
-            imm.exec {
-                var focused = view?.findFocus() ?: null;
-                if (focused == null) {
-                    imm.hideSoftInputFromInputMethod(null, 0);
-                } else {
-                    if (!imm.hideSoftInputFromWindow(focused.windowToken, InputMethodManager.HIDE_IMPLICIT_ONLY)) {
-                        imm.hideSoftInputFromWindow(focused.windowToken, 0);
-                    }
-                }
-            }
-            it.getSystemService(Context.INPUT_METHOD_SERVICE)
-        }
-    }
 }

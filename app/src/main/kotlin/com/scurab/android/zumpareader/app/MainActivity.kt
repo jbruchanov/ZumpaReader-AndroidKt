@@ -26,10 +26,7 @@ import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.ui.DelayClickListener
 import com.scurab.android.zumpareader.ui.QuickHideBehavior
 import com.scurab.android.zumpareader.ui.hideAnimated
-import com.scurab.android.zumpareader.util.exec
-import com.scurab.android.zumpareader.util.execIfNull
-import com.scurab.android.zumpareader.util.obtainStyledColor
-import com.scurab.android.zumpareader.util.wrapWithTint
+import com.scurab.android.zumpareader.util.*
 import io.fabric.sdk.android.Fabric
 import java.util.*
 
@@ -106,14 +103,14 @@ public class MainActivity : AppCompatActivity() {
 
     fun onFloatingButtonClick() {
         if (zumpaApp.zumpaPrefs.isLoggedIn) {
-            (supportFragmentManager.fragments.lastOrNull() as? BaseFragment).exec {
+            (supportFragmentManager.fragments.lastNonNullFragment() as? BaseFragment).exec {
                 it.onFloatingButtonClick();
             }
         }
     }
 
     override fun onBackPressed() {
-        (supportFragmentManager.fragments.lastOrNull() as? BaseFragment).exec {
+        (supportFragmentManager.fragments.lastNonNullFragment() as? BaseFragment).exec {
             if (!it.onBackButtonClick()) {
                 super.onBackPressed()
             }

@@ -2,15 +2,15 @@ package com.scurab.android.zumpareader.util
 
 import android.content.Context
 import android.content.res.ColorStateList
-import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.support.annotation.IdRes
 import android.support.annotation.StringRes
+import android.support.v4.app.Fragment
 import android.support.v4.graphics.drawable.DrawableCompat
 import android.support.v7.widget.RecyclerView
 import android.util.TypedValue
 import android.view.View
-import android.widget.ImageView
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import java.net.URLEncoder
 import java.util.*
@@ -72,4 +72,43 @@ public fun Drawable.wrapWithTint(color: Int): Drawable {
     var drawable = DrawableCompat.wrap(this);
     DrawableCompat.setTintList(drawable, ColorStateList.valueOf(color));
     return drawable
+}
+
+public fun List<Fragment?>.lastNonNullFragment(): Fragment? {
+    for (i in size - 1 downTo 0 step 1) {
+        if (this[i] != null) {
+            return this[i]
+        }
+    }
+    return null
+}
+
+public fun Context.hideKeyboard() {
+    hideKeyboard(null)
+}
+
+public fun Context.hideKeyboard(view: View?) {
+    var imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager;
+    imm.exec {
+        var focused = view?.findFocus() ?: null;
+        if (focused == null) {
+            imm.hideSoftInputFromInputMethod(null, 0);
+        } else {
+            if (!imm.hideSoftInputFromWindow(focused.windowToken, InputMethodManager.HIDE_IMPLICIT_ONLY)) {
+                imm.hideSoftInputFromWindow(focused.windowToken, 0);
+            }
+        }
+    }
+}
+
+public fun Context.showKeyboard() {
+    showKeyboard()
+}
+
+public fun Context.showKeyboard(view : View?) {
+    var imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager;
+    imm.exec {
+        imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+        view?.requestFocus()
+    }
 }

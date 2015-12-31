@@ -159,7 +159,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener 
             val body = ZumpaThreadBody(app.zumpaPrefs.nickName, app.zumpaData[threadId]?.subject ?: "", msg, threadId)
             val observable = it.sendResponse(threadId, threadId, body)
             isSending = true
-            hideKeyboard()
+            context.hideKeyboard()
             observable
                     .subscribeOn(Schedulers.io())
                     .subscribe(object : Observer<ZumpaThreadResult?> {
