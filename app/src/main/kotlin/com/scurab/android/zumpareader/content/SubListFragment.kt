@@ -2,16 +2,12 @@ package com.scurab.android.zumpareader.content
 
 import android.app.ProgressDialog
 import android.graphics.Color
-import android.os.Build
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
-import android.widget.ImageButton
-import android.widget.ImageView
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection
 import com.pawegio.kandroid.find
@@ -25,7 +21,10 @@ import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.ui.hideAnimated
 import com.scurab.android.zumpareader.ui.isVisible
 import com.scurab.android.zumpareader.ui.showAnimated
-import com.scurab.android.zumpareader.util.*
+import com.scurab.android.zumpareader.util.exec
+import com.scurab.android.zumpareader.util.execOn
+import com.scurab.android.zumpareader.util.hideKeyboard
+import com.scurab.android.zumpareader.util.toast
 import com.scurab.android.zumpareader.widget.PostMessageView
 import rx.Observer
 import rx.android.schedulers.AndroidSchedulers
@@ -34,8 +33,7 @@ import rx.schedulers.Schedulers
 /**
  * Created by JBruchanov on 27/11/2015.
  */
-public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener {
-
+public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, SendingFragment {
     companion object {
         private val THREAD_ID: String = "THREAD_ID"
 
@@ -72,26 +70,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener 
             }
         }
 
-    private var sendingDialog: ProgressDialog? = null
-    private var isSending: Boolean
-        get() {
-            return sendingDialog != null
-        }
-        set(value) {
-            if (value != isSending) {
-                if (value) {
-                    context.exec {
-                        sendingDialog = ProgressDialog.show(context, null, it.resources.getString(R.string.wheeeee), true, false)
-                    }
-                } else {
-                    sendingDialog.exec {
-                        it.dismiss()
-                    }
-                    sendingDialog = null
-                }
-            }
-        }
-
+    override var sendingDialog: ProgressDialog? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup, savedInstanceState: Bundle?): View? {
         var content = inflater.inflate(R.layout.view_recycler_refreshable_thread, container, false)
@@ -150,12 +129,14 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener 
                     .subscribe(object : Observer<ZumpaThreadResult?> {
                         override fun onNext(t: ZumpaThreadResult?) {
                             t.exec {
-                                view.post {
-                                    hideMessagePanel(true)
-                                    isSending = false
-                                    isLoading = false
-                                    scrollDownAfterLoad = true
-                                    loadData()
+                                if (view != null) {
+                                    view.post {
+                                        hideMessagePanel(true)
+                                        isSending = false
+                                        isLoading = false
+                                        scrollDownAfterLoad = true
+                                        loadData()
+                                    }
                                 }
                             }
                         }
