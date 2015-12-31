@@ -25,9 +25,8 @@ public interface ZumpaAPI {
     fun sendResponse(@Query(value = "i") id: String, @Query(value = "t") id2: String, @Body body: ZumpaThreadBody): Observable<ZumpaThreadResult>
 
     @POST("/phorum/post.php")
-    fun sendThread(@Body body: ZumpaThreadBody): Call<ZumpaThreadResult>
+    fun sendThread(@Body body: ZumpaThreadBody): Observable<ZumpaThreadResult>
 
-    @Headers("User-Agent: Mozilla/5.0 (Linux; U; Android 2.2; en-us; Nexus One Build/FRF91) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1")
     @POST("/login.php")
     fun login(@Body body: ZumpaLoginBody): Call<ZumpaResponse>
 }
