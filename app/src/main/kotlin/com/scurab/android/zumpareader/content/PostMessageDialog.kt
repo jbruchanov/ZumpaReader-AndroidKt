@@ -8,6 +8,7 @@ import android.support.v4.app.DialogFragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.Window
 import com.pawegio.kandroid.find
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.app.MainActivity
@@ -27,6 +28,7 @@ public class PostMessageDialog : DialogFragment() {
         var dialog = super.onCreateDialog(savedInstanceState)
         dialog.window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT));
         dialog.setCanceledOnTouchOutside(false)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         return dialog
     }
 
