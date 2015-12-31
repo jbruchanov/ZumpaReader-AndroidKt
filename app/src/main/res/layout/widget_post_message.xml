@@ -1,11 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:background="?primaryBackgroundColor"
-    android:orientation="vertical">
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:background="?primaryBackgroundColor"
+              android:orientation="vertical">
 
+
+    <EditText
+        android:id="@+id/subject"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/gap_tiny"
+        android:background="@drawable/edit_text_background"
+        android:hint="@string/subject"
+        android:inputType="text"
+        android:maxLines="5"
+        android:minHeight="@dimen/response_edit_text_min_height"
+        android:minLines="2"
+        android:padding="@dimen/gap_small"
+        android:scrollbars="vertical"
+        android:textSize="@dimen/text_message"
+        android:visibility="gone"
+        tools:visibility="visible"/>
 
     <EditText
         android:id="@+id/message"
@@ -13,13 +30,13 @@
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/gap_tiny"
         android:background="@drawable/edit_text_background"
-        android:gravity="left|top"
+        android:hint="@string/message"
         android:maxLines="5"
         android:minHeight="@dimen/response_edit_text_min_height"
         android:minLines="2"
-        android:scrollbars="vertical"
         android:padding="@dimen/gap_small"
-        android:textSize="@dimen/text_message" />
+        android:scrollbars="vertical"
+        android:textSize="@dimen/text_message"/>
 
 
     <LinearLayout
@@ -29,33 +46,39 @@
 
         <ImageButton
             android:id="@+id/photo"
+            android:enabled="false"
+            android:alpha="0.3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="?imageButtonBackground"
             android:padding="@dimen/gap_normal"
-            android:src="@drawable/ic_photo" />
+            android:src="@drawable/ic_photo"/>
 
         <ImageButton
             android:id="@+id/camera"
+            android:enabled="false"
+            android:alpha="0.3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="?imageButtonBackground"
             android:padding="@dimen/gap_normal"
-            android:src="@drawable/ic_camera" />
+            android:src="@drawable/ic_camera"/>
 
         <ImageButton
             android:id="@+id/survey"
+            android:enabled="false"
+            android:alpha="0.3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="?imageButtonBackground"
             android:padding="@dimen/gap_normal"
-            android:src="@drawable/ic_survey" />
+            android:src="@drawable/ic_survey"/>
 
         <View
-            tools:ignore="NewApi"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_weight="1" />
+            android:layout_weight="1"
+            tools:ignore="NewApi"/>
 
         <ImageButton
             android:id="@+id/send"
@@ -63,6 +86,6 @@
             android:layout_height="wrap_content"
             android:background="?imageButtonBackground"
             android:padding="@dimen/gap_normal"
-            android:src="@drawable/ic_send" />
+            android:src="@drawable/ic_send"/>
     </LinearLayout>
 </LinearLayout>

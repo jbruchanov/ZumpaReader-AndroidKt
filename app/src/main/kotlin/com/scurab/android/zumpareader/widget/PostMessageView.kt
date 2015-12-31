@@ -2,6 +2,8 @@ package com.scurab.android.zumpareader.widget
 
 import android.content.Context
 import android.util.AttributeSet
+import android.view.Gravity
+import android.view.View
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageButton
@@ -13,6 +15,7 @@ import com.scurab.android.zumpareader.R
  */
 public class PostMessageView : FrameLayout {
 
+    public val subject by lazy { find<EditText>(R.id.subject) }
     public val message by lazy { find<EditText>(R.id.message) }
     public val photo by lazy { find<ImageButton>(R.id.photo) }
     public val camera by lazy { find<ImageButton>(R.id.camera) }
@@ -23,7 +26,7 @@ public class PostMessageView : FrameLayout {
 
     constructor(context: Context?, attrs: AttributeSet?) : this(context, attrs, 0)
 
-    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr){
+    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr) {
         init(attrs)
     }
 
@@ -33,5 +36,13 @@ public class PostMessageView : FrameLayout {
 
     private fun init(attrs: AttributeSet?) {
         inflate(context, R.layout.widget_post_message, this)
+    }
+
+    public fun setUIForNewMessage() {
+        subject.visibility = View.VISIBLE
+        message.maxLines = Int.MAX_VALUE
+        message.minHeight = resources.getDimensionPixelSize(R.dimen.new_message_edit_text_min_height)
+        message.maxHeight = resources.getDimensionPixelSize(R.dimen.new_message_edit_text_min_height)
+        message.gravity = Gravity.TOP or Gravity.LEFT
     }
 }
