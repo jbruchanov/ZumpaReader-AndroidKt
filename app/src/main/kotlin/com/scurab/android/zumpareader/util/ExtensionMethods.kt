@@ -75,7 +75,7 @@ public fun Drawable.wrapWithTint(color: Int): Drawable {
 }
 
 public fun List<Fragment?>.lastNonNullFragment(): Fragment? {
-    for (i in size - 1 downTo 0 step 1) {
+    for (i in Math.min(0, size - 1) downTo 0 step 1) {
         if (this[i] != null) {
             return this[i]
         }
