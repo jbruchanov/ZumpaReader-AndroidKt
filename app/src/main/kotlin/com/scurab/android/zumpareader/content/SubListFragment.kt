@@ -53,9 +53,9 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
     
     protected val threadId: String by lazy { arguments!!.getString(THREAD_ID) }
 
-    private val recyclerView: RecyclerView get() = view!!.find<RecyclerView>(R.id.recycler_view)
-    private val swipyRefreshLayout: SwipyRefreshLayout get() = view!!.find<SwipyRefreshLayout>(R.id.swipe_refresh_layout)
-    private val postMessageView: PostMessageView get() = view!!.find<PostMessageView>(R.id.response_panel)
+    private val recyclerView: RecyclerView? get() = view?.find<RecyclerView>(R.id.recycler_view)
+    private val swipyRefreshLayout: SwipyRefreshLayout? get() = view?.find<SwipyRefreshLayout>(R.id.swipe_refresh_layout)
+    private val postMessageView: PostMessageView? get() = view?.find<PostMessageView>(R.id.response_panel)
     private var scrollDownAfterLoad : Boolean = false
 
     override var isLoading: Boolean
@@ -81,11 +81,11 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        postMessageView.visibility = View.INVISIBLE
-        recyclerView.layoutManager = LinearLayoutManager(view.context, LinearLayoutManager.VERTICAL, false)
-        swipyRefreshLayout.direction = SwipyRefreshLayoutDirection.BOTTOM
-        swipyRefreshLayout.setOnRefreshListener { loadData() }
-        postMessageView.sendButton.setOnClickListener { dispatchSend() }
+        postMessageView?.visibility = View.INVISIBLE
+        recyclerView?.layoutManager = LinearLayoutManager(view.context, LinearLayoutManager.VERTICAL, false)
+        swipyRefreshLayout?.direction = SwipyRefreshLayoutDirection.BOTTOM
+        swipyRefreshLayout?.setOnRefreshListener { loadData() }
+        postMessageView?.sendButton?.setOnClickListener { dispatchSend() }
         loadData()
     }
 
@@ -99,7 +99,9 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
             it.settingsButton.visibility = View.GONE
         }
         view.post {//set padding for response panel
-            recyclerView.setPadding(recyclerView.paddingLeft, recyclerView.paddingTop, recyclerView.paddingRight, postMessageView?.height ?: 0)
+            recyclerView.execOn {
+                setPadding(paddingLeft, paddingTop, paddingRight, postMessageView?.height ?: 0)
+            }
         }
     }
 
@@ -112,7 +114,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
     }
 
     protected fun dispatchSend() {
-        var msg = postMessageView.message.text.toString().trim()
+        var msg = postMessageView?.message?.text?.toString()?.trim() ?: ""
         if (msg.length == 0) {
             context.toast(R.string.err_empty_msg)
             return
@@ -164,7 +166,9 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
                                 onResultLoaded(it)
                                 if (scrollDownAfterLoad) {
                                     scrollDownAfterLoad = false
-                                    recyclerView.scrollToPosition(recyclerView.adapter.itemCount)
+                                    recyclerView.exec {
+                                        it.scrollToPosition(it.adapter.itemCount)
+                                    }
                                 }
                             }
                         }
@@ -195,7 +199,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
 
     fun hideMessagePanel(clearText: Boolean = false) : Boolean {
         if (clearText) {
-            postMessageView.message.text = null
+            postMessageView?.message?.text = null
         }
         postMessageView.exec {
             if (it.isVisible()) {

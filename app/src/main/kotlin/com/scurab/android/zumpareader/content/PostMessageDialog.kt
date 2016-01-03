@@ -28,7 +28,7 @@ import rx.schedulers.Schedulers
  */
 public class PostMessageDialog : DialogFragment(), SendingFragment {
 
-    private val postMessageView: PostMessageView get() = view!!.find<PostMessageView>(R.id.post_message_view)
+    private val postMessageView: PostMessageView? get() = view?.find<PostMessageView>(R.id.post_message_view)
     override var sendingDialog: ProgressDialog? = null
 
     public val mainActivity: MainActivity? get() {
@@ -52,11 +52,15 @@ public class PostMessageDialog : DialogFragment(), SendingFragment {
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        postMessageView.setUIForNewMessage()
-        postMessageView.sendButton.setOnClickListener { dispatchSend() }
+        postMessageView?.setUIForNewMessage()
+        postMessageView?.sendButton?.setOnClickListener { dispatchSend() }
     }
 
     protected fun dispatchSend() {
+        if (postMessageView == null) {
+            return
+        }
+        var postMessageView= this.postMessageView!!
         var subject = postMessageView.subject.text.toString().trim()
         var message = postMessageView.message.text.toString().trim()
 
@@ -97,8 +101,8 @@ public class PostMessageDialog : DialogFragment(), SendingFragment {
 
     override fun onResume() {
         super.onResume()
-        postMessageView.post {
-            context.showKeyboard(postMessageView.subject)
+        postMessageView?.post {
+            context.showKeyboard(postMessageView?.subject)
         }
     }
 
