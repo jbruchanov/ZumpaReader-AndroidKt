@@ -15,6 +15,7 @@ buildscript {
     }
 }
 
+apply from: 'tools.gradle'
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'io.fabric'
@@ -25,12 +26,17 @@ android {
 
     defaultConfig {
         applicationId "com.scurab.android.zumpareader"
+        buildConfigField "String", "BUILD_DETAIL", "\"build-" + getDate() + ",git-" + gitSha() + "\""
         minSdkVersion 9
         targetSdkVersion 23
         versionCode 1
         versionName "0.1"
     }
     buildTypes {
+        debug {
+            versionNameSuffix "-build" + getDate() + "-git" + gitSha()
+            minifyEnabled false
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'

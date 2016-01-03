@@ -1,0 +1,16 @@
+gradle.allprojects { ext.getDate = { return getDate(); } }
+gradle.allprojects { ext.gitSha = { return gitSha(); } }
+
+def getDate() {
+    def date = new Date()
+    def formattedDate = date.format('yyyyMMddHHmmss')
+    return formattedDate
+}
+
+def gitSha() {
+    try {
+        return 'git rev-parse --short HEAD'.execute().text.trim()
+    } catch (any) {
+        throw new Exception("!!! Unable to execute 'git' => Git is not part of your system path !!!");
+    }
+}
