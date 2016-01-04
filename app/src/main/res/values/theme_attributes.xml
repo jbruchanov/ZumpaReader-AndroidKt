@@ -2,6 +2,7 @@
 <resources>
     <attr name="contextColor" format="color" />
     <attr name="contextColor50p" format="color" />
+    <attr name="contextColorText" format="color" />
     <attr name="primaryTextColor" format="color" />
     <attr name="primaryBackgroundColor" format="color" />
     <attr name="secondaryBackgroundColor" format="color" />
