@@ -28,7 +28,7 @@ android {
         applicationId "com.scurab.android.zumpareader"
         buildConfigField "String", "BUILD_DETAIL", "\"build-" + getDate() + ",git-" + gitSha() + "\""
         buildConfigField "boolean", "VERBOSE_LOGGING", "false"
-        minSdkVersion 9
+        minSdkVersion 14
         targetSdkVersion 23
         versionCode 1
         versionName "0.1"
@@ -41,6 +41,16 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    productFlavors {
+        dev {
+            applicationId "com.scurab.android.zumpareader"
+        }
+
+        playStore {
+            applicationId "com.scurab.zumpareader"
         }
     }
 
