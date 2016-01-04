@@ -2,14 +2,11 @@ package com.scurab.android.zumpareader.content
 
 import android.app.Dialog
 import android.app.ProgressDialog
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.support.v4.app.DialogFragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.Window
 import com.pawegio.kandroid.find
 import com.pawegio.kandroid.toast
 import com.scurab.android.zumpareader.R
@@ -38,12 +35,9 @@ public class PostMessageDialog : DialogFragment(), SendingFragment {
         return mainActivity?.zumpaApp
     }
 
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog? {
-        var dialog = super.onCreateDialog(savedInstanceState)
-        dialog.window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT));
-        dialog.setCanceledOnTouchOutside(false)
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        return dialog
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setStyle(0, R.style.AppTheme_Dialog);
     }
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {

@@ -10,4 +10,11 @@
     <style name="AppTheme.Settings" parent="@style/Base.V21.Theme.AppCompat" >
         <item name="colorAccent">@color/colorAccent</item>
     </style>
+
+    <style name="AppTheme.Dialog" parent="@style/Base.V21.Theme.AppCompat.Light.Dialog" >
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowCloseOnTouchOutside">false</item>
+    </style>
 </resources>
