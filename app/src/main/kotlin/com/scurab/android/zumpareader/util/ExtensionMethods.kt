@@ -12,6 +12,7 @@ import android.util.TypedValue
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
+import com.scurab.android.zumpareader.ZR
 import java.net.URLEncoder
 import java.util.*
 
@@ -45,7 +46,7 @@ public fun <T> T?.execIfNull(f: () -> Unit) {
 }
 
 public fun String.encodeHttp(): String {
-    return URLEncoder.encode(this, "iso-8859-2")
+    return URLEncoder.encode(this, ZR.Constants.ENCODING)
 }
 
 public fun <K, V> Map<K, V>.asListOfValues(): ArrayList<V> = ArrayList(this.values);

@@ -21,7 +21,7 @@ class HTMLTags {
     public static final String NBSP = "&nbsp;";
     public static final String TAG_BOLD = "b";
     public static final char NBSP_CHAR = (char) 160;
-    public static final String NBSP_CHAR_STR = String.valueOf((char) 160);
+    public static final String NBSP_CHAR_STR = String.valueOf(NBSP_CHAR);
     public static final String TAG_INPUT = "input";
     public static final String ATTR_VALUE = "value";
     public static final String ATTR_TYPE = "type";

@@ -2,6 +2,7 @@ package com.scurab.android.zumpareader.model
 
 import android.content.Context
 import android.content.res.Resources
+import com.scurab.android.zumpareader.ZR
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.util.encodeHttp
 import com.scurab.android.zumpareader.util.exec
@@ -172,7 +173,7 @@ public data class ZumpaThreadBody(
 
 public class ZumpaResponse(val data: ByteArray, val mediaType: MediaType) {
 
-    public fun asString() = String(data, "iso-8859-2")
+    public fun asString() = String(data, ZR.Constants.ENCODING)
 }
 
 //
