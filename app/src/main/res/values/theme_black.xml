@@ -2,7 +2,7 @@
 <resources>
     <style name="ThemeBlack" parent="AppTheme.NoActionBar">
         <item name="contextColor">@color/yellow_orange</item>
-        <item name="contextColorText">@color/yellow_orange_dark</item>
+        <item name="contextColorText">@color/blue_gray</item>
         <item name="contextColor50p">@color/yellow_orange_50p</item>
         <item name="primaryTextColor">@color/white</item>
         <item name="primaryBackgroundColor">@color/black</item>

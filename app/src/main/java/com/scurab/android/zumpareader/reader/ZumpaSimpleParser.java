@@ -24,6 +24,7 @@ import com.scurab.android.zumpareader.model.ZumpaMainPageResult;
 import com.scurab.android.zumpareader.model.ZumpaThread;
 import com.scurab.android.zumpareader.model.ZumpaThreadItem;
 import com.scurab.android.zumpareader.model.ZumpaThreadResult;
+import com.scurab.android.zumpareader.util.ExtensionMethodsKt;
 import com.scurab.android.zumpareader.util.ParseUtils;
 import com.scurab.android.zumpareader.ZR;
 
@@ -54,6 +55,7 @@ public class ZumpaSimpleParser {
     private boolean mShowLastUser;
     private static final SimpleDateFormat FULL_DATE_FORMAT = new SimpleDateFormat("dd. MM. yyyy HH:mm:ss");
     private static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm");
+    private static final Pattern RESPONSE_PATTERN = Pattern.compile("^\\W*(\\w.+)\\s»", Pattern.CASE_INSENSITIVE);
     private static final Pattern URL_PATTERN = Pattern.compile("(http[s]?://[^\\s]*)", Pattern.CASE_INSENSITIVE);
     private static final Pattern DATE_PATTERN = Pattern.compile("Datum:&nbsp;([^<]+)", Pattern.CASE_INSENSITIVE);
     private static final Pattern AUTHOR_PATTERN = Pattern.compile("Autor:&nbsp;([^<]+)", Pattern.CASE_INSENSITIVE);
@@ -482,7 +484,7 @@ public class ZumpaSimpleParser {
     }
 
     public static CharSequence parseBody(String body, Context context) {
-        SpannableString ssb = new SpannableString(body);
+        SpannableString ssb = new SpannableString(body.replaceAll(HTMLTags.NBSP_CHAR_STR, " "));
         Matcher matcher = URL_PATTERN.matcher(body);
         List<Pair<Integer, Integer>> links = new ArrayList<>();
         while (matcher.find()) {
@@ -507,6 +509,12 @@ public class ZumpaSimpleParser {
                             new ImageSpan(draw));
                 }
             }
+        }
+
+        Matcher responses = RESPONSE_PATTERN.matcher(body);
+        int color = ExtensionMethodsKt.obtainStyledColor(context, R.attr.contextColorText);
+        while (responses.find()) {
+            setSpans(ssb, responses.start(1), responses.end(1), new ForegroundColorSpan(color));
         }
         return ssb;
     }
