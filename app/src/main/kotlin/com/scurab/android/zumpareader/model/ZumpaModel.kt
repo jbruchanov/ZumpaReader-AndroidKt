@@ -1,7 +1,6 @@
 package com.scurab.android.zumpareader.model
 
 import android.content.Context
-import android.content.res.Resources
 import com.scurab.android.zumpareader.ZR
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.util.encodeHttp

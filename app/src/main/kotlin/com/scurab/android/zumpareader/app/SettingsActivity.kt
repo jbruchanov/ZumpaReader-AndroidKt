@@ -13,7 +13,6 @@ import com.scurab.android.zumpareader.util.toast
 import retrofit.Callback
 import retrofit.Response
 import retrofit.Retrofit
-import java.util.regex.Pattern
 
 /**
  * Created by JBruchanov on 29/12/2015.

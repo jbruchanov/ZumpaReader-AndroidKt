@@ -2,14 +2,12 @@ package com.scurab.android.zumpareader.reader;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.util.Pair;
 import android.text.Html;
 import android.text.SpannableString;
-import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.style.ForegroundColorSpan;
@@ -18,6 +16,7 @@ import android.text.style.RelativeSizeSpan;
 import android.text.style.TypefaceSpan;
 
 import com.scurab.android.zumpareader.R;
+import com.scurab.android.zumpareader.ZR;
 import com.scurab.android.zumpareader.model.Survey;
 import com.scurab.android.zumpareader.model.SurveyItem;
 import com.scurab.android.zumpareader.model.ZumpaMainPageResult;
@@ -26,7 +25,6 @@ import com.scurab.android.zumpareader.model.ZumpaThreadItem;
 import com.scurab.android.zumpareader.model.ZumpaThreadResult;
 import com.scurab.android.zumpareader.util.ExtensionMethodsKt;
 import com.scurab.android.zumpareader.util.ParseUtils;
-import com.scurab.android.zumpareader.ZR;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;

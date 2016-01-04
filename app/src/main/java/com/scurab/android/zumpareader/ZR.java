@@ -1,7 +1,5 @@
 package com.scurab.android.zumpareader;
 
-import android.graphics.Color;
-
 public final class ZR {
     public static final class Constants {
         public static final String ZUMPA_MAIN_URL = "http://portal2.dkm.cz";

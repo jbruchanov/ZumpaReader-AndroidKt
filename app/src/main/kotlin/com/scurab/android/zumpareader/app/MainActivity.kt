@@ -5,30 +5,22 @@ import android.os.Build
 import android.os.Bundle
 import android.support.design.widget.CoordinatorLayout
 import android.support.design.widget.FloatingActionButton
-import android.support.design.widget.NavigationView
 import android.support.v4.app.FragmentTransaction
-import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
-import android.view.MenuItem
 import android.view.View
 import android.widget.ImageButton
-import android.widget.ImageView
 import android.widget.ProgressBar
-import android.widget.Toast
 import com.crashlytics.android.Crashlytics
 import com.pawegio.kandroid.find
-import com.pawegio.kandroid.toast
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.content.MainListFragment
-import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.ui.DelayClickListener
 import com.scurab.android.zumpareader.ui.QuickHideBehavior
 import com.scurab.android.zumpareader.ui.hideAnimated
 import com.scurab.android.zumpareader.util.*
 import io.fabric.sdk.android.Fabric
-import java.util.*
 
 /**
  * Created by JBruchanov on 24/11/2015.

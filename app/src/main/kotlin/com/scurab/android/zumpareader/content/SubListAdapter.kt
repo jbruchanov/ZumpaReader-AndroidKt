@@ -4,13 +4,11 @@ import android.app.Activity
 import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.graphics.Bitmap
-import android.graphics.Color
 import android.graphics.drawable.*
 import android.net.Uri
 import android.os.Build
 import android.support.annotation.ColorInt
 import android.support.v7.widget.RecyclerView
-import android.util.Log
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
@@ -20,7 +18,10 @@ import android.widget.ImageView
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.drawable.SimpleProgressDrawable
 import com.scurab.android.zumpareader.model.ZumpaThreadItem
-import com.scurab.android.zumpareader.util.*
+import com.scurab.android.zumpareader.util.exec
+import com.scurab.android.zumpareader.util.execOn
+import com.scurab.android.zumpareader.util.find
+import com.scurab.android.zumpareader.util.obtainStyledColor
 import com.squareup.picasso.Picasso
 import java.text.SimpleDateFormat
 import java.util.*

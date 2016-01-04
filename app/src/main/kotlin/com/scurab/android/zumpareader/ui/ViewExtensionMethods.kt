@@ -2,13 +2,10 @@ package com.scurab.android.zumpareader.ui
 
 import android.animation.Animator
 import android.os.Build
-import android.support.annotation.IdRes
 import android.support.v4.view.ViewCompat
-import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.view.ViewAnimationUtils
 import com.scurab.android.zumpareader.util.exec
-import com.scurab.android.zumpareader.util.execIfNull
 
 /**
  * Created by jiribruchanov on 12/8/15.
