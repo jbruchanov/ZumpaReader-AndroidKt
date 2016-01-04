@@ -27,6 +27,7 @@ android {
     defaultConfig {
         applicationId "com.scurab.android.zumpareader"
         buildConfigField "String", "BUILD_DETAIL", "\"build-" + getDate() + ",git-" + gitSha() + "\""
+        buildConfigField "boolean", "VERBOSE_LOGGING", "false"
         minSdkVersion 9
         targetSdkVersion 23
         versionCode 1

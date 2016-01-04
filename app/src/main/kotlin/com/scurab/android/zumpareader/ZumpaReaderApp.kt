@@ -56,7 +56,7 @@ public class ZumpaReaderApp:Application(){
 
         val cookieManager = CookieManager()
         cookieManager.setCookiePolicy(java.net.CookiePolicy.ACCEPT_ALL)
-        cookieManager.put(URI.create("http://portal2.dkm.cz"), zumpaPrefs.cookiesMap)
+        cookieManager.put(URI.create(ZR.Constants.ZUMPA_MAIN_URL), zumpaPrefs.cookiesMap)
 
         var logging = HttpLoggingInterceptor();
         // set your desired log level
@@ -68,7 +68,7 @@ public class ZumpaReaderApp:Application(){
             setReadTimeout(2000L, TimeUnit.MILLISECONDS)
             setWriteTimeout(2000L, TimeUnit.MILLISECONDS)
             setCookieHandler(cookieManager)
-            if (BuildConfig.DEBUG) {
+            if (BuildConfig.VERBOSE_LOGGING) {
                 interceptors().add(logging)
             }
         }
