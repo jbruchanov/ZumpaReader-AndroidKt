@@ -18,13 +18,12 @@ import com.scurab.android.zumpareader.model.ZumpaThreadBody
 import com.scurab.android.zumpareader.model.ZumpaThreadItem
 import com.scurab.android.zumpareader.model.ZumpaThreadResult
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
+import com.scurab.android.zumpareader.text.appendReply
+import com.scurab.android.zumpareader.text.containsAuthor
 import com.scurab.android.zumpareader.ui.hideAnimated
 import com.scurab.android.zumpareader.ui.isVisible
 import com.scurab.android.zumpareader.ui.showAnimated
-import com.scurab.android.zumpareader.util.exec
-import com.scurab.android.zumpareader.util.execOn
-import com.scurab.android.zumpareader.util.hideKeyboard
-import com.scurab.android.zumpareader.util.toast
+import com.scurab.android.zumpareader.util.*
 import com.scurab.android.zumpareader.widget.PostMessageView
 import rx.Observer
 import rx.android.schedulers.AndroidSchedulers
@@ -50,13 +49,14 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
         val subject = zumpaData[threadId]?.subject
         return if (subject != null) ZumpaSimpleParser.parseBody(subject, context) else ""
     }
-    
+
     protected val threadId: String by lazy { arguments!!.getString(THREAD_ID) }
 
     private val recyclerView: RecyclerView? get() = view?.find<RecyclerView>(R.id.recycler_view)
     private val swipyRefreshLayout: SwipyRefreshLayout? get() = view?.find<SwipyRefreshLayout>(R.id.swipe_refresh_layout)
     private val postMessageView: PostMessageView? get() = view?.find<PostMessageView>(R.id.response_panel)
-    private var scrollDownAfterLoad : Boolean = false
+    private var scrollDownAfterLoad: Boolean = false
+    private val contextColorText: Int by lazy { context.obtainStyledColor(R.attr.contextColorText) }
 
     override var isLoading: Boolean
         get() = super.isLoading
@@ -98,7 +98,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
             }
             it.settingsButton.visibility = View.GONE
         }
-        view.post {//set padding for response panel
+        view.post { //set padding for response panel
             recyclerView.execOn {
                 setPadding(paddingLeft, paddingTop, paddingRight, postMessageView?.height ?: 0)
             }
@@ -142,11 +142,14 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
                                 }
                             }
                         }
+
                         override fun onError(e: Throwable?) {
                             e?.message?.exec { toast(it) }
                             isSending = false
                         }
-                        override fun onCompleted() { }
+
+                        override fun onCompleted() {
+                        }
                     })
         }
     }
@@ -157,7 +160,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
         }
         isLoading = true
         var tid = threadId
-        zumpaApp?.zumpaAPI?.getThreadPage(tid, tid).exec{
+        zumpaApp?.zumpaAPI?.getThreadPage(tid, tid).exec {
             it.observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())
                     .subscribe(object : Observer<ZumpaThreadResult?> {
@@ -173,8 +176,13 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
                             }
                         }
 
-                        override fun onError(e: Throwable?) { e?.message?.exec { toast(it) } }
-                        override fun onCompleted() { isLoading = false }
+                        override fun onError(e: Throwable?) {
+                            e?.message?.exec { toast(it) }
+                        }
+
+                        override fun onCompleted() {
+                            isLoading = false
+                        }
                     })
         }
     }
@@ -197,7 +205,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
         return super.onBackButtonClick()
     }
 
-    fun hideMessagePanel(clearText: Boolean = false) : Boolean {
+    fun hideMessagePanel(clearText: Boolean = false): Boolean {
         if (clearText) {
             postMessageView?.message?.text = null
         }
@@ -231,10 +239,24 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
     }
 
     override fun onItemClick(item: ZumpaThreadItem, longClick: Boolean) {
-        if (longClick) {
-
-        } else {
-
+        if (postMessageView != null) {
+            val postMessageView = this.postMessageView!!
+            if (longClick) {
+                postMessageView.showAnimated()
+                mainActivity?.floatingButton?.hideAnimated()
+            }
+            if (postMessageView.isVisible()) {
+                postMessageView.message.text.execOn {
+                    var text = "@%s: \n".format(item.authorReal)
+                    val outRange = OutRef<IntRange>()
+                    if (containsAuthor(text, outRange)) {
+                        val range = outRange.data!!
+                        replace(range.first, range.last, "")
+                    } else {
+                        appendReply(text, contextColorText)
+                    }
+                }
+            }
         }
     }
 
