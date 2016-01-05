@@ -53,7 +53,7 @@ public class ZumpaSimpleParser {
     private boolean mShowLastUser;
     private static final SimpleDateFormat FULL_DATE_FORMAT = new SimpleDateFormat("dd. MM. yyyy HH:mm:ss");
     private static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm");
-    private static final Pattern RESPONSE_PATTERN = Pattern.compile("^\\W*(\\w.+)\\s»", Pattern.CASE_INSENSITIVE);
+    public static final Pattern RESPONSE_PATTERN = Pattern.compile("(.+)\\s?»", Pattern.CASE_INSENSITIVE);
     private static final Pattern URL_PATTERN = Pattern.compile("(http[s]?://[^\\s]*)", Pattern.CASE_INSENSITIVE);
     private static final Pattern DATE_PATTERN = Pattern.compile("Datum:&nbsp;([^<]+)", Pattern.CASE_INSENSITIVE);
     private static final Pattern AUTHOR_PATTERN = Pattern.compile("Autor:&nbsp;([^<]+)", Pattern.CASE_INSENSITIVE);
