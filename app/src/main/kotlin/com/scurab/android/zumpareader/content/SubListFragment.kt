@@ -98,9 +98,11 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
             }
             it.settingsButton.visibility = View.GONE
         }
-        view.post { //set padding for response panel
-            recyclerView.execOn {
-                setPadding(paddingLeft, paddingTop, paddingRight, postMessageView?.height ?: 0)
+        if (zumpaApp?.zumpaPrefs?.isLoggedIn ?: false) {
+            view.post { //set padding for response panel
+                recyclerView.execOn {
+                    setPadding(paddingLeft, paddingTop, paddingRight, postMessageView?.height ?: 0)
+                }
             }
         }
     }
@@ -239,7 +241,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
     }
 
     override fun onItemClick(item: ZumpaThreadItem, longClick: Boolean) {
-        if (postMessageView != null) {
+        if (postMessageView != null && zumpaApp?.zumpaPrefs?.isLoggedIn ?: false) {
             val postMessageView = this.postMessageView!!
             if (longClick) {
                 postMessageView.showAnimated()
