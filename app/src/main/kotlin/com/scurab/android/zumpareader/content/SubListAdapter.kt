@@ -44,12 +44,12 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
     private val items: ArrayList<ZumpaThreadItem>
     private val dataItems: ArrayList<SubListItem>
     public var itemClickListener: ItemClickListener? = null
-    public var loadImages : Boolean
+    public var loadImages: Boolean
 
     @ColorInt
     private var contextColor: Int = 0
 
-    constructor(data: List<ZumpaThreadItem>, loadImages : Boolean = true) {
+    constructor(data: List<ZumpaThreadItem>, loadImages: Boolean = true) {
         items = ArrayList(data)
         this.loadImages = loadImages
         dataItems = ArrayList((items.size * 1.3/*some bigger values for links etc*/).toInt())
@@ -152,11 +152,11 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
         }
     }
 
-    protected fun dispatchClick(item: ZumpaThreadItem, longClick : Boolean = false) {
+    protected fun dispatchClick(item: ZumpaThreadItem, longClick: Boolean = false) {
         itemClickListener.exec { it.onItemClick(item, longClick) }
     }
 
-    protected fun dispatchClick(url: String, longClick : Boolean = false) {
+    protected fun dispatchClick(url: String, longClick: Boolean = false) {
         itemClickListener.exec { it.onItemClick(url, longClick) }
     }
 
@@ -175,9 +175,9 @@ private data class SubListItem(val item: ZumpaThreadItem, val itemPosition: Int,
 public class ZumpaSubItemViewHolder(val adapter: SubListAdapter, val view: View) : ZumpaItemViewHolder(view) {
     internal val button by lazy { find<Button>(R.id.button) }
     internal val imageView by lazy { view as ImageView }
-    internal var url : String? = null
-    internal var loadedUrl : String? = null
-    internal var imageTarget : ItemTarget? = null
+    internal var url: String? = null
+    internal var loadedUrl: String? = null
+    internal var imageTarget: ItemTarget? = null
 
     public fun loadImage(url: String) {
         if (url.equals(loadedUrl)) {
@@ -189,7 +189,7 @@ public class ZumpaSubItemViewHolder(val adapter: SubListAdapter, val view: View)
     }
 }
 
-internal class ItemTarget(val adapter: SubListAdapter, val holder: ZumpaSubItemViewHolder, @ColorInt val contextColor:Int) : com.squareup.picasso.Target {
+internal class ItemTarget(val adapter: SubListAdapter, val holder: ZumpaSubItemViewHolder, @ColorInt val contextColor: Int) : com.squareup.picasso.Target {
     val progressDrawable by lazy { SimpleProgressDrawable(holder.itemView.context) }
 
     override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
@@ -221,7 +221,7 @@ internal class ItemTarget(val adapter: SubListAdapter, val holder: ZumpaSubItemV
     }
 }
 
-private fun String.isImage(): Boolean {
+internal fun String.isImage(): Boolean {
     var uri = Uri.parse(this)
     val path = uri.path.toLowerCase()
     return path.endsWith(".jpg") || path.endsWith(".jpeg") || path.endsWith(".png") || path.endsWith(".bmp") || path.endsWith(".gif")

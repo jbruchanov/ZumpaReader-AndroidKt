@@ -16,7 +16,7 @@ import java.util.*
 /**
  * Created by JBruchanov on 25/11/2015.
  */
-public class MainListAdapter : RecyclerView.Adapter<ZumpaThreadViewHolder> {
+public class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadViewHolder> {
 
     public interface OnShowItemListener {
         public fun onShowingItem(source: MainListAdapter, item: Int);
@@ -105,8 +105,9 @@ public class MainListAdapter : RecyclerView.Adapter<ZumpaThreadViewHolder> {
         onShowItemListener = listener
         onShoItemListenerEndOffset = endOffset
     }
-}
 
-public class ZumpaThreadViewHolder(view: View) : ZumpaItemViewHolder(view) {
-    val stateBar by lazy { itemView.find<View>(R.id.item_state) }
+
+    public class ZumpaThreadViewHolder(view: View) : ZumpaItemViewHolder(view) {
+        val stateBar by lazy { itemView.find<View>(R.id.item_state) }
+    }
 }
