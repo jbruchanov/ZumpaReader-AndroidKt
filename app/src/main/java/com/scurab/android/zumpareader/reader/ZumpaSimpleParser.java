@@ -37,10 +37,12 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -54,7 +56,7 @@ public class ZumpaSimpleParser {
     private static final SimpleDateFormat FULL_DATE_FORMAT = new SimpleDateFormat("dd. MM. yyyy HH:mm:ss");
     private static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm");
     public static final Pattern RESPONSE_PATTERN = Pattern.compile("(.+)\\s?»", Pattern.CASE_INSENSITIVE);
-    private static final Pattern URL_PATTERN = Pattern.compile("(http[s]?://[^\\s]*)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern URL_PATTERN2 = Pattern.compile(">?(http[s]?://[^<\"\\s]*)<?", Pattern.CASE_INSENSITIVE);
     private static final Pattern DATE_PATTERN = Pattern.compile("Datum:&nbsp;([^<]+)", Pattern.CASE_INSENSITIVE);
     private static final Pattern AUTHOR_PATTERN = Pattern.compile("Autor:&nbsp;([^<]+)", Pattern.CASE_INSENSITIVE);
     private static final Pattern AUTHOR_PATTERN1 = Pattern.compile("Autor:&nbsp;<a[^>]*>([^<]+)</a>", Pattern.CASE_INSENSITIVE);
@@ -308,7 +310,7 @@ public class ZumpaSimpleParser {
             long date = getTime(content);
 
             StringBuilder sb = new StringBuilder();
-            List<String> urls = null;
+            Set<String> urls = null;
             boolean containsBold = false;
 
             String[] lines = content.split("<br>");
@@ -317,11 +319,12 @@ public class ZumpaSimpleParser {
                 if (line.contains(HTMLTags.TAG_BOLD_START) && line.contains(HTMLTags.TAG_BOLD_END)) {
                     containsBold = true;
                 }
-                if (line.matches(".*http[s]?.*")) {
-                    String link = ParseUtils.Companion.parseLink(line);
+                Matcher matcher = URL_PATTERN2.matcher(line);
+                while (matcher.find()) {
+                    String link = matcher.group(1);
                     if (link != null) {
                         if (urls == null) {
-                            urls = new ArrayList<>();
+                            urls = new HashSet<>();
                         }
                         urls.add(link);
                     }
@@ -338,7 +341,9 @@ public class ZumpaSimpleParser {
             }
 
             zti = new ZumpaThreadItem(author, body, date);
-            zti.setUrls(urls);
+            if (urls != null) {
+                zti.setUrls(new ArrayList<>(urls));
+            }
             if (!TextUtils.isEmpty(userName)) {
                 zti.setHasResponseForYou(body.contains(createToMeTemplate(userName)));
             }
@@ -483,7 +488,7 @@ public class ZumpaSimpleParser {
 
     public static CharSequence parseBody(String body, Context context) {
         SpannableString ssb = new SpannableString(body.replaceAll(HTMLTags.NBSP_CHAR_STR, " "));
-        Matcher matcher = URL_PATTERN.matcher(body);
+        Matcher matcher = URL_PATTERN2.matcher(body);
         List<Pair<Integer, Integer>> links = new ArrayList<>();
         while (matcher.find()) {
             int start = matcher.start();
