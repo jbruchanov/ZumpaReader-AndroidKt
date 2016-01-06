@@ -27,4 +27,9 @@
     <string name="err_empty_msg">Empty message</string>
     <string name="subject">Subject</string>
     <string name="message">Message</string>
+
+    <string name="none">None</string>
+    <string name="favorites">Favorites</string>
+    <string name="own">Own</string>
+    <string name="filter">Filter</string>
 </resources>
