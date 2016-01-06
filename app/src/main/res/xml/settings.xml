@@ -13,15 +13,18 @@
         android:key="KEY_LOGIN"
         android:title="@string/login"/>
     <PreferenceCategory android:title="@string/settings">
-        <CheckBoxPreference
-            android:defaultValue="true"
-            android:key="KEY_LOAD_IMAGES"
-            android:title="@string/load_images"/>
         <ListPreference
             android:key="KEY_FILTER"
             android:defaultValue="0"
             android:title="@string/filter"
             android:entryValues="@array/filter_values"
             android:entries="@array/filter_labels" />
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="KEY_LOAD_IMAGES"
+            android:title="@string/load_images"/>
+        <EditTextPreference
+            android:key="KEY_NICK_NAME"
+            android:title="@string/nick_name"/>
     </PreferenceCategory>
 </PreferenceScreen>
