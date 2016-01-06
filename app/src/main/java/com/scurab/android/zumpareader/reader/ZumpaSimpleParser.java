@@ -29,6 +29,7 @@ import com.scurab.android.zumpareader.util.ParseUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
@@ -56,16 +57,11 @@ public class ZumpaSimpleParser {
     private static final SimpleDateFormat FULL_DATE_FORMAT = new SimpleDateFormat("dd. MM. yyyy HH:mm:ss");
     private static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm");
     public static final Pattern RESPONSE_PATTERN = Pattern.compile("(.+)\\s?»", Pattern.CASE_INSENSITIVE);
-    private static final Pattern AUTHOR_RATING_PATTERN = Pattern.compile("\\([^+-]*([+-]{1,5})\\)", Pattern.CASE_INSENSITIVE);
     private static final Pattern URL_PATTERN2 = Pattern.compile(">?(http[s]?://[^<\"\\s]*)<?", Pattern.CASE_INSENSITIVE);
     private static final Pattern DATE_PATTERN = Pattern.compile("Datum:&nbsp;([^<]+)", Pattern.CASE_INSENSITIVE);
-    private static final Pattern AUTHOR_PATTERN = Pattern.compile("Autor:&nbsp;([^<]+)", Pattern.CASE_INSENSITIVE);
-    private static final Pattern AUTHOR_PATTERN1 = Pattern.compile("Autor:&nbsp;<a[^>]*>([^<]+)</a>", Pattern.CASE_INSENSITIVE);
-    private static final Pattern AUTHOR_PATTERN2 = Pattern.compile("Autor:&nbsp;(.+)<br>Datum:", Pattern.CASE_INSENSITIVE);
     private static Pattern SURVEY_RESPONSE_PATTERN = Pattern.compile("\\((\\d*) odp.\\)", Pattern.CASE_INSENSITIVE);
     private static Pattern ZUMPA_LINK = Pattern.compile("portal2.dkm.cz/phorum/read.php.*t=(\\d+)", Pattern.CASE_INSENSITIVE);
     private static Pattern IMG_OBJECT = Pattern.compile("<img.*src=\"([^\"]*)\"", Pattern.CASE_INSENSITIVE);
-    private static final String TAG_NBSP = "&nbsp;";
     private String mUserName;
 
     public ZumpaMainPageResult parseMainPage(@NonNull String html) {
@@ -307,7 +303,11 @@ public class ZumpaSimpleParser {
         {
             elem = elems.first();
             String content = elem.html();
-            String author = getAuthorName(content);
+            String author = getAuthorName(elem);
+            String rating = elem.child(2).text();
+            if (rating.length() == 0) {
+                rating = elem.child(1).text();
+            }
             long date = getTime(content);
 
             StringBuilder sb = new StringBuilder();
@@ -343,6 +343,7 @@ public class ZumpaSimpleParser {
             }
 
             zti = new ZumpaThreadItem(author, body, date);
+            zti.setRating(rating);
             if (urls != null) {
                 zti.setUrls(new ArrayList<>(urls));
             }
@@ -370,17 +371,22 @@ public class ZumpaSimpleParser {
         return name;
     }
 
-    private String getAuthorName(String html) {
-        String name = getGroup(AUTHOR_PATTERN, html, 1, null);
-        if (name == null) {
-            name = getGroup(AUTHOR_PATTERN1, html, 1, null);
+    private String getAuthorName(Element elem) {
+        String value = elem.textNodes().get(0).getWholeText();
+        int start = value.indexOf(HTMLTags.NBSP_CHAR) + 1;
+        int end = value.length();
+        if (end < 0 || start > end) {
+            end = value.length();
         }
-        String result = name;
-        if (name != null && name.contains("(")) {
-            String htmlName = getGroup(AUTHOR_PATTERN2, html, 1, "");
-            result = Html.fromHtml(htmlName).toString();
+        if (start >= end) {
+            value = elem.child(1).text();
+        } else {
+            value = value.substring(start, end).trim();
+            if (value.contains("(") && !value.contains(")")) {
+                value += ")";
+            }
         }
-        return result.trim();
+        return value.replaceAll(HTMLTags.NBSP_CHAR_STR, " ");
     }
 
     private long getTime(String data) {
@@ -486,19 +492,6 @@ public class ZumpaSimpleParser {
             }
         }
         return 0;
-    }
-
-    public static CharSequence parseAuthor(String body, Context context) {
-        Matcher matcher = AUTHOR_RATING_PATTERN.matcher(body);
-        if (matcher.find()) {
-            SpannableString ssb = new SpannableString(body.replaceAll(HTMLTags.NBSP_CHAR_STR, " "));
-            String group = matcher.group(1);
-            int color = group.charAt(0) == '+' ? R.color.rating_good : R.color.rating_bad;
-            setSpans(ssb, matcher.start(1), matcher.end(1), new ForegroundColorSpan(context.getResources().getColor(color)));
-            return ssb;
-        } else {
-            return body;
-        }
     }
 
     public static CharSequence parseBody(String body, Context context) {

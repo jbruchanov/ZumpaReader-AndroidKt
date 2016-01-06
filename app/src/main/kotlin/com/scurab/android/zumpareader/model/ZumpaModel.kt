@@ -1,6 +1,11 @@
 package com.scurab.android.zumpareader.model
 
 import android.content.Context
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.TextUtils
+import android.text.style.ForegroundColorSpan
+import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZR
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.util.encodeHttp
@@ -90,6 +95,7 @@ public data class ZumpaThreadItem(val author: String,
     public var isOwnThread: Boolean? = null
     public var survey: Survey? = null
     public var urls: List<String>? = null
+    public var rating: String? = null
 
     public val date by lazy { Date(time) }
 
@@ -104,7 +110,15 @@ public data class ZumpaThreadItem(val author: String,
     private var _styledAuthor: CharSequence? = null
     public fun styledAuthor(context: Context): CharSequence {
         if (_styledAuthor == null) {
-            _styledAuthor = ZumpaSimpleParser.parseAuthor(author, context)
+            if (rating.isNullOrEmpty()) {
+                _styledAuthor = author
+            } else {
+                val r = rating!!
+                val ssb = SpannableString(author + " " + r)
+                val color = if (r[0] == '+') R.color.rating_good else R.color.rating_bad;
+                ssb.setSpan(ForegroundColorSpan(context.resources.getColor(color)), ssb.length - r.length, ssb.length, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+                _styledAuthor = ssb
+            }
         }
         return _styledAuthor!!
     }
