@@ -110,7 +110,24 @@ public class ZumpaSimpleParser {
             prev = els.get(0).attr(HTMLTags.ATTR_HREF);
             next = els.get(1).attr(HTMLTags.ATTR_HREF);
         }
+        prev = extractQueryString(prev, "t");
+        next = extractQueryString(next, "t");
         return new Pair<>(prev, next);
+    }
+
+    private String extractQueryString(@Nullable String value, @NonNull String key) {
+        if (value != null) {
+            key += "=";
+            int start = value.indexOf(key + "") + key.length();
+            if (start >= 0) {
+                int end = value.indexOf("&", start);
+                if (end < 0) {
+                    end = value.length();
+                }
+                value = value.substring(start, end);
+            }
+        }
+        return value;
     }
 
     private LinkedHashMap<String, ZumpaThread> parseContent(Element elem) {
