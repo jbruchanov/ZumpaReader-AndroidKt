@@ -14,6 +14,7 @@ public class ZumpaPrefs(context: Context) {
     private val KEY_LOAD_IMAGES = "KEY_LOAD_IMAGES"
     private val KEY_NICK_NAME = "KEY_NICK_NAME"
     private val KEY_USER_NAME = "prefUser"
+    private val KEY_READ_STATES = "KEY_READ_STATES"
 
     private val sharedPrefs: SharedPreferences
 
@@ -60,5 +61,14 @@ public class ZumpaPrefs(context: Context) {
     public val nickName:String
         get() {
             return sharedPrefs.getString(KEY_NICK_NAME, sharedPrefs.getString(KEY_USER_NAME, ""))
+        }
+
+    public var readStates: String?
+        get() {
+            return sharedPrefs.getString(KEY_READ_STATES, null)
+        }
+
+        set(value) {
+            sharedPrefs.edit().putString(KEY_READ_STATES, value).apply()
         }
 }
