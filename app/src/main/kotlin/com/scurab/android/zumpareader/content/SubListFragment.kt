@@ -131,24 +131,25 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
             context.hideKeyboard(view)
             observable
                     .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(object : Observer<ZumpaThreadResult?> {
                         override fun onNext(t: ZumpaThreadResult?) {
                             t.exec {
-                                if (view != null) {
-                                    view.post {
-                                        hideMessagePanel(true)
-                                        isSending = false
-                                        isLoading = false
-                                        scrollDownAfterLoad = true
-                                        loadData()
-                                    }
+                                if (isResumed) {
+                                    hideMessagePanel(true)
+                                    isSending = false
+                                    isLoading = false
+                                    scrollDownAfterLoad = true
+                                    loadData()
                                 }
                             }
                         }
 
                         override fun onError(e: Throwable?) {
-                            e?.message?.exec { toast(it) }
-                            isSending = false
+                            if (isResumed) {
+                                e?.message?.exec { toast(it) }
+                                isSending = false
+                            }
                         }
 
                         override fun onCompleted() {
@@ -173,7 +174,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
                                 if (scrollDownAfterLoad) {
                                     scrollDownAfterLoad = false
                                     recyclerView.exec {
-                                        it.scrollToPosition(it.adapter.itemCount)
+                                        it.smoothScrollToPosition(it.adapter.itemCount)
                                     }
                                 }
                             }
