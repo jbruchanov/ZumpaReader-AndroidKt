@@ -135,8 +135,8 @@ public data class SurveyItem(val text: String,
 
 
 //region parsing result
-public data class ZumpaMainPageResult(val prevPage: String?,
-                                      val nextPage: String,
+public data class ZumpaMainPageResult(val prevThreadId: String?,
+                                      val nextThreadId: String,
                                       val items: LinkedHashMap<String, ZumpaThread>)
 
 public data class ZumpaThreadResult(val items: List<ZumpaThreadItem>)

@@ -14,12 +14,11 @@ import rx.Observable
 
 public interface ZumpaAPI {
 
-    @GET("/phorum/list.php?f=2")
-    fun getMainPage(): Observable<ZumpaMainPageResult>;
+    @GET("/phorum/list.php?f=2&a=2&af=2")
+    fun getMainPage(@Query(value = "af") filter: String): Observable<ZumpaMainPageResult>;
 
-    @GET("/phorum/list.php?f=2&a=2")
-    fun getMainPage(@Query(value = "t") fromThread: String): Observable<ZumpaMainPageResult>;
-
+    @GET("/phorum/list.php?f=2&a=2&af=2")
+    fun getMainPage(@Query(value = "t") fromThread: String, @Query(value = "af") filter: String): Observable<ZumpaMainPageResult>;
 
     @GET("/phorum/read.php?f=2")
     fun getThreadPage(@Query(value = "i") id: String, @Query(value = "t") id2: String): Observable<ZumpaThreadResult>

@@ -30,8 +30,9 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
     private var content: View? = null
     private val recyclerView: RecyclerView get() = content!!.find<RecyclerView>(R.id.recycler_view)
     private val swipeToRefresh: SwipyRefreshLayout get() = content!!.find<SwipyRefreshLayout>(R.id.swipe_refresh_layout)
+    private var lastFilter : String = ""
 
-    private var nextPageId: String? = null
+    private var nextThreadId: String? = null
     override var isLoading: Boolean
         get() = super.isLoading
         set(value) {
@@ -85,31 +86,44 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
         if (isLoading) {
             return
         }
-        isLoading = true
-        val mainPage = if (fromThread != null) zumpaApp?.zumpaAPI?.getMainPage(fromThread) else zumpaApp?.zumpaAPI?.getMainPage()
-        mainPage.exec{
-            it.observeOn(AndroidSchedulers.mainThread())
-            .subscribeOn(Schedulers.io())
-            .subscribe(object : Observer<ZumpaMainPageResult?> {
-                override fun onNext(t: ZumpaMainPageResult?) {
-                    t.exec {
-                        onResultLoaded(it)
-                    }
+        if (zumpaApp != null) {
+            var zumpaApp = this.zumpaApp!!
+            var filter = zumpaApp.zumpaPrefs.filter
+            if (!lastFilter.equals(filter)) {
+                recyclerView.adapter.exec {
+                    (it as MainListAdapter).removeAll();
                 }
+            }
+            lastFilter = filter
+            isLoading = true
+            val mainPage = if (fromThread != null) zumpaApp.zumpaAPI.getMainPage(fromThread, filter) else zumpaApp.zumpaAPI.getMainPage(filter)
+            mainPage.exec {
+                it.observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(object : Observer<ZumpaMainPageResult?> {
+                            override fun onNext(t: ZumpaMainPageResult?) {
+                                t.exec {
+                                    onResultLoaded(it)
+                                }
+                            }
 
-                override fun onError(e: Throwable?) {
-                    isLoading = false
-                    e?.message?.exec { toast(it) }
-                }
-                override fun onCompleted() { isLoading = false }
-            })
+                            override fun onError(e: Throwable?) {
+                                isLoading = false
+                                e?.message?.exec { toast(it) }
+                            }
+
+                            override fun onCompleted() {
+                                isLoading = false
+                            }
+                        })
+            }
         }
     }
 
     protected fun onResultLoaded(response: ZumpaMainPageResult?) {
         response?.exec {
             zumpaData.putAll(it.items)
-            nextPageId = it.nextPage
+            nextThreadId = it.nextThreadId
             val values = it.items.asListOfValues()
             recyclerView.exec {
                 var user = zumpaApp?.zumpaPrefs?.loggedUserName
@@ -148,7 +162,7 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
         if (!isLoading) {
             (recyclerView?.adapter as MainListAdapter).exec {
                 var v = it.items.last()
-                loadPage(v.id)
+                loadPage(nextThreadId)
             }
 
         }
