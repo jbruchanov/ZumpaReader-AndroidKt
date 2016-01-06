@@ -200,6 +200,7 @@ public class ZumpaSimpleParser {
         zumpaThread.setTime(timeValue);
         zumpaThread.setItems(responses/*, mUserName*/);
         zumpaThread.setFavorite(isFavourite);
+        zumpaThread.setHasResponseForYou(hasResponseForYou);
         return zumpaThread;
     }
 

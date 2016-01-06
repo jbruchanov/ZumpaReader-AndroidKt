@@ -26,6 +26,7 @@ public constructor(val id: String,
         public val STATE_NEW = 1
         public val STATE_UPDATED = 2
         public val STATE_OWN = 3
+        public val STATE_RESPONSE_4U = 4
     }
     public constructor(id: String,
                        subject: String,
@@ -47,19 +48,10 @@ public constructor(val id: String,
             _items = value
         }
 
-    public fun setItems(value: Int, userName: String?) {
-        if (userName != null && userName.equals(author)) {
-            state = STATE_OWN
-        } else if (state == STATE_NONE && _items != 0 && value > _items) {
-            state = STATE_UPDATED
-        } else if (_items == value) {
-            //no update
-        }
-        items = value
-    }
-
     public fun setStateBasedOnReadValue(readCount: Int?, userName: String?) {
-        if (readCount == null) {
+        if (hasResponseForYou) {
+            state = STATE_RESPONSE_4U
+        } else if (readCount == null) {
             state = STATE_NEW
         } else if (items == readCount) {
             if (userName != null && userName.equals(author)) {
@@ -85,6 +77,8 @@ public constructor(val id: String,
         }
         return _styledSubject!!
     }
+
+    public var hasResponseForYou: Boolean = false
 }
 
 public data class ZumpaThreadItem(val author: String,

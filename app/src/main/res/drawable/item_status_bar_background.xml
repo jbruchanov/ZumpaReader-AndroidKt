@@ -28,4 +28,11 @@
             <solid android:color="@color/item_state_own"/>
         </shape>
     </item>
+    <item
+        android:maxLevel="4"
+        android:minLevel="4">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/item_state_has_msg"/>
+        </shape>
+    </item>
 </level-list>
