@@ -119,7 +119,7 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
                     }
                 }
                 if (it.adapter != null) {
-                    (it.adapter as MainListAdapter).addItems(values, zumpaApp?.zumpaPrefs?.loggedUserName)
+                    (it.adapter as MainListAdapter).addItems(values)
                 } else {
                     val mainListAdapter = MainListAdapter(values)
                     mainListAdapter.setOnShowItemListener(this@MainListFragment, 15)

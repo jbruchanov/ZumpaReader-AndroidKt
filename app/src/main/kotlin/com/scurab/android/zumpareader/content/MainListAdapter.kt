@@ -40,7 +40,7 @@ public class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadV
         dataMap.putAll(items.toMapBy { it.id })
     }
 
-    public fun addItems(newItems: ArrayList<ZumpaThread>, userName: String?) {
+    public fun addItems(newItems: ArrayList<ZumpaThread>) {
         for (newItem in newItems) {
             dataMap.put(newItem.id, newItem);
         }
