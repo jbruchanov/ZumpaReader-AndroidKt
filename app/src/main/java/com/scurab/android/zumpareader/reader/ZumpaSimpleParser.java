@@ -583,6 +583,7 @@ public class ZumpaSimpleParser {
 
         static {
             DATA.put(R.drawable.emoji_hm, Pattern.compile(":[-o]?[/\\\\]"));
+            DATA.put(R.drawable.emoji_kiss, Pattern.compile(":[-o]?\\*+"));
             DATA.put(R.drawable.emoji_lol, Pattern.compile(":[-o]?D+"));
             DATA.put(R.drawable.emoji_o_o, Pattern.compile("[oO]_[oO]"));
             DATA.put(R.drawable.emoji_p, Pattern.compile(":[-o]?[pP]"));
