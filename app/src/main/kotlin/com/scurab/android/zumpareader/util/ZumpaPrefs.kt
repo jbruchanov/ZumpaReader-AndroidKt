@@ -9,12 +9,18 @@ import java.util.*
  * Created by JBruchanov on 29/12/2015.
  */
 public class ZumpaPrefs(context: Context) {
+
+    companion object {
+        public val KEY_USER_NAME = "KEY_USER_NAME"
+        public val KEY_PASSWORD = "KEY_PASSWORD"
+        public val KEY_LOGIN = "KEY_LOGIN"
+    }
     private val KEY_COOKIES = "KEY_COOKIES"
     private val KEY_IS_LOGGED_IN = "KEY_IS_LOGGED_IN"
     private val KEY_LOAD_IMAGES = "KEY_LOAD_IMAGES"
     private val KEY_NICK_NAME = "KEY_NICK_NAME"
-    private val KEY_USER_NAME = "prefUser"
     private val KEY_READ_STATES = "KEY_READ_STATES"
+    private val KEY_FILTER = "KEY_FILTER"
 
     private val sharedPrefs: SharedPreferences
 
@@ -70,5 +76,14 @@ public class ZumpaPrefs(context: Context) {
 
         set(value) {
             sharedPrefs.edit().putString(KEY_READ_STATES, value).apply()
+        }
+
+    public var filter: String
+        get() {
+            return sharedPrefs.getString(KEY_FILTER, "0")
+        }
+
+        set(value) {
+            sharedPrefs.edit().putString(KEY_FILTER, value).apply()
         }
 }

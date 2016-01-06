@@ -2,15 +2,15 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <PreferenceCategory android:title="@string/credentials">
         <EditTextPreference
-            android:key="prefUser"
+            android:key="KEY_USER_NAME"
             android:title="@string/user"/>
         <EditTextPreference
             android:inputType="textPassword"
-            android:key="prefPassword"
+            android:key="KEY_PASSWORD"
             android:title="@string/password"/>
     </PreferenceCategory>
     <com.scurab.android.zumpareader.preferences.ButtonPreference
-        android:key="prefLogin"
+        android:key="KEY_LOGIN"
         android:title="@string/login"/>
     <PreferenceCategory android:title="@string/settings">
         <CheckBoxPreference

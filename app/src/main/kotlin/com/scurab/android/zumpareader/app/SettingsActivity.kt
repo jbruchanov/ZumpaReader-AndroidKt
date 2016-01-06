@@ -8,6 +8,7 @@ import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.model.ZumpaLoginBody
 import com.scurab.android.zumpareader.model.ZumpaResponse
 import com.scurab.android.zumpareader.util.ParseUtils
+import com.scurab.android.zumpareader.util.ZumpaPrefs
 import com.scurab.android.zumpareader.util.exec
 import com.scurab.android.zumpareader.util.toast
 import retrofit.Callback
@@ -19,7 +20,7 @@ import retrofit.Retrofit
  */
 public class SettingsActivity : PreferenceActivity() {
 
-    private val buttonPref by lazy { findPreference("prefLogin") }
+    private val buttonPref by lazy { findPreference(ZumpaPrefs.KEY_LOGIN) }
     public val zumpaApp: ZumpaReaderApp
         get() {
             return getApplication() as ZumpaReaderApp
@@ -58,8 +59,8 @@ public class SettingsActivity : PreferenceActivity() {
     }
 
     protected fun dispatchLoginClicked() {
-        var user = preferenceManager.sharedPreferences.getString("prefUser", "")
-        var pwd = preferenceManager.sharedPreferences.getString("prefPassword", "")
+        var user = preferenceManager.sharedPreferences.getString(ZumpaPrefs.KEY_USER_NAME, "")
+        var pwd = preferenceManager.sharedPreferences.getString(ZumpaPrefs.KEY_PASSWORD, "")
 
         if (user.isNullOrEmpty()) {
             toast(R.string.err_no_username)
