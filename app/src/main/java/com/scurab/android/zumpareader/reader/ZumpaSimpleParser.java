@@ -327,6 +327,7 @@ public class ZumpaSimpleParser {
                         if (urls == null) {
                             urls = new HashSet<>();
                         }
+                        link = Html.fromHtml(link).toString();//decode html escapes
                         urls.add(link);
                     }
                 }
