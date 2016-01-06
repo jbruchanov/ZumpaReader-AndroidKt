@@ -2,18 +2,18 @@ package com.scurab.android.zumpareader.app
 
 import android.app.ProgressDialog
 import android.os.Bundle
+import android.preference.Preference
 import android.preference.PreferenceActivity
 import com.scurab.android.zumpareader.R
+import com.scurab.android.zumpareader.ZR
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.model.ZumpaLoginBody
 import com.scurab.android.zumpareader.model.ZumpaResponse
-import com.scurab.android.zumpareader.util.ParseUtils
-import com.scurab.android.zumpareader.util.ZumpaPrefs
-import com.scurab.android.zumpareader.util.exec
-import com.scurab.android.zumpareader.util.toast
+import com.scurab.android.zumpareader.util.*
 import retrofit.Callback
 import retrofit.Response
 import retrofit.Retrofit
+import java.net.URI
 
 /**
  * Created by JBruchanov on 29/12/2015.
@@ -21,9 +21,11 @@ import retrofit.Retrofit
 public class SettingsActivity : PreferenceActivity() {
 
     private val buttonPref by lazy { findPreference(ZumpaPrefs.KEY_LOGIN) }
+    private val showLastAuthorPref by lazy { findPreference(ZumpaPrefs.KEY_SHOW_LAST_AUTHOR) }
+
     public val zumpaApp: ZumpaReaderApp
         get() {
-            return getApplication() as ZumpaReaderApp
+            return application as ZumpaReaderApp
         }
 
     private var progressDialog: ProgressDialog? = null
@@ -102,7 +104,13 @@ public class SettingsActivity : PreferenceActivity() {
     override fun onPause() {
         super.onPause()
         hideProgressDialog()
-        zumpaApp.zumpaParser.userName = zumpaApp.zumpaPrefs.loggedUserName
+        zumpaApp.zumpaParser.execOn {
+            userName = zumpaApp.zumpaPrefs.loggedUserName
+            isShowLastUser = zumpaApp.zumpaPrefs.showLastAuthor
+        }
+        zumpaApp.cookieManager.cookieStore.removeAll()
+        zumpaApp.cookieManager.put(URI.create(ZR.Constants.ZUMPA_MAIN_URL), zumpaApp.zumpaPrefs.cookiesMap);
+        zumpaApp.zumpaParser.isShowLastUser = zumpaApp.zumpaPrefs.showLastAuthor
     }
 
     private fun showProgressDialog() {

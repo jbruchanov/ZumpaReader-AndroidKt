@@ -39,12 +39,24 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentLeft="true"
-                android:layout_toLeftOf="@+id/threads"
+                android:layout_toLeftOf="@+id/last_author"
                 android:ellipsize="end"
                 android:singleLine="true"
                 android:textColor="?attr/authorColor"
                 android:textSize="?attr/authorTextSize"
                 tools:text="@string/dummy_long"/>
+
+            <TextView
+                android:id="@+id/last_author"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toLeftOf="@+id/threads"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:layout_marginLeft="@dimen/gap_normal"
+                android:textColor="?attr/authorColor"
+                android:textSize="?attr/authorTextSize"
+                tools:text="@string/dummy_short"/>
 
             <TextView
                 android:id="@+id/threads"

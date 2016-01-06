@@ -33,4 +33,5 @@
     <string name="own">Own</string>
     <string name="filter">Filter</string>
     <string name="nick_name">Nickname</string>
+    <string name="show_last_author">Show last author</string>
 </resources>

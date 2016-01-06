@@ -196,6 +196,7 @@ public class ZumpaSimpleParser {
 
         ZumpaThread zumpaThread = new ZumpaThread(id, subject);
         zumpaThread.setAuthor(author);
+        zumpaThread.setLastAuthor(lastAnswerAuthor);
         zumpaThread.setContentUrl(contentUrl);
         zumpaThread.setTime(timeValue);
         zumpaThread.setItems(responses/*, mUserName*/);

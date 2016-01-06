@@ -3,6 +3,7 @@ package com.scurab.android.zumpareader.util
 import android.content.Context
 import android.content.SharedPreferences
 import com.pawegio.kandroid.defaultSharedPreferences
+import com.scurab.android.zumpareader.ZR
 import java.util.*
 
 /**
@@ -14,6 +15,7 @@ public class ZumpaPrefs(context: Context) {
         public val KEY_USER_NAME = "KEY_USER_NAME"
         public val KEY_PASSWORD = "KEY_PASSWORD"
         public val KEY_LOGIN = "KEY_LOGIN"
+        public val KEY_SHOW_LAST_AUTHOR = "KEY_SHOW_LAST_AUTHOR"
     }
     private val KEY_COOKIES = "KEY_COOKIES"
     private val KEY_IS_LOGGED_IN = "KEY_IS_LOGGED_IN"
@@ -43,6 +45,9 @@ public class ZumpaPrefs(context: Context) {
             cookies.exec {
                 var list: MutableList<String> = ArrayList()
                 list.addAll(it)
+                if (showLastAuthor) {
+                    list.add("%s=1;".format(ZR.Constants.ZUMPA_SHOW_LAST_ANSWER_AUTHOR_KEY))
+                }
                 map.put("Set-Cookie", list)
             }
             return map
@@ -85,5 +90,10 @@ public class ZumpaPrefs(context: Context) {
 
         set(value) {
             sharedPrefs.edit().putString(KEY_FILTER, value).apply()
+        }
+
+    public val showLastAuthor: Boolean
+        get() {
+            return sharedPrefs.getBoolean(KEY_SHOW_LAST_AUTHOR, false)
         }
 }

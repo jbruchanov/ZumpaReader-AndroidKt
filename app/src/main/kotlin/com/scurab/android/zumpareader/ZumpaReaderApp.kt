@@ -32,11 +32,17 @@ import java.util.concurrent.TimeUnit
  */
 public class ZumpaReaderApp:Application(){
 
-    public val zumpaParser: ZumpaSimpleParser by lazy { ZumpaSimpleParser().apply { userName = zumpaPrefs.loggedUserName } }
+    public val zumpaParser: ZumpaSimpleParser by lazy {
+        ZumpaSimpleParser().apply {
+            userName = zumpaPrefs.loggedUserName
+            isShowLastUser = zumpaPrefs.showLastAuthor
+        }
+    }
     public val zumpaPrefs: ZumpaPrefs by lazy { ZumpaPrefs(this) }
     public val zumpaData: TreeMap<String, ZumpaThread> = TreeMap()
     private var _zumpaReadStates: TreeMap<String, ZumpaReadState> = TreeMap()
     public val zumpaReadStates: TreeMap<String, ZumpaReadState> get() { return _zumpaReadStates }
+    public val cookieManager: CookieManager = CookieManager()
     private val gson: Gson = Gson()
     private val MAX_STATES_TO_STORE = 100
     private val TIMEOUT = 5000L
@@ -109,7 +115,6 @@ public class ZumpaReaderApp:Application(){
 
     public val zumpaAPI: ZumpaAPI by lazy {
 
-        val cookieManager = CookieManager()
         cookieManager.setCookiePolicy(java.net.CookiePolicy.ACCEPT_ALL)
         cookieManager.put(URI.create(ZR.Constants.ZUMPA_MAIN_URL), zumpaPrefs.cookiesMap)
 

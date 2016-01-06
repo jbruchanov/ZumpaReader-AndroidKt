@@ -5,6 +5,7 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import com.pawegio.kandroid.find
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.model.ZumpaThread
@@ -31,7 +32,8 @@ public class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadV
     public var items: ArrayList<ZumpaThread>
     private val dataMap: HashMap<String, ZumpaThread> = HashMap()
     private var ownerRecyclerView: RecyclerView? = null
-    private val dateFormat = SimpleDateFormat("HH:mm.ss dd.MM.")
+    private val dateFormat = SimpleDateFormat("dd.MM. HH:mm.ss")
+    private val shoreDateFormat = SimpleDateFormat("HH:mm")
     private var onShowItemListener: OnShowItemListener? = null
     private var onShoItemListenerEndOffset: Int = 0
 
@@ -66,7 +68,8 @@ public class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadV
         holder.title.text = item.styledSubject(holder.itemView.context)
         holder.author.text = item.author
         holder.threads.text = item.items.toString()
-        holder.time.text = dateFormat.format(item.date)
+        holder.time.text = if (item.lastAuthor == null) dateFormat.format(item.date) else shoreDateFormat.format(item.date)
+        holder.lastAuthor.text = item.lastAuthor
         (holder.stateBar.background as? LevelListDrawable).exec {
             it.setLevel(item.state)
         }
@@ -110,5 +113,6 @@ public class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadV
 
     public class ZumpaThreadViewHolder(view: View) : ZumpaItemViewHolder(view) {
         val stateBar by lazy { itemView.find<View>(R.id.item_state) }
+        val lastAuthor by lazy { itemView.find<TextView>(R.id.last_author) }
     }
 }

@@ -79,6 +79,7 @@ public constructor(val id: String,
     }
 
     public var hasResponseForYou: Boolean = false
+    public var lastAuthor: String? = null
 }
 
 public data class ZumpaThreadItem(val author: String,
