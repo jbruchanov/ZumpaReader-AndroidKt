@@ -112,6 +112,12 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
             nextPageId = it.nextPage
             val values = it.items.asListOfValues()
             recyclerView.exec {
+                var user = zumpaApp?.zumpaPrefs?.loggedUserName
+                zumpaApp?.zumpaReadStates.exec {
+                    for (zumpaThread in values) {
+                        zumpaThread.setStateBasedOnReadValue(it[zumpaThread.id]?.count, user)
+                    }
+                }
                 if (it.adapter != null) {
                     (it.adapter as MainListAdapter).addItems(values, zumpaApp?.zumpaPrefs?.loggedUserName)
                 } else {

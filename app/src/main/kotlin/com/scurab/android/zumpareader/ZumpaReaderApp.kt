@@ -6,6 +6,7 @@ import android.os.Environment
 import android.util.Log
 import com.scurab.android.zumpareader.data.PicassoHttpDownloader
 import com.scurab.android.zumpareader.data.ZumpaConverterFactory
+import com.scurab.android.zumpareader.model.ZumpaReadState
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.util.ZumpaPrefs
@@ -28,6 +29,7 @@ public class ZumpaReaderApp:Application(){
     public val zumpaParser: ZumpaSimpleParser by lazy { ZumpaSimpleParser().apply { userName = zumpaPrefs.loggedUserName } }
     public val zumpaPrefs: ZumpaPrefs by lazy { ZumpaPrefs(this) }
     public val zumpaData: TreeMap<String, ZumpaThread> = TreeMap()
+    public val zumpaReadStates: TreeMap<String, ZumpaReadState> = TreeMap()
 
     private var zumpaHttpClient : OkHttpClient? = null
 

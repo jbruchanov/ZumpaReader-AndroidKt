@@ -38,8 +38,8 @@ public constructor(val id: String,
     private var _items = 0
     var items: Int
         get() = _items
-        private set(value) {
-            setItems(value, null)
+        set(value) {
+            _items = value
         }
 
     public fun setItems(value: Int, userName: String?) {
@@ -50,8 +50,23 @@ public constructor(val id: String,
         } else if (_items == value) {
             //no update
         }
-        _items = value
+        items = value
     }
+
+    public fun setStateBasedOnReadValue(readCount: Int?, userName: String?) {
+        if (readCount == null) {
+            state = STATE_NEW
+        } else if (items == readCount) {
+            if (userName != null && userName.equals(author)) {
+                state = STATE_OWN
+            } else {
+                state = STATE_NONE
+            }
+        } else if (items != readCount) {
+            state = STATE_UPDATED
+        }
+    }
+
     var isFavorite: Boolean = false
     val idLong by lazy { id.toLong() }
     var state: Int = STATE_NEW
@@ -182,5 +197,7 @@ public class ZumpaResponse(val data: ByteArray, val mediaType: MediaType) {
 
     public fun asString() = String(data, ZR.Constants.ENCODING)
 }
+
+public data class ZumpaReadState(val threadId: String, var count: Int)
 
 //

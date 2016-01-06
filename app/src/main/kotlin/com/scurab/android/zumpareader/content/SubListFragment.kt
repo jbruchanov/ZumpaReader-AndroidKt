@@ -14,6 +14,7 @@ import com.pawegio.kandroid.find
 import com.pawegio.kandroid.toast
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.app.BaseFragment
+import com.scurab.android.zumpareader.model.ZumpaReadState
 import com.scurab.android.zumpareader.model.ZumpaThreadBody
 import com.scurab.android.zumpareader.model.ZumpaThreadItem
 import com.scurab.android.zumpareader.model.ZumpaThreadResult
@@ -221,9 +222,10 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
         return false
     }
 
-    private fun onResultLoaded(it: ZumpaThreadResult) {
-        it.items.exec {
+    private fun onResultLoaded(result: ZumpaThreadResult) {
+        result.items.exec {
             var items = it
+            storeReadState(result)
             recyclerView.exec {
                 val loadImages = zumpaApp?.zumpaPrefs?.loadImages ?: true
                 if (it.adapter == null) {
@@ -236,6 +238,18 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
                         updateItems(items)
                     }
                 }
+            }
+        }
+    }
+
+    private fun storeReadState(result: ZumpaThreadResult) {
+        val zumpaReadStates = zumpaApp?.zumpaReadStates
+        zumpaReadStates.exec {
+            val size = result.items.size - 1
+            if (it.containsKey(threadId)) {
+                it[threadId]!!.count = size//don't count 1st one as it's actual post
+            } else {
+                it[threadId] = ZumpaReadState(threadId, size)
             }
         }
     }

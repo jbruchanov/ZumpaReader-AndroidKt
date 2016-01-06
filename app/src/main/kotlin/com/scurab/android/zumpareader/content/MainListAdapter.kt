@@ -42,12 +42,7 @@ public class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadV
 
     public fun addItems(newItems: ArrayList<ZumpaThread>, userName: String?) {
         for (newItem in newItems) {
-            val item = dataMap.get(newItem.id)
-            if (item != null) {
-                item.setItems(newItem.items, userName)
-            } else {
-                dataMap.put(newItem.id, newItem);
-            }
+            dataMap.put(newItem.id, newItem);
         }
         items.clear()
         items.addAll(dataMap.values)

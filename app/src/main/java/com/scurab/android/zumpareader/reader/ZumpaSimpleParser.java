@@ -185,7 +185,7 @@ public class ZumpaSimpleParser {
         zumpaThread.setAuthor(author);
         zumpaThread.setContentUrl(contentUrl);
         zumpaThread.setTime(timeValue);
-        zumpaThread.setItems(responses, mUserName);
+        zumpaThread.setItems(responses/*, mUserName*/);
         zumpaThread.setFavorite(isFavourite);
         return zumpaThread;
     }
