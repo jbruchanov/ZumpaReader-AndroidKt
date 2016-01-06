@@ -151,9 +151,12 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
 
     public fun onThreadItemClick(item: ZumpaThread, position: Int) {
         isLoading = false
-        item.state = ZumpaThread.STATE_NONE
-        recyclerView?.adapter.exec {
-            it.notifyItemChanged(position)
+        val oldState = item.state
+        item.setStateBasedOnReadValue(item.items, zumpaApp?.zumpaPrefs?.loggedUserName)
+        if (oldState != item.state) {
+            recyclerView?.adapter.exec {
+                it.notifyItemChanged(position)
+            }
         }
         openFragment(SubListFragment.newInstance(item.id.toString()), true, true)
     }
