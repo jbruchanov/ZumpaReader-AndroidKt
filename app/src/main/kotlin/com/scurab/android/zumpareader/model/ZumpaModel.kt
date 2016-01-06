@@ -67,7 +67,7 @@ public constructor(val id: String,
     }
 }
 
-public data class ZumpaThreadItem(val author: CharSequence,
+public data class ZumpaThreadItem(val author: String,
                                   val body: String,
                                   val time: Long) {
     public var hasResponseForYou: Boolean = false
@@ -84,6 +84,14 @@ public data class ZumpaThreadItem(val author: CharSequence,
             _styledBody = ZumpaSimpleParser.parseBody(body, context)
         }
         return _styledBody!!
+    }
+
+    private var _styledAuthor: CharSequence? = null
+    public fun styledAuthor(context: Context): CharSequence {
+        if (_styledAuthor == null) {
+            _styledAuthor = ZumpaSimpleParser.parseAuthor(author, context)
+        }
+        return _styledAuthor!!
     }
 }
 

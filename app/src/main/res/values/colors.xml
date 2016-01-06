@@ -12,6 +12,8 @@
     <color name="yellow_orange">#FFA710</color>
     <color name="blue_gray">#0d8aac</color>
     <color name="yellow_orange_50p">#80FFA710</color>
+    <color name="rating_good">#0a0</color>
+    <color name="rating_bad">#d00</color>
 
     <color name="item_state_own">#00FFFF</color>
     <color name="item_state_has_msg">#FF0000</color>
