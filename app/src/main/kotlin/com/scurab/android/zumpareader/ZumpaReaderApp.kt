@@ -39,6 +39,7 @@ public class ZumpaReaderApp:Application(){
     public val zumpaReadStates: TreeMap<String, ZumpaReadState> get() { return _zumpaReadStates }
     private val gson: Gson = Gson()
     private val MAX_STATES_TO_STORE = 100
+    private val TIMEOUT = 5000L
 
     private var zumpaHttpClient : OkHttpClient? = null
 
@@ -118,9 +119,9 @@ public class ZumpaReaderApp:Application(){
         zumpaHttpClient = OkHttpClient()
         zumpaHttpClient.execOn {
             followRedirects = true//false for logging
-            setConnectTimeout(2000L, TimeUnit.MILLISECONDS)
-            setReadTimeout(2000L, TimeUnit.MILLISECONDS)
-            setWriteTimeout(2000L, TimeUnit.MILLISECONDS)
+            setConnectTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
+            setReadTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
+            setWriteTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
             setCookieHandler(cookieManager)
             if (BuildConfig.VERBOSE_LOGGING) {
                 interceptors().add(logging)
