@@ -5,12 +5,11 @@ import android.os.Build
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View
-import android.widget.EditText
-import android.widget.FrameLayout
-import android.widget.ImageButton
-import android.widget.ImageView
+import android.view.ViewGroup
+import android.widget.*
 import com.pawegio.kandroid.find
 import com.scurab.android.zumpareader.R
+import com.scurab.android.zumpareader.util.execOn
 import com.scurab.android.zumpareader.util.obtainStyledColor
 import com.scurab.android.zumpareader.util.wrapWithTint
 
@@ -45,10 +44,14 @@ public class PostMessageView : FrameLayout {
 
     public fun setUIForNewMessage() {
         subject.visibility = View.VISIBLE
-        message.maxLines = Int.MAX_VALUE
-        message.minHeight = resources.getDimensionPixelSize(R.dimen.new_message_edit_text_min_height)
-        message.maxHeight = resources.getDimensionPixelSize(R.dimen.new_message_edit_text_min_height)
+        message.maxLines = Integer.MAX_VALUE
         message.gravity = Gravity.TOP or Gravity.LEFT
+        (message.layoutParams as LinearLayout.LayoutParams).execOn {
+            weight = 1f
+            height = 0
+            requestLayout()
+        }
+        layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT
     }
 
     private fun initIcons() {
