@@ -2,7 +2,9 @@ package com.scurab.android.zumpareader.content.post
 
 import android.app.ProgressDialog
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.support.v4.app.DialogFragment
 import android.view.LayoutInflater
 import android.view.View
@@ -16,7 +18,6 @@ import com.scurab.android.zumpareader.content.SendingFragment
 import com.scurab.android.zumpareader.model.ZumpaThreadBody
 import com.scurab.android.zumpareader.model.ZumpaThreadResult
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
-import com.scurab.android.zumpareader.ui.showAnimated
 import com.scurab.android.zumpareader.util.*
 import com.scurab.android.zumpareader.widget.PostMessageView
 import rx.Observer
@@ -25,14 +26,17 @@ import rx.schedulers.Schedulers
 /**
  * Created by JBruchanov on 31/12/2015.
  */
-public class PostMessageDialog : DialogFragment(), SendingFragment {
+public class PostMessageFragment : DialogFragment(), SendingFragment {
 
     companion object {
-        public fun newInstance(subject: String?, message: String?): PostMessageDialog {
-            return PostMessageDialog().apply {
+        public fun newInstance(subject: String?, message: String?): PostMessageFragment {
+            return PostMessageFragment().apply {
                 arguments = PostFragment.arguments(subject, message)
             }
         }
+
+        public val REQ_CODE_IMAGE = 123
+        public val REQ_CODE_CAMERA = 124
     }
 
     private val postMessageView: PostMessageView? get() = view?.find<PostMessageView>(R.id.post_message_view)
@@ -64,11 +68,37 @@ public class PostMessageDialog : DialogFragment(), SendingFragment {
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        postMessageView.exec {
-            it.setUIForNewMessage()
-            it.sendButton.setOnClickListener { dispatchSend() }
-            it.subject.setText(argSubject)
-            it.message.setText(ZumpaSimpleParser.replaceLinksByZumpaLinks(argMessage))
+        postMessageView.execOn {
+            setUIForNewMessage()
+            sendButton.setOnClickListener { dispatchSend() }
+            subject.setText(argSubject)
+            message.setText(ZumpaSimpleParser.replaceLinksByZumpaLinks(argMessage))
+
+            camera.setOnClickListener { onCameraClick() }
+            photo.setOnClickListener { onPhotoClick() }
+        }
+    }
+
+    private fun onPhotoClick() {
+        try {
+            val intent = Intent();
+            intent.setType("image/*");
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            parentFragment.startActivityForResult(intent, REQ_CODE_IMAGE);
+        } catch(e: Exception) {
+            context.toast(R.string.err_fail)
+        }
+    }
+
+    private fun onCameraClick() {
+        try {
+            val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            val cameraFileUri = context.getCameraFileUri()
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.parse( cameraFileUri))
+            parentFragment.startActivityForResult(intent, REQ_CODE_CAMERA);
+        } catch(e: Exception) {
+            context.toast(R.string.err_fail)
         }
     }
 
