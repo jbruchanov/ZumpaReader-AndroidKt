@@ -49,7 +49,7 @@ public abstract class BaseFragment : Fragment() {
 
     private var _zumpaData: TreeMap<String, ZumpaThread>? = null
     protected val zumpaData: TreeMap<String, ZumpaThread> by lazy { _zumpaData!! }
-    protected abstract val title: CharSequence
+    protected abstract val title: CharSequence?
 
     public open fun onMenuItemClick(item: MenuItem): Boolean {
         return false
@@ -67,7 +67,9 @@ public abstract class BaseFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        mainActivity?.title = title
+        if (title != null) {
+            mainActivity?.title = title
+        }
     }
 
     public open fun onFloatingButtonClick() {
