@@ -339,17 +339,7 @@ public class ZumpaSimpleParser {
                 if (line.contains(HTMLTags.TAG_BOLD_START) && line.contains(HTMLTags.TAG_BOLD_END)) {
                     containsBold = true;
                 }
-                Matcher matcher = URL_PATTERN2.matcher(line);
-                while (matcher.find()) {
-                    String link = matcher.group(1);
-                    if (link != null) {
-                        if (urls == null) {
-                            urls = new HashSet<>();
-                        }
-                        link = Html.fromHtml(link).toString();//decode html escapes
-                        urls.add(link);
-                    }
-                }
+                urls = getLinks(line);
                 line = Html.fromHtml(line).toString();
                 sb.append(line).append("\n");
             }
@@ -577,6 +567,29 @@ public class ZumpaSimpleParser {
 
     public void setUserName(String userName) {
         mUserName = userName;
+    }
+
+    public static String replaceLinksByZumpaLinks(@Nullable String text) {
+        if (text != null) {
+            Set<String> links = getLinks(text);
+            for (String link : links) {
+                text = text.replace(link, String.format("<%s>", link));
+            }
+        }
+        return text;
+    }
+
+    private static Set<String> getLinks(String text) {
+        Matcher matcher = URL_PATTERN2.matcher(text);
+        HashSet<String> links = new HashSet<>();
+        while (matcher.find()) {
+            String link = matcher.group(1);
+            if (link != null) {
+                link = Html.fromHtml(link).toString();//decode html escapes
+                links.add(link);
+            }
+        }
+        return links;
     }
 
     public static class SmileRes {
