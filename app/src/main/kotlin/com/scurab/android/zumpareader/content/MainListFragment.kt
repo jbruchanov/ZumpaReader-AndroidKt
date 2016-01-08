@@ -12,6 +12,8 @@ import com.pawegio.kandroid.find
 import com.pawegio.kandroid.toast
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.app.BaseFragment
+import com.scurab.android.zumpareader.content.post.PostFragment
+import com.scurab.android.zumpareader.content.post.PostMessageDialog
 import com.scurab.android.zumpareader.model.ZumpaMainPageResult
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.ui.hideAnimated
@@ -173,7 +175,7 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
 
     override fun onFloatingButtonClick() {
         activity?.supportFragmentManager.exec {
-            PostMessageDialog().show(it, PostMessageDialog::class.java.name)
+            openFragment(PostFragment())
             mainActivity?.floatingButton?.hideAnimated()
         }
     }
