@@ -3,6 +3,8 @@ package com.scurab.android.zumpareader.util
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
+import android.net.Uri
+import android.os.Environment
 import android.os.Handler
 import android.os.Looper
 import android.support.annotation.IdRes
@@ -15,6 +17,7 @@ import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import com.scurab.android.zumpareader.ZR
+import java.io.File
 import java.net.URLEncoder
 import java.util.*
 
@@ -108,7 +111,7 @@ public fun Context.showKeyboard() {
     showKeyboard()
 }
 
-public fun Context.showKeyboard(view : View?) {
+public fun Context.showKeyboard(view: View?) {
     var imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager;
     imm.exec {
         imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
@@ -126,4 +129,13 @@ public fun Context.postDelayed(runnable: Runnable, delay: Long) {
     } else {
         Handler(Looper.getMainLooper()).postDelayed(runnable, delay)
     }
+}
+
+public fun Context.getCameraFileUri(): String {
+    val path = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+    if (!path.exists()) {
+        path.mkdir();
+    }
+    var file = File(path, "camera.jpg");
+    return "file://" + file.absolutePath
 }
