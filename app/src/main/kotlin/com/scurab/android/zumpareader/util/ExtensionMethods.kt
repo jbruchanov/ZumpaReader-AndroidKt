@@ -3,6 +3,8 @@ package com.scurab.android.zumpareader.util
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
+import android.os.Handler
+import android.os.Looper
 import android.support.annotation.IdRes
 import android.support.annotation.StringRes
 import android.support.v4.app.Fragment
@@ -111,5 +113,17 @@ public fun Context.showKeyboard(view : View?) {
     imm.exec {
         imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
         view?.requestFocus()
+    }
+}
+
+public fun Context.post(runnable: Runnable) {
+    Handler(Looper.getMainLooper()).post(runnable)
+}
+
+public fun Context.postDelayed(runnable: Runnable, delay: Long) {
+    if (delay <= 0) {
+        post(runnable)
+    } else {
+        Handler(Looper.getMainLooper()).postDelayed(runnable, delay)
     }
 }
