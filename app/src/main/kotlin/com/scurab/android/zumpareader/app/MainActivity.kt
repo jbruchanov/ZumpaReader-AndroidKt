@@ -116,6 +116,11 @@ public class MainActivity : AppCompatActivity() {
         ((floatingButton.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior as QuickHideBehavior?)?.enabled = false;
     }
 
+    fun showFloatingButton() {
+        floatingButton.showAnimated()
+        ((floatingButton.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior as QuickHideBehavior?)?.enabled = true;
+    }
+
 
     public fun setScrollStrategyEnabled(enabled: Boolean) {
         ((floatingButton.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior as QuickHideBehavior?)?.enabled = enabled;
