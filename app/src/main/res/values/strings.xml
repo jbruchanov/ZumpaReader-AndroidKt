@@ -25,6 +25,7 @@
     <string name="err_fail">Fail :(</string>
     <string name="err_empty_subject">Empty subject</string>
     <string name="err_empty_msg">Empty message</string>
+    <string name="err_login_first">Login first!</string>
     <string name="subject">Subject</string>
     <string name="message">Message</string>
 

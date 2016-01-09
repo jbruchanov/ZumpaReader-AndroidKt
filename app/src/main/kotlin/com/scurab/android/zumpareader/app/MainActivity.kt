@@ -94,8 +94,12 @@ public class MainActivity : AppCompatActivity() {
                 uris = uriMore.toTypedArray()
             }
             if (!(subject.isNullOrEmpty() && text.isNullOrEmpty() && uris == null)) {
-                supportFragmentManager.exec {
-                    openFragment(PostFragment.newInstance(subject, text, uris))
+                if (!zumpaApp.zumpaPrefs.isLoggedIn) {
+                    toast(R.string.err_login_first)
+                } else {
+                    supportFragmentManager.exec {
+                        openFragment(PostFragment.newInstance(subject, text, uris))
+                    }
                 }
             }
         }
