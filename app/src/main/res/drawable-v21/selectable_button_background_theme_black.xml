@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+        android:color="?contextColor50p">
+    <item android:id="@android:id/mask">
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/white"/>
+        </shape>
+    </item>
+    <item>
+        <selector>
+            <item android:state_selected="true">
+                <layer-list>
+                    <item>
+                        <shape>
+                            <solid android:color="@android:color/transparent"/>
+                        </shape>
+                    </item>
+                    <item android:top="@dimen/header_button_top_gap">
+                        <shape>
+                            <solid android:color="@color/yellow_orange"/>
+                        </shape>
+                    </item>
+                </layer-list>
+            </item>
+            <item>
+                <shape>
+                    <solid android:color="@android:color/transparent"/>
+                </shape>
+            </item>
+        </selector>
+    </item>
+</ripple>

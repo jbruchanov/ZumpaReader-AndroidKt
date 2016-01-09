@@ -7,9 +7,12 @@
     <dimen name="gap_tiny">2dp</dimen>
     <dimen name="gap_small">4dp</dimen>
     <dimen name="gap_normal">8dp</dimen>
+    <dimen name="gap_normal_with_gap">10dp</dimen>
     <dimen name="gap_mid">12dp</dimen>
     <dimen name="gap_large">16dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
+
+    <dimen name="header_button_top_gap">52dp</dimen><!-- asset dependent value -->
 
     <dimen name="text_small">12sp</dimen>
     <dimen name="text_message">13sp</dimen>

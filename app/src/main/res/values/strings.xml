@@ -35,4 +35,8 @@
     <string name="filter">Filter</string>
     <string name="nick_name">Nickname</string>
     <string name="show_last_author">Show last author</string>
+    <string name="original">Original</string>
+    <string name="resized">Resized</string>
+    <string name="resolution">Resolution</string>
+    <string name="size">Size</string>
 </resources>
