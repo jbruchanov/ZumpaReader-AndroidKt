@@ -23,6 +23,7 @@ public class ZumpaPrefs(context: Context) {
     private val KEY_NICK_NAME = "KEY_NICK_NAME"
     private val KEY_READ_STATES = "KEY_READ_STATES"
     private val KEY_FILTER = "KEY_FILTER"
+    private val KEY_LAST_CAMERA_URI = "KEY_LAST_CAMERA_URI"
 
     private val sharedPrefs: SharedPreferences
 
@@ -95,5 +96,14 @@ public class ZumpaPrefs(context: Context) {
     public val showLastAuthor: Boolean
         get() {
             return sharedPrefs.getBoolean(KEY_SHOW_LAST_AUTHOR, false)
+        }
+
+    public var lastCameraUri: String
+        get() {
+            return sharedPrefs.getString(KEY_LAST_CAMERA_URI, "")
+        }
+
+        set(value) {
+            sharedPrefs.edit().putString(KEY_LAST_CAMERA_URI, value).apply()
         }
 }

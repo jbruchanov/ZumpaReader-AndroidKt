@@ -131,11 +131,11 @@ public fun Context.postDelayed(runnable: Runnable, delay: Long) {
     }
 }
 
-public fun Context.getCameraFileUri(): String {
+public fun Context.getRandomCameraFileUri(): String {
     val path = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
     if (!path.exists()) {
         path.mkdir();
     }
-    var file = File(path, "camera.jpg");
+    var file = File(path, "camera_%s.jpg".format(System.currentTimeMillis()));
     return "file://" + file.absolutePath
 }

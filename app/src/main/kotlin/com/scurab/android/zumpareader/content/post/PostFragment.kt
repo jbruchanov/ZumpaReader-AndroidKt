@@ -75,7 +75,7 @@ public class PostFragment : BaseFragment() {
                 val uri: String
                 val icon: Int
                 if (PostMessageFragment.REQ_CODE_CAMERA == requestCode) {
-                    uri = context.getCameraFileUri()
+                    uri = zumpaApp!!.zumpaPrefs.lastCameraUri
                     icon = R.drawable.ic_camera
                 } else {
                     uri = data!!.dataString

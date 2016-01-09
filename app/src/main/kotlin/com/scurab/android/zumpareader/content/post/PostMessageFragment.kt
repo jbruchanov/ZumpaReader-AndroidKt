@@ -94,7 +94,8 @@ public class PostMessageFragment : DialogFragment(), SendingFragment {
     private fun onCameraClick() {
         try {
             val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-            val cameraFileUri = context.getCameraFileUri()
+            val cameraFileUri = context.getRandomCameraFileUri()
+            zumpaApp!!.zumpaPrefs.lastCameraUri = cameraFileUri
             intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.parse( cameraFileUri))
             parentFragment.startActivityForResult(intent, REQ_CODE_CAMERA);
         } catch(e: Exception) {
