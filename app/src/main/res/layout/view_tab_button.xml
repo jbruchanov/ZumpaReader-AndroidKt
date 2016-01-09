@@ -3,7 +3,10 @@
            xmlns:tools="http://schemas.android.com/tools"
            android:layout_width="wrap_content"
            android:layout_height="wrap_content"
-           android:background="?threadItemBackground"
+           android:background="?tabButtonBackground"
            tools:src="@drawable/ic_pen"
-           android:padding="@dimen/gap_normal"
+           android:paddingLeft="@dimen/gap_large"
+           android:paddingRight="@dimen/gap_large"
+           android:paddingTop="@dimen/gap_normal"
+           android:paddingBottom="@dimen/gap_normal_with_gap"
            android:orientation="vertical"/>
