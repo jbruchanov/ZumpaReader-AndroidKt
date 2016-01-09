@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TableLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                style="@style/ImageTable.Header"
+                android:textColor="?contextColor"/>
+
+            <TextView
+                style="@style/ImageTable.Header"
+                android:gravity="center_horizontal"
+                android:text="@string/original"/>
+
+            <TextView
+                style="@style/ImageTable.Header"
+                android:gravity="center_horizontal"
+                android:text="@string/resized"/>
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                style="@style/ImageTable.Header"
+                android:text="@string/resolution"/>
+
+            <TextView
+                android:id="@+id/resolution_original"
+                style="@style/ImageTable.Text"
+                tools:text="1280x1024"/>
+
+            <TextView
+                android:id="@+id/resolution_resized"
+                style="@style/ImageTable.Text"
+                android:text="..."/>
+        </TableRow>
+
+        <TableRow
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                style="@style/ImageTable.Header"
+                android:text="@string/size"/>
+
+            <TextView
+                android:id="@+id/size_original"
+                style="@style/ImageTable.Text"
+                tools:text="2.6MiB"/>
+
+            <TextView
+                android:id="@+id/size_resized"
+                style="@style/ImageTable.Text"
+                android:text="..."/>
+        </TableRow>
+    </TableLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+
+        <Spinner
+            android:id="@+id/size_spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:minWidth="100dp"
+            tools:layout_width="100dp"
+            />
+
+        <ImageButton
+            android:id="@+id/resize"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?imageButtonBackground"
+            android:enabled="false"
+            android:padding="@dimen/gap_normal"
+            android:src="@drawable/ic_resize"/>
+
+        <ImageButton
+            android:id="@+id/rotate_right"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?imageButtonBackground"
+            android:enabled="false"
+            android:padding="@dimen/gap_normal"
+            android:src="@drawable/ic_rotate_right"/>
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            tools:ignore="NewApi"/>
+
+        <ImageButton
+            android:id="@+id/send"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?imageButtonBackground"
+            android:padding="@dimen/gap_normal"
+            android:src="@drawable/ic_file_upload"/>
+    </LinearLayout>
+</LinearLayout>
