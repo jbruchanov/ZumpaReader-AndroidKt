@@ -26,16 +26,16 @@ import com.scurab.android.zumpareader.util.*
 public class PostFragment : BaseFragment() {
     companion object {
 
-        public fun newInstance(subject: String?, message: String?, uri: Uri?): PostFragment {
+        public fun newInstance(subject: String?, message: String?, uris: Array<Uri>? = null): PostFragment {
             return PostFragment().apply {
-                arguments = arguments(subject, message, uri)
+                arguments = arguments(subject, message, uris)
             }
         }
-        public fun arguments(subject: String?, message: String?, uri: Uri? = null): Bundle {
+        public fun arguments(subject: String?, message: String?, uris: Array<Uri>? = null): Bundle {
             return Bundle().apply {
                 putString(Intent.EXTRA_SUBJECT, subject)
                 putString(Intent.EXTRA_TEXT, message)
-                putParcelable(Intent.EXTRA_STREAM, uri)
+                putParcelableArray(Intent.EXTRA_STREAM, uris)
             }
         }
 
@@ -53,9 +53,15 @@ public class PostFragment : BaseFragment() {
         tabHost.execOn {
             setup(context, childFragmentManager, android.R.id.tabcontent)
             addTab(newTabSpec("1").setIndicator(createIndicator(R.drawable.ic_pen, contextColor, tabWidget)), PostMessageFragment::class.java, arguments(argSubject, argMessage))
-            if (argUri != null) {
-                addTab(newTabSpec("2").setIndicator(createIndicator(R.drawable.ic_photo, contextColor, tabWidget)), PostImageFragment::class.java, PostImageFragment.arguments(argUri!!))
-                post { setCurrentTabByTag("2") }
+            if (argUris != null) {
+                var i = 1
+                val uris = argUris
+                for (argUri in uris!!.asIterable()) {
+                    addTab(newTabSpec((++i).toString()).setIndicator(createIndicator(R.drawable.ic_photo, contextColor, tabWidget)), PostImageFragment::class.java, PostImageFragment.arguments(argUri))
+                }
+                if (i == 2) {//just single image
+                    post { setCurrentTabByTag(i.toString()) }
+                }
             }
         }
         return view
@@ -118,8 +124,12 @@ public class PostFragment : BaseFragment() {
         if (arguments != null && arguments.containsKey(Intent.EXTRA_TEXT)) arguments.getString(Intent.EXTRA_TEXT) else null
     }
 
-    private val argUri: Uri? by lazy {
-        if (arguments != null && arguments.containsKey(Intent.EXTRA_STREAM)) arguments.getParcelable<Uri>(Intent.EXTRA_STREAM) else null
+    private val argUris: Array<Uri>? by lazy {
+        var result: Array<Uri>? = null
+        if (arguments != null && arguments.containsKey(Intent.EXTRA_STREAM)) {
+            result = arguments.getParcelableArray(Intent.EXTRA_STREAM) as Array<Uri>?
+        }
+        result
     }
 
     override fun onDestroyView() {

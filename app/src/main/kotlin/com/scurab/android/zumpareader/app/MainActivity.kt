@@ -1,6 +1,7 @@
 package com.scurab.android.zumpareader.app
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.support.design.widget.CoordinatorLayout
@@ -16,9 +17,11 @@ import com.pawegio.kandroid.find
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.content.MainListFragment
+import com.scurab.android.zumpareader.content.post.PostFragment
 import com.scurab.android.zumpareader.ui.DelayClickListener
 import com.scurab.android.zumpareader.ui.QuickHideBehavior
 import com.scurab.android.zumpareader.ui.hideAnimated
+import com.scurab.android.zumpareader.ui.showAnimated
 import com.scurab.android.zumpareader.util.*
 import io.fabric.sdk.android.Fabric
 
@@ -70,6 +73,32 @@ public class MainActivity : AppCompatActivity() {
         }
 
         settingsButton.setOnClickListener { startActivity(Intent(this@MainActivity, SettingsActivity::class.java)) }
+        checkIntent(intent)
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        checkIntent(intent)
+    }
+
+    private fun checkIntent(intent: Intent?) {
+        intent.exec {
+            val subject: String? = it.getStringExtra(Intent.EXTRA_SUBJECT)
+            val text: String? = it.getStringExtra(Intent.EXTRA_TEXT)
+            val uri1= it.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+            val uriMore = it.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
+            var uris : Array<Uri>? = null
+            if (uri1 != null) {
+                uris = arrayOf(uri1)
+            } else if (uriMore != null) {
+                uris = uriMore.toTypedArray()
+            }
+            if (!(subject.isNullOrEmpty() && text.isNullOrEmpty() && uris == null)) {
+                supportFragmentManager.exec {
+                    openFragment(PostFragment.newInstance(subject, text, uris))
+                }
+            }
+        }
     }
 
     public fun openFragment(fragment: BaseFragment, addToBackStack: Boolean = true, replace: Boolean = true) {
