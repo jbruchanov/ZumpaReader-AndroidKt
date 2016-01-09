@@ -2,7 +2,6 @@ package com.scurab.android.zumpareader.content.post
 
 import android.app.ProgressDialog
 import android.content.Intent
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.support.v4.app.DialogFragment
@@ -24,15 +23,15 @@ public class PostImageFragment : DialogFragment(), SendingFragment {
 
 
     companion object {
-        public fun newInstance(uri: String): PostImageFragment {
+        public fun newInstance(uri: Uri): PostImageFragment {
             return PostImageFragment().apply {
                 arguments = arguments(uri)
             }
         }
 
-        public fun arguments(uri: String): Bundle {
+        public fun arguments(uri: Uri): Bundle {
             return Bundle().apply {
-                putString(Intent.EXTRA_STREAM, uri)
+                putParcelable(Intent.EXTRA_STREAM, uri)
             }
         }
     }
@@ -43,7 +42,7 @@ public class PostImageFragment : DialogFragment(), SendingFragment {
         return view!!.find<ImageView>(R.id.image)
     }
 
-    private val imageUri by lazy { Uri.parse(arguments.getString(Intent.EXTRA_STREAM)) }
+    private val imageUri by lazy { arguments.getParcelable<Uri>(Intent.EXTRA_STREAM) }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_post_image, container, false)
