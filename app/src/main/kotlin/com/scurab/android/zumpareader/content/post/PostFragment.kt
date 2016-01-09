@@ -26,15 +26,16 @@ import com.scurab.android.zumpareader.util.*
 public class PostFragment : BaseFragment() {
     companion object {
 
-        public fun newInstance(subject: String?, message: String?): PostFragment {
+        public fun newInstance(subject: String?, message: String?, uri: Uri?): PostFragment {
             return PostFragment().apply {
-                arguments = arguments(subject, message)
+                arguments = arguments(subject, message, uri)
             }
         }
-        public fun arguments(subject: String?, message: String?): Bundle {
+        public fun arguments(subject: String?, message: String?, uri: Uri? = null): Bundle {
             return Bundle().apply {
                 putString(Intent.EXTRA_SUBJECT, subject)
                 putString(Intent.EXTRA_TEXT, message)
+                putParcelable(Intent.EXTRA_STREAM, uri)
             }
         }
 
@@ -52,6 +53,10 @@ public class PostFragment : BaseFragment() {
         tabHost.execOn {
             setup(context, childFragmentManager, android.R.id.tabcontent)
             addTab(newTabSpec("1").setIndicator(createIndicator(R.drawable.ic_pen, contextColor, tabWidget)), PostMessageFragment::class.java, arguments(argSubject, argMessage))
+            if (argUri != null) {
+                addTab(newTabSpec("2").setIndicator(createIndicator(R.drawable.ic_photo, contextColor, tabWidget)), PostImageFragment::class.java, PostImageFragment.arguments(argUri!!))
+                post { setCurrentTabByTag("2") }
+            }
         }
         return view
     }
@@ -72,7 +77,7 @@ public class PostFragment : BaseFragment() {
                 }
                 tabHost.execOn {
                     var newIndex = (childFragmentManager.fragments.size + 1).toString()
-                    addTab(newTabSpec(newIndex).setIndicator(createIndicator(icon, contextColor, tabWidget)), PostImageFragment::class.java, PostImageFragment.arguments(uri))
+                    addTab(newTabSpec(newIndex).setIndicator(createIndicator(icon, contextColor, tabWidget)), PostImageFragment::class.java, PostImageFragment.arguments(Uri.parse(uri)))
                     post { setCurrentTabByTag(newIndex) }
                 }
             } catch(e: Throwable) {
@@ -111,6 +116,10 @@ public class PostFragment : BaseFragment() {
 
     private val argMessage: String? by lazy {
         if (arguments != null && arguments.containsKey(Intent.EXTRA_TEXT)) arguments.getString(Intent.EXTRA_TEXT) else null
+    }
+
+    private val argUri: Uri? by lazy {
+        if (arguments != null && arguments.containsKey(Intent.EXTRA_STREAM)) arguments.getParcelable<Uri>(Intent.EXTRA_STREAM) else null
     }
 
     override fun onDestroyView() {
