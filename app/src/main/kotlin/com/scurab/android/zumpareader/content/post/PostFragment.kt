@@ -63,6 +63,7 @@ public class PostFragment : BaseFragment() {
                     post { setCurrentTabByTag(i.toString()) }
                 }
             }
+            setOnTabChangedListener { context.hideKeyboard(view) }
         }
         return view
     }
