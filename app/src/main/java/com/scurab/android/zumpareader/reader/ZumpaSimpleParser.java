@@ -339,7 +339,7 @@ public class ZumpaSimpleParser {
                 if (line.contains(HTMLTags.TAG_BOLD_START) && line.contains(HTMLTags.TAG_BOLD_END)) {
                     containsBold = true;
                 }
-                urls = getLinks(line);
+                urls = getLinks(line, urls);
                 line = Html.fromHtml(line).toString();
                 sb.append(line).append("\n");
             }
@@ -580,11 +580,18 @@ public class ZumpaSimpleParser {
     }
 
     private static Set<String> getLinks(String text) {
+        return getLinks(text, null);
+    }
+
+    private static Set<String> getLinks(String text, @Nullable Set<String> toFill) {
         Matcher matcher = URL_PATTERN2.matcher(text);
-        HashSet<String> links = new HashSet<>();
+        Set<String> links = toFill;
         while (matcher.find()) {
             String link = matcher.group(1);
-            if (link != null) {
+            if (!TextUtils.isEmpty(link)) {
+                if (links == null) {
+                    links = new HashSet<>();
+                }
                 link = Html.fromHtml(link).toString();//decode html escapes
                 links.add(link);
             }
