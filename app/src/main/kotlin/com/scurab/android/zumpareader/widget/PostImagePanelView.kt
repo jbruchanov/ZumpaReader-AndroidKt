@@ -1,6 +1,7 @@
 package com.scurab.android.zumpareader.widget
 
 import android.content.Context
+import android.os.Build
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -8,6 +9,8 @@ import android.view.ViewGroup
 import android.widget.*
 import com.pawegio.kandroid.find
 import com.scurab.android.zumpareader.R
+import com.scurab.android.zumpareader.util.obtainStyledColor
+import com.scurab.android.zumpareader.util.setImageTint
 
 /**
  * Created by JBruchanov on 09/01/2016.
@@ -15,6 +18,8 @@ import com.scurab.android.zumpareader.R
 public class PostImagePanelView : FrameLayout {
 
     public val upload by lazy { find<ImageButton>(R.id.send) }
+    public val resize by lazy { find<ImageButton>(R.id.resize) }
+    public val rotateRight by lazy { find<ImageButton>(R.id.rotate_right) }
     public val sizeSpinner by lazy { find<Spinner>(R.id.size_spinner) }
     private val resolutionOriginal by lazy { find<Spinner>(R.id.resolution_original) }
     private val resolutionResized by lazy { find<Spinner>(R.id.resolution_resized) }
@@ -36,6 +41,16 @@ public class PostImagePanelView : FrameLayout {
     private fun init(attrs: AttributeSet?) {
         inflate(context, R.layout.widget_post_image_panel, this)
         sizeSpinner.adapter = SizeSpinnerAdapter(context)
+        initIcons()
+    }
+
+    private fun initIcons() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            val color = context.obtainStyledColor(R.attr.contextColor)
+            upload.setImageTint(color)
+            resize.setImageTint(color)
+            rotateRight.setImageTint(color)
+        }
     }
 }
 
