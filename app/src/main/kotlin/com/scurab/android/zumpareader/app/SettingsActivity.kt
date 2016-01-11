@@ -43,12 +43,6 @@ public class SettingsActivity : PreferenceActivity() {
             true
         }
         buttonPref.title = resources.getString(if (zumpaApp.zumpaPrefs.isLoggedIn) R.string.logout else R.string.login)
-        zumpaApp.followRedirects = false
-    }
-
-    override fun onDestroy() {
-        zumpaApp.followRedirects = true
-        super.onDestroy()
     }
 
     protected fun dispatchLogoutClicked() {
@@ -88,8 +82,7 @@ public class SettingsActivity : PreferenceActivity() {
                             response.exec {
                                 val success = response?.code() == 302//response?.body()?.asString()?.contains("/logout.php") ?: false
                                 zumpaApp.zumpaPrefs.isLoggedIn = success
-                                var sessionId: String? = ParseUtils.extractSessionId(it)
-                                zumpaApp.zumpaPrefs.cookies = ParseUtils.extractCookies(it)
+                                zumpaApp.zumpaPrefs.cookies = if (success) ParseUtils.extractCookies(it) else null
                                 toast(if (success) R.string.ok else R.string.err_fail)
                                 if (success) {
                                     buttonPref.title = resources.getString(R.string.logout)
@@ -101,9 +94,15 @@ public class SettingsActivity : PreferenceActivity() {
         )
     }
 
+    override fun onResume() {
+        super.onResume()
+        zumpaApp.followRedirects = false
+    }
+
     override fun onPause() {
         super.onPause()
         hideProgressDialog()
+
         zumpaApp.zumpaParser.execOn {
             userName = zumpaApp.zumpaPrefs.loggedUserName
             isShowLastUser = zumpaApp.zumpaPrefs.showLastAuthor
@@ -111,6 +110,7 @@ public class SettingsActivity : PreferenceActivity() {
         zumpaApp.cookieManager.cookieStore.removeAll()
         zumpaApp.cookieManager.put(URI.create(ZR.Constants.ZUMPA_MAIN_URL), zumpaApp.zumpaPrefs.cookiesMap);
         zumpaApp.zumpaParser.isShowLastUser = zumpaApp.zumpaPrefs.showLastAuthor
+        zumpaApp.followRedirects = true
     }
 
     private fun showProgressDialog() {
