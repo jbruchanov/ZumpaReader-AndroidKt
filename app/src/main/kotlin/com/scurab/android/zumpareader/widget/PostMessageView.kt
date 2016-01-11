@@ -6,19 +6,22 @@ import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.EditText
+import android.widget.FrameLayout
+import android.widget.ImageButton
+import android.widget.LinearLayout
 import com.pawegio.kandroid.find
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.util.execOn
 import com.scurab.android.zumpareader.util.obtainStyledColor
-import com.scurab.android.zumpareader.util.wrapWithTint
+import com.scurab.android.zumpareader.util.setImageTint
 
 /**
  * Created by JBruchanov on 31/12/2015.
  */
 public class PostMessageView : FrameLayout {
 
-    public val subject by lazy { find<EditText>(R.id.subject) }
+    public val subject by lazy(LazyThreadSafetyMode.NONE) { find<EditText>(R.id.subject) }
     public val message by lazy { find<EditText>(R.id.message) }
     public val photo by lazy { find<ImageButton>(R.id.photo) }
     public val camera by lazy { find<ImageButton>(R.id.camera) }
@@ -57,14 +60,10 @@ public class PostMessageView : FrameLayout {
     private fun initIcons() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             val color = context.obtainStyledColor(R.attr.contextColor)
-            updateTint(photo, color)
-            updateTint(camera, color)
-            updateTint(survey, color)
-            updateTint(sendButton, color)
+            photo.setImageTint(color)
+            camera.setImageTint(color)
+            survey.setImageTint(color)
+            sendButton.setImageTint(color)
         }
-    }
-
-    private fun updateTint(imageView: ImageView, color: Int) {
-        imageView.setImageDrawable(imageView.drawable.wrapWithTint(color))
     }
 }
