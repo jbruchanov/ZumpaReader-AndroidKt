@@ -29,9 +29,19 @@ import rx.schedulers.Schedulers
 public class PostMessageFragment : DialogFragment(), SendingFragment {
 
     companion object {
+        private val SHOW_KEYBOARD = "SHOW_KEYBOARD"
+
         public fun newInstance(subject: String?, message: String?): PostMessageFragment {
             return PostMessageFragment().apply {
                 arguments = PostFragment.arguments(subject, message)
+            }
+        }
+
+        public fun arguments(subject: String?, message: String?, showKeyboard: Boolean = true): Bundle {
+            return Bundle().apply {
+                putString(Intent.EXTRA_SUBJECT, subject)
+                putString(Intent.EXTRA_TEXT, message)
+                putBoolean(SHOW_KEYBOARD, showKeyboard)
             }
         }
 
@@ -50,7 +60,11 @@ public class PostMessageFragment : DialogFragment(), SendingFragment {
     }
 
     private val argSubject: String? by lazy {
-        if (arguments != null && arguments.containsKey(Intent.EXTRA_SUBJECT)) arguments.getString(Intent.EXTRA_SUBJECT) else null
+        arguments?.getString(Intent.EXTRA_SUBJECT)
+    }
+
+    private val showKeyboard: Boolean by lazy {
+        arguments?.getBoolean(SHOW_KEYBOARD) ?: false
     }
 
     private val argMessage: String? by lazy {
@@ -143,13 +157,6 @@ public class PostMessageFragment : DialogFragment(), SendingFragment {
                             }
                         }
                     })
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        postMessageView?.post {
-            context.showKeyboard(postMessageView?.subject)
         }
     }
 

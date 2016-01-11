@@ -31,6 +31,7 @@ public class PostFragment : BaseFragment() {
                 arguments = arguments(subject, message, uris)
             }
         }
+
         public fun arguments(subject: String?, message: String?, uris: Array<Uri>? = null): Bundle {
             return Bundle().apply {
                 putString(Intent.EXTRA_SUBJECT, subject)
@@ -52,7 +53,7 @@ public class PostFragment : BaseFragment() {
         val tabWidget = view.find<TabWidget>(android.R.id.tabs)
         tabHost.execOn {
             setup(context, childFragmentManager, android.R.id.tabcontent)
-            addTab(newTabSpec("1").setIndicator(createIndicator(R.drawable.ic_pen, contextColor, tabWidget)), PostMessageFragment::class.java, arguments(argSubject, argMessage))
+            addTab(newTabSpec("1").setIndicator(createIndicator(R.drawable.ic_pen, contextColor, tabWidget)), PostMessageFragment::class.java, PostMessageFragment.arguments(argSubject, argMessage, argUris == null))
             if (argUris != null) {
                 var i = 1
                 val uris = argUris
