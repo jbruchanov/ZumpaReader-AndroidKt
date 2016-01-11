@@ -15,6 +15,8 @@ import android.support.v7.widget.RecyclerView
 import android.util.TypedValue
 import android.view.View
 import android.view.inputmethod.InputMethodManager
+import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.Toast
 import com.scurab.android.zumpareader.ZR
 import java.io.File
@@ -138,4 +140,16 @@ public fun Context.getRandomCameraFileUri(withScheme: Boolean = true): String {
     }
     var file = File(path, "camera_%s.jpg".format(System.currentTimeMillis()));
     return if (withScheme) "file://" + file.absolutePath else file.absolutePath
+}
+
+public fun ImageView.setImageTint(color: Int) {
+    if (drawable != null) {
+        setImageDrawable(drawable.wrapWithTint(color))
+    }
+}
+
+public fun ImageButton.setImageTint(color: Int) {
+    if (drawable != null) {
+        setImageDrawable(drawable.wrapWithTint(color))
+    }
 }
