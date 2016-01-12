@@ -572,8 +572,10 @@ public class ZumpaSimpleParser {
     public static String replaceLinksByZumpaLinks(@Nullable String text) {
         if (text != null) {
             Set<String> links = getLinks(text);
-            for (String link : links) {
-                text = text.replace(link, String.format("<%s>", link));
+            if (links != null) {
+                for (String link : links) {
+                    text = text.replace(link, String.format("<%s>", link));
+                }
             }
         }
         return text;
