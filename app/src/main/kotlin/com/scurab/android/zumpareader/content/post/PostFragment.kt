@@ -25,7 +25,7 @@ import com.scurab.android.zumpareader.util.*
  */
 public class PostFragment : BaseFragment() {
     companion object {
-
+        private val POST_MESSAGE_TAG = "1"
         public fun newInstance(subject: String?, message: String?, uris: Array<Uri>? = null): PostFragment {
             return PostFragment().apply {
                 arguments = arguments(subject, message, uris)
@@ -53,7 +53,7 @@ public class PostFragment : BaseFragment() {
         val tabWidget = view.find<TabWidget>(android.R.id.tabs)
         tabHost.execOn {
             setup(context, childFragmentManager, android.R.id.tabcontent)
-            addTab(newTabSpec("1").setIndicator(createIndicator(R.drawable.ic_pen, contextColor, tabWidget)), PostMessageFragment::class.java, PostMessageFragment.arguments(argSubject, argMessage, argUris == null))
+            addTab(newTabSpec(POST_MESSAGE_TAG).setIndicator(createIndicator(R.drawable.ic_pen, contextColor, tabWidget)), PostMessageFragment::class.java, PostMessageFragment.arguments(argSubject, argMessage, argUris == null))
             if (argUris != null) {
                 var i = 1
                 val uris = argUris
@@ -132,6 +132,13 @@ public class PostFragment : BaseFragment() {
             result = arguments.getParcelableArray(Intent.EXTRA_STREAM) as Array<Uri>?
         }
         result
+    }
+
+    fun onSharedImage(link: String, activateFragment: Boolean = true) {
+        tabHost?.currentTab = 0
+        (childFragmentManager.findFragmentByTag(POST_MESSAGE_TAG) as? PostMessageFragment).exec {
+            it.addLink(link)
+        }
     }
 
     override fun onDestroyView() {
