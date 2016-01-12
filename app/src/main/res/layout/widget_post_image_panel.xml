@@ -107,6 +107,16 @@
             tools:ignore="NewApi"/>
 
         <ImageButton
+            android:id="@+id/copy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?imageButtonBackground"
+            android:padding="@dimen/gap_normal"
+            android:visibility="invisible"
+            tools:visibility="visible"
+            android:src="@drawable/ic_copy"/>
+
+        <ImageButton
             android:id="@+id/send"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

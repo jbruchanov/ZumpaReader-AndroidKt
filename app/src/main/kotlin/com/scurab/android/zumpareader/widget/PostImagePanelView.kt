@@ -19,6 +19,7 @@ import com.scurab.android.zumpareader.util.setImageTint
 public class PostImagePanelView : FrameLayout {
 
     public val upload by lazy { find<ImageButton>(R.id.send) }
+    public val copy by lazy { find<ImageButton>(R.id.copy) }
     public val resize by lazy { find<ImageButton>(R.id.resize) }
     public val rotateRight by lazy { find<ImageButton>(R.id.rotate_right) }
     public val sizeSpinner by lazy { find<Spinner>(R.id.size_spinner) }
