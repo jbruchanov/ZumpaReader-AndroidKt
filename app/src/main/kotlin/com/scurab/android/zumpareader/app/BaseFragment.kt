@@ -93,19 +93,6 @@ public abstract class BaseFragment : Fragment() {
         }
     }
 
-    public fun saveIntoClipboard(url: String): Boolean {
-        try {
-            context.execOn {
-                var clip = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                clip.primaryClip = ClipData.newRawUri(url, Uri.parse(url))
-                return true
-            }
-        } catch(e: Exception) {
-            e.printStackTrace()
-        }
-        return false
-    }
-
     protected val isLoggedIn : Boolean
         get() {
             return zumpaApp?.zumpaPrefs?.isLoggedIn ?: false

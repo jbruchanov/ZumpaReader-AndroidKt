@@ -1,5 +1,7 @@
 package com.scurab.android.zumpareader.util
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
@@ -152,4 +154,18 @@ public fun ImageButton.setImageTint(color: Int) {
     if (drawable != null) {
         setImageDrawable(drawable.wrapWithTint(color))
     }
+}
+
+public fun Boolean.asVisibility(falseValue: Int = View.GONE) : Int {
+    return if (this) View.VISIBLE else falseValue
+}
+
+public fun Context.saveToClipboard(text: String?) {
+    var clip = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    clip.primaryClip = ClipData.newPlainText(text, text)
+}
+
+public fun Context.saveToClipboard(uri: Uri) {
+    var clip = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    clip.primaryClip = ClipData.newRawUri(uri.toString(), uri)
 }

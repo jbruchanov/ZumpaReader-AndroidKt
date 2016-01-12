@@ -2,6 +2,7 @@ package com.scurab.android.zumpareader.content
 
 import android.app.ProgressDialog
 import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -279,9 +280,8 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
 
     override fun onItemClick(url: String, longClick: Boolean) {
         if (longClick) {
-            if (saveIntoClipboard(url)) {
-                context.toast(R.string.saved_into_clipboard)
-            }
+            context.saveToClipboard(Uri.parse(url))
+            context.toast(R.string.saved_into_clipboard)
         } else {
             val id = ZumpaSimpleParser.getZumpaThreadId(url)
             if (id != 0) {
