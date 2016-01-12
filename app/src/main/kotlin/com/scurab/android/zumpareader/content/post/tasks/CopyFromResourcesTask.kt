@@ -44,11 +44,16 @@ public abstract class CopyFromResourcesTask(private val context: Context, val ur
         imageStorage = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
         hash = ParseUtils.MD5(uri.toString())
         val output = File(imageStorage, hash)
-        this.thumbnail = File(imageStorage, hash + "_thumbnail")
+        val thumb = File(imageStorage, hash + "_thumbnail")
+        this.thumbnail = thumb
         this.output = output
         if (!(output.exists() && output.length() > 0L)) {
             super.execute()
         } else {
+            loadImageData(output)
+            if (!thumb.exists() || thumb.length() == 0L) {
+                createThumbnail(output, thumbnail!!)
+            }
             onPostExecute(output.absolutePath)
         }
     }
