@@ -90,16 +90,16 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
         postMessageView.execOn {
             visibility = View.INVISIBLE
             sendButton.setOnClickListener { dispatchSend() }
-            camera.setOnClickListener { dispatchOpenPostMessage() }
-            photo.setOnClickListener { dispatchOpenPostMessage() }
+            camera.setOnClickListener { dispatchOpenPostMessage(R.id.camera) }
+            photo.setOnClickListener { dispatchOpenPostMessage(R.id.photo) }
 
         }
         loadData()
     }
 
-    protected fun dispatchOpenPostMessage() {
+    protected fun dispatchOpenPostMessage(flag: Int) {
         mainActivity.execOn {
-            openFragment(PostFragment.newInstance(title.toString(), postMessageView!!.message.text.toString(), null, threadId))
+            openFragment(PostFragment.newInstance(title.toString(), postMessageView!!.message.text.toString(), null, threadId, flag))
         }
     }
 

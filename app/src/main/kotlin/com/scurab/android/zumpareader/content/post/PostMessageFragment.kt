@@ -48,9 +48,6 @@ public class PostMessageFragment : DialogFragment(), SendingFragment {
                 putString(PostFragment.THREAD_ID, threadId)
             }
         }
-
-        public val REQ_CODE_IMAGE = 123
-        public val REQ_CODE_CAMERA = 124
     }
 
     private val postMessageView: PostMessageView? get() = view?.find<PostMessageView>(R.id.post_message_view)
@@ -62,6 +59,8 @@ public class PostMessageFragment : DialogFragment(), SendingFragment {
     public val zumpaApp: ZumpaReaderApp? get() {
         return mainActivity?.zumpaApp
     }
+
+    private val parentPostFragment: PostFragment? get() = parentFragment as PostFragment?
 
     private val showKeyboard: Boolean by lazy { arguments?.getBoolean(SHOW_KEYBOARD) ?: false }
     private val argSubject: String? by lazy { arguments?.getString(Intent.EXTRA_SUBJECT) }
@@ -88,8 +87,8 @@ public class PostMessageFragment : DialogFragment(), SendingFragment {
             subject.isEnabled = argThreadId == null
             message.setText(ZumpaSimpleParser.replaceLinksByZumpaLinks(argMessage))
 
-            camera.setOnClickListener { onCameraClick() }
-            photo.setOnClickListener { onPhotoClick() }
+            camera.setOnClickListener { parentPostFragment?.onCameraClick() }
+            photo.setOnClickListener { parentPostFragment?.onPhotoClick() }
         }
     }
 
@@ -105,30 +104,6 @@ public class PostMessageFragment : DialogFragment(), SendingFragment {
                 }
             }
             links.clear()
-        }
-    }
-
-    private fun onPhotoClick() {
-        try {
-            val intent = Intent();
-            intent.setType("image/*");
-            intent.setAction(Intent.ACTION_GET_CONTENT);
-            intent.addCategory(Intent.CATEGORY_OPENABLE);
-            parentFragment.startActivityForResult(intent, REQ_CODE_IMAGE);
-        } catch(e: Exception) {
-            context.toast(R.string.err_fail)
-        }
-    }
-
-    private fun onCameraClick() {
-        try {
-            val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-            val cameraFileUri = context.getRandomCameraFileUri()
-            zumpaApp!!.zumpaPrefs.lastCameraUri = cameraFileUri
-            intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.parse( cameraFileUri))
-            parentFragment.startActivityForResult(intent, REQ_CODE_CAMERA);
-        } catch(e: Exception) {
-            context.toast(R.string.err_fail)
         }
     }
 

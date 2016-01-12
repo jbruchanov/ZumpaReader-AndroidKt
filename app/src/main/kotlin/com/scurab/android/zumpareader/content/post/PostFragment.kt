@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.support.annotation.ColorInt
 import android.support.annotation.DrawableRes
 import android.support.v4.app.FragmentTabHost
@@ -25,22 +26,31 @@ import com.scurab.android.zumpareader.util.*
  */
 public class PostFragment : BaseFragment() {
     companion object {
+        public val REQ_CODE_IMAGE = 123
+        public val REQ_CODE_CAMERA = 124
+
         private val POST_MESSAGE_TAG = "1"
         val THREAD_ID = "THREAD_UD"
+        val FLAG = "FLAG"
 
-        public fun newInstance(subject: String?, message: String?, uris: Array<Uri>? = null, threadId: String? = null): PostFragment {
+        public fun newInstance(subject: String?, message: String?, uris: Array<Uri>? = null, threadId: String? = null, flag:Int = 0): PostFragment {
             return PostFragment().apply {
-                arguments = arguments(subject, message, uris, threadId)
+                arguments = arguments(subject, message, uris, threadId, flag)
             }
         }
 
-        public fun arguments(subject: String?, message: String?, uris: Array<Uri>? = null, threadId: String? = null): Bundle {
+        public fun arguments(subject: String?, message: String?, uris: Array<Uri>? = null, threadId: String? = null, flag:Int = 0): Bundle {
             return Bundle().apply {
                 putString(Intent.EXTRA_SUBJECT, subject)
                 putString(Intent.EXTRA_TEXT, message)
                 putParcelableArray(Intent.EXTRA_STREAM, uris)
                 putString(THREAD_ID, threadId)
+                putInt(FLAG, flag)
             }
+        }
+
+        fun isRequestCode(requestCode: Int): Boolean {
+            return REQ_CODE_CAMERA == requestCode || REQ_CODE_IMAGE == requestCode
         }
 
     }
@@ -82,12 +92,12 @@ public class PostFragment : BaseFragment() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        val isImage = (PostMessageFragment.REQ_CODE_IMAGE == requestCode || PostMessageFragment.REQ_CODE_CAMERA == requestCode)
+        val isImage = (REQ_CODE_IMAGE == requestCode || REQ_CODE_CAMERA == requestCode)
         if (isImage && resultCode == Activity.RESULT_OK) {
             try {
                 val uri: String
                 val icon: Int
-                if (PostMessageFragment.REQ_CODE_CAMERA == requestCode) {
+                if (REQ_CODE_CAMERA == requestCode) {
                     uri = zumpaApp!!.zumpaPrefs.lastCameraUri
                     icon = R.drawable.ic_camera
                 } else {
@@ -105,6 +115,63 @@ public class PostFragment : BaseFragment() {
         }
     }
 
+    private val argSubject: String? by lazy { arguments?.getString(Intent.EXTRA_SUBJECT) }
+    private val argMessage: String? by lazy { arguments?.getString(Intent.EXTRA_TEXT) }
+    private val argUris: Array<Uri>? by lazy {
+        var result: Array<Uri>? = null
+        if (arguments != null && arguments.containsKey(Intent.EXTRA_STREAM)) {
+            result = arguments.getParcelableArray(Intent.EXTRA_STREAM) as Array<Uri>?
+        }
+        result
+    }
+    private val argThreadId: String? by lazy { arguments?.getString(THREAD_ID) }
+    private var argFlagUsed = false//use it just for first time
+    private val argFlag: Int by lazy { arguments?.getInt(FLAG) ?: 0 }
+
+    fun onSharedImage(link: String, activateFragment: Boolean = true) {
+        tabHost?.currentTab = 0
+        (childFragmentManager.findFragmentByTag(POST_MESSAGE_TAG) as? PostMessageFragment).exec {
+            it.addLink(link)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (!argFlagUsed && argFlag != 0) {
+            argFlagUsed = true
+            context.post(Runnable {
+                when (argFlag) {
+                    R.id.photo -> onPhotoClick()
+                    R.id.camera -> onCameraClick()
+                }
+            })
+        }
+    }
+
+    fun onPhotoClick() {
+        try {
+            val intent = Intent();
+            intent.setType("image/*");
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            mainActivity!!.startActivityForResult(intent, REQ_CODE_IMAGE);
+        } catch(e: Exception) {
+            context.toast(R.string.err_fail)
+        }
+    }
+
+    fun onCameraClick() {
+        try {
+            val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            val cameraFileUri = context.getRandomCameraFileUri()
+            zumpaApp!!.zumpaPrefs.lastCameraUri = cameraFileUri
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.parse( cameraFileUri))
+            mainActivity!!.startActivityForResult(intent, REQ_CODE_CAMERA);
+        } catch(e: Exception) {
+            context.toast(R.string.err_fail)
+        }
+    }
+
     private fun createIndicator(@DrawableRes resId: Int, @ColorInt color: Int, parent: ViewGroup?): View {
         val btn = context.layoutInflater.inflate(R.layout.view_tab_button, parent, false) as ImageView
         val res = context.resources
@@ -118,24 +185,6 @@ public class PostFragment : BaseFragment() {
         mainActivity.execOn {
             showFloatingButton()
             settingsButton.visibility = View.VISIBLE
-        }
-    }
-
-    private val argSubject: String? by lazy { arguments?.getString(Intent.EXTRA_SUBJECT) }
-    private val argMessage: String? by lazy { arguments?.getString(Intent.EXTRA_TEXT) }
-    private val argUris: Array<Uri>? by lazy {
-        var result: Array<Uri>? = null
-        if (arguments != null && arguments.containsKey(Intent.EXTRA_STREAM)) {
-            result = arguments.getParcelableArray(Intent.EXTRA_STREAM) as Array<Uri>?
-        }
-        result
-    }
-    private val argThreadId: String? by lazy { arguments?.getString(THREAD_ID) }
-
-    fun onSharedImage(link: String, activateFragment: Boolean = true) {
-        tabHost?.currentTab = 0
-        (childFragmentManager.findFragmentByTag(POST_MESSAGE_TAG) as? PostMessageFragment).exec {
-            it.addLink(link)
         }
     }
 
