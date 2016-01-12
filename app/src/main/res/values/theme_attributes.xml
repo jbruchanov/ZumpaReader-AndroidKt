@@ -26,4 +26,5 @@
     <attr name="buttonTextSize" format="dimension" />
     <attr name="buttonBackground" format="reference" />
     <attr name="itemStateWidth" format="dimension" />
+    <attr name="messageTextColor" format="color" />
 </resources>

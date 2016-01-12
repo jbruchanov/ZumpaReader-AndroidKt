@@ -22,6 +22,7 @@
         android:scrollbars="vertical"
         android:textSize="@dimen/text_message"
         android:visibility="gone"
+        android:textColor="?messageTextColor"
         tools:visibility="visible"/>
 
     <EditText
@@ -35,6 +36,7 @@
         android:minHeight="@dimen/response_edit_text_min_height"
         android:minLines="2"
         android:padding="@dimen/gap_small"
+        android:textColor="?messageTextColor"
         android:scrollbars="vertical"
         android:textSize="@dimen/text_message"/>
 

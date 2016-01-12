@@ -27,6 +27,7 @@
         <item name="buttonTextSize">@dimen/text_small</item>
         <item name="buttonBackground">@drawable/url_button_background_theme_black</item>
         <item name="itemStateWidth">@dimen/item_left_bar_width</item>
+        <item name="messageTextColor">@color/message_text_black</item>
     </style>
 
 </resources>
