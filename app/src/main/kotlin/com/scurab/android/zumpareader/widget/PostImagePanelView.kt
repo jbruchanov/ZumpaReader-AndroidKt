@@ -1,6 +1,7 @@
 package com.scurab.android.zumpareader.widget
 
 import android.content.Context
+import android.graphics.Point
 import android.os.Build
 import android.util.AttributeSet
 import android.view.LayoutInflater
@@ -21,10 +22,10 @@ public class PostImagePanelView : FrameLayout {
     public val resize by lazy { find<ImageButton>(R.id.resize) }
     public val rotateRight by lazy { find<ImageButton>(R.id.rotate_right) }
     public val sizeSpinner by lazy { find<Spinner>(R.id.size_spinner) }
-    private val resolutionOriginal by lazy { find<Spinner>(R.id.resolution_original) }
-    private val resolutionResized by lazy { find<Spinner>(R.id.resolution_resized) }
-    private val sizeOriginal by lazy { find<Spinner>(R.id.size_original) }
-    private val sizeResized by lazy { find<Spinner>(R.id.size_resized) }
+    private val resolutionOriginal by lazy { find<TextView>(R.id.resolution_original) }
+    private val resolutionResized by lazy { find<TextView>(R.id.resolution_resized) }
+    private val sizeOriginal by lazy { find<TextView>(R.id.size_original) }
+    private val sizeResized by lazy { find<TextView>(R.id.size_resized) }
 
     constructor(context: Context?) : this(context, null)
 
@@ -41,6 +42,7 @@ public class PostImagePanelView : FrameLayout {
     private fun init(attrs: AttributeSet?) {
         inflate(context, R.layout.widget_post_image_panel, this)
         sizeSpinner.adapter = SizeSpinnerAdapter(context)
+        sizeSpinner.setSelection(1)
         initIcons()
     }
 
@@ -51,6 +53,35 @@ public class PostImagePanelView : FrameLayout {
             resize.setImageTint(color)
             rotateRight.setImageTint(color)
         }
+    }
+
+    public fun setImageSize(resolution: Point?, fileSize: Long) {
+        resolutionOriginal.text = resolution?.toResolution()
+        sizeOriginal.text = fileSize.toReadableSize()
+    }
+
+    public fun setResizedImageSize(resolution: Point, fileSize: Long) {
+        resolutionResized.text = resolution.toResolution()
+        sizeResized.text = fileSize.toReadableSize()
+    }
+
+    private fun Long.toReadableSize(): String {
+        if (this == 0L) {
+            return "0 B";
+        }
+        val mod = 1024;
+        val units = arrayOf("B", "KiB", "MiB", "GiB", "TiB", "PiB");
+        var i = 0;
+        var size = this.toFloat();
+        while(size > mod){
+            size /= mod;
+            i++
+        }
+        return "%.2f %s".format(size, units[i]);
+    }
+
+    private fun Point.toResolution(): String {
+        return "%sx%s".format(x, y)
     }
 }
 
