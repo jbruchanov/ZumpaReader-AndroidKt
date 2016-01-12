@@ -22,6 +22,7 @@ import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.util.*
 import com.scurab.android.zumpareader.widget.PostMessageView
 import rx.Observer
+import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
 import java.util.*
 
@@ -32,7 +33,6 @@ public class PostMessageFragment : DialogFragment(), SendingFragment {
 
     companion object {
         private val SHOW_KEYBOARD = "SHOW_KEYBOARD"
-        private val LOCK_SUBJECT = "LOCK_SUBJECT"
 
         public fun newInstance(subject: String?, message: String?): PostMessageFragment {
             return PostMessageFragment().apply {
@@ -40,12 +40,12 @@ public class PostMessageFragment : DialogFragment(), SendingFragment {
             }
         }
 
-        public fun arguments(subject: String?, message: String?, showKeyboard: Boolean = true, lockSubject: Boolean = false): Bundle {
+        public fun arguments(subject: String?, message: String?, showKeyboard: Boolean = true, threadId: String? = null): Bundle {
             return Bundle().apply {
                 putString(Intent.EXTRA_SUBJECT, subject)
                 putString(Intent.EXTRA_TEXT, message)
                 putBoolean(SHOW_KEYBOARD, showKeyboard)
-                putBoolean(LOCK_SUBJECT, lockSubject)
+                putString(PostFragment.THREAD_ID, threadId)
             }
         }
 
@@ -63,16 +63,10 @@ public class PostMessageFragment : DialogFragment(), SendingFragment {
         return mainActivity?.zumpaApp
     }
 
-    private val argSubject: String? by lazy {
-        arguments?.getString(Intent.EXTRA_SUBJECT)
-    }
-
-    private val showKeyboard: Boolean by lazy {
-        arguments?.getBoolean(SHOW_KEYBOARD) ?: false
-    }
-
+    private val showKeyboard: Boolean by lazy { arguments?.getBoolean(SHOW_KEYBOARD) ?: false }
+    private val argSubject: String? by lazy { arguments?.getString(Intent.EXTRA_SUBJECT) }
+    private val argThreadId: String? by lazy { arguments?.getString(PostFragment.THREAD_ID) }
     private val argMessage: String? by lazy { arguments?.getString(Intent.EXTRA_TEXT) }
-    private val argLockSubject: Boolean by lazy { arguments?.getBoolean(LOCK_SUBJECT) ?: false }
 
     private val links = ArrayList<String>()
 
@@ -91,7 +85,7 @@ public class PostMessageFragment : DialogFragment(), SendingFragment {
             setUIForNewMessage()
             sendButton.setOnClickListener { dispatchSend() }
             subject.setText(argSubject)
-            subject.isEnabled = !argLockSubject
+            subject.isEnabled = argThreadId == null
             message.setText(ZumpaSimpleParser.replaceLinksByZumpaLinks(argMessage))
 
             camera.setOnClickListener { onCameraClick() }
@@ -142,6 +136,7 @@ public class PostMessageFragment : DialogFragment(), SendingFragment {
         if (postMessageView == null) {
             return
         }
+
         var postMessageView= this.postMessageView!!
         var subject = postMessageView.subject.text.toString().trim()
         var message = postMessageView.message.text.toString().trim()
@@ -158,32 +153,69 @@ public class PostMessageFragment : DialogFragment(), SendingFragment {
 
         zumpaApp?.zumpaAPI.exec {
             val app = zumpaApp!!
-            val body = ZumpaThreadBody(app.zumpaPrefs.nickName, subject, message)
+            val threadId = argThreadId
             isSending = true
-            context.hideKeyboard(view)
-            it.sendThread(body)
-                    .subscribeOn(Schedulers.io())
-                    .subscribe(object : Observer<ZumpaThreadResult?> {
-                        override fun onNext(t: ZumpaThreadResult?) {
-                        }
-
-                        override fun onError(e: Throwable?) {
-                            isSending = false
-                            e?.message.exec { if (view != null) view.post { toast(it) } } }
-
-                        override fun onCompleted() {
-                            isSending = false
-                            if (isResumed) {
-                                dismiss()
+            if(threadId == null) {
+                val body = ZumpaThreadBody(app.zumpaPrefs.nickName, subject, message)
+                context.hideKeyboard(view)
+                it.sendThread(body)
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(object : Observer<ZumpaThreadResult?> {
+                            override fun onNext(t: ZumpaThreadResult?) {
                             }
-                        }
-                    })
+
+                            override fun onError(e: Throwable?) {
+                                isSending = false
+                                e?.message.exec { if (view != null) view.post { toast(it) } }
+                            }
+
+                            override fun onCompleted() {
+                                isSending = false
+                                if (isResumed) {
+                                    dismiss()
+                                }
+                            }
+                        })
+            } else {
+                val body = ZumpaThreadBody(app.zumpaPrefs.nickName, app.zumpaData[threadId]?.subject ?: argSubject!!, message, threadId)
+                val observable = it.sendResponse(threadId, threadId, body)
+                context.hideKeyboard(view)
+                observable
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(object : Observer<ZumpaThreadResult?> {
+                            private var finish = false
+                            override fun onNext(t: ZumpaThreadResult?) {
+                                t.exec {
+                                    if (isResumed) {
+                                        isSending = false
+                                        finish = true
+                                    }
+                                }
+                            }
+
+                            override fun onError(e: Throwable?) {
+                                if (isResumed) {
+                                    e?.message?.exec { toast(it) }
+                                    isSending = false
+                                }
+                            }
+
+                            override fun onCompleted() {
+                                if (finish && isResumed) {
+                                    dismiss()
+                                }
+                            }
+                        })
+            }
         }
     }
 
     override fun dismiss() {
-        super.dismiss()
-        mainActivity.execOn { reloadData() }
+        mainActivity.execOn {
+            supportFragmentManager.popBackStack()
+            reloadData()
+        }
     }
 
     fun addLink(link: String) {

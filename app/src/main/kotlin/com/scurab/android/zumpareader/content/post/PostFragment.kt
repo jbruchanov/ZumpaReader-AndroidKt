@@ -26,17 +26,20 @@ import com.scurab.android.zumpareader.util.*
 public class PostFragment : BaseFragment() {
     companion object {
         private val POST_MESSAGE_TAG = "1"
-        public fun newInstance(subject: String?, message: String?, uris: Array<Uri>? = null): PostFragment {
+        val THREAD_ID = "THREAD_UD"
+
+        public fun newInstance(subject: String?, message: String?, uris: Array<Uri>? = null, threadId: String? = null): PostFragment {
             return PostFragment().apply {
-                arguments = arguments(subject, message, uris)
+                arguments = arguments(subject, message, uris, threadId)
             }
         }
 
-        public fun arguments(subject: String?, message: String?, uris: Array<Uri>? = null): Bundle {
+        public fun arguments(subject: String?, message: String?, uris: Array<Uri>? = null, threadId: String? = null): Bundle {
             return Bundle().apply {
                 putString(Intent.EXTRA_SUBJECT, subject)
                 putString(Intent.EXTRA_TEXT, message)
                 putParcelableArray(Intent.EXTRA_STREAM, uris)
+                putString(THREAD_ID, threadId)
             }
         }
 
@@ -47,13 +50,21 @@ public class PostFragment : BaseFragment() {
     override val title: CharSequence?
         get() = null
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        mainActivity.execOn {
+            hideFloatingButton()
+            settingsButton.visibility = View.INVISIBLE
+        }
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_post, container, false)
         val tabHost = view.find<FragmentTabHost>(android.R.id.tabhost)
         val tabWidget = view.find<TabWidget>(android.R.id.tabs)
         tabHost.execOn {
             setup(context, childFragmentManager, android.R.id.tabcontent)
-            addTab(newTabSpec(POST_MESSAGE_TAG).setIndicator(createIndicator(R.drawable.ic_pen, contextColor, tabWidget)), PostMessageFragment::class.java, PostMessageFragment.arguments(argSubject, argMessage, argUris == null))
+            addTab(newTabSpec(POST_MESSAGE_TAG).setIndicator(createIndicator(R.drawable.ic_pen, contextColor, tabWidget)), PostMessageFragment::class.java, PostMessageFragment.arguments(argSubject, argMessage, argUris == null, argThreadId))
             if (argUris != null) {
                 var i = 1
                 val uris = argUris
@@ -102,14 +113,6 @@ public class PostFragment : BaseFragment() {
         return btn
     }
 
-    override fun onResume() {
-        super.onResume()
-        mainActivity.execOn {
-            hideFloatingButton()
-            settingsButton.visibility = View.INVISIBLE
-        }
-    }
-
     override fun onDestroy() {
         super.onDestroy()
         mainActivity.execOn {
@@ -118,14 +121,8 @@ public class PostFragment : BaseFragment() {
         }
     }
 
-    private val argSubject: String? by lazy {
-        if (arguments != null && arguments.containsKey(Intent.EXTRA_SUBJECT)) arguments.getString(Intent.EXTRA_SUBJECT) else null
-    }
-
-    private val argMessage: String? by lazy {
-        if (arguments != null && arguments.containsKey(Intent.EXTRA_TEXT)) arguments.getString(Intent.EXTRA_TEXT) else null
-    }
-
+    private val argSubject: String? by lazy { arguments?.getString(Intent.EXTRA_SUBJECT) }
+    private val argMessage: String? by lazy { arguments?.getString(Intent.EXTRA_TEXT) }
     private val argUris: Array<Uri>? by lazy {
         var result: Array<Uri>? = null
         if (arguments != null && arguments.containsKey(Intent.EXTRA_STREAM)) {
@@ -133,6 +130,7 @@ public class PostFragment : BaseFragment() {
         }
         result
     }
+    private val argThreadId: String? by lazy { arguments?.getString(THREAD_ID) }
 
     fun onSharedImage(link: String, activateFragment: Boolean = true) {
         tabHost?.currentTab = 0
