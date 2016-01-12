@@ -26,10 +26,7 @@ import com.scurab.android.zumpareader.content.post.tasks.CopyFromResourcesTask
 import com.scurab.android.zumpareader.content.post.tasks.ProcessImageTask
 import com.scurab.android.zumpareader.content.post.tasks.UploadImageTask
 import com.scurab.android.zumpareader.drawable.SimpleProgressDrawable
-import com.scurab.android.zumpareader.util.ParseUtils
-import com.scurab.android.zumpareader.util.exec
-import com.scurab.android.zumpareader.util.getRandomCameraFileUri
-import com.scurab.android.zumpareader.util.toast
+import com.scurab.android.zumpareader.util.*
 import com.scurab.android.zumpareader.utils.FotoDiskProvider
 import com.scurab.android.zumpareader.widget.PostImagePanelView
 import com.squareup.picasso.Picasso
@@ -151,21 +148,30 @@ public class PostImageFragment : DialogFragment(), SendingFragment {
     }
 
     private fun dispatchUpload() {
-        return//TODO:
-        (image.drawable as? BitmapDrawable).exec {
-            var file = context.getRandomCameraFileUri(false)
-            if (it.bitmap.compress(Bitmap.CompressFormat.JPEG, 80, FileOutputStream(file))) {
-                isSending = true
-                object : UploadImageTask(file) {
-                    override fun onPostExecute(result: String?) {
-                        if (isResumed) {
-                            isSending = false
-                            context.toast(result)
-                            Log.d("URL", result)
-                        }
+        var out = File(imageFileToUpload)
+        if (!out.exists()) {
+            out = File(imageFile)
+        }
+
+        isSending = true
+        object : UploadImageTask(out.absolutePath) {
+            override fun onPostExecute(result: String?) {
+                if (context != null) {
+                    isSending = false
+                    if (result != null) {
+                        dispatchImageUploaded(result)
+                    } else {
+                        context.toast(R.string.err_fail)
                     }
-                }.execute()
+                }
             }
+        }.execute()
+    }
+
+    protected fun dispatchImageUploaded(result: String) {
+        (parentFragment as? PostFragment).execOn {
+            onSharedImage(result)
+            context.toast(R.string.done)
         }
     }
 
