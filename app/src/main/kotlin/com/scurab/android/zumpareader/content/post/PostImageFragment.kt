@@ -1,25 +1,16 @@
 package com.scurab.android.zumpareader.content.post
 
 import android.app.ProgressDialog
-import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Point
-import android.graphics.drawable.BitmapDrawable
-import android.media.ThumbnailUtils
 import android.net.Uri
-import android.os.AsyncTask
 import android.os.Bundle
-import android.os.Environment
 import android.support.v4.app.DialogFragment
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import com.pawegio.kandroid.find
-import com.pawegio.kandroid.toast
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.content.SendingFragment
 import com.scurab.android.zumpareader.content.post.tasks.CopyFromResourcesTask
@@ -27,11 +18,9 @@ import com.scurab.android.zumpareader.content.post.tasks.ProcessImageTask
 import com.scurab.android.zumpareader.content.post.tasks.UploadImageTask
 import com.scurab.android.zumpareader.drawable.SimpleProgressDrawable
 import com.scurab.android.zumpareader.util.*
-import com.scurab.android.zumpareader.utils.FotoDiskProvider
 import com.scurab.android.zumpareader.widget.PostImagePanelView
 import com.squareup.picasso.Picasso
 import java.io.File
-import java.io.FileOutputStream
 
 /**
  * Created by JBruchanov on 08/01/2016.
@@ -71,6 +60,7 @@ public class PostImageFragment : DialogFragment(), SendingFragment {
     private var imageSize: Long = 0
     private var imageResizedResolution: Point? = null
     private var imageResizedSize: Long = 0
+    private var imageUploadedLink : String? = null
 
     private val imageFileToUpload: String? get() {
         return if (imageFile != null) imageFile + "_out" else null
@@ -103,6 +93,7 @@ public class PostImageFragment : DialogFragment(), SendingFragment {
                     imagePanel.setResizedImageSize(imageResizedResolution!!, imageResizedSize)
                 }
                 image.rotation = imageRotation.toFloat()
+                imagePanel.copy.visibility = (imageUploadedLink != null).asVisibility()
             }
         } catch (e: Throwable) {
             context.toast(e.message)
@@ -110,6 +101,14 @@ public class PostImageFragment : DialogFragment(), SendingFragment {
         imagePanel.upload.setOnClickListener { dispatchUpload() }
         imagePanel.resize.setOnClickListener { onImageResize() }
         imagePanel.rotateRight.setOnClickListener { onImageRotate() }
+        imagePanel.copy.setOnClickListener { onCopyLinkToClipboard() }
+    }
+
+    protected fun onCopyLinkToClipboard() {
+        imageUploadedLink.exec {
+            context.saveToClipboard(Uri.parse(it))
+            context.toast(R.string.saved_into_clipboard)
+        }
     }
 
     protected fun onImageResize() {
@@ -158,6 +157,7 @@ public class PostImageFragment : DialogFragment(), SendingFragment {
             override fun onPostExecute(result: String?) {
                 if (context != null) {
                     isSending = false
+                    imageUploadedLink = result
                     if (result != null) {
                         dispatchImageUploaded(result)
                     } else {
