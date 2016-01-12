@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.support.v4.app.DialogFragment
+import android.text.Editable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -22,6 +23,7 @@ import com.scurab.android.zumpareader.util.*
 import com.scurab.android.zumpareader.widget.PostMessageView
 import rx.Observer
 import rx.schedulers.Schedulers
+import java.util.*
 
 /**
  * Created by JBruchanov on 31/12/2015.
@@ -30,6 +32,7 @@ public class PostMessageFragment : DialogFragment(), SendingFragment {
 
     companion object {
         private val SHOW_KEYBOARD = "SHOW_KEYBOARD"
+        private val LOCK_SUBJECT = "LOCK_SUBJECT"
 
         public fun newInstance(subject: String?, message: String?): PostMessageFragment {
             return PostMessageFragment().apply {
@@ -37,11 +40,12 @@ public class PostMessageFragment : DialogFragment(), SendingFragment {
             }
         }
 
-        public fun arguments(subject: String?, message: String?, showKeyboard: Boolean = true): Bundle {
+        public fun arguments(subject: String?, message: String?, showKeyboard: Boolean = true, lockSubject: Boolean = false): Bundle {
             return Bundle().apply {
                 putString(Intent.EXTRA_SUBJECT, subject)
                 putString(Intent.EXTRA_TEXT, message)
                 putBoolean(SHOW_KEYBOARD, showKeyboard)
+                putBoolean(LOCK_SUBJECT, lockSubject)
             }
         }
 
@@ -67,9 +71,10 @@ public class PostMessageFragment : DialogFragment(), SendingFragment {
         arguments?.getBoolean(SHOW_KEYBOARD) ?: false
     }
 
-    private val argMessage: String? by lazy {
-        if (arguments != null && arguments.containsKey(Intent.EXTRA_TEXT)) arguments.getString(Intent.EXTRA_TEXT) else null
-    }
+    private val argMessage: String? by lazy { arguments?.getString(Intent.EXTRA_TEXT) }
+    private val argLockSubject: Boolean by lazy { arguments?.getBoolean(LOCK_SUBJECT) ?: false }
+
+    private val links = ArrayList<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -86,10 +91,26 @@ public class PostMessageFragment : DialogFragment(), SendingFragment {
             setUIForNewMessage()
             sendButton.setOnClickListener { dispatchSend() }
             subject.setText(argSubject)
+            subject.isEnabled = !argLockSubject
             message.setText(ZumpaSimpleParser.replaceLinksByZumpaLinks(argMessage))
 
             camera.setOnClickListener { onCameraClick() }
             photo.setOnClickListener { onPhotoClick() }
+        }
+    }
+
+    override fun onViewStateRestored(savedInstanceState: Bundle?) {
+        super.onViewStateRestored(savedInstanceState)
+        if (links.size > 0) {
+            postMessageView?.message.exec {
+                if (!it.text.isLastCharNewLine()) {
+                    it.append("\n")
+                }
+                for (link in links) {
+                    it.text.append(link.asZumpaLinkWithNewLine())
+                }
+            }
+            links.clear()
         }
     }
 
@@ -163,5 +184,17 @@ public class PostMessageFragment : DialogFragment(), SendingFragment {
     override fun dismiss() {
         super.dismiss()
         mainActivity.execOn { reloadData() }
+    }
+
+    fun addLink(link: String) {
+        links.add(link)
+    }
+
+    private fun String.asZumpaLinkWithNewLine() : String {
+        return "<%s>\n".format(this)
+    }
+
+    private fun Editable.isLastCharNewLine(): Boolean {
+        return this.length == 0 || this.last() == '\n'
     }
 }
