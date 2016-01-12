@@ -18,6 +18,7 @@ import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.content.MainListFragment
 import com.scurab.android.zumpareader.content.post.PostFragment
+import com.scurab.android.zumpareader.content.post.PostMessageFragment
 import com.scurab.android.zumpareader.ui.DelayClickListener
 import com.scurab.android.zumpareader.ui.QuickHideBehavior
 import com.scurab.android.zumpareader.ui.hideAnimated
@@ -162,5 +163,14 @@ public class MainActivity : AppCompatActivity() {
     fun reloadData() {
         var fragment = supportFragmentManager.fragments.firstOrNull { it -> it is MainListFragment } as? MainListFragment
         fragment.execOn { reloadData() }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (PostFragment.isRequestCode(requestCode)) {
+            (supportFragmentManager.findFragmentByTag(PostFragment::class.java.name) as PostFragment?).execOn {
+                onActivityResult(requestCode, resultCode, data)
+            }
+        }
     }
 }
