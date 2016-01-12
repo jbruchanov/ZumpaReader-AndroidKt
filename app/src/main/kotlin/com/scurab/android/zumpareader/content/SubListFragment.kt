@@ -15,6 +15,7 @@ import com.pawegio.kandroid.find
 import com.pawegio.kandroid.toast
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.app.BaseFragment
+import com.scurab.android.zumpareader.content.post.PostFragment
 import com.scurab.android.zumpareader.model.ZumpaReadState
 import com.scurab.android.zumpareader.model.ZumpaThreadBody
 import com.scurab.android.zumpareader.model.ZumpaThreadItem
@@ -83,12 +84,23 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        postMessageView?.visibility = View.INVISIBLE
         recyclerView?.layoutManager = LinearLayoutManager(view.context, LinearLayoutManager.VERTICAL, false)
         swipyRefreshLayout?.direction = SwipyRefreshLayoutDirection.BOTTOM
         swipyRefreshLayout?.setOnRefreshListener { loadData() }
-        postMessageView?.sendButton?.setOnClickListener { dispatchSend() }
+        postMessageView.execOn {
+            visibility = View.INVISIBLE
+            sendButton.setOnClickListener { dispatchSend() }
+            camera.setOnClickListener { dispatchOpenPostMessage() }
+            photo.setOnClickListener { dispatchOpenPostMessage() }
+
+        }
         loadData()
+    }
+
+    protected fun dispatchOpenPostMessage() {
+        mainActivity.execOn {
+            openFragment(PostFragment.newInstance(title.toString(), postMessageView!!.message.text.toString(), null, threadId))
+        }
     }
 
     override fun onResume() {
