@@ -2,7 +2,6 @@ package com.scurab.android.zumpareader.app
 
 import android.app.ProgressDialog
 import android.os.Bundle
-import android.preference.Preference
 import android.preference.PreferenceActivity
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZR

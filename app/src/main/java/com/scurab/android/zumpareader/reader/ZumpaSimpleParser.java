@@ -24,12 +24,10 @@ import com.scurab.android.zumpareader.model.ZumpaThread;
 import com.scurab.android.zumpareader.model.ZumpaThreadItem;
 import com.scurab.android.zumpareader.model.ZumpaThreadResult;
 import com.scurab.android.zumpareader.util.ExtensionMethodsKt;
-import com.scurab.android.zumpareader.util.ParseUtils;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;

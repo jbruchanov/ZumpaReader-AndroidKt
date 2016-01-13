@@ -18,7 +18,6 @@ import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.content.MainListFragment
 import com.scurab.android.zumpareader.content.post.PostFragment
-import com.scurab.android.zumpareader.content.post.PostMessageFragment
 import com.scurab.android.zumpareader.ui.DelayClickListener
 import com.scurab.android.zumpareader.ui.QuickHideBehavior
 import com.scurab.android.zumpareader.ui.hideAnimated

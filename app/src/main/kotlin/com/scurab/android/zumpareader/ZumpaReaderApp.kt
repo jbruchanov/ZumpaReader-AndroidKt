@@ -8,7 +8,6 @@ import android.os.Environment
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.scurab.android.zumpareader.app.MainActivity
 import com.scurab.android.zumpareader.data.PicassoHttpDownloader
 import com.scurab.android.zumpareader.data.ZumpaConverterFactory
 import com.scurab.android.zumpareader.model.ZumpaReadState
@@ -21,7 +20,6 @@ import com.squareup.okhttp.logging.HttpLoggingInterceptor
 import com.squareup.picasso.Picasso
 import retrofit.Retrofit
 import retrofit.RxJavaCallAdapterFactory
-import java.lang.reflect.Type
 import java.net.CookieManager
 import java.net.URI
 import java.util.*

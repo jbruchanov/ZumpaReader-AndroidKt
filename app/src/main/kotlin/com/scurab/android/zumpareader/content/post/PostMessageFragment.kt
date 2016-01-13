@@ -2,9 +2,7 @@ package com.scurab.android.zumpareader.content.post
 
 import android.app.ProgressDialog
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
 import android.support.v4.app.DialogFragment
 import android.text.Editable
 import android.view.LayoutInflater
@@ -19,7 +17,10 @@ import com.scurab.android.zumpareader.content.SendingFragment
 import com.scurab.android.zumpareader.model.ZumpaThreadBody
 import com.scurab.android.zumpareader.model.ZumpaThreadResult
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
-import com.scurab.android.zumpareader.util.*
+import com.scurab.android.zumpareader.util.exec
+import com.scurab.android.zumpareader.util.execOn
+import com.scurab.android.zumpareader.util.hideKeyboard
+import com.scurab.android.zumpareader.util.toast
 import com.scurab.android.zumpareader.widget.PostMessageView
 import rx.Observer
 import rx.android.schedulers.AndroidSchedulers
