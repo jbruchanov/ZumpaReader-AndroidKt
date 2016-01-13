@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/drawable_progress">
+        <clip>
+            <shape android:shape="rectangle">
+                <corners android:radius="@dimen/url_button_radius_corners_theme_black"/>
+                <solid android:color="@color/yellow_orange_50p"/>
+            </shape>
+        </clip>
+    </item>
+    <item android:drawable="@drawable/url_button_background_theme_black" />
+</layer-list>

@@ -8,6 +8,7 @@
     <attr name="secondaryBackgroundColor" format="color" />
 
     <attr name="imageButtonBackground" format="reference" />
+    <attr name="surveyButtonBackground" format="reference" />
     <attr name="listItemPadding" format="dimension"/>
     <attr name="threadItemBackground" format="reference"/>
     <attr name="tabButtonBackground" format="reference"/>
@@ -24,6 +25,7 @@
     <attr name="threadsTextSize" format="dimension"/>
     <attr name="buttonTextColor" format="color" />
     <attr name="buttonTextSize" format="dimension" />
+    <attr name="surveyButtonTextSize" format="dimension" />
     <attr name="buttonBackground" format="reference" />
     <attr name="itemStateWidth" format="dimension" />
     <attr name="messageTextColor" format="color" />
