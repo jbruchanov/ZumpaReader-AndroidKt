@@ -124,7 +124,8 @@ public class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        floatingButton.visibility = if (zumpaApp.zumpaPrefs.isLoggedIn) View.VISIBLE else View.GONE
+        val containsPostFragment = supportFragmentManager.fragments.firstOrNull() { it -> it is PostFragment } != null
+        floatingButton.visibility = if (zumpaApp.zumpaPrefs.isLoggedIn && !containsPostFragment) View.VISIBLE else View.GONE
     }
 
     fun onFloatingButtonClick() {
