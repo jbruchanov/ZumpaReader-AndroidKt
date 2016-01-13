@@ -17,11 +17,13 @@ import android.widget.Button
 import android.widget.ImageView
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.drawable.SimpleProgressDrawable
+import com.scurab.android.zumpareader.model.SurveyItem
 import com.scurab.android.zumpareader.model.ZumpaThreadItem
 import com.scurab.android.zumpareader.util.exec
 import com.scurab.android.zumpareader.util.execOn
 import com.scurab.android.zumpareader.util.find
 import com.scurab.android.zumpareader.util.obtainStyledColor
+import com.scurab.android.zumpareader.widget.SurveyView
 import com.squareup.picasso.Picasso
 import java.text.SimpleDateFormat
 import java.util.*
@@ -39,12 +41,14 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
     private val TYPE_ITEM = 1
     private val TYPE_IMAGE = 2
     private val TYPE_URL = 3
+    private val TYPE_SURVEY = 4
 
     private val dateFormat = SimpleDateFormat("HH:mm.ss")
     private val items: ArrayList<ZumpaThreadItem>
     private val dataItems: ArrayList<SubListItem>
     public var itemClickListener: ItemClickListener? = null
     public var loadImages: Boolean
+    public var surveyClickListner: SurveyView.ItemClickListener? = null
 
     @ColorInt
     private var contextColor: Int = 0
@@ -72,6 +76,9 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
                 }
                 sub.sortBy { it.type }
                 outDataItems.addAll(sub)
+            }
+            if (i == 0 && item.survey != null) {
+                outDataItems.add(SubListItem(item, i, TYPE_SURVEY, null))
             }
         }
     }
@@ -119,6 +126,7 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
                 holder.button.text = dataItem.data
             }
             TYPE_IMAGE -> holder.loadImage(dataItem.data!!)
+            TYPE_SURVEY -> holder.surveyView.survey = items[dataItem.itemPosition].survey
         }
         itemView.postInvalidate()
     }
@@ -147,6 +155,15 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
                     view.setOnLongClickListener { vh.loadedUrl.exec { dispatchClick(it, true) }; true }
                     vh
                 }
+                TYPE_SURVEY -> {
+                    val view = li.inflate(R.layout.item_sub_list_survey, parent, false) as SurveyView
+                    view.surveyItemClickListener = object : SurveyView.ItemClickListener {
+                        override fun onItemClick(item: SurveyItem) {
+                            surveyClickListner.execOn { onItemClick(item) }
+                        }
+                    }
+                    ZumpaSubItemViewHolder(this, view)
+                }
                 else -> throw IllegalStateException("Invalid view type:" + viewType)
             }
         }
@@ -166,6 +183,10 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
             items.addAll(updated.subList(items.size, updated.size))
             buildAdapterItems(items, dataItems)
             notifyItemRangeInserted(oldSize, dataItems.size - oldSize - 1)
+        } else if (items.size >= 0 && items[0].survey != null) {//update survey if necessary
+            items[0].survey = updated[0].survey
+            val index = dataItems.indexOfFirst { it.type == TYPE_SURVEY }
+            notifyItemChanged(index)
         }
     }
 }
@@ -178,6 +199,7 @@ public class ZumpaSubItemViewHolder(val adapter: SubListAdapter, val view: View)
     internal var url: String? = null
     internal var loadedUrl: String? = null
     internal var imageTarget: ItemTarget? = null
+    internal val surveyView by lazy { view as SurveyView }
 
     public fun loadImage(url: String) {
         if (url.equals(loadedUrl)) {

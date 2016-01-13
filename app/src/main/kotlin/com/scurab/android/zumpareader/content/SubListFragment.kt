@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,10 +17,7 @@ import com.pawegio.kandroid.toast
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.app.BaseFragment
 import com.scurab.android.zumpareader.content.post.PostFragment
-import com.scurab.android.zumpareader.model.ZumpaReadState
-import com.scurab.android.zumpareader.model.ZumpaThreadBody
-import com.scurab.android.zumpareader.model.ZumpaThreadItem
-import com.scurab.android.zumpareader.model.ZumpaThreadResult
+import com.scurab.android.zumpareader.model.*
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.text.appendReply
 import com.scurab.android.zumpareader.text.containsAuthor
@@ -28,14 +26,17 @@ import com.scurab.android.zumpareader.ui.isVisible
 import com.scurab.android.zumpareader.ui.showAnimated
 import com.scurab.android.zumpareader.util.*
 import com.scurab.android.zumpareader.widget.PostMessageView
+import com.scurab.android.zumpareader.widget.SurveyView
 import rx.Observer
+import rx.Subscriber
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
 
 /**
  * Created by JBruchanov on 27/11/2015.
  */
-public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, SendingFragment {
+public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, SendingFragment, SurveyView.ItemClickListener {
+
     companion object {
         private val THREAD_ID: String = "THREAD_ID"
 
@@ -173,6 +174,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
 
     public fun loadData() {
         if (isLoading) {
+            isSending = false
             return
         }
         isLoading = true
@@ -194,10 +196,13 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
                         }
 
                         override fun onError(e: Throwable?) {
+                            isSending = false
+                            isLoading = false
                             e?.message?.exec { toast(it) }
                         }
 
                         override fun onCompleted() {
+                            isSending = false
                             isLoading = false
                         }
                     })
@@ -245,6 +250,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
                 if (it.adapter == null) {
                     recyclerView?.adapter = SubListAdapter(items, loadImages).apply {
                         itemClickListener = this@SubListFragment
+                        surveyClickListner = this@SubListFragment
                     }
                 } else {
                     (recyclerView?.adapter as SubListAdapter).execOn {
@@ -286,6 +292,34 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
                         appendReply(text, contextColorText)
                     }
                 }
+            }
+        }
+    }
+
+    override fun onItemClick(item: SurveyItem) {
+        if (zumpaApp?.zumpaPrefs?.isLoggedIn ?: false) {
+            zumpaApp?.zumpaAPI?.voteSurvey(ZumpaVoteSurveyBody(item.surveyId, item.id)).exec {
+                isSending = true
+                it.observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(object : Subscriber<ZumpaResponse>() {
+                            override fun onCompleted() {
+                                loadData()//hide dialog there
+                            }
+
+                            override fun onNext(t: ZumpaResponse) {
+                                var x = t.asString()
+                                Log.d("", x);
+                            }
+
+                            override fun onError(e: Throwable?) {
+                                if (context != null) {
+                                    e?.message.exec {
+                                        context.toast(it)
+                                    }
+                                }
+                            }
+                        })
             }
         }
     }
