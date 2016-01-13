@@ -4,6 +4,7 @@
         <item name="contextColor">@color/yellow_orange</item>
         <item name="contextColorText">@color/blue_gray</item>
         <item name="contextColor50p">@color/yellow_orange_50p</item>
+        <item name="contextColor25p">@color/yellow_orange_25p</item>
         <item name="primaryTextColor">@color/white</item>
         <item name="primaryBackgroundColor">@color/black</item>
         <item name="secondaryBackgroundColor">@color/dark</item>
