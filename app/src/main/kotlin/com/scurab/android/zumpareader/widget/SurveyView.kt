@@ -69,6 +69,7 @@ public class SurveyView : FrameLayout {
                 val btn = content.getChildAt(i) as Button
                 btn.text = "${item.text} (${item.percents}%)"
                 btn.background.setLevel(item.percents * 100)/* 10000 = 100% */
+                btn.isSelected = item.voted
                 btn.tag = item
                 btn.setOnClickListener(clickListenerInner)
             }
