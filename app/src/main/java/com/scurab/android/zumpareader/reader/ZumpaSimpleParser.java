@@ -611,7 +611,7 @@ public class ZumpaSimpleParser {
             DATA.put(R.drawable.emoji_o_o, Pattern.compile("[oO]_[oO]"));
             DATA.put(R.drawable.emoji_p, Pattern.compile(":[-o]?[pP]"));
             DATA.put(R.drawable.emoji_sad, Pattern.compile(":[-o]?\\(+"));
-            DATA.put(R.drawable.emoji_smiley, Pattern.compile(":[-o]?\\)+"));
+            DATA.put(R.drawable.emoji_smiley, Pattern.compile(":[-o]?[\\)\\]]+"));
             DATA.put(R.drawable.emoji_speechless, Pattern.compile(":[-o]?\\|"));
             DATA.put(R.drawable.emoji_wink, Pattern.compile(";[-o]?\\)+"));
         }
