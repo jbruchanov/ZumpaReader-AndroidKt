@@ -70,11 +70,6 @@ public class PostMessageFragment : DialogFragment(), SendingFragment {
 
     private val links = ArrayList<String>()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setStyle(0, R.style.AppTheme_Dialog);
-    }
-
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater?.inflate(R.layout.fragment_post_message, container, false)
     }
