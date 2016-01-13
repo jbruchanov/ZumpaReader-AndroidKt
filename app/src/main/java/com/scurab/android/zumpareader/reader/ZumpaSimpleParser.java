@@ -427,7 +427,7 @@ public class ZumpaSimpleParser {
             Element e = iter.next();
             String id = e.attr(HTMLTags.ATTR_ID);
             if (id != null && id.matches("ank\\d*")) {
-                return parseSurveyImpl(e, id);
+                return parseSurveyImpl(e, id.replace("ank", ""));
             }
         }
         return null;
@@ -436,7 +436,7 @@ public class ZumpaSimpleParser {
     private Survey parseSurveyImpl(Element e, String id) {
         String question = parseQuestion(e);
         int responses = parseResponses(e);
-        List<SurveyItem> surveyItems = parseSurveyItems(e);
+        List<SurveyItem> surveyItems = parseSurveyItems(e, id);
         return new Survey(id, question, responses, surveyItems);
     }
 
@@ -451,22 +451,25 @@ public class ZumpaSimpleParser {
         return getSurveyResponsesFromText(txt);
     }
 
-    private List<SurveyItem> parseSurveyItems(Element e) {
+    private List<SurveyItem> parseSurveyItems(Element e, String surveyId) {
         Elements lis = e.getElementsByTag(HTMLTags.TAG_LI);
         ListIterator<Element> iter = lis.listIterator();
         List<SurveyItem> result = new ArrayList<>();
+        int order = 1;
         while (iter.hasNext()) {
             Element li = iter.next();
-            SurveyItem surveyItem = parseSurveyRow(li);
+            SurveyItem surveyItem = parseSurveyRow(order, surveyId, li);
             if (surveyItem != null) {
                 result.add(surveyItem);
+                order++;
             }
         }
         return result;
     }
 
-    private SurveyItem parseSurveyRow(Element li) {
+    private SurveyItem parseSurveyRow(int order, String surveyId, Element li) {
         Element a = li.getElementsByTag(HTMLTags.TAG_HREF).first();
+        boolean voted = a == null;
         if (a == null) {
             a = li.getElementsByTag(HTMLTags.TAG_BOLD).first();
         }
@@ -474,7 +477,7 @@ public class ZumpaSimpleParser {
         String percts = innerDiv.html().replace(HTMLTags.NBSP, "").replace("%", "").trim();
         String text = a.text();
         int percents = safeInt(percts, 0);
-        return new SurveyItem(text, percents, false);
+        return new SurveyItem(order, surveyId, text, percents, voted);
     }
 
     public static int getSurveyResponsesFromText(String text) {
