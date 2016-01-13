@@ -124,7 +124,9 @@ public data class Survey(val id: String,
                          val responses: Int,
                          val items: List<SurveyItem>)
 
-public data class SurveyItem(val text: String,
+public data class SurveyItem(val id: Int,
+                             val surveyId: String,
+                             val text: String,
                              val percents: Int,
                              var voted: Boolean)
 
@@ -198,6 +200,19 @@ public data class ZumpaThreadBody(
                     .append("&t=", t)
                     .append("&p=", p)
         }
+        return sb.toString()
+    }
+}
+
+public class ZumpaVoteSurveyBody(
+        val id: String,
+        val item: Int) : ZumpaBody {
+
+    override fun toHttpPostString(): String {
+        val sb = StringBuilder(32)
+        .append("a=").append(id)
+        .append("&typ=A")
+        .append("&v=").append(item)
         return sb.toString()
     }
 }

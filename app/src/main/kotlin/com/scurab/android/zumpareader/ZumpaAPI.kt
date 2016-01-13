@@ -31,4 +31,7 @@ public interface ZumpaAPI {
 
     @POST("/login.php")
     fun login(@Body body: ZumpaLoginBody): Call<ZumpaResponse>
+
+    @POST("/phorum/rate.php")
+    fun voteSurvey(@Body body: ZumpaVoteSurveyBody): Observable<ZumpaResponse>
 }
