@@ -20,7 +20,7 @@ public interface SendingFragment {
             if (value != isSending) {
                 if (value) {
                     getContext().exec {
-                        sendingDialog = ProgressDialog.show(it, null, it.resources.getString(R.string.wheeeee), true, false)
+                        sendingDialog = createDialog(it).apply { show() }
                     }
                 } else {
                     sendingDialog.exec {
@@ -31,5 +31,14 @@ public interface SendingFragment {
             }
         }
 
+    private fun createDialog(context : Context): ProgressDialog {
+        val dialog = ProgressDialog(context, R.style.AppTheme_Dialog)
+        dialog.setTitle(null)
+        dialog.setMessage(context.resources.getString(R.string.wheeeee))
+        dialog.isIndeterminate = true
+        dialog.setCancelable(false)
+        dialog.setOnCancelListener(null)
+        return dialog
+    }
     public fun getContext(): Context
 }

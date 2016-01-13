@@ -11,7 +11,7 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
-    <style name="AppTheme.Dialog" parent="@style/Base.V21.Theme.AppCompat.Light.Dialog" >
+    <style name="AppTheme.Dialog" parent="@style/Base.V21.Theme.AppCompat.Dialog" >
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
