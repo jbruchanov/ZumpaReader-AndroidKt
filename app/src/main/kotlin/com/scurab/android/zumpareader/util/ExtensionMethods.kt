@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.support.annotation.DimenRes
 import android.support.annotation.IdRes
 import android.support.annotation.StringRes
 import android.support.v4.app.Fragment
@@ -168,4 +169,13 @@ public fun Context.saveToClipboard(text: String?) {
 public fun Context.saveToClipboard(uri: Uri) {
     var clip = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     clip.primaryClip = ClipData.newRawUri(uri.toString(), uri)
+}
+
+public fun View.setPadding(px: Int) {
+    setPadding(px, px, px, px)
+}
+
+public fun View.setPaddingRes(@DimenRes dimenRes: Int) {
+    val px = resources.getDimensionPixelSize(dimenRes)
+    setPadding(px, px, px, px)
 }
