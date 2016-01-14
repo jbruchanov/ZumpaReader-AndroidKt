@@ -20,6 +20,7 @@ import com.scurab.android.zumpareader.ZR;
 import com.scurab.android.zumpareader.model.Survey;
 import com.scurab.android.zumpareader.model.SurveyItem;
 import com.scurab.android.zumpareader.model.ZumpaMainPageResult;
+import com.scurab.android.zumpareader.model.ZumpaPushMessage;
 import com.scurab.android.zumpareader.model.ZumpaThread;
 import com.scurab.android.zumpareader.model.ZumpaThreadItem;
 import com.scurab.android.zumpareader.model.ZumpaThreadResult;
@@ -60,6 +61,7 @@ public class ZumpaSimpleParser {
     private static Pattern SURVEY_RESPONSE_PATTERN = Pattern.compile("\\((\\d*) odp.\\)", Pattern.CASE_INSENSITIVE);
     private static Pattern ZUMPA_LINK = Pattern.compile("portal2.dkm.cz/phorum/read.php.*t=(\\d+)", Pattern.CASE_INSENSITIVE);
     private static Pattern IMG_OBJECT = Pattern.compile("<img.*src=\"([^\"]*)\"", Pattern.CASE_INSENSITIVE);
+    private static Pattern USER_ID_PATTERN = Pattern.compile("profile.php\\?uid=([a-z0-9]*)'", Pattern.CASE_INSENSITIVE);
     private String mUserName;
 
     public ZumpaMainPageResult parseMainPage(@NonNull String html) {
@@ -540,7 +542,7 @@ public class ZumpaSimpleParser {
         return ssb;
     }
 
-    private static  boolean ignore(List<Pair<Integer, Integer>> pairs, int value) {
+    private static boolean ignore(List<Pair<Integer, Integer>> pairs, int value) {
         for (Pair<Integer, Integer> p : pairs) {
             if (p.first <= value && value <= p.second) {
                 return true;
@@ -560,6 +562,11 @@ public class ZumpaSimpleParser {
     @Nullable
     public static String tryParseImage(String content) {
         return (content != null) ? getGroup(IMG_OBJECT, content, 1, null) : null;
+    }
+
+    @Nullable
+    public static String parseUID(String content) {
+        return (content != null) ? getGroup(USER_ID_PATTERN, content, 1, null) : null;
     }
 
     public String getUserName() {
@@ -600,6 +607,34 @@ public class ZumpaSimpleParser {
             }
         }
         return links;
+    }
+
+    public static final String ZUMPA_PUSH_KEY_NOTIFICAION = "ZUMPA";
+    public static final String ZUMPA_UPDATE_KEY_NOTIFICAION = "UPDATE";
+    public static final String VALUE_SEPARATOR = "=";
+    public static final String ITEM_SEPARATOR = ";";
+    public static final String ZUMPA_PUSH_KEY_THREAD_ID = "ID";
+    public static final String ZUMPA_PUSH_KEY_FROM = "F";
+    public static final String ZUMPA_PUSH_KEY_MESSAGE = "MSG";
+    public static final String ZUMPA_PUSH_KEY_HIDENOTIFICATION = "ZUMPA_PUSH_KEY_HIDENOTIFICATION";
+    public static final int ZUMPA_PUSH_KEY_HIDENOTIFICATION_ID = 974561;
+
+    public static ZumpaPushMessage parsePushMessage(String data) {
+        String[] items = data.split(ITEM_SEPARATOR);
+        String threadId = null, from = null, message = null;
+        for (String item : items) {
+            String[] itemValues = item.split(VALUE_SEPARATOR);
+            String key = itemValues[0];
+            String value = itemValues[1];
+            if (key.equals(ZUMPA_PUSH_KEY_THREAD_ID)) {
+                threadId = value;
+            } else if (key.equals(ZUMPA_PUSH_KEY_FROM)) {
+                from = value;
+            } else if (key.equals(ZUMPA_PUSH_KEY_MESSAGE)) {
+                message = value;
+            }
+        }
+        return new ZumpaPushMessage(threadId, from, message);
     }
 
     public static class SmileRes {
