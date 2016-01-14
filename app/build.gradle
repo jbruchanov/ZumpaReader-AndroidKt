@@ -1,5 +1,6 @@
 buildscript {
     ext.kotlin_version = '1.0.0-beta-2423'
+    ext.playServices = "8.3.0"
     ext.supportLibraryVersion = "23.1.1"
 
     repositories {
