@@ -18,7 +18,7 @@ public class ZumpaConverterFactory(val parser: ZumpaSimpleParser) : Converter.Fa
 
     private val mainPageConverter: ZumpaMainPageConverter by lazy { ZumpaMainPageConverter(parser) }
     private val threadPageConverter: ZumpaThreadPageConverter by lazy { ZumpaThreadPageConverter(parser) }
-    private val postConverter: ZumpaHTTPPostConverter by lazy { ZumpaHTTPPostConverter() }
+    private val postConverter: ZumpaGenericConverter by lazy { ZumpaGenericConverter() }
     private val httpPostConverter by lazy {
         object : Converter<ZumpaBody, RequestBody> {
             override fun convert(value: ZumpaBody?): RequestBody? {
@@ -47,3 +47,4 @@ internal fun closeQuietly(stream: InputStream) {
         e.printStackTrace()
     }
 }
+

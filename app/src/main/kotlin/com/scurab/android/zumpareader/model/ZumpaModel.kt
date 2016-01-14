@@ -10,6 +10,7 @@ import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.util.encodeHttp
 import com.scurab.android.zumpareader.util.exec
 import com.squareup.okhttp.MediaType
+import java.nio.charset.Charset
 import java.util.*
 
 /**
@@ -216,11 +217,16 @@ public class ZumpaVoteSurveyBody(
     }
 }
 
-public class ZumpaResponse(val data: ByteArray, val mediaType: MediaType) {
-
-    public fun asString() = String(data, ZR.Constants.ENCODING)
-}
-
 public data class ZumpaReadState(val threadId: String, var count: Int)
 
+open public class ZumpaGenericResponse(protected val data: ByteArray, public val contentType: String?) {
+    public fun asString() = String(data, ZR.Constants.ENCODING)
+    public fun asUTFString() = String(data, Charset.forName("UTF-8"))
+
+}
+public data class ZumpaWSBody(private val pages: Int = 1) : ZumpaBody {
+    override fun toHttpPostString(): String {
+        return "{\"Pages\" : $pages}"
+    }
+}
 //

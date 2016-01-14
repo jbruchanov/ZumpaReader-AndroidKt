@@ -7,7 +7,7 @@ import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZR
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.model.ZumpaLoginBody
-import com.scurab.android.zumpareader.model.ZumpaResponse
+import com.scurab.android.zumpareader.model.ZumpaGenericResponse
 import com.scurab.android.zumpareader.util.*
 import retrofit.Callback
 import retrofit.Response
@@ -69,13 +69,13 @@ public class SettingsActivity : PreferenceActivity() {
 
         showProgressDialog()
         zumpaApp.zumpaAPI.login(ZumpaLoginBody(user, pwd)).enqueue(
-                object : Callback<ZumpaResponse?> {
+                object : Callback<ZumpaGenericResponse?> {
                     override fun onFailure(t: Throwable?) {
                         hideProgressDialog()
                         toast(R.string.err_fail)
                     }
 
-                    override fun onResponse(response: Response<ZumpaResponse?>?, retrofit: Retrofit?) {
+                    override fun onResponse(response: Response<ZumpaGenericResponse?>?, retrofit: Retrofit?) {
                         hideProgressDialog()
                         if (!isFinishing) {
                             response.exec {

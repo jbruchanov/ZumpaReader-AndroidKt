@@ -302,12 +302,12 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
                 isSending = true
                 it.observeOn(AndroidSchedulers.mainThread())
                         .subscribeOn(Schedulers.io())
-                        .subscribe(object : Subscriber<ZumpaResponse>() {
+                        .subscribe(object : Subscriber<ZumpaGenericResponse>() {
                             override fun onCompleted() {
                                 loadData()//hide dialog there
                             }
 
-                            override fun onNext(t: ZumpaResponse) {
+                            override fun onNext(t: ZumpaGenericResponse) {
                                 var x = t.asString()
                                 Log.d("", x);
                             }

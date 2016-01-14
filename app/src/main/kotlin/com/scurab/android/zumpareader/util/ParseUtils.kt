@@ -4,7 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Point
 import android.text.Html
-import com.scurab.android.zumpareader.model.ZumpaResponse
+import com.scurab.android.zumpareader.model.ZumpaGenericResponse
 import com.squareup.okhttp.Headers
 import retrofit.Response
 import java.security.MessageDigest
@@ -101,12 +101,12 @@ public class ParseUtils {
             return null;
         }
 
-        public fun extractCookies(it: Response<ZumpaResponse?>): Set<String> {
+        public fun extractCookies(it: Response<ZumpaGenericResponse?>): Set<String> {
             var cookies = it.headers().toMultimap()["Set-Cookie"] as List<String>
             return HashSet<String>(cookies)
         }
 
-        public fun extractSessionId(it: Response<ZumpaResponse?>): String? {
+        public fun extractSessionId(it: Response<ZumpaGenericResponse?>): String? {
             var cookies = it.headers().toMultimap()["Set-Cookie"] as List<String>
             var sessionId: String? = null
             for (c in cookies) {
