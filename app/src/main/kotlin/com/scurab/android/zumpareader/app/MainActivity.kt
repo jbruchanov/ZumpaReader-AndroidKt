@@ -17,6 +17,7 @@ import com.pawegio.kandroid.find
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.content.MainListFragment
+import com.scurab.android.zumpareader.content.SubListFragment
 import com.scurab.android.zumpareader.content.post.PostFragment
 import com.scurab.android.zumpareader.ui.DelayClickListener
 import com.scurab.android.zumpareader.ui.QuickHideBehavior
@@ -30,6 +31,11 @@ import io.fabric.sdk.android.Fabric
  */
 
 public class MainActivity : AppCompatActivity() {
+
+    companion object{
+        public val PUSH_REQ_CODE = 46879;
+        public val EXTRA_THREAD_ID = "ThreadID";
+    }
 
     private val toolbar by lazy { find<Toolbar>(R.id.toolbar) }
     private val progressBar by lazy { find<ProgressBar>(R.id.progress_bar) }
@@ -83,22 +89,27 @@ public class MainActivity : AppCompatActivity() {
 
     private fun checkIntent(intent: Intent?) {
         intent.exec {
-            val subject: String? = it.getStringExtra(Intent.EXTRA_SUBJECT)
-            val text: String? = it.getStringExtra(Intent.EXTRA_TEXT)
-            val uri1= it.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
-            val uriMore = it.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
-            var uris : Array<Uri>? = null
-            if (uri1 != null) {
-                uris = arrayOf(uri1)
-            } else if (uriMore != null) {
-                uris = uriMore.toTypedArray()
-            }
-            if (!(subject.isNullOrEmpty() && text.isNullOrEmpty() && uris == null)) {
-                if (!zumpaApp.zumpaPrefs.isLoggedIn) {
-                    toast(R.string.err_login_first)
-                } else {
-                    supportFragmentManager.exec {
-                        openFragment(PostFragment.newInstance(subject, text, uris))
+            val pushThreadId = it.getStringExtra(EXTRA_THREAD_ID)
+            if (pushThreadId != null) {
+                openFragment(SubListFragment.newInstance(pushThreadId), true, true)
+            } else {
+                val subject: String? = it.getStringExtra(Intent.EXTRA_SUBJECT)
+                val text: String? = it.getStringExtra(Intent.EXTRA_TEXT)
+                val uri1 = it.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+                val uriMore = it.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
+                var uris: Array<Uri>? = null
+                if (uri1 != null) {
+                    uris = arrayOf(uri1)
+                } else if (uriMore != null) {
+                    uris = uriMore.toTypedArray()
+                }
+                if (!(subject.isNullOrEmpty() && text.isNullOrEmpty() && uris == null)) {
+                    if (!zumpaApp.zumpaPrefs.isLoggedIn) {
+                        toast(R.string.err_login_first)
+                    } else {
+                        supportFragmentManager.exec {
+                            openFragment(PostFragment.newInstance(subject, text, uris))
+                        }
                     }
                 }
             }
