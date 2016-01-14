@@ -163,8 +163,8 @@ public class ZumpaLoginBody(
         val nick: String,
         val pass: String) : ZumpaBody {
 
-    val rem = "5"//timelimit
-    val login = "Přihlásit"
+    private val rem = "5"//timelimit
+    private val login = "Přihlásit"
 
     override fun toHttpPostString(): String {
         return StringBuilder(64)
@@ -181,11 +181,11 @@ public data class ZumpaThreadBody(
         val body: String,
         val threadId: String? = null
 ) : ZumpaBody {
-    val f: String = "2"//something
-    val a: String = "post"//postType
-    val t by lazy { threadId }//postId1
-    val p by lazy { threadId }//postId2
-    val post = "Odeslat"//postButton
+    private val f: String = "2"//something
+    private val a: String = "post"//postType
+    private val t by lazy { threadId }//postId1
+    private val p by lazy { threadId }//postId2
+    private val post = "Odeslat"//postButton
 
     override fun toHttpPostString(): String {
         val sb = StringBuilder(64)
@@ -216,6 +216,8 @@ public class ZumpaVoteSurveyBody(
         return sb.toString()
     }
 }
+
+public data class ZumpaPushMessage(val threadId: String, val from: String, val message: String?)
 
 public data class ZumpaReadState(val threadId: String, var count: Int)
 
