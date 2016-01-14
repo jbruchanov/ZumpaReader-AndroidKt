@@ -32,10 +32,10 @@ import java.util.concurrent.TimeUnit
 public class ZumpaReaderApp:Application(){
 
     public val zumpaParser: ZumpaSimpleParser by lazy {
-        ZumpaSimpleParser().apply {
-            userName = zumpaPrefs.loggedUserName
-            isShowLastUser = zumpaPrefs.showLastAuthor
-        }
+        val v = ZumpaSimpleParser()
+        v.userName = zumpaPrefs.loggedUserName
+        v.isShowLastUser = zumpaPrefs.showLastAuthor
+        v
     }
 
     public val zumpaPrefs: ZumpaPrefs by lazy { ZumpaPrefs(this) }
@@ -73,6 +73,7 @@ public class ZumpaReaderApp:Application(){
         loadReadStates();
 
         initPicasso()
+
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks{
             private var activities = 0
             override fun onActivityStarted(activity: Activity?) {
