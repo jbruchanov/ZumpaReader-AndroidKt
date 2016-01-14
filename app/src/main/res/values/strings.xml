@@ -26,6 +26,7 @@
     <string name="err_empty_subject">Empty subject</string>
     <string name="err_empty_msg">Empty message</string>
     <string name="err_login_first">Login first!</string>
+    <string name="err_no_push_reg">Unable to register for push notifications!</string>
     <string name="subject">Subject</string>
     <string name="message">Message</string>
 
@@ -39,4 +40,5 @@
     <string name="resized">Resized</string>
     <string name="resolution">Resolution</string>
     <string name="size">Size</string>
+    <string name="notification_header">Žum&#x3c0;čoviny…</string>
 </resources>
