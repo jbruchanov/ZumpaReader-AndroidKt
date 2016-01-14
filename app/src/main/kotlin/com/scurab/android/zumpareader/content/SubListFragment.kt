@@ -51,7 +51,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
 
     override val title: CharSequence get() {
         val subject = zumpaData[threadId]?.subject
-        return if (subject != null) ZumpaSimpleParser.parseBody(subject, context) else ""
+        return if (subject != null) ZumpaSimpleParser.parseBody(subject, context) else context.getString(R.string.app_name)
     }
 
     protected val threadId: String by lazy { arguments!!.getString(THREAD_ID) }
