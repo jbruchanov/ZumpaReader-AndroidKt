@@ -17,6 +17,9 @@ public interface ZumpaAPI {
     @GET("/phorum/list.php?f=2&a=2&af=2")
     fun getMainPage(@Query(value = "af") filter: String): Observable<ZumpaMainPageResult>;
 
+    @GET("/phorum/list.php?f=2")
+    fun getMainPageHtml(): Call<ZumpaGenericResponse>;
+
     @GET("/phorum/list.php?f=2&a=2&af=2")
     fun getMainPage(@Query(value = "t") fromThread: String, @Query(value = "af") filter: String): Observable<ZumpaMainPageResult>;
 
@@ -43,8 +46,8 @@ public interface ZumpaWSAPI {
 
 public interface ZumpaPHPAPI {
     @GET("/CDM/RegisterHandler.php?register=true&platform=android")
-    fun register(@Query("user") user: String, @Query("uid") uid: String, @Query("regid") regId: String): Observable<ZumpaGenericResponse>
+    fun register(@Query("user") user: String, @Query("uid") uid: String, @Query("regid") regId: String): Call<ZumpaGenericResponse>
 
     @GET("/CDM/RegisterHandler.php?unregister=true")
-    fun unregister(@Query("user") user: String): Observable<ZumpaGenericResponse>
+    fun unregister(@Query("user") user: String): Call<ZumpaGenericResponse>
 }
