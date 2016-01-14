@@ -24,6 +24,7 @@ public class ZumpaPrefs(context: Context) {
     private val KEY_READ_STATES = "KEY_READ_STATES"
     private val KEY_FILTER = "KEY_FILTER"
     private val KEY_LAST_CAMERA_URI = "KEY_LAST_CAMERA_URI"
+    private val KEY_PUSH_REG_ID = "KEY_PUSH_REG_ID"
 
     private val sharedPrefs: SharedPreferences
 
@@ -105,5 +106,14 @@ public class ZumpaPrefs(context: Context) {
 
         set(value) {
             sharedPrefs.edit().putString(KEY_LAST_CAMERA_URI, value).apply()
+        }
+
+    public var pushRegId: String?
+        get() {
+            return sharedPrefs.getString(KEY_PUSH_REG_ID, null)
+        }
+
+        set(value) {
+            sharedPrefs.edit().putString(KEY_PUSH_REG_ID, value).apply()
         }
 }

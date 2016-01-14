@@ -1,23 +1,26 @@
 package com.scurab.android.zumpareader.app
 
 import android.app.ProgressDialog
+import android.content.Context
+import android.os.AsyncTask
 import android.os.Bundle
 import android.preference.PreferenceActivity
+import com.google.android.gms.gcm.GoogleCloudMessaging
+import com.google.android.gms.iid.InstanceID
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZR
 import com.scurab.android.zumpareader.ZumpaReaderApp
+import com.scurab.android.zumpareader.content.SendingFragment
 import com.scurab.android.zumpareader.model.ZumpaLoginBody
-import com.scurab.android.zumpareader.model.ZumpaGenericResponse
+import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.util.*
-import retrofit.Callback
-import retrofit.Response
-import retrofit.Retrofit
 import java.net.URI
 
 /**
  * Created by JBruchanov on 29/12/2015.
  */
-public class SettingsActivity : PreferenceActivity() {
+public class SettingsActivity : PreferenceActivity(), SendingFragment {
+
 
     private val buttonPref by lazy { findPreference(ZumpaPrefs.KEY_LOGIN) }
     private val showLastAuthorPref by lazy { findPreference(ZumpaPrefs.KEY_SHOW_LAST_AUTHOR) }
@@ -28,6 +31,11 @@ public class SettingsActivity : PreferenceActivity() {
         }
 
     private var progressDialog: ProgressDialog? = null
+    override var sendingDialog: ProgressDialog? = null
+
+    override fun getContext(): Context {
+        return this
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,30 +75,21 @@ public class SettingsActivity : PreferenceActivity() {
             return
         }
 
-        showProgressDialog()
-        zumpaApp.zumpaAPI.login(ZumpaLoginBody(user, pwd)).enqueue(
-                object : Callback<ZumpaGenericResponse?> {
-                    override fun onFailure(t: Throwable?) {
-                        hideProgressDialog()
-                        toast(R.string.err_fail)
+        isSending = true
+        object : LoginTask(zumpaApp, ZumpaLoginBody(user, pwd)){
+            override fun onPostExecute(loginResult: Boolean, pushResult: Boolean) {
+                isSending = false
+                if (!isFinishing) {
+                    toast(if (loginResult) R.string.ok else R.string.err_fail)
+                    if (!pushResult) {
+                        toast(R.string.err_no_push_reg)
                     }
-
-                    override fun onResponse(response: Response<ZumpaGenericResponse?>?, retrofit: Retrofit?) {
-                        hideProgressDialog()
-                        if (!isFinishing) {
-                            response.exec {
-                                val success = response?.code() == 302//response?.body()?.asString()?.contains("/logout.php") ?: false
-                                zumpaApp.zumpaPrefs.isLoggedIn = success
-                                zumpaApp.zumpaPrefs.cookies = if (success) ParseUtils.extractCookies(it) else null
-                                toast(if (success) R.string.ok else R.string.err_fail)
-                                if (success) {
-                                    buttonPref.title = resources.getString(R.string.logout)
-                                }
-                            }
-                        }
+                    if (loginResult) {
+                        buttonPref.title = resources.getString(R.string.logout)
                     }
                 }
-        )
+            }
+        }.execute()
     }
 
     override fun onResume() {
@@ -100,7 +99,7 @@ public class SettingsActivity : PreferenceActivity() {
 
     override fun onPause() {
         super.onPause()
-        hideProgressDialog()
+        isSending = false
 
         zumpaApp.zumpaParser.execOn {
             userName = zumpaApp.zumpaPrefs.loggedUserName
@@ -111,15 +110,43 @@ public class SettingsActivity : PreferenceActivity() {
         zumpaApp.zumpaParser.isShowLastUser = zumpaApp.zumpaPrefs.showLastAuthor
         zumpaApp.followRedirects = true
     }
+}
 
-    private fun showProgressDialog() {
-        if (progressDialog == null) {
-            progressDialog = ProgressDialog.show(this, null, resources.getString(R.string.wheeeee), true, false)
+private abstract class LoginTask(private val zumpaApp: ZumpaReaderApp, private val zumpaLoginBody: ZumpaLoginBody) : AsyncTask<Void, Void, Void>() {
+    private var loginResult: Boolean = false
+    private var pushResult: Boolean = false
+
+    override fun doInBackground(vararg params: Void?): Void? {
+        zumpaApp.followRedirects = false
+
+        val loginResponse = zumpaApp.zumpaAPI.login(zumpaLoginBody).execute()
+        loginResult = loginResponse.code() == 302
+
+        zumpaApp.followRedirects = true
+        zumpaApp.zumpaPrefs.isLoggedIn = loginResult
+        zumpaApp.zumpaPrefs.cookies = if (loginResult) ParseUtils.extractCookies(loginResponse) else null
+
+        try {
+            val instanceID = InstanceID.getInstance(zumpaApp);
+            val token = instanceID.getToken("542579595500", GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
+            zumpaApp.zumpaPrefs.pushRegId = token
+            if (token != null && loginResult) {
+                val body = zumpaApp.zumpaAPI.getMainPageHtml().execute().body().asString()
+                val uid = ZumpaSimpleParser.parseUID(body)
+                if (uid != null) {
+                    val response = zumpaApp.zumpaPHPAPI.register(zumpaLoginBody.nick, uid, token).execute().body().asUTFString()
+                    pushResult = "[OK]".equals(response)
+                }
+            }
+        } catch(e: Throwable) {
+            e.printStackTrace()
         }
+        return null
     }
 
-    private fun hideProgressDialog() {
-        progressDialog?.cancel()
-        progressDialog = null
+    final override fun onPostExecute(result: Void?) {
+        onPostExecute(loginResult, pushResult)
     }
+
+    abstract fun onPostExecute(loginResult: Boolean, pushResult: Boolean)
 }
