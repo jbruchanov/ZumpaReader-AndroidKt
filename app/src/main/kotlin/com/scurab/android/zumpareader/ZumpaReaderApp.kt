@@ -10,6 +10,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.scurab.android.zumpareader.data.PicassoHttpDownloader
 import com.scurab.android.zumpareader.data.ZumpaConverterFactory
+import com.scurab.android.zumpareader.data.ZumpaGenericConverterFactory
 import com.scurab.android.zumpareader.model.ZumpaReadState
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
@@ -36,6 +37,7 @@ public class ZumpaReaderApp:Application(){
             isShowLastUser = zumpaPrefs.showLastAuthor
         }
     }
+
     public val zumpaPrefs: ZumpaPrefs by lazy { ZumpaPrefs(this) }
     public val zumpaData: TreeMap<String, ZumpaThread> = TreeMap()
     private var _zumpaReadStates: TreeMap<String, ZumpaReadState> = TreeMap()
@@ -45,7 +47,26 @@ public class ZumpaReaderApp:Application(){
     private val MAX_STATES_TO_STORE = 100
     private val TIMEOUT = 5000L
 
-    private var zumpaHttpClient : OkHttpClient? = null
+    private val zumpaHttpClient by lazy {
+        cookieManager.setCookiePolicy(java.net.CookiePolicy.ACCEPT_ALL)
+        cookieManager.put(URI.create(ZR.Constants.ZUMPA_MAIN_URL), zumpaPrefs.cookiesMap)
+
+        var logging = HttpLoggingInterceptor();
+        // set your desired log level
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+        val zumpaHttpClient = OkHttpClient()
+        zumpaHttpClient.execOn {
+            this.followRedirects = true//false for logging
+            setConnectTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
+            setReadTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
+            setWriteTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
+            setCookieHandler(cookieManager)
+            if (BuildConfig.VERBOSE_LOGGING) {
+                interceptors().add(logging)
+            }
+        }
+        zumpaHttpClient
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -112,25 +133,6 @@ public class ZumpaReaderApp:Application(){
     }
 
     public val zumpaAPI: ZumpaAPI by lazy {
-
-        cookieManager.setCookiePolicy(java.net.CookiePolicy.ACCEPT_ALL)
-        cookieManager.put(URI.create(ZR.Constants.ZUMPA_MAIN_URL), zumpaPrefs.cookiesMap)
-
-        var logging = HttpLoggingInterceptor();
-        // set your desired log level
-        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
-        zumpaHttpClient = OkHttpClient()
-        zumpaHttpClient.execOn {
-            followRedirects = true//false for logging
-            setConnectTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
-            setReadTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
-            setWriteTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
-            setCookieHandler(cookieManager)
-            if (BuildConfig.VERBOSE_LOGGING) {
-                interceptors().add(logging)
-            }
-        }
-
         val retrofit = Retrofit.Builder()
                 .baseUrl(ZR.Constants.ZUMPA_MAIN_URL)
                 .addConverterFactory(ZumpaConverterFactory(zumpaParser))
@@ -141,6 +143,28 @@ public class ZumpaReaderApp:Application(){
         retrofit.create(ZumpaAPI::class.java)
     }
 
+    public val zumpaWebServiceAPI: ZumpaWSAPI by lazy {
+        val retrofit = Retrofit.Builder()
+                .baseUrl(ZR.Constants.ZUMPA_WS_MAIN_URL)
+                .addConverterFactory(ZumpaGenericConverterFactory())
+                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+                .client(zumpaHttpClient)
+                .build()
+
+        retrofit.create(ZumpaWSAPI::class.java)
+    }
+
+    public val zumpaPHPAPI: ZumpaPHPAPI by lazy {
+        val retrofit = Retrofit.Builder()
+                .baseUrl(ZR.Constants.ZUMPA_PHP_MAIN_URL)
+                .addConverterFactory(ZumpaGenericConverterFactory())
+                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+                .client(zumpaHttpClient)
+                .build()
+
+        retrofit.create(ZumpaPHPAPI::class.java)
+    }
+
     public fun resetCookies() {
         zumpaHttpClient.execOn {
             setCookieHandler(CookieManager())
@@ -148,9 +172,9 @@ public class ZumpaReaderApp:Application(){
     }
 
     public var followRedirects: Boolean
-        get() = zumpaHttpClient?.followRedirects ?: false
+        get() = zumpaHttpClient.followRedirects ?: false
         set(value) {
-            zumpaHttpClient?.followRedirects = value
+            zumpaHttpClient.followRedirects = value
         }
 
 }

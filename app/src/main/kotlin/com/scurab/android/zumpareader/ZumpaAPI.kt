@@ -30,8 +30,21 @@ public interface ZumpaAPI {
     fun sendThread(@Body body: ZumpaThreadBody): Observable<ZumpaThreadResult>
 
     @POST("/login.php")
-    fun login(@Body body: ZumpaLoginBody): Call<ZumpaResponse>
+    fun login(@Body body: ZumpaLoginBody): Call<ZumpaGenericResponse>
 
     @POST("/phorum/rate.php")
-    fun voteSurvey(@Body body: ZumpaVoteSurveyBody): Observable<ZumpaResponse>
+    fun voteSurvey(@Body body: ZumpaVoteSurveyBody): Observable<ZumpaGenericResponse>
+}
+
+public interface ZumpaWSAPI {
+    @POST("/zumpa")
+    fun getZumpa(@Body body: ZumpaWSBody): Observable<ZumpaGenericResponse>
+}
+
+public interface ZumpaPHPAPI {
+    @GET("/CDM/RegisterHandler.php?register=true&platform=android")
+    fun register(@Query("user") user: String, @Query("uid") uid: String, @Query("regid") regId: String): Observable<ZumpaGenericResponse>
+
+    @GET("/CDM/RegisterHandler.php?unregister=true")
+    fun unregister(@Query("user") user: String): Observable<ZumpaGenericResponse>
 }
