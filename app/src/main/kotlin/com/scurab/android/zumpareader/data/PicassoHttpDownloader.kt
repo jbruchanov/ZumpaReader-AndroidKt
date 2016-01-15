@@ -1,26 +1,46 @@
 package com.scurab.android.zumpareader.data
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Point
 import android.net.Uri
+import android.os.Environment
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.util.ParseUtils
+import com.squareup.okhttp.CacheControl
 import com.squareup.okhttp.OkHttpClient
+import com.squareup.okhttp.Request
 import com.squareup.picasso.Downloader
+import com.squareup.picasso.NetworkPolicy
 import com.squareup.picasso.OkHttpDownloader
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
 
 /**
  * Created by JBruchanov on 30/12/2015.
  */
 public class PicassoHttpDownloader(private val imageStorage: File, private val displaySize: Point, client: OkHttpClient) : OkHttpDownloader(client) {
+
+    companion object {
+        public fun createDefault(context: Context, client: OkHttpClient): PicassoHttpDownloader {
+            return PicassoHttpDownloader(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
+                    Point(context.resources.displayMetrics.widthPixels, context.resources.displayMetrics.heightPixels),
+                    client)
+        }
+    }
+
     private val htmlStart = '<'.toByte()
     private val maxHtmlCheck = 10 * 1024
+    private val EMPTY_BITMAP = Bitmap.createBitmap(1,1, Bitmap.Config.ALPHA_8)
 
     override fun load(uri: Uri?, networkPolicy: Int): Downloader.Response? {
+        return load(uri, networkPolicy, false)
+    }
+
+    fun load(uri: Uri?, networkPolicy: Int, justDownloading: Boolean): Downloader.Response? {
         //        if(!uri.toString().contains("134560")){
         //            return null
         //        }
@@ -31,7 +51,7 @@ public class PicassoHttpDownloader(private val imageStorage: File, private val d
             return super.load(uri, networkPolicy)
         }
 
-        var result = tryLoadImage(md5Uri)
+        var result = tryLoadImage(md5Uri, justDownloading)
         if (result != null) {
             resultBitmap = result.second
             if (result.first && resultBitmap == null) {
@@ -84,18 +104,25 @@ public class PicassoHttpDownloader(private val imageStorage: File, private val d
         if (resultBitmap == null) {
             return null
         }
+        if (justDownloading) {
+            resultBitmap.recycle()//won't be used later
+        }
         return Downloader.Response(resultBitmap, false)
     }
 
 
-    private fun tryLoadImage(md5: String): Pair<Boolean, Bitmap?>? {
+    private fun tryLoadImage(md5: String, justDownloading: Boolean): Pair<Boolean, Bitmap?>? {
         var bitmap: Bitmap? = null
         var exists : Boolean
         var file = File(imageStorage.absolutePath + "/" + md5)
         exists = file.exists() && file.isFile
         var isImage = exists && file.length() > 0
         if (exists && isImage) {
-            bitmap = BitmapFactory.decodeFile(file.absolutePath)
+            if (justDownloading) {
+                bitmap = EMPTY_BITMAP//let's assume whatever is stored it's proper image
+            } else {
+                bitmap = BitmapFactory.decodeFile(file.absolutePath)
+            }
         }
         return Pair(exists, bitmap)
     }
@@ -107,5 +134,19 @@ public class PicassoHttpDownloader(private val imageStorage: File, private val d
         } catch(e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    private fun download(uri: Uri): Downloader.Response {
+        val builder = Request.Builder().url(uri.toString())
+        val response = client.newCall(builder.build()).execute()
+        val responseCode = response.code()
+        if (responseCode >= 300) {
+            response.body().close()
+            throw Downloader.ResponseException(responseCode.toString() + " " + response.message(), 0, responseCode)
+        }
+
+        val fromCache = response.cacheResponse() != null
+        val responseBody = response.body()
+        return Downloader.Response(responseBody.byteStream(), fromCache, responseBody.contentLength())
     }
 }
