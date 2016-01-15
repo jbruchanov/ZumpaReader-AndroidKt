@@ -62,7 +62,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
     private val swipyRefreshLayout: SwipyRefreshLayout? get() = view?.find<SwipyRefreshLayout>(R.id.swipe_refresh_layout)
     private val postMessageView: PostMessageView? get() = view?.find<PostMessageView>(R.id.response_panel)
     private var scrollDownAfterLoad: Boolean = false
-    private val contextColorText: Int by lazy { context.obtainStyledColor(R.attr.contextColorText) }
+    private val contextColorText: Int by lazy { context.obtainStyledColor(R.attr.contextColorText2) }
 
     override var isLoading: Boolean
         get() = super.isLoading
