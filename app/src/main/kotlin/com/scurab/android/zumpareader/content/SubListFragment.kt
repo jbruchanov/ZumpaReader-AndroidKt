@@ -39,22 +39,26 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
 
     companion object {
         private val THREAD_ID: String = "THREAD_ID"
+        private val SCROLL_DOWN: String = "SCROLL_DOWN"
 
-        public fun newInstance(threadId: String): SubListFragment {
+        public fun newInstance(threadId: String, scrollDown: Boolean = false): SubListFragment {
             return SubListFragment().apply {
                 var args = Bundle()
                 args.putString(THREAD_ID, threadId)
+                args.putBoolean(SCROLL_DOWN, scrollDown)
                 arguments = args
             }
         }
     }
 
     override val title: CharSequence get() {
-        val subject = zumpaData[threadId]?.subject
+        val subject = zumpaData[argThreadId]?.subject
         return if (subject != null) ZumpaSimpleParser.parseBody(subject, context) else context.getString(R.string.app_name)
     }
 
-    protected val threadId: String by lazy { arguments!!.getString(THREAD_ID) }
+    protected val argThreadId by lazy { arguments!!.getString(THREAD_ID) }
+    protected val argScrollDown by lazy { arguments!!.getBoolean(SCROLL_DOWN) }
+    private var firstLoad : Boolean = true
 
     private val recyclerView: RecyclerView? get() = view?.find<RecyclerView>(R.id.recycler_view)
     private val swipyRefreshLayout: SwipyRefreshLayout? get() = view?.find<SwipyRefreshLayout>(R.id.swipe_refresh_layout)
@@ -100,7 +104,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
 
     protected fun dispatchOpenPostMessage(flag: Int) {
         mainActivity.execOn {
-            openFragment(PostFragment.newInstance(title.toString(), postMessageView!!.message.text.toString(), null, threadId, flag))
+            openFragment(PostFragment.newInstance(title.toString(), postMessageView!!.message.text.toString(), null, argThreadId, flag))
         }
     }
 
@@ -139,8 +143,8 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
 
         zumpaApp?.zumpaAPI.exec {
             val app = zumpaApp!!
-            val body = ZumpaThreadBody(app.zumpaPrefs.nickName, app.zumpaData[threadId]?.subject ?: "", msg, threadId)
-            val observable = it.sendResponse(threadId, threadId, body)
+            val body = ZumpaThreadBody(app.zumpaPrefs.nickName, app.zumpaData[argThreadId]?.subject ?: "", msg, argThreadId)
+            val observable = it.sendResponse(argThreadId, argThreadId, body)
             isSending = true
             context.hideKeyboard(view)
             observable
@@ -178,7 +182,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
             return
         }
         isLoading = true
-        var tid = threadId
+        var tid = argThreadId
         zumpaApp?.zumpaAPI?.getThreadPage(tid, tid).exec {
             it.observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())
@@ -186,8 +190,9 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
                         override fun onNext(t: ZumpaThreadResult?) {
                             t.exec {
                                 onResultLoaded(it)
-                                if (scrollDownAfterLoad) {
+                                if (scrollDownAfterLoad || (argScrollDown && firstLoad)) {
                                     scrollDownAfterLoad = false
+                                    firstLoad = false
                                     recyclerView.exec {
                                         it.smoothScrollToPosition(it.adapter.itemCount)
                                     }
@@ -266,10 +271,10 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
         val zumpaReadStates = zumpaApp?.zumpaReadStates
         zumpaReadStates.exec {
             val size = result.items.size - 1
-            if (it.containsKey(threadId)) {
-                it[threadId]!!.count = size//don't count 1st one as it's actual post
+            if (it.containsKey(argThreadId)) {
+                it[argThreadId]!!.count = size//don't count 1st one as it's actual post
             } else {
-                it[threadId] = ZumpaReadState(threadId, size)
+                it[argThreadId] = ZumpaReadState(argThreadId, size)
             }
         }
     }

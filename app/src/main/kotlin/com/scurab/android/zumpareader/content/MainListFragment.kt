@@ -55,7 +55,6 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
                 swipeToRefresh.direction = SwipyRefreshLayoutDirection.TOP
                 recyclerView.apply {
                     layoutManager = LinearLayoutManager(inflater.context, LinearLayoutManager.VERTICAL, false)
-                    //itemAnimator = DefaultItemAnimator()
                 }
             }
         }
@@ -165,7 +164,6 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
     override fun onShowingItem(source: MainListAdapter, item: Int) {
         if (!isLoading) {
             (recyclerView?.adapter as MainListAdapter).exec {
-                var v = it.items.last()
                 loadPage(nextThreadId)
             }
 
