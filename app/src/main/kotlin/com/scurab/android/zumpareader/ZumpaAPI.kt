@@ -41,7 +41,7 @@ public interface ZumpaAPI {
 
 public interface ZumpaWSAPI {
     @POST("/zumpa")
-    fun getZumpa(@Body body: ZumpaWSBody): Observable<ZumpaGenericResponse>
+    fun getZumpa(@Body body: ZumpaWSBody): Call<ZumpaGenericResponse>
 }
 
 public interface ZumpaPHPAPI {
