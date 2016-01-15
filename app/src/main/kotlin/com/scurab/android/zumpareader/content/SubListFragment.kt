@@ -7,9 +7,7 @@ import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection
 import com.pawegio.kandroid.find
@@ -115,7 +113,6 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
             if (isLoggedIn) {
                 it.floatingButton.showAnimated()
             }
-            it.settingsButton.visibility = View.GONE
         }
         if (zumpaApp?.zumpaPrefs?.isLoggedIn ?: false) {
             view.post { //set padding for response panel
@@ -128,7 +125,6 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
 
     override fun onPause() {
         mainActivity?.setScrollStrategyEnabled(true)
-        mainActivity?.settingsButton?.visibility = View.VISIBLE
         isLoading = false
         isSending = false
         super.onPause()

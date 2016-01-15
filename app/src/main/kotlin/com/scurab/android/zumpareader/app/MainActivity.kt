@@ -44,9 +44,6 @@ public class MainActivity : AppCompatActivity() {
 
     public val floatingButton: FloatingActionButton  get() = _floatingButton
 
-    private val _settingsButton by lazy { find<ImageButton>(R.id.settings) }
-    public val settingsButton: ImageButton get() = _settingsButton
-
     public val zumpaApp: ZumpaReaderApp
         get() {
             return getApplication() as ZumpaReaderApp
@@ -62,23 +59,18 @@ public class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         Fabric.with(this, Crashlytics());
 
         setContentView(R.layout.activity_main)
-
         setSupportActionBar(toolbar)
         floatingButton.setOnClickListener(DelayClickListener() { onFloatingButtonClick() })
         supportFragmentManager.findFragmentById(R.id.fragment_container).execIfNull {
             openFragment(MainListFragment(), false)
         }
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            val color = obtainStyledColor(R.attr.contextColor)
-            settingsButton.setImageDrawable(_settingsButton.drawable.wrapWithTint(color))
-        }
-
-        settingsButton.setOnClickListener { startActivity(Intent(this@MainActivity, SettingsActivity::class.java)) }
+        val color = obtainStyledColor(R.attr.contextColor)
+        progressBar.indeterminateDrawable = progressBar.indeterminateDrawable.wrapWithTint(color)
+        toolbar.overflowIcon = resources.getDrawable(R.drawable.ic_more).wrapWithTint(color)
         checkIntent(intent)
     }
 

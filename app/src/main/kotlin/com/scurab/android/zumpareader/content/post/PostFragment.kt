@@ -64,7 +64,6 @@ public class PostFragment : BaseFragment() {
         super.onCreate(savedInstanceState)
         mainActivity.execOn {
             hideFloatingButton()
-            settingsButton.visibility = View.INVISIBLE
         }
     }
 
@@ -184,7 +183,6 @@ public class PostFragment : BaseFragment() {
         super.onDestroy()
         mainActivity.execOn {
             showFloatingButton()
-            settingsButton.visibility = View.VISIBLE
         }
     }
 
