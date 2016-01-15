@@ -89,6 +89,16 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
                 invalidateOptionsMenu = true
                 return true
             }
+            R.id.offline -> {
+                var app = zumpaApp!!
+                if (!app.zumpaPrefs.isOffline) {
+                    OfflineDownloadFragment().show(mainActivity!!.supportFragmentManager, OfflineDownloadFragment::class.java.name)
+                } else {
+                    app.zumpaPrefs.isOffline = false
+                    mainActivity!!.invalidateOptionsMenu()
+                }
+                return true
+            }
             else ->
                 return super.onOptionsItemSelected(item)
         }
