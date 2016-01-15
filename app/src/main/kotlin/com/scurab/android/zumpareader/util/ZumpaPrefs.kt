@@ -25,6 +25,7 @@ public class ZumpaPrefs(context: Context) {
     private val KEY_FILTER = "KEY_FILTER"
     private val KEY_LAST_CAMERA_URI = "KEY_LAST_CAMERA_URI"
     private val KEY_PUSH_REG_ID = "KEY_PUSH_REG_ID"
+    private val KEY_OFFLINE = "KEY_OFFLINE"
 
     private val sharedPrefs: SharedPreferences
 
@@ -115,5 +116,14 @@ public class ZumpaPrefs(context: Context) {
 
         set(value) {
             sharedPrefs.edit().putString(KEY_PUSH_REG_ID, value).apply()
+        }
+
+    public var isOffline: Boolean
+        get() {
+            return sharedPrefs.getBoolean(KEY_OFFLINE, false)
+        }
+
+        set(value) {
+            sharedPrefs.edit().putBoolean(KEY_OFFLINE, value).apply()
         }
 }

@@ -1,24 +1,22 @@
 package com.scurab.android.zumpareader.content
 
+import android.content.Intent
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection
 import com.pawegio.kandroid.find
 import com.pawegio.kandroid.toast
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.app.BaseFragment
+import com.scurab.android.zumpareader.app.SettingsActivity
 import com.scurab.android.zumpareader.content.post.PostFragment
 import com.scurab.android.zumpareader.model.ZumpaMainPageResult
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.ui.hideAnimated
-import com.scurab.android.zumpareader.util.asListOfValues
-import com.scurab.android.zumpareader.util.exec
-import com.scurab.android.zumpareader.util.execIfNull
+import com.scurab.android.zumpareader.util.*
 import rx.Observer
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
@@ -32,6 +30,7 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
     private val recyclerView: RecyclerView get() = content!!.find<RecyclerView>(R.id.recycler_view)
     private val swipeToRefresh: SwipyRefreshLayout get() = content!!.find<SwipyRefreshLayout>(R.id.swipe_refresh_layout)
     private var lastFilter : String = ""
+    private var invalidateOptionsMenu = false
 
     private var nextThreadId: String? = null
     override var isLoading: Boolean
@@ -47,6 +46,11 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
         }
 
     override val title: CharSequence get() = getString(R.string.app_name)
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup, savedInstanceState: Bundle?): View? {
         content.execIfNull {
@@ -75,6 +79,25 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
         swipeToRefresh.setOnRefreshListener { loadPage() }
         recyclerView.adapter.execIfNull {
             loadPage()
+        }
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.settings -> {
+                startActivity(Intent(context, SettingsActivity::class.java))
+                invalidateOptionsMenu = true
+                return true
+            }
+            else ->
+                return super.onOptionsItemSelected(item)
+        }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.menu, menu)
+        menu.findItem(R.id.offline).execOn {
+            setTitle(if (zumpaApp!!.zumpaPrefs.isOffline) R.string.online else R.string.offline)
         }
     }
 
@@ -117,6 +140,14 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
                             }
                         })
             }
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (invalidateOptionsMenu) {
+            invalidateOptionsMenu = false
+            mainActivity!!.invalidateOptionsMenu()
         }
     }
 
