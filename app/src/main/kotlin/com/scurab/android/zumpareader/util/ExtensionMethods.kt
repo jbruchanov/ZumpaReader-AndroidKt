@@ -179,3 +179,16 @@ public fun View.setPaddingRes(@DimenRes dimenRes: Int) {
     val px = resources.getDimensionPixelSize(dimenRes)
     setPadding(px, px, px, px)
 }
+
+public fun Uri.isImage() : Boolean{
+    val path = path.toLowerCase()
+    return path.endsWith(".jpg") || path.endsWith(".jpeg") || path.endsWith(".png") || path.endsWith(".bmp") || path.endsWith(".gif")
+}
+
+public fun String.isImageUri(): Boolean {
+    try {
+        return Uri.parse(this).isImage()
+    } catch(e: Exception) {
+        return false
+    }
+}

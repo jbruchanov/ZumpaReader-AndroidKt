@@ -19,10 +19,7 @@ import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.drawable.SimpleProgressDrawable
 import com.scurab.android.zumpareader.model.SurveyItem
 import com.scurab.android.zumpareader.model.ZumpaThreadItem
-import com.scurab.android.zumpareader.util.exec
-import com.scurab.android.zumpareader.util.execOn
-import com.scurab.android.zumpareader.util.find
-import com.scurab.android.zumpareader.util.obtainStyledColor
+import com.scurab.android.zumpareader.util.*
 import com.scurab.android.zumpareader.widget.SurveyView
 import com.squareup.picasso.Picasso
 import java.text.SimpleDateFormat
@@ -71,7 +68,7 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
             sub.clear()
             item.urls.exec {
                 for (url in it) {
-                    val element = SubListItem(item, i, if (url.isImage() && loadImages) TYPE_IMAGE else TYPE_URL, url)
+                    val element = SubListItem(item, i, if (url.isImageUri() && loadImages) TYPE_IMAGE else TYPE_URL, url)
                     sub.add(element)
                 }
                 sub.sortBy { it.type }
@@ -241,10 +238,4 @@ internal class ItemTarget(val adapter: SubListAdapter, val holder: ZumpaSubItemV
         }
         return result
     }
-}
-
-internal fun String.isImage(): Boolean {
-    var uri = Uri.parse(this)
-    val path = uri.path.toLowerCase()
-    return path.endsWith(".jpg") || path.endsWith(".jpeg") || path.endsWith(".png") || path.endsWith(".bmp") || path.endsWith(".gif")
 }
