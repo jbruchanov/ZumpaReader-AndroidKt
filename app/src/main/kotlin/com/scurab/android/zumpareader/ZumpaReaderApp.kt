@@ -47,7 +47,7 @@ public class ZumpaReaderApp:Application(){
     private val MAX_STATES_TO_STORE = 100
     private val TIMEOUT = 5000L
 
-    private val zumpaHttpClient by lazy {
+    public val zumpaHttpClient by lazy {
         cookieManager.setCookiePolicy(java.net.CookiePolicy.ACCEPT_ALL)
         cookieManager.put(URI.create(ZR.Constants.ZUMPA_MAIN_URL), zumpaPrefs.cookiesMap)
 
@@ -58,7 +58,7 @@ public class ZumpaReaderApp:Application(){
         zumpaHttpClient.execOn {
             this.followRedirects = true//false for logging
             setConnectTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
-            setReadTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
+            setReadTimeout(TIMEOUT * 5, TimeUnit.MILLISECONDS)
             setWriteTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
             setCookieHandler(cookieManager)
             if (BuildConfig.VERBOSE_LOGGING) {
@@ -116,16 +116,8 @@ public class ZumpaReaderApp:Application(){
     }
 
     private fun initPicasso() {
-        val client = OkHttpClient()
-        client.setConnectTimeout(2000L, TimeUnit.MILLISECONDS)
-        client.setReadTimeout(2000L, TimeUnit.MILLISECONDS)
-        client.setWriteTimeout(2000L, TimeUnit.MILLISECONDS)
-
         val picasso = Picasso.Builder(this)
-                .downloader(
-                        PicassoHttpDownloader(getExternalFilesDir(Environment.DIRECTORY_PICTURES),
-                                Point(resources.displayMetrics.widthPixels, resources.displayMetrics.heightPixels),
-                                client))
+                .downloader(PicassoHttpDownloader.createDefault(this, zumpaHttpClient))
                 .listener({ picasso, uri, exception ->
                     Log.d("PicassoLoader", "URL:%s Exception:%s".format(uri, exception))
                     exception.printStackTrace()
