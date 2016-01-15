@@ -2,7 +2,8 @@
 <resources>
     <style name="ThemeBlack" parent="AppTheme.NoActionBar">
         <item name="contextColor">@color/yellow_orange</item>
-        <item name="contextColorText">@color/blue_gray</item>
+        <item name="contextColorText">@color/context_color_black</item>
+        <item name="contextColorText2">@color/blue_gray</item>
         <item name="contextColor50p">@color/yellow_orange_50p</item>
         <item name="contextColor25p">@color/yellow_orange_25p</item>
         <item name="primaryTextColor">@color/white</item>
@@ -25,7 +26,7 @@
         <item name="dateTextSize">@dimen/text_small</item>
         <item name="threadsColor">?primaryTextColor</item>
         <item name="threadsTextSize">@dimen/text_normal</item>
-        <item name="buttonTextColor">?contextColor</item>
+        <item name="buttonTextColor">?contextColorText</item>
         <item name="buttonTextSize">@dimen/text_small</item>
         <item name="surveyButtonTextSize">@dimen/text_smaller</item>
         <item name="buttonBackground">@drawable/url_button_background_theme_black</item>

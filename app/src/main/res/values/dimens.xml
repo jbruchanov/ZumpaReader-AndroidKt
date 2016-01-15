@@ -27,4 +27,5 @@
     <dimen name="url_button_radius_corners_theme_black">5dp</dimen>
     <dimen name="url_button_stroke_width_theme_black">1dp</dimen>
     <dimen name="item_left_bar_width">2dp</dimen>
+    <dimen name="dialog_offline_min_width">250dp</dimen>
 </resources>

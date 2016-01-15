@@ -43,4 +43,10 @@
     <string name="notification_header">Žum&#x3c0;čoviny…</string>
     <string name="offline">Offline</string>
     <string name="online">Online</string>
+    <string name="download_images">Download Images</string>
+    <string name="threads">Threads</string>
+    <string name="images">Images</string>
+    <string name="action_start">Start</string>
+    <string name="action_stop">Stop</string>
+    <string name="pages">Pages</string>
 </resources>

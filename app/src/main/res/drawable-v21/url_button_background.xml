@@ -1,17 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="?contextColor">
+        android:color="?contextColor">
     <item android:id="@android:id/mask">
         <shape android:shape="rectangle">
-            <corners android:radius="@dimen/url_button_radius_corners_theme_black" />
-            <solid android:color="@android:color/white" />
+            <corners android:radius="@dimen/url_button_radius_corners_theme_black"/>
+            <solid android:color="@android:color/white"/>
         </shape>
     </item>
     <item>
-        <shape android:shape="rectangle">
-            <stroke android:color="?contextColor" android:width="@dimen/url_button_stroke_width_theme_black" />
-            <corners android:radius="@dimen/url_button_radius_corners_theme_black" />
-            <solid android:color="@android:color/transparent" />
-        </shape>
+        <selector>
+            <item android:state_enabled="false">
+                <shape android:shape="rectangle">
+                    <stroke
+                        android:width="@dimen/url_button_stroke_width_theme_black"
+                        android:color="?contextColor25p"/>
+                    <corners android:radius="@dimen/url_button_radius_corners_theme_black"/>
+                    <solid android:color="@android:color/transparent"/>
+                </shape>
+            </item>
+            <item>
+                <shape android:shape="rectangle">
+                    <stroke
+                        android:width="@dimen/url_button_stroke_width_theme_black"
+                        android:color="?contextColor"/>
+                    <corners android:radius="@dimen/url_button_radius_corners_theme_black"/>
+                    <solid android:color="@android:color/transparent"/>
+                </shape>
+            </item>
+        </selector>
     </item>
 </ripple>

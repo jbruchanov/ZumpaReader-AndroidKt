@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_enabled="false">
+        <shape android:shape="rectangle">
+            <stroke android:color="@color/yellow_orange_25p" android:width="@dimen/url_button_stroke_width_theme_black" />
+            <corners android:radius="@dimen/url_button_radius_corners_theme_black" />
+        </shape>
+    </item>
     <item android:state_pressed="true">
         <shape android:shape="rectangle">
             <stroke android:color="@color/yellow_orange" android:width="@dimen/url_button_stroke_width_theme_black" />
