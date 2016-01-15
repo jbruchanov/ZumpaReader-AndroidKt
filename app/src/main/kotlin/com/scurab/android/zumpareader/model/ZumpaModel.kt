@@ -80,6 +80,7 @@ public constructor(val id: String,
 
     public var hasResponseForYou: Boolean = false
     public var lastAuthor: String? = null
+    public var offlineItems : List<ZumpaThreadItem>? = null
 }
 
 public data class ZumpaThreadItem(val author: String,
@@ -221,7 +222,7 @@ public data class ZumpaPushMessage(val threadId: String, val from: String, val m
 
 public data class ZumpaReadState(val threadId: String, var count: Int)
 
-open public class ZumpaGenericResponse(protected val data: ByteArray, public val contentType: String?) {
+open public class ZumpaGenericResponse(public val data: ByteArray, public val contentType: String?) {
     public fun asString() = String(data, ZR.Constants.ENCODING)
     public fun asUTFString() = String(data, Charset.forName("UTF-8"))
 
