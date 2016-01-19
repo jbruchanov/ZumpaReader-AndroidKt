@@ -10,12 +10,16 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import com.pawegio.kandroid.find
+import com.scurab.android.zumpareader.BusProvider
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.data.LoaderTask
+import com.scurab.android.zumpareader.event.DIALOG_EVENT_STOP
+import com.scurab.android.zumpareader.event.DialogEvent
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.ui.isVisible
 import com.scurab.android.zumpareader.util.asVisibility
+import com.scurab.android.zumpareader.util.toast
 import java.io.File
 import java.util.*
 
@@ -83,6 +87,7 @@ public class OfflineDownloadFragment : DialogFragment() {
     override fun onStop() {
         super.onStop()
         loaderTask?.cancel(true)
+        BusProvider.post(DialogEvent(DIALOG_EVENT_STOP, this))
     }
 
     private var loaderTask: LoaderTask? = null
@@ -95,6 +100,12 @@ public class OfflineDownloadFragment : DialogFragment() {
             override fun onPostExecute(result: LinkedHashMap<String, ZumpaThread>?) {
                 if (isResumed) {
                     isLoading = false
+                    if (result != null) {
+                        zumpaApp?.zumpaOfflineApi?.offlineData = result
+                    }
+                    if (exception != null) {
+                        context.toast(exception!!.message)
+                    }
                 }
             }
 
