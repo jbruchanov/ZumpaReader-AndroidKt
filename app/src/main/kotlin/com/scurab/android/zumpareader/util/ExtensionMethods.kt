@@ -22,7 +22,9 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.Toast
 import com.scurab.android.zumpareader.ZR
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.InputStream
 import java.net.URLEncoder
 import java.util.*
 
@@ -191,4 +193,10 @@ public fun String.isImageUri(): Boolean {
     } catch(e: Exception) {
         return false
     }
+}
+
+public fun InputStream.contentAsString(): String {
+    var bos = ByteArrayOutputStream()
+    copyTo(bos)
+    return String(bos.toByteArray())
 }
