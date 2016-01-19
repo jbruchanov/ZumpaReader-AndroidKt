@@ -3,8 +3,10 @@ package com.scurab.android.zumpareader.app
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.view.MenuItem
+import com.scurab.android.zumpareader.BusProvider
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.model.ZumpaThread
@@ -53,6 +55,16 @@ public abstract class BaseFragment : Fragment() {
         return false
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        BusProvider.register(this)
+    }
+
+    override fun onDestroy() {
+        BusProvider.unregister(this)
+        super.onDestroy()
+    }
+
     public open fun openFragment(fragment: BaseFragment, addToBackStack: Boolean = true, replace: Boolean = true) {
         mainActivity?.openFragment(fragment, addToBackStack, replace)
         isLoading = false
@@ -65,6 +77,10 @@ public abstract class BaseFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        onRefreshTitle()
+    }
+
+    protected fun onRefreshTitle() {
         if (title != null) {
             mainActivity?.title = title
         }
@@ -93,6 +109,6 @@ public abstract class BaseFragment : Fragment() {
 
     protected val isLoggedIn : Boolean
         get() {
-            return zumpaApp?.zumpaPrefs?.isLoggedIn ?: false
+            return zumpaApp?.zumpaPrefs?.isLoggedInNotOffline ?: false
         }
 }
