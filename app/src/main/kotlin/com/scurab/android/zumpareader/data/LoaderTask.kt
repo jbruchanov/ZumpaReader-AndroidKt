@@ -2,11 +2,12 @@ package com.scurab.android.zumpareader.data
 
 import android.net.Uri
 import android.os.AsyncTask
-import com.google.gson.Gson
-import com.google.gson.JsonArray
-import com.google.gson.JsonObject
-import com.google.gson.JsonParser
+import com.github.salomonbrys.kotson.bool
+import com.github.salomonbrys.kotson.long
+import com.github.salomonbrys.kotson.string
+import com.google.gson.*
 import com.scurab.android.zumpareader.ZumpaReaderApp
+import com.scurab.android.zumpareader.gson.GsonExcludeStrategy
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.model.ZumpaThreadItem
 import com.scurab.android.zumpareader.model.ZumpaWSBody
@@ -20,13 +21,15 @@ import java.util.*
  * Created by JBruchanov on 15/01/2016.
  */
 
-abstract class LoaderTask(private val zumpaApp: ZumpaReaderApp, val pages: Int, val images: Boolean, val outJsonFile: String?) : AsyncTask<Void, Void, LinkedHashMap<String, ZumpaThread>>() {
+abstract class LoaderTask(private val zumpaApp: ZumpaReaderApp, val pages: Int, val downloadImages: Boolean, val outJsonFile: String?) : AsyncTask<Void, Void, LinkedHashMap<String, ZumpaThread>>() {
 
     public var imagesDownloading = 0
         private set
     public var imagesDownloaded = 0
         private set
     public var threadsDownloaded = 0
+        private set
+    public var exception : Throwable? = null
         private set
 
     override fun doInBackground(vararg params: Void?): LinkedHashMap<String, ZumpaThread>? {
@@ -45,17 +48,20 @@ abstract class LoaderTask(private val zumpaApp: ZumpaReaderApp, val pages: Int, 
 
                 if (outJsonFile != null) {
                     with(FileOutputStream(outJsonFile)) {
-                        write(Gson().toJson(body).toByteArray())
+                        val gson = GsonBuilder().setExclusionStrategies(GsonExcludeStrategy()).create()
+                        write(gson.toJson(result).toByteArray())
                         close()
                     }
                 }
 
                 val urls = HashSet<String>()
-                result.forEach {
-                    it.value.offlineItems?.forEach {
-                        it.urls?.forEach {
-                            if (it.isImageUri()) {
-                                urls.add(it)
+                if (downloadImages) {
+                    result.forEach {
+                        it.value.offlineItems?.forEach {
+                            it.urls?.forEach {
+                                if (it.isImageUri()) {
+                                    urls.add(it)
+                                }
                             }
                         }
                     }
@@ -83,6 +89,7 @@ abstract class LoaderTask(private val zumpaApp: ZumpaReaderApp, val pages: Int, 
 
             }
         } catch(e: Throwable) {
+            exception = e
             e.printStackTrace()
             return null
         }
@@ -94,10 +101,10 @@ abstract class LoaderTask(private val zumpaApp: ZumpaReaderApp, val pages: Int, 
     abstract override fun onPostExecute(result: LinkedHashMap<String, ZumpaThread>?)
 
     fun JsonObject.asZumpaThread() : ZumpaThread {
-        return ZumpaThread(get("ID").asString, get("Subject").asString).apply {
-            time = get("Time").asLong
-            author = get("Author").asString
-            hasResponseForYou = get("HasRespondForYou").asBoolean
+        return ZumpaThread(get("ID").string, get("Subject").string).apply {
+            time = get("Time").long
+            author = get("Author").string
+            hasResponseForYou = get("HasRespondForYou").bool
             offlineItems = get("Items").asJsonArray.asZumpaThreadItems()
         }
     }
@@ -106,10 +113,10 @@ abstract class LoaderTask(private val zumpaApp: ZumpaReaderApp, val pages: Int, 
         val result = ArrayList<ZumpaThreadItem>()
         for (item in this) {
             val obj = item.asJsonObject
-            val authorReal = obj.get("AuthorReal").asString
-            val authorFake = if (obj.has("AuthorFake")) obj.get("AuthorReal").asString else authorReal
-            val body = obj.get("Body").asString
-            val time = obj.get("Time").asLong
+            val authorReal = obj.get("AuthorReal").string
+            val authorFake = if (obj.has("AuthorFake")) obj.get("AuthorReal").string else authorReal
+            val body = obj.get("Body").string
+            val time = obj.get("Time").long
             result.add(ZumpaThreadItem(authorFake, body, time).apply {
                 this.authorReal = authorReal
                 urls = if(obj.has("InsideUris")) obj.get("InsideUris").asJsonArray.asStrings() else null
