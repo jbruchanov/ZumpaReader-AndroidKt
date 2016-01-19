@@ -18,6 +18,7 @@ public class ZumpaPrefs(context: Context) {
         public val KEY_SHOW_LAST_AUTHOR = "KEY_SHOW_LAST_AUTHOR"
         public val KEY_OFFLINE = "KEY_OFFLINE"
     }
+
     private val KEY_COOKIES = "KEY_COOKIES"
     private val KEY_IS_LOGGED_IN = "KEY_IS_LOGGED_IN"
     private val KEY_LOAD_IMAGES = "KEY_LOAD_IMAGES"
@@ -42,7 +43,7 @@ public class ZumpaPrefs(context: Context) {
             sharedPrefs.edit().putStringSet(KEY_COOKIES, value).apply()
         }
 
-    public val cookiesMap : MutableMap<String, MutableList<String>>
+    public val cookiesMap: MutableMap<String, MutableList<String>>
         get() {
             var map: MutableMap<String, MutableList<String>> = HashMap()
             cookies.exec {
@@ -54,6 +55,11 @@ public class ZumpaPrefs(context: Context) {
                 map.put("Set-Cookie", list)
             }
             return map
+        }
+
+    public val isLoggedInNotOffline: Boolean
+        get() {
+            return isLoggedIn && !isOffline
         }
 
     public var isLoggedIn: Boolean
@@ -72,7 +78,7 @@ public class ZumpaPrefs(context: Context) {
             return sharedPrefs.getBoolean(KEY_LOAD_IMAGES, true)
         }
 
-    public val nickName:String
+    public val nickName: String
         get() {
             return sharedPrefs.getString(KEY_NICK_NAME, sharedPrefs.getString(KEY_USER_NAME, ""))
         }
