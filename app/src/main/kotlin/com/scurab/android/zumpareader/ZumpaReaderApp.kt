@@ -117,7 +117,7 @@ public class ZumpaReaderApp:Application(){
 
     private fun initPicasso() {
         val picasso = Picasso.Builder(this)
-                .downloader(PicassoHttpDownloader.createDefault(this, zumpaHttpClient))
+                .downloader(PicassoHttpDownloader.createDefault(this, zumpaHttpClient, zumpaPrefs))
                 .listener({ picasso, uri, exception ->
                     Log.d("PicassoLoader", "URL:%s Exception:%s".format(uri, exception))
                     exception.printStackTrace()
@@ -125,7 +125,12 @@ public class ZumpaReaderApp:Application(){
         Picasso.setSingletonInstance(picasso)
     }
 
-    public val zumpaAPI: ZumpaAPI by lazy {
+    public val zumpaAPI: ZumpaAPI
+        get() {
+            return if(zumpaPrefs.isOffline) zumpaOfflineApi else zumpaOnlineAPI
+        }
+
+    public val zumpaOnlineAPI: ZumpaAPI by lazy {
         val retrofit = Retrofit.Builder()
                 .baseUrl(ZR.Constants.ZUMPA_MAIN_URL)
                 .addConverterFactory(ZumpaConverterFactory(zumpaParser))
@@ -134,6 +139,10 @@ public class ZumpaReaderApp:Application(){
                 .build()
 
         retrofit.create(ZumpaAPI::class.java)
+    }
+
+    public val zumpaOfflineApi: ZumpaOfflineApi by lazy {
+        ZumpaOfflineApi(LinkedHashMap<String, ZumpaThread>())
     }
 
     public val zumpaWebServiceAPI: ZumpaWSAPI by lazy {
