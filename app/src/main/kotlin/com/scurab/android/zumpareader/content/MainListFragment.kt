@@ -13,10 +13,12 @@ import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.app.BaseFragment
 import com.scurab.android.zumpareader.app.SettingsActivity
 import com.scurab.android.zumpareader.content.post.PostFragment
+import com.scurab.android.zumpareader.event.DialogEvent
 import com.scurab.android.zumpareader.model.ZumpaMainPageResult
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.ui.hideAnimated
 import com.scurab.android.zumpareader.util.*
+import com.squareup.otto.Subscribe
 import rx.Observer
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
@@ -30,6 +32,7 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
     private val recyclerView: RecyclerView get() = content!!.find<RecyclerView>(R.id.recycler_view)
     private val swipeToRefresh: SwipyRefreshLayout get() = content!!.find<SwipyRefreshLayout>(R.id.swipe_refresh_layout)
     private var lastFilter : String = ""
+    private var lastOffline : Boolean? = null
     private var invalidateOptionsMenu = false
 
     private var nextThreadId: String? = null
@@ -45,11 +48,23 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
             }
         }
 
-    override val title: CharSequence get() = getString(R.string.app_name)
+    override val title: CharSequence get() {
+        val appName = getString(R.string.app_name)
+        return if (zumpaApp?.zumpaPrefs?.isOffline ?: false) {
+            "%s (%s)".format(appName, getString(R.string.offline))
+        } else {
+            appName
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
+    }
+
+    @Subscribe
+    public fun onDialogEvent(dialogEvent: DialogEvent) {
+        onRefreshTitle()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup, savedInstanceState: Bundle?): View? {
@@ -92,11 +107,14 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
             R.id.offline -> {
                 var app = zumpaApp!!
                 if (!app.zumpaPrefs.isOffline) {
+                    app.zumpaPrefs.isOffline = !app.zumpaPrefs.isOffline
                     OfflineDownloadFragment().show(mainActivity!!.supportFragmentManager, OfflineDownloadFragment::class.java.name)
+                    lastOffline = null
                 } else {
-                    app.zumpaPrefs.isOffline = false
-                    mainActivity!!.invalidateOptionsMenu()
+                    app.zumpaPrefs.isOffline = !app.zumpaPrefs.isOffline
+                    reloadData()
                 }
+                mainActivity!!.invalidateOptionsMenu()
                 return true
             }
             else ->
@@ -116,17 +134,19 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
     }
 
     private fun loadPage(fromThread: String? = null) {
-        if (isLoading) {
+        if (isLoading || fromThread?.isEmpty() ?: false) {
             return
         }
         if (zumpaApp != null) {
             var zumpaApp = this.zumpaApp!!
             var filter = zumpaApp.zumpaPrefs.filter
-            if (!lastFilter.equals(filter)) {
+            var offline = zumpaApp.zumpaPrefs.isOffline
+            if (!lastFilter.equals(filter) || lastOffline != offline) {
                 recyclerView.adapter.exec {
                     (it as MainListAdapter).removeAll();
                 }
             }
+            lastOffline = offline
             lastFilter = filter
             isLoading = true
             val mainPage = if (fromThread != null) zumpaApp.zumpaAPI.getMainPage(fromThread, filter) else zumpaApp.zumpaAPI.getMainPage(filter)
