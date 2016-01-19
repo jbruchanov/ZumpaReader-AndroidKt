@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Environment
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.util.ParseUtils
+import com.scurab.android.zumpareader.util.ZumpaPrefs
 import com.squareup.okhttp.CacheControl
 import com.squareup.okhttp.OkHttpClient
 import com.squareup.okhttp.Request
@@ -22,13 +23,14 @@ import java.io.IOException
 /**
  * Created by JBruchanov on 30/12/2015.
  */
-public class PicassoHttpDownloader(private val imageStorage: File, private val displaySize: Point, client: OkHttpClient) : OkHttpDownloader(client) {
+public class PicassoHttpDownloader(private val imageStorage: File, private val displaySize: Point, client: OkHttpClient, private val zumpaPrefs: ZumpaPrefs? = null) : OkHttpDownloader(client) {
 
     companion object {
-        public fun createDefault(context: Context, client: OkHttpClient): PicassoHttpDownloader {
+        public fun createDefault(context: Context, client: OkHttpClient, zumpaPrefs: ZumpaPrefs? = null): PicassoHttpDownloader {
             return PicassoHttpDownloader(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
                     Point(context.resources.displayMetrics.widthPixels, context.resources.displayMetrics.heightPixels),
-                    client)
+                    client,
+                    zumpaPrefs)
         }
     }
 
@@ -45,9 +47,13 @@ public class PicassoHttpDownloader(private val imageStorage: File, private val d
         //            return null
         //        }
 
+        var isOffline = zumpaPrefs?.isOffline ?: false
         var resultBitmap: Bitmap? = null
         var md5Uri = ParseUtils.MD5(uri.toString())
         if (md5Uri == null) {
+            if (isOffline) {
+                return null
+            }
             return super.load(uri, networkPolicy)
         }
 
@@ -61,6 +67,9 @@ public class PicassoHttpDownloader(private val imageStorage: File, private val d
         }
 
         if (resultBitmap == null) {
+            if (isOffline) {
+                return null
+            }
             var touchFile = true
 
             var response = super.load(uri, networkPolicy)
