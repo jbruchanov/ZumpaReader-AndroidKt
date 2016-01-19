@@ -55,7 +55,11 @@ public class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadV
     public fun removeAll() {
         items.clear()
         dataMap.clear()
-        notifyDataSetChanged()
+        try {
+            notifyDataSetChanged()
+        } catch(e: Exception) {
+            ownerRecyclerView?.post { notifyDataSetChanged() }
+        }
     }
 
     override fun getItemCount(): Int {
