@@ -535,7 +535,7 @@ public class ZumpaSimpleParser {
         }
 
         Matcher responses = RESPONSE_PATTERN.matcher(body);
-        int color = ExtensionMethodsKt.obtainStyledColor(context, R.attr.contextColorText);
+        int color = ExtensionMethodsKt.obtainStyledColor(context, R.attr.contextColorText2);
         while (responses.find()) {
             setSpans(ssb, responses.start(1), responses.end(1), new ForegroundColorSpan(color));
         }

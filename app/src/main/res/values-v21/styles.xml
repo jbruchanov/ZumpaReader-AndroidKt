@@ -12,14 +12,14 @@
     </style>
 
     <style name="AppTheme.Dialog" parent="@style/Base.V21.Theme.AppCompat.Dialog">
-        <item name="colorAccent">?contextColor</item>
+        <item name="colorAccent">@color/yellow_orange</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowCloseOnTouchOutside">false</item>
     </style>
 
     <style name="AppTheme.Dialog.Offline" parent="@style/Base.V21.Theme.AppCompat.Dialog">
-        <item name="colorAccent">?contextColor</item>
+        <item name="colorAccent">@color/yellow_orange</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowBackground">?primaryBackgroundColor</item>
         <item name="android:windowCloseOnTouchOutside">false</item>
