@@ -65,6 +65,10 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
     @Subscribe
     public fun onDialogEvent(dialogEvent: DialogEvent) {
         onRefreshTitle()
+        if (zumpaApp?.zumpaPrefs?.isOffline ?: false) {
+            lastOffline = null
+            loadPage(null)
+        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup, savedInstanceState: Bundle?): View? {
@@ -114,6 +118,7 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
                     app.zumpaPrefs.isOffline = !app.zumpaPrefs.isOffline
                     reloadData()
                 }
+                onRefreshTitle()
                 mainActivity!!.invalidateOptionsMenu()
                 return true
             }
