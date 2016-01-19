@@ -13,7 +13,10 @@ import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.content.SendingFragment
 import com.scurab.android.zumpareader.model.ZumpaLoginBody
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
-import com.scurab.android.zumpareader.util.*
+import com.scurab.android.zumpareader.util.ParseUtils
+import com.scurab.android.zumpareader.util.ZumpaPrefs
+import com.scurab.android.zumpareader.util.execOn
+import com.scurab.android.zumpareader.util.toast
 import java.net.URI
 
 /**

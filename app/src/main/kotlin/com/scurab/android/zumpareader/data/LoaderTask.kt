@@ -5,7 +5,10 @@ import android.os.AsyncTask
 import com.github.salomonbrys.kotson.bool
 import com.github.salomonbrys.kotson.long
 import com.github.salomonbrys.kotson.string
-import com.google.gson.*
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.gson.GsonExcludeStrategy
 import com.scurab.android.zumpareader.model.ZumpaThread

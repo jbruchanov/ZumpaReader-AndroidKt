@@ -4,9 +4,11 @@ import android.content.Context
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
-import com.github.salomonbrys.kotson.*
+import com.github.salomonbrys.kotson.long
+import com.github.salomonbrys.kotson.nullArray
+import com.github.salomonbrys.kotson.nullString
+import com.github.salomonbrys.kotson.string
 import com.google.gson.JsonArray
-import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZR
@@ -14,7 +16,6 @@ import com.scurab.android.zumpareader.gson.GsonExclude
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.util.encodeHttp
 import com.scurab.android.zumpareader.util.exec
-import com.squareup.okhttp.MediaType
 import java.nio.charset.Charset
 import java.util.*
 

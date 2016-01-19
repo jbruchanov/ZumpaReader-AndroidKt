@@ -5,7 +5,6 @@ import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.drawable.*
-import android.net.Uri
 import android.os.Build
 import android.support.annotation.ColorInt
 import android.support.v7.widget.RecyclerView

@@ -1,6 +1,7 @@
 package com.scurab.android.zumpareader.gson
 
-import com.google.gson.*
+import com.google.gson.ExclusionStrategy
+import com.google.gson.FieldAttributes
 
 /**
  * Created by JBruchanov on 18/01/2016.

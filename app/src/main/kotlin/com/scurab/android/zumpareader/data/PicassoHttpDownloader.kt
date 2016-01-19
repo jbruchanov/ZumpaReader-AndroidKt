@@ -9,16 +9,13 @@ import android.os.Environment
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.util.ParseUtils
 import com.scurab.android.zumpareader.util.ZumpaPrefs
-import com.squareup.okhttp.CacheControl
 import com.squareup.okhttp.OkHttpClient
 import com.squareup.okhttp.Request
 import com.squareup.picasso.Downloader
-import com.squareup.picasso.NetworkPolicy
 import com.squareup.picasso.OkHttpDownloader
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
-import java.io.IOException
 
 /**
  * Created by JBruchanov on 30/12/2015.
