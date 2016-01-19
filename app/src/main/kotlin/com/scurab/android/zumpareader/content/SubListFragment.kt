@@ -114,7 +114,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
                 it.floatingButton.showAnimated()
             }
         }
-        if (zumpaApp?.zumpaPrefs?.isLoggedIn ?: false) {
+        if (zumpaApp?.zumpaPrefs?.isLoggedInNotOffline ?: false) {
             view.post { //set padding for response panel
                 recyclerView.execOn {
                     setPadding(paddingLeft, paddingTop, paddingRight, postMessageView?.height ?: 0)
@@ -276,7 +276,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
     }
 
     override fun onItemClick(item: ZumpaThreadItem, longClick: Boolean) {
-        if (postMessageView != null && zumpaApp?.zumpaPrefs?.isLoggedIn ?: false) {
+        if (postMessageView != null && zumpaApp?.zumpaPrefs?.isLoggedInNotOffline ?: false) {
             val postMessageView = this.postMessageView!!
             if (longClick) {
                 postMessageView.showAnimated()
@@ -298,7 +298,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
     }
 
     override fun onItemClick(item: SurveyItem) {
-        if (zumpaApp?.zumpaPrefs?.isLoggedIn ?: false) {
+        if (zumpaApp?.zumpaPrefs?.isLoggedInNotOffline ?: false) {
             zumpaApp?.zumpaAPI?.voteSurvey(ZumpaVoteSurveyBody(item.surveyId, item.id)).exec {
                 isSending = true
                 it.observeOn(AndroidSchedulers.mainThread())
