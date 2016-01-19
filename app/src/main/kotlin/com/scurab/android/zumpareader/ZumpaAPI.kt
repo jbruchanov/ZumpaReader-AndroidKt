@@ -7,6 +7,7 @@ import retrofit.http.GET
 import retrofit.http.POST
 import retrofit.http.Query
 import rx.Observable
+import java.util.*
 
 /**
  * Created by JBruchanov on 24/11/2015.
@@ -50,4 +51,43 @@ public interface ZumpaPHPAPI {
 
     @GET("/CDM/RegisterHandler.php?unregister=true")
     fun unregister(@Query("user") user: String): Call<ZumpaGenericResponse>
+}
+
+public class ZumpaOfflineApi(public var offlineData: LinkedHashMap<String, ZumpaThread>) : ZumpaAPI {
+
+    override fun getMainPage(filter: String): Observable<ZumpaMainPageResult> {
+        return Observable.just(ZumpaMainPageResult(null, "", offlineData))
+    }
+
+    override fun getMainPageHtml(): Call<ZumpaGenericResponse> {
+        throw UnsupportedOperationException()
+    }
+
+    override fun getMainPage(fromThread: String, filter: String): Observable<ZumpaMainPageResult> {
+        return getMainPage(filter)
+    }
+
+    override fun getThreadPage(id: String, id2: String): Observable<ZumpaThreadResult> {
+        var data = offlineData[id]?.offlineItems;
+        if (data == null) {
+            data = listOf<ZumpaThreadItem>()
+        }
+        return Observable.just(ZumpaThreadResult(data))
+    }
+
+    override fun sendResponse(id: String, id2: String, body: ZumpaThreadBody): Observable<ZumpaThreadResult> {
+        throw UnsupportedOperationException()
+    }
+
+    override fun sendThread(body: ZumpaThreadBody): Observable<ZumpaThreadResult> {
+        throw UnsupportedOperationException()
+    }
+
+    override fun login(body: ZumpaLoginBody): Call<ZumpaGenericResponse> {
+        throw UnsupportedOperationException()
+    }
+
+    override fun voteSurvey(body: ZumpaVoteSurveyBody): Observable<ZumpaGenericResponse> {
+        throw UnsupportedOperationException()
+    }
 }
