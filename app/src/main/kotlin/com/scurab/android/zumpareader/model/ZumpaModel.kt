@@ -4,8 +4,13 @@ import android.content.Context
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
+import com.github.salomonbrys.kotson.*
+import com.google.gson.JsonArray
+import com.google.gson.JsonElement
+import com.google.gson.JsonObject
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZR
+import com.scurab.android.zumpareader.gson.GsonExclude
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.util.encodeHttp
 import com.scurab.android.zumpareader.util.exec
@@ -27,6 +32,28 @@ public constructor(val id: String,
         public val STATE_UPDATED = 2
         public val STATE_OWN = 3
         public val STATE_RESPONSE_4U = 4
+
+        public fun thread(elem: JsonObject): ZumpaThread {
+            return ZumpaThread(elem["id"].string, elem["subject"].string).apply {
+                this.author = elem["author"].string
+                this.time = elem["time"].long
+                this.lastAuthor = elem.get("lastAuthor").nullString
+                this.offlineItems = elem["offlineItems"].asJsonArray.asItems()
+                this.items = Math.max(0, (this.offlineItems?.count() ?: 0) - 1)
+                this.state = STATE_NONE
+            }
+        }
+
+        fun JsonArray.asItems(): List<ZumpaThreadItem> {
+            return map { v -> (v as JsonObject).asItem() }
+        }
+
+        fun JsonObject.asItem(): ZumpaThreadItem {
+            return ZumpaThreadItem(this["author"].string, this["body"].string, this["time"].long).apply {
+                this.authorReal = this@asItem["authorReal"].string
+                this.urls = this@asItem.get("urls").nullArray?.map { v -> v.string }
+            }
+        }
     }
     public constructor(id: String,
                        subject: String,
@@ -59,7 +86,7 @@ public constructor(val id: String,
             } else {
                 state = STATE_NONE
             }
-        } else if (items != readCount) {
+        } else if (items > readCount) {//< ignored because of offline mode
             state = STATE_UPDATED
         }
     }
@@ -68,6 +95,7 @@ public constructor(val id: String,
     val idLong by lazy { id.toLong() }
     var state: Int = STATE_NEW
 
+    @GsonExclude
     public val date by lazy { Date(time) }
 
     private var _styledSubject: CharSequence? = null
