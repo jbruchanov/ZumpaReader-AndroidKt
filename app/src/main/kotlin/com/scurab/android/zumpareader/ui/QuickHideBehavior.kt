@@ -13,6 +13,8 @@ import android.util.AttributeSet
 import android.view.View
 import android.view.ViewAnimationUtils
 import android.view.ViewGroup
+import com.scurab.android.zumpareader.ZumpaReaderApp
+import com.scurab.android.zumpareader.util.ZumpaPrefs
 import com.scurab.android.zumpareader.util.exec
 
 /**
@@ -29,10 +31,12 @@ public class QuickHideBehavior : CoordinatorLayout.Behavior<FloatingActionButton
     private var scrollThreshold = 0;
     private var animator : Animator? = null;
     public var enabled = true
+    private val zumpaPrefs : ZumpaPrefs
 
     //Required to attach behavior via XML
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
         val a = context.getTheme().obtainStyledAttributes(intArrayOf(R.attr.actionBarSize));
+        zumpaPrefs = (context.applicationContext as ZumpaReaderApp).zumpaPrefs
         //Use half the standard action bar height
         scrollThreshold = a.getDimensionPixelSize(0, 0) / 2;
         a.recycle();
@@ -58,7 +62,7 @@ public class QuickHideBehavior : CoordinatorLayout.Behavior<FloatingActionButton
                                 dxConsumed: Int, dyConsumed: Int,
                                 dxUnconsumed: Int, dyUnconsumed: Int) {
 
-        if (!enabled) {
+        if (!enabled || !zumpaPrefs.isLoggedInNotOffline) {
             return;
         }
         //Consumed distance is the actual distance traveled by the scrolling view
@@ -81,7 +85,7 @@ public class QuickHideBehavior : CoordinatorLayout.Behavior<FloatingActionButton
                                target: View,
                                velocityX: Float, velocityY: Float,
                                consumed: Boolean): Boolean {
-        if (!enabled) {
+        if (!enabled || !zumpaPrefs.isLoggedInNotOffline) {
             return false;
         }
         if (consumed) {
