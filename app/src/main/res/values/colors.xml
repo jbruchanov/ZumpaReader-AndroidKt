@@ -5,6 +5,7 @@
 
     <color name="black">#000</color>
     <color name="dark">#202020</color>
+    <color name="grey">#808080</color>
     <color name="black_yellow_pressed">#503405</color>
     <color name="dark_yellow_pressed">#654A1A</color>
     <color name="white">#FFF</color>
