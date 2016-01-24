@@ -75,11 +75,13 @@ public class ParseUtils {
             opts.inJustDecodeBounds = true
             BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size, opts)
             var imWidth = opts.outWidth
+            var imMax = Math.max(opts.outWidth, opts.outHeight);
             var dispWidth = Math.min(displaySize.x, displaySize.y)
             var resize = 1
-            while (imWidth > 0 && imWidth > 1.5f * dispWidth) {
+            while (imWidth > 0 && imWidth > 1.5f * dispWidth || imMax > 4096/*oGL limit*/) {
                 resize *= 2
                 imWidth /= 2
+                imMax /= 2
             }
             opts.inJustDecodeBounds = false
             opts.inSampleSize = resize
