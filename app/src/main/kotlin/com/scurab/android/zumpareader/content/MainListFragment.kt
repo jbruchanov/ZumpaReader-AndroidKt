@@ -17,6 +17,7 @@ import com.scurab.android.zumpareader.event.DialogEvent
 import com.scurab.android.zumpareader.model.ZumpaMainPageResult
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.ui.hideAnimated
+import com.scurab.android.zumpareader.ui.showAnimated
 import com.scurab.android.zumpareader.util.asListOfValues
 import com.scurab.android.zumpareader.util.exec
 import com.scurab.android.zumpareader.util.execIfNull
@@ -122,7 +123,14 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
                     reloadData()
                 }
                 onRefreshTitle()
-                mainActivity!!.invalidateOptionsMenu()
+                mainActivity.execOn {
+                    invalidateOptionsMenu()
+                    if (app.zumpaPrefs.isOffline) {
+                        floatingButton.hideAnimated()
+                    } else {
+                        floatingButton.showAnimated()
+                    }
+                }
                 return true
             }
             else ->
