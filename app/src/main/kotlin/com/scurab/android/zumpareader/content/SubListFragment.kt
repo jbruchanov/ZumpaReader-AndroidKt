@@ -115,7 +115,11 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
         mainActivity.exec {
             it.setScrollStrategyEnabled(false)
             if (isLoggedIn) {
-                it.floatingButton.showAnimated()
+                if (postMessageView?.isVisible() ?: false) {
+                    it.floatingButton.hideAnimated()
+                } else {
+                    it.floatingButton.showAnimated()
+                }
             }
         }
         view.viewTreeObserver.addOnGlobalLayoutListener(treeViewObserver)
@@ -140,7 +144,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
     }
 
     protected fun dispatchSend() {
-        var msg = postMessageView?.message?.text?.toString()?.trim() ?: ""
+        var msg = postMessageView?.message?.text?.toString() ?: ""
         if (msg.length == 0) {
             context.toast(R.string.err_empty_msg)
             return
