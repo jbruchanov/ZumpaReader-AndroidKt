@@ -10,6 +10,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection
 import com.pawegio.kandroid.find
@@ -65,6 +66,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
     private val postMessageView: PostMessageView? get() = view?.find<PostMessageView>(R.id.response_panel)
     private var scrollDownAfterLoad: Boolean = false
     private val contextColorText: Int by lazy { context.obtainStyledColor(R.attr.contextColorText2) }
+    private val treeViewObserver: ViewTreeObserver.OnGlobalLayoutListener = ViewTreeObserver.OnGlobalLayoutListener { updateRecycleViewPadding() }
 
     override var isLoading: Boolean
         get() = super.isLoading
@@ -116,6 +118,10 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
                 it.floatingButton.showAnimated()
             }
         }
+        view.viewTreeObserver.addOnGlobalLayoutListener(treeViewObserver)
+    }
+
+    private fun updateRecycleViewPadding(){
         if (zumpaApp?.zumpaPrefs?.isLoggedInNotOffline ?: false) {
             view.post { //set padding for response panel
                 recyclerView.execOn {
@@ -129,6 +135,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
         mainActivity?.setScrollStrategyEnabled(true)
         isLoading = false
         isSending = false
+        view.viewTreeObserver.removeGlobalLayoutListenerSafe(treeViewObserver)
         super.onPause()
     }
 

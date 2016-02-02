@@ -17,6 +17,7 @@ import android.support.v4.graphics.drawable.DrawableCompat
 import android.support.v7.widget.RecyclerView
 import android.util.TypedValue
 import android.view.View
+import android.view.ViewTreeObserver
 import android.view.inputmethod.InputMethodManager
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -199,4 +200,12 @@ public fun InputStream.contentAsString(): String {
     var bos = ByteArrayOutputStream()
     copyTo(bos)
     return String(bos.toByteArray())
+}
+
+public fun ViewTreeObserver.removeGlobalLayoutListenerSafe(listener: ViewTreeObserver.OnGlobalLayoutListener) {
+    try {
+        removeOnGlobalLayoutListener(listener)
+    } catch(e: Throwable) {
+        removeGlobalOnLayoutListener(listener)
+    }
 }
