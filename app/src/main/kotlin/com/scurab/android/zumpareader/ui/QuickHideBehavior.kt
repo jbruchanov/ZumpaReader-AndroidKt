@@ -43,7 +43,11 @@ public class QuickHideBehavior : CoordinatorLayout.Behavior<FloatingActionButton
     //Required to attach behavior via XML
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
         val a = context.getTheme().obtainStyledAttributes(intArrayOf(R.attr.actionBarSize));
-        zumpaPrefs = (context.applicationContext as ZumpaReaderApp).zumpaPrefs
+        try {
+            zumpaPrefs = (context.applicationContext as ZumpaReaderApp).zumpaPrefs
+        } catch(e: ClassCastException) {//preview
+            zumpaPrefs = ZumpaPrefs(context)
+        }
         //Use half the standard action bar height
         scrollThreshold = a.getDimensionPixelSize(0, 0) / 2;
         a.recycle();
