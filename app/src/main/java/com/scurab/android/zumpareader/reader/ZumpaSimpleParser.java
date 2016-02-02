@@ -238,7 +238,6 @@ public class ZumpaSimpleParser {
         }
         return result;
     }
-
     private static int safeInt(String text, int defValue) {
         try {
             text = text.replaceAll(HTMLTags.NBSP_CHAR_STR, "").trim();
@@ -527,9 +526,10 @@ public class ZumpaSimpleParser {
                 int end = matcher.end();
                 if (!ignore(links, start)) {
                     Drawable draw = context.getResources().getDrawable(drawable);
-                    draw.setBounds(0, 0, (int) (draw.getIntrinsicWidth() / 1.5f), (int) (draw.getIntrinsicHeight() / 1.5f));
+                    final float v = 1.9f;
+                    draw.setBounds(0, 0, (int) (draw.getIntrinsicWidth() / v), (int) (draw.getIntrinsicHeight() / v));
                     setSpans(ssb, start, end,
-                            new ImageSpan(draw));
+                            new ImageSpan(draw, ImageSpan.ALIGN_BASELINE));
                 }
             }
         }
