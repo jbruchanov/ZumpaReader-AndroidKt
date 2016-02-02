@@ -27,6 +27,7 @@ public class SettingsActivity : PreferenceActivity(), SendingFragment {
 
     private val buttonPref by lazy { findPreference(ZumpaPrefs.KEY_LOGIN) }
     private val showLastAuthorPref by lazy { findPreference(ZumpaPrefs.KEY_SHOW_LAST_AUTHOR) }
+    private val filterPref by lazy { findPreference(ZumpaPrefs.KEY_FILTER) }
 
     public val zumpaApp: ZumpaReaderApp
         get() {
@@ -53,6 +54,7 @@ public class SettingsActivity : PreferenceActivity(), SendingFragment {
             true
         }
         buttonPref.title = resources.getString(if (zumpaApp.zumpaPrefs.isLoggedIn) R.string.logout else R.string.login)
+        filterPref.isEnabled = zumpaApp.zumpaPrefs.isLoggedIn
     }
 
     protected fun dispatchLogoutClicked() {
@@ -61,6 +63,7 @@ public class SettingsActivity : PreferenceActivity(), SendingFragment {
         prefs.cookies = null
         buttonPref.title = resources.getString(R.string.login)
         zumpaApp.resetCookies()
+        filterPref.isEnabled = false
         toast(R.string.done)
     }
 
@@ -87,6 +90,7 @@ public class SettingsActivity : PreferenceActivity(), SendingFragment {
                     if (!pushResult) {
                         toast(R.string.err_no_push_reg)
                     }
+                    filterPref.isEnabled = loginResult
                     if (loginResult) {
                         buttonPref.title = resources.getString(R.string.logout)
                     }

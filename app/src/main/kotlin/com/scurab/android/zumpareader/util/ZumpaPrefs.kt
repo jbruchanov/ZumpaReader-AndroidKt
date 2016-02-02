@@ -17,6 +17,7 @@ public class ZumpaPrefs(context: Context) {
         public val KEY_LOGIN = "KEY_LOGIN"
         public val KEY_SHOW_LAST_AUTHOR = "KEY_SHOW_LAST_AUTHOR"
         public val KEY_OFFLINE = "KEY_OFFLINE"
+        public val KEY_FILTER = "KEY_FILTER"
     }
 
     private val KEY_COOKIES = "KEY_COOKIES"
@@ -24,7 +25,6 @@ public class ZumpaPrefs(context: Context) {
     private val KEY_LOAD_IMAGES = "KEY_LOAD_IMAGES"
     private val KEY_NICK_NAME = "KEY_NICK_NAME"
     private val KEY_READ_STATES = "KEY_READ_STATES"
-    private val KEY_FILTER = "KEY_FILTER"
     private val KEY_LAST_CAMERA_URI = "KEY_LAST_CAMERA_URI"
     private val KEY_PUSH_REG_ID = "KEY_PUSH_REG_ID"
 
@@ -94,7 +94,7 @@ public class ZumpaPrefs(context: Context) {
 
     public var filter: String
         get() {
-            return sharedPrefs.getString(KEY_FILTER, "0")
+            return if (isLoggedIn) sharedPrefs.getString(KEY_FILTER, "0") else "0"
         }
 
         set(value) {
