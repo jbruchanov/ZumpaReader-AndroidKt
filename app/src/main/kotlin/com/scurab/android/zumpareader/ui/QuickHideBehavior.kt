@@ -30,7 +30,14 @@ public class QuickHideBehavior : CoordinatorLayout.Behavior<FloatingActionButton
     private var scrollDistance = 0
     private var scrollThreshold = 0;
     private var animator : Animator? = null;
-    public var enabled = true
+    private var _enabled = true
+    public var enabled : Boolean
+        get() = _enabled
+        set(value) {
+            _enabled = value
+            scrollDistance = 0
+            scrollTrigger = DIRECTION_DOWN
+        }
     private val zumpaPrefs : ZumpaPrefs
 
     //Required to attach behavior via XML
