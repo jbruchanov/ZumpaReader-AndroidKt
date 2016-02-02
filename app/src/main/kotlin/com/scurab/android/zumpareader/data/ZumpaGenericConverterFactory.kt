@@ -13,10 +13,8 @@ import java.lang.reflect.Type
 public class ZumpaGenericConverterFactory() : Converter.Factory() {
 
     private val httpPostConverter by lazy {
-        object : Converter<ZumpaWSBody, RequestBody> {
-            override fun convert(value: ZumpaWSBody?): RequestBody? {
-                return RequestBody.create(MediaType.parse("application/json"), value?.toHttpPostString())
-            }
+        Converter<ZumpaWSBody, RequestBody> {
+            value -> RequestBody.create(MediaType.parse("application/json"), value?.toHttpPostString())
         }
     }
 
