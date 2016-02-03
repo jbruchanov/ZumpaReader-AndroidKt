@@ -51,7 +51,7 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
         android:src="@drawable/ic_add_white"
-        app:rippleColor="@color/black"
+        app:rippleColor="@color/colorAccentPressed"
         app:layout_behavior="com.scurab.android.zumpareader.ui.QuickHideBehavior"/>
 
 </android.support.design.widget.CoordinatorLayout>

@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="colorAccent">@color/yellow_orange</color>
+    <color name="colorAccentPressed">#9e6709</color>
 
 
     <color name="black">#000</color>
+    <color name="floating_pressed">#000</color>
     <color name="dark">#202020</color>
     <color name="grey">#808080</color>
     <color name="black_yellow_pressed">#503405</color>
