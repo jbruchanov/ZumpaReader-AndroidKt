@@ -94,7 +94,7 @@ public class OfflineDownloadFragment : DialogFragment() {
 
     private fun onStartLoading() {
         isLoading = true
-        val offline = File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), ZumpaReaderApp.OFFLINE_FILE_NAME).absolutePath
+        val offline = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), ZumpaReaderApp.OFFLINE_FILE_NAME).absolutePath
         loaderTask = object : LoaderTask(context.applicationContext as ZumpaReaderApp, pages.text.toString().toInt(), imagesDownload.isChecked, offline) {
 
             override fun onPostExecute(result: LinkedHashMap<String, ZumpaThread>?) {
