@@ -2,15 +2,19 @@ package com.scurab.android.zumpareader
 
 import android.app.Activity
 import android.app.Application
-import android.graphics.Point
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
+import com.github.salomonbrys.kotson.simpleDeserialize
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
+import com.google.gson.stream.JsonReader
 import com.scurab.android.zumpareader.data.PicassoHttpDownloader
 import com.scurab.android.zumpareader.data.ZumpaConverterFactory
 import com.scurab.android.zumpareader.data.ZumpaGenericConverterFactory
+import com.scurab.android.zumpareader.gson.GsonExcludeStrategy
 import com.scurab.android.zumpareader.model.ZumpaReadState
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
@@ -21,6 +25,9 @@ import com.squareup.okhttp.logging.HttpLoggingInterceptor
 import com.squareup.picasso.Picasso
 import retrofit.Retrofit
 import retrofit.RxJavaCallAdapterFactory
+import java.io.File
+import java.io.FileInputStream
+import java.io.InputStreamReader
 import java.net.CookieManager
 import java.net.URI
 import java.util.*
@@ -30,6 +37,10 @@ import java.util.concurrent.TimeUnit
  * Created by JBruchanov on 24/11/2015.
  */
 public class ZumpaReaderApp:Application(){
+
+    companion object {
+        val OFFLINE_FILE_NAME = "offline.json"
+    }
 
     public val zumpaParser: ZumpaSimpleParser by lazy {
         val v = ZumpaSimpleParser()
@@ -91,6 +102,17 @@ public class ZumpaReaderApp:Application(){
                 }
             }
         })
+
+        val offline = File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), OFFLINE_FILE_NAME)
+        if (offline.exists() && zumpaPrefs.isOffline) {
+            val gsonBuilder = GsonBuilder().setExclusionStrategies(GsonExcludeStrategy())
+            gsonBuilder.simpleDeserialize { elem -> ZumpaThread.thread(elem as JsonObject) }
+            val gson = gsonBuilder.create()
+            val type = object : TypeToken<LinkedHashMap<String, ZumpaThread>>() {}.type
+            val jsonReader = JsonReader(InputStreamReader(FileInputStream(offline)))
+            val result: LinkedHashMap<String, ZumpaThread> = gson.fromJson(jsonReader, type)
+            zumpaOfflineApi.offlineData = result
+        }
     }
 
     private fun loadReadStates() {
