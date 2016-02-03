@@ -64,16 +64,6 @@
             android:padding="@dimen/gap_normal"
             android:src="@drawable/ic_camera"/>
 
-        <ImageButton
-            android:id="@+id/survey"
-            android:enabled="false"
-            android:alpha="0.3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="?imageButtonBackground"
-            android:padding="@dimen/gap_normal"
-            android:src="@drawable/ic_survey"/>
-
         <View
             android:layout_width="0dp"
             android:layout_height="0dp"
