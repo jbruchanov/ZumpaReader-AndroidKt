@@ -75,6 +75,7 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     compile "com.android.support:appcompat-v7:${supportLibraryVersion}"
     compile "com.android.support:design:${supportLibraryVersion}"
+    compile "com.android.support:percent:${supportLibraryVersion}"
 
     compile 'org.jsoup:jsoup:1.8.3'
     compile 'com.pawegio.kandroid:kandroid:0.3.8@aar'

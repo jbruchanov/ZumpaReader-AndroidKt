@@ -186,19 +186,22 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
     }
 
     public fun loadData() {
-        if (isLoading) {
+        loadData(argThreadId)
+    }
+
+    public fun loadData(tid: String, force: Boolean = false) {
+        if ((isLoading && !force) || tid.isNullOrEmpty()) {
             isSending = false
             return
         }
         isLoading = true
-        var tid = argThreadId
         zumpaApp?.zumpaAPI?.getThreadPage(tid, tid).exec {
             it.observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())
                     .subscribe(object : Observer<ZumpaThreadResult?> {
                         override fun onNext(t: ZumpaThreadResult?) {
                             t.exec {
-                                onResultLoaded(it)
+                                onResultLoaded(it, force)
                                 if (scrollDownAfterLoad || (argScrollDown && firstLoad)) {
                                     scrollDownAfterLoad = false
                                     firstLoad = false
@@ -255,7 +258,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
         return false
     }
 
-    private fun onResultLoaded(result: ZumpaThreadResult) {
+    private fun onResultLoaded(result: ZumpaThreadResult, clearData:Boolean) {
         result.items.exec {
             var items = it
             storeReadState(result)
@@ -269,7 +272,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
                 } else {
                     (recyclerView?.adapter as SubListAdapter).execOn {
                         this.loadImages = loadImages
-                        updateItems(items)
+                        updateItems(items, clearData)
                     }
                 }
             }

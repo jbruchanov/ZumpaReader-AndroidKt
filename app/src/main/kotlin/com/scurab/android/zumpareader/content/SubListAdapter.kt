@@ -173,12 +173,20 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
         itemClickListener.exec { it.onItemClick(url, longClick) }
     }
 
-    fun updateItems(updated: List<ZumpaThreadItem>) {
+    fun updateItems(updated: List<ZumpaThreadItem>, clearData: Boolean) {
+        if (clearData) {
+            items.clear()
+            dataItems.clear()
+        }
         if (items.size != updated.size) {
             val oldSize = dataItems.size
             items.addAll(updated.subList(items.size, updated.size))
             buildAdapterItems(items, dataItems)
-            notifyItemRangeInserted(oldSize, dataItems.size - oldSize - 1)
+            if (clearData) {
+                notifyDataSetChanged()
+            } else {
+                notifyItemRangeInserted(oldSize, dataItems.size - oldSize - 1)
+            }
         } else if (items.size >= 0 && items[0].survey != null) {//update survey if necessary
             items[0].survey = updated[0].survey
             val index = dataItems.indexOfFirst { it.type == TYPE_SURVEY }

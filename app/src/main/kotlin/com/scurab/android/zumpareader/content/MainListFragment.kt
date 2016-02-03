@@ -30,7 +30,7 @@ import rx.schedulers.Schedulers
 /**
  * Created by JBruchanov on 24/11/2015.
  */
-public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener {
+public open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener {
 
     private var content: View? = null
     private val recyclerView: RecyclerView get() = content!!.find<RecyclerView>(R.id.recycler_view)
@@ -226,7 +226,7 @@ public class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListen
         }
     }
 
-    public fun onThreadItemClick(item: ZumpaThread, position: Int) {
+    public open fun onThreadItemClick(item: ZumpaThread, position: Int) {
         isLoading = false
         val oldState = item.state
         item.setStateBasedOnReadValue(item.items, zumpaApp?.zumpaPrefs?.loggedUserName)

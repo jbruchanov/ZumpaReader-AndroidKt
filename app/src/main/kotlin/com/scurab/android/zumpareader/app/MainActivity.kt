@@ -16,6 +16,7 @@ import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.content.MainListFragment
 import com.scurab.android.zumpareader.content.SubListFragment
+import com.scurab.android.zumpareader.content.TabletFragment
 import com.scurab.android.zumpareader.content.post.PostFragment
 import com.scurab.android.zumpareader.ui.DelayClickListener
 import com.scurab.android.zumpareader.ui.QuickHideBehavior
@@ -63,7 +64,8 @@ public class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
         floatingButton.setOnClickListener(DelayClickListener() { onFloatingButtonClick() })
         supportFragmentManager.findFragmentById(R.id.fragment_container).execIfNull {
-            openFragment(MainListFragment(), false)
+            val isTablet = resources.getBoolean(R.bool.is_tablet)
+            openFragment(if (isTablet) TabletFragment() else MainListFragment(), false)
         }
 
         val color = obtainStyledColor(R.attr.contextColor)
