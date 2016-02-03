@@ -13,10 +13,7 @@ import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.content.SendingFragment
 import com.scurab.android.zumpareader.model.ZumpaLoginBody
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
-import com.scurab.android.zumpareader.util.ParseUtils
-import com.scurab.android.zumpareader.util.ZumpaPrefs
-import com.scurab.android.zumpareader.util.execOn
-import com.scurab.android.zumpareader.util.toast
+import com.scurab.android.zumpareader.util.*
 import java.net.URI
 
 /**
@@ -59,12 +56,23 @@ public class SettingsActivity : PreferenceActivity(), SendingFragment {
 
     protected fun dispatchLogoutClicked() {
         val prefs = zumpaApp.zumpaPrefs
+        var user = prefs.loggedUserName
         prefs.isLoggedIn = false
         prefs.cookies = null
         buttonPref.title = resources.getString(R.string.login)
         zumpaApp.resetCookies()
         filterPref.isEnabled = false
-        toast(R.string.done)
+        if (user != null) {
+            isSending = true
+            object : LogoutTask(zumpaApp, user) {
+                override fun onPostExecute(loginResult: Boolean, pushResult: Boolean) {
+                    toast(R.string.done)
+                    isSending = false
+                }
+            }.execute()
+        } else {
+            toast(R.string.done)
+        }
     }
 
     protected fun dispatchLoginClicked() {
@@ -126,7 +134,7 @@ private abstract class LoginTask(private val zumpaApp: ZumpaReaderApp, private v
     override fun doInBackground(vararg params: Void?): Void? {
         zumpaApp.followRedirects = false
 
-        val loginResponse = zumpaApp.zumpaAPI.login(zumpaLoginBody).execute()
+        val loginResponse = zumpaApp.zumpaOnlineAPI.login(zumpaLoginBody).execute()
         loginResult = loginResponse.code() == 302
 
         zumpaApp.followRedirects = true
@@ -138,7 +146,7 @@ private abstract class LoginTask(private val zumpaApp: ZumpaReaderApp, private v
             val token = instanceID.getToken("542579595500", GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
             zumpaApp.zumpaPrefs.pushRegId = token
             if (token != null && loginResult) {
-                val body = zumpaApp.zumpaAPI.getMainPageHtml().execute().body().asString()
+                val body = zumpaApp.zumpaOnlineAPI.getMainPageHtml().execute().body().asString()
                 val uid = ZumpaSimpleParser.parseUID(body)
                 if (uid != null) {
                     val response = zumpaApp.zumpaPHPAPI.register(zumpaLoginBody.nick, uid, token).execute().body().asUTFString()
@@ -153,6 +161,27 @@ private abstract class LoginTask(private val zumpaApp: ZumpaReaderApp, private v
 
     final override fun onPostExecute(result: Void?) {
         onPostExecute(loginResult, pushResult)
+    }
+
+    abstract fun onPostExecute(loginResult: Boolean, pushResult: Boolean)
+}
+
+private abstract class LogoutTask(private val zumpaApp: ZumpaReaderApp, private val zumpaUser: String) : AsyncTask<Void, Void, Void>() {
+    private var logoutResult: Boolean = false
+    private var pushResult: Boolean = false
+
+    override fun doInBackground(vararg params: Void?): Void? {
+        try {
+            val response = zumpaApp.zumpaPHPAPI.unregister(zumpaUser).execute().body().asUTFString()
+            pushResult = "[OK]".equals(response)
+        } catch(e: Throwable) {
+            e.printStackTrace()
+        }
+        return null
+    }
+
+    final override fun onPostExecute(result: Void?) {
+        onPostExecute(logoutResult, pushResult)
     }
 
     abstract fun onPostExecute(loginResult: Boolean, pushResult: Boolean)
