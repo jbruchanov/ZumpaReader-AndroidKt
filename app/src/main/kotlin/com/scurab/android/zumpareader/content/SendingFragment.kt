@@ -8,11 +8,11 @@ import com.scurab.android.zumpareader.util.exec
 /**
  * Created by JBruchanov on 31/12/2015.
  */
-public interface SendingFragment {
+interface SendingFragment {
 
     var sendingDialog: ProgressDialog?
 
-    public var isSending: Boolean
+    var isSending: Boolean
         get() {
             return sendingDialog != null
         }
@@ -31,7 +31,7 @@ public interface SendingFragment {
             }
         }
 
-    private fun createDialog(context : Context): ProgressDialog {
+    private fun createDialog(context: Context): ProgressDialog {
         val dialog = ProgressDialog(context, R.style.AppTheme_Dialog)
         dialog.setTitle(null)
         dialog.setMessage(context.resources.getString(R.string.wheeeee))
@@ -40,5 +40,6 @@ public interface SendingFragment {
         dialog.setOnCancelListener(null)
         return dialog
     }
-    public fun getContext(): Context
+
+    fun getContext(): Context
 }

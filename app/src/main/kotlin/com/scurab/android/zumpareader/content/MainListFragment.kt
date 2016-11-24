@@ -7,8 +7,6 @@ import android.support.v7.widget.RecyclerView
 import android.view.*
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection
-import com.pawegio.kandroid.find
-import com.pawegio.kandroid.toast
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.app.BaseFragment
 import com.scurab.android.zumpareader.app.SettingsActivity
@@ -23,6 +21,8 @@ import com.scurab.android.zumpareader.util.exec
 import com.scurab.android.zumpareader.util.execIfNull
 import com.scurab.android.zumpareader.util.execOn
 import com.squareup.otto.Subscribe
+import org.jetbrains.anko.find
+import org.jetbrains.anko.support.v4.toast
 import rx.Observer
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
@@ -30,13 +30,13 @@ import rx.schedulers.Schedulers
 /**
  * Created by JBruchanov on 24/11/2015.
  */
-public open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener {
+open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener {
 
     private var content: View? = null
     private val recyclerView: RecyclerView get() = content!!.find<RecyclerView>(R.id.recycler_view)
     private val swipeToRefresh: SwipyRefreshLayout get() = content!!.find<SwipyRefreshLayout>(R.id.swipe_refresh_layout)
-    private var lastFilter : String = ""
-    private var lastOffline : Boolean? = null
+    private var lastFilter: String = ""
+    private var lastOffline: Boolean? = null
     private var invalidateOptionsMenu = false
 
     private var nextThreadId: String? = null
@@ -66,8 +66,7 @@ public open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemL
         setHasOptionsMenu(true)
     }
 
-    @Subscribe
-    public fun onDialogEvent(dialogEvent: DialogEvent) {
+    @Subscribe fun onDialogEvent(dialogEvent: DialogEvent) {
         onRefreshTitle()
         if (zumpaApp?.zumpaPrefs?.isOffline ?: false) {
             lastOffline = null
@@ -75,9 +74,9 @@ public open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemL
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         content.execIfNull {
-            content = inflater.inflate(R.layout.view_recycler_refreshable, container, false)
+            content = inflater!!.inflate(R.layout.view_recycler_refreshable, container, false)
             content.exec {
                 swipeToRefresh.direction = SwipyRefreshLayoutDirection.TOP
                 recyclerView.apply {
@@ -86,7 +85,7 @@ public open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemL
             }
         }
 
-        return content;
+        return content
     }
 
     override fun onDestroyView() {
@@ -145,7 +144,7 @@ public open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemL
         }
     }
 
-    public fun reloadData() {
+    fun reloadData() {
         loadPage()
     }
 
@@ -157,9 +156,9 @@ public open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemL
             var zumpaApp = this.zumpaApp!!
             var filter = zumpaApp.zumpaPrefs.filter
             var offline = zumpaApp.zumpaPrefs.isOffline
-            if (!lastFilter.equals(filter) || lastOffline != offline) {
+            if (lastFilter != filter || lastOffline != offline) {
                 recyclerView.adapter.exec {
-                    (it as MainListAdapter).removeAll();
+                    (it as MainListAdapter).removeAll()
                 }
             }
             lastOffline = offline
@@ -226,7 +225,7 @@ public open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemL
         }
     }
 
-    public open fun onThreadItemClick(item: ZumpaThread, position: Int) {
+    open fun onThreadItemClick(item: ZumpaThread, position: Int) {
         isLoading = false
         val oldState = item.state
         item.setStateBasedOnReadValue(item.items, zumpaApp?.zumpaPrefs?.loggedUserName)

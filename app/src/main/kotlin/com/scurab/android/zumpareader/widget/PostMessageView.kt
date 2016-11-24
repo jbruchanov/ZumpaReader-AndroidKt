@@ -10,22 +10,22 @@ import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.LinearLayout
-import com.pawegio.kandroid.find
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.util.execOn
 import com.scurab.android.zumpareader.util.obtainStyledColor
 import com.scurab.android.zumpareader.util.setImageTint
+import org.jetbrains.anko.find
 
 /**
  * Created by JBruchanov on 31/12/2015.
  */
-public class PostMessageView : FrameLayout {
+class PostMessageView : FrameLayout {
 
-    public val subject by lazy(LazyThreadSafetyMode.NONE) { find<EditText>(R.id.subject) }
-    public val message by lazy { find<EditText>(R.id.message) }
-    public val photo by lazy { find<ImageButton>(R.id.photo) }
-    public val camera by lazy { find<ImageButton>(R.id.camera) }
-    public val sendButton by lazy { find<ImageButton>(R.id.send) }
+    val subject by lazy(LazyThreadSafetyMode.NONE) { find<EditText>(R.id.subject) }
+    val message by lazy { find<EditText>(R.id.message) }
+    val photo by lazy { find<ImageButton>(R.id.photo) }
+    val camera by lazy { find<ImageButton>(R.id.camera) }
+    val sendButton by lazy { find<ImageButton>(R.id.send) }
 
     constructor(context: Context?) : this(context, null)
 
@@ -44,7 +44,7 @@ public class PostMessageView : FrameLayout {
         initIcons()
     }
 
-    public fun setUIForNewMessage() {
+    fun setUIForNewMessage() {
         subject.visibility = View.VISIBLE
         message.maxLines = Integer.MAX_VALUE
         message.gravity = Gravity.TOP or Gravity.LEFT

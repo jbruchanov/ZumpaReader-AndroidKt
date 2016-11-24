@@ -10,7 +10,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import com.pawegio.kandroid.find
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.content.SendingFragment
 import com.scurab.android.zumpareader.content.post.tasks.CopyFromResourcesTask
@@ -20,21 +19,22 @@ import com.scurab.android.zumpareader.drawable.SimpleProgressDrawable
 import com.scurab.android.zumpareader.util.*
 import com.scurab.android.zumpareader.widget.PostImagePanelView
 import com.squareup.picasso.Picasso
+import org.jetbrains.anko.find
 import java.io.File
 
 /**
  * Created by JBruchanov on 08/01/2016.
  */
-public class PostImageFragment : DialogFragment(), SendingFragment {
+class PostImageFragment : DialogFragment(), SendingFragment {
 
     companion object {
-        public fun newInstance(uri: Uri): PostImageFragment {
+        fun newInstance(uri: Uri): PostImageFragment {
             return PostImageFragment().apply {
                 arguments = arguments(uri)
             }
         }
 
-        public fun arguments(uri: Uri): Bundle {
+        fun arguments(uri: Uri): Bundle {
             return Bundle().apply {
                 putParcelable(Intent.EXTRA_STREAM, uri)
             }
@@ -52,7 +52,7 @@ public class PostImageFragment : DialogFragment(), SendingFragment {
     }
 
     private val imageUri by lazy { arguments.getParcelable<Uri>(Intent.EXTRA_STREAM) }
-    private var imageFile : String? = null
+    private var imageFile: String? = null
     private var imageRotation = 0
     private var restoreState = false
 
@@ -60,7 +60,7 @@ public class PostImageFragment : DialogFragment(), SendingFragment {
     private var imageSize: Long = 0
     private var imageResizedResolution: Point? = null
     private var imageResizedSize: Long = 0
-    private var imageUploadedLink : String? = null
+    private var imageUploadedLink: String? = null
 
     private val imageFileToUpload: String? get() {
         return if (imageFile != null) imageFile + "_out" else null
@@ -126,7 +126,7 @@ public class PostImageFragment : DialogFragment(), SendingFragment {
     private fun onImageProcess(inSample: Int, imageRotation: Int) {
         isSending = true
         imageFile.exec {
-            object : ProcessImageTask(it, imageFileToUpload!!, inSample, imageRotation){
+            object : ProcessImageTask(it, imageFileToUpload!!, inSample, imageRotation) {
 
                 override fun onPostExecute(result: String?) {
                     isSending = false

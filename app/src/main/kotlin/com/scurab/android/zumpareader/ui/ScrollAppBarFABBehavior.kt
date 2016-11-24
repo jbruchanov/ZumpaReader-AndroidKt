@@ -12,7 +12,7 @@ import com.scurab.android.zumpareader.util.exec
 /**
  * Created by JBruchanov on 25/11/2015.
  */
-public class ScrollAppBarFABBehavior(context: Context, attrs: AttributeSet) : CoordinatorLayout.Behavior<FloatingActionButton>(context, attrs) {
+class ScrollAppBarFABBehavior(context: Context, attrs: AttributeSet) : CoordinatorLayout.Behavior<FloatingActionButton>(context, attrs) {
 
     private var childInitialOffset: Int = 0
     private var dependencyOffset: Int = 0
@@ -24,7 +24,7 @@ public class ScrollAppBarFABBehavior(context: Context, attrs: AttributeSet) : Co
     override fun onDependentViewChanged(parent: CoordinatorLayout, child: FloatingActionButton, dependency: View): Boolean {
         //Check if the view position has actually changed
         if (dependencyOffset != dependency.top) {
-            dependencyOffset = dependency.top;
+            dependencyOffset = dependency.top
 
             var margin = 0
             (child.layoutParams as? ViewGroup.MarginLayoutParams).exec {
@@ -34,10 +34,10 @@ public class ScrollAppBarFABBehavior(context: Context, attrs: AttributeSet) : Co
             val offset = (childInitialOffset - child.top - dependencyOffset + (dependency.height / 2))
             child.offsetTopAndBottom(offset)
             //Notify that we changed our attached child
-            return true;
+            return true
         }
 
-        return false;
+        return false
     }
 
     override fun onLayoutChild(parent: CoordinatorLayout?, child: FloatingActionButton?, layoutDirection: Int): Boolean {

@@ -8,29 +8,31 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.TextView
-import com.pawegio.kandroid.find
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.model.Survey
 import com.scurab.android.zumpareader.model.SurveyItem
 import com.scurab.android.zumpareader.util.exec
+import org.jetbrains.anko.find
 
 /**
  * Created by JBruchanov on 13/01/2016.
  */
-public class SurveyView : FrameLayout {
+class SurveyView : FrameLayout {
 
-    public interface ItemClickListener{
+    interface ItemClickListener {
         fun onItemClick(item: SurveyItem)
     }
 
     private val content by lazy { find<ViewGroup>(R.id.content) }
     private val surveyText by lazy { find<TextView>(R.id.survey_text) }
-    private val buttonCount : Int get() { return content.childCount - 1 }
-    private val clickListenerInner: ((View) -> Unit) = { v -> dispatchButtonClick(v)}
-    public var surveyItemClickListener: ItemClickListener? = null
+    private val buttonCount: Int get() {
+        return content.childCount - 1
+    }
+    private val clickListenerInner: ((View) -> Unit) = { v -> dispatchButtonClick(v) }
+    var surveyItemClickListener: ItemClickListener? = null
 
-    private var _survey : Survey? = null
-    public var survey: Survey?
+    private var _survey: Survey? = null
+    var survey: Survey?
         get() = _survey
         set(value) {
             _survey = value
@@ -69,7 +71,7 @@ public class SurveyView : FrameLayout {
                 val btn = content.getChildAt(i) as Button
                 btn.text = "${item.text} (${item.percents}%)"
                 btn.background.mutate()
-                btn.background.setLevel(item.percents * 100)/* 10000 = 100% */
+                btn.background.level = item.percents * 100/* 10000 = 100% */
                 btn.isSelected = item.voted
                 btn.tag = item
                 btn.setOnClickListener(clickListenerInner)

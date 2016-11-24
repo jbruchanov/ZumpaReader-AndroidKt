@@ -13,20 +13,23 @@ import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.content.SendingFragment
 import com.scurab.android.zumpareader.model.ZumpaLoginBody
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
-import com.scurab.android.zumpareader.util.*
+import com.scurab.android.zumpareader.util.ParseUtils
+import com.scurab.android.zumpareader.util.ZumpaPrefs
+import com.scurab.android.zumpareader.util.execOn
+import com.scurab.android.zumpareader.util.toast
 import java.net.URI
 
 /**
  * Created by JBruchanov on 29/12/2015.
  */
-public class SettingsActivity : PreferenceActivity(), SendingFragment {
+class SettingsActivity : PreferenceActivity(), SendingFragment {
 
 
     private val buttonPref by lazy { findPreference(ZumpaPrefs.KEY_LOGIN) }
     private val showLastAuthorPref by lazy { findPreference(ZumpaPrefs.KEY_SHOW_LAST_AUTHOR) }
     private val filterPref by lazy { findPreference(ZumpaPrefs.KEY_FILTER) }
 
-    public val zumpaApp: ZumpaReaderApp
+    val zumpaApp: ZumpaReaderApp
         get() {
             return application as ZumpaReaderApp
         }
@@ -40,7 +43,7 @@ public class SettingsActivity : PreferenceActivity(), SendingFragment {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        addPreferencesFromResource(R.xml.settings);
+        addPreferencesFromResource(R.xml.settings)
 
         buttonPref.setOnPreferenceClickListener {
             if (zumpaApp.zumpaPrefs.isLoggedIn) {
@@ -90,7 +93,7 @@ public class SettingsActivity : PreferenceActivity(), SendingFragment {
         }
 
         isSending = true
-        object : LoginTask(zumpaApp, ZumpaLoginBody(user, pwd)){
+        object : LoginTask(zumpaApp, ZumpaLoginBody(user, pwd)) {
             override fun onPostExecute(loginResult: Boolean, pushResult: Boolean) {
                 isSending = false
                 if (!isFinishing) {
@@ -121,7 +124,7 @@ public class SettingsActivity : PreferenceActivity(), SendingFragment {
             isShowLastUser = zumpaApp.zumpaPrefs.showLastAuthor
         }
         zumpaApp.cookieManager.cookieStore.removeAll()
-        zumpaApp.cookieManager.put(URI.create(ZR.Constants.ZUMPA_MAIN_URL), zumpaApp.zumpaPrefs.cookiesMap);
+        zumpaApp.cookieManager.put(URI.create(ZR.Constants.ZUMPA_MAIN_URL), zumpaApp.zumpaPrefs.cookiesMap)
         zumpaApp.zumpaParser.isShowLastUser = zumpaApp.zumpaPrefs.showLastAuthor
         zumpaApp.followRedirects = true
     }
@@ -142,15 +145,15 @@ private abstract class LoginTask(private val zumpaApp: ZumpaReaderApp, private v
         zumpaApp.zumpaPrefs.cookies = if (loginResult) ParseUtils.extractCookies(loginResponse) else null
 
         try {
-            val instanceID = InstanceID.getInstance(zumpaApp);
-            val token = instanceID.getToken("542579595500", GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
+            val instanceID = InstanceID.getInstance(zumpaApp)
+            val token = instanceID.getToken("542579595500", GoogleCloudMessaging.INSTANCE_ID_SCOPE, null)
             zumpaApp.zumpaPrefs.pushRegId = token
             if (token != null && loginResult) {
                 val body = zumpaApp.zumpaOnlineAPI.getMainPageHtml().execute().body().asString()
                 val uid = ZumpaSimpleParser.parseUID(body)
                 if (uid != null) {
                     val response = zumpaApp.zumpaPHPAPI.register(zumpaLoginBody.nick, uid, token).execute().body().asUTFString()
-                    pushResult = "[OK]".equals(response)
+                    pushResult = "[OK]" == response
                 }
             }
         } catch(e: Throwable) {
@@ -173,7 +176,7 @@ private abstract class LogoutTask(private val zumpaApp: ZumpaReaderApp, private 
     override fun doInBackground(vararg params: Void?): Void? {
         try {
             val response = zumpaApp.zumpaPHPAPI.unregister(zumpaUser).execute().body().asUTFString()
-            pushResult = "[OK]".equals(response)
+            pushResult = "[OK]" == response
         } catch(e: Throwable) {
             e.printStackTrace()
         }

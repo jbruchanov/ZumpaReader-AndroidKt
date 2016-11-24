@@ -11,7 +11,6 @@ import android.support.v7.widget.Toolbar
 import android.view.View
 import android.widget.ProgressBar
 import com.crashlytics.android.Crashlytics
-import com.pawegio.kandroid.find
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.content.MainListFragment
@@ -24,16 +23,17 @@ import com.scurab.android.zumpareader.ui.hideAnimated
 import com.scurab.android.zumpareader.ui.showAnimated
 import com.scurab.android.zumpareader.util.*
 import io.fabric.sdk.android.Fabric
+import org.jetbrains.anko.find
 
 /**
  * Created by JBruchanov on 24/11/2015.
  */
 
-public class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity() {
 
-    companion object{
-        public val PUSH_REQ_CODE = 46879;
-        public val EXTRA_THREAD_ID = "ThreadID";
+    companion object {
+        val PUSH_REQ_CODE = 46879
+        val EXTRA_THREAD_ID = "ThreadID"
     }
 
     private val toolbar by lazy { find<Toolbar>(R.id.toolbar) }
@@ -41,14 +41,14 @@ public class MainActivity : AppCompatActivity() {
     private val coordinatorLayout by lazy { find<CoordinatorLayout>(R.id.coordinator_layout) }
     private val _floatingButton by lazy { find<FloatingActionButton>(R.id.fab) }
 
-    public val floatingButton: FloatingActionButton  get() = _floatingButton
+    val floatingButton: FloatingActionButton  get() = _floatingButton
 
-    public val zumpaApp: ZumpaReaderApp
+    val zumpaApp: ZumpaReaderApp
         get() {
-            return getApplication() as ZumpaReaderApp
+            return application as ZumpaReaderApp
         }
 
-    public var progressBarVisible: Boolean
+    var progressBarVisible: Boolean
         get() {
             return progressBar.visibility == View.VISIBLE
         }
@@ -58,7 +58,7 @@ public class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Fabric.with(this, Crashlytics());
+        Fabric.with(this, Crashlytics())
 
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
@@ -108,7 +108,7 @@ public class MainActivity : AppCompatActivity() {
         }
     }
 
-    public fun openFragment(fragment: BaseFragment, addToBackStack: Boolean = true, replace: Boolean = true) {
+    fun openFragment(fragment: BaseFragment, addToBackStack: Boolean = true, replace: Boolean = true) {
         val tr = supportFragmentManager.beginTransaction()
         if (addToBackStack) {
             tr.addToBackStack(fragment.javaClass.canonicalName)
@@ -133,7 +133,7 @@ public class MainActivity : AppCompatActivity() {
     fun onFloatingButtonClick() {
         if (zumpaApp.zumpaPrefs.isLoggedInNotOffline) {
             (supportFragmentManager.fragments.lastNonNullFragment() as? BaseFragment).exec {
-                it.onFloatingButtonClick();
+                it.onFloatingButtonClick()
             }
         }
     }
@@ -150,17 +150,17 @@ public class MainActivity : AppCompatActivity() {
 
     fun hideFloatingButton() {
         floatingButton.hideAnimated()
-        ((floatingButton.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior as QuickHideBehavior?)?.enabled = false;
+        ((floatingButton.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior as QuickHideBehavior?)?.enabled = false
     }
 
     fun showFloatingButton() {
         floatingButton.showAnimated()
-        ((floatingButton.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior as QuickHideBehavior?)?.enabled = true;
+        ((floatingButton.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior as QuickHideBehavior?)?.enabled = true
     }
 
 
-    public fun setScrollStrategyEnabled(enabled: Boolean) {
-        ((floatingButton.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior as QuickHideBehavior?)?.enabled = enabled;
+    fun setScrollStrategyEnabled(enabled: Boolean) {
+        ((floatingButton.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior as QuickHideBehavior?)?.enabled = enabled
     }
 
     fun reloadData() {

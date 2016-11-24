@@ -17,19 +17,19 @@ import java.util.*
 /**
  * Created by JBruchanov on 25/11/2015.
  */
-public abstract class BaseFragment : Fragment() {
+abstract class BaseFragment : Fragment() {
 
-    public val mainActivity: MainActivity?
+    val mainActivity: MainActivity?
         get() {
             return activity as MainActivity?
         }
 
-    public val zumpaApp: ZumpaReaderApp?
+    val zumpaApp: ZumpaReaderApp?
         get() {
             return mainActivity?.zumpaApp
         }
 
-    public var progressBarVisible: Boolean
+    var progressBarVisible: Boolean
         get() {
             return mainActivity?.progressBarVisible ?: false
         }
@@ -51,7 +51,7 @@ public abstract class BaseFragment : Fragment() {
     protected val zumpaData: TreeMap<String, ZumpaThread> by lazy { _zumpaData!! }
     protected abstract val title: CharSequence?
 
-    public open fun onMenuItemClick(item: MenuItem): Boolean {
+    open fun onMenuItemClick(item: MenuItem): Boolean {
         return false
     }
 
@@ -65,7 +65,7 @@ public abstract class BaseFragment : Fragment() {
         super.onDestroy()
     }
 
-    public open fun openFragment(fragment: BaseFragment, addToBackStack: Boolean = true, replace: Boolean = true) {
+    open fun openFragment(fragment: BaseFragment, addToBackStack: Boolean = true, replace: Boolean = true) {
         mainActivity?.openFragment(fragment, addToBackStack, replace)
         isLoading = false
     }
@@ -86,18 +86,18 @@ public abstract class BaseFragment : Fragment() {
         }
     }
 
-    public open fun onFloatingButtonClick() {
+    open fun onFloatingButtonClick() {
 
     }
 
-    public open fun onBackButtonClick(): Boolean {
-        return false;
+    open fun onBackButtonClick(): Boolean {
+        return false
     }
 
-    public fun startLinkActivity(url: String) {
+    fun startLinkActivity(url: String) {
         try {
             val intent = Intent(Intent.ACTION_VIEW)
-            intent.setData(Uri.parse(url))
+            intent.data = Uri.parse(url)
             startActivity(intent)
         } catch(e: Throwable) {
             e.printStackTrace()
@@ -107,7 +107,7 @@ public abstract class BaseFragment : Fragment() {
         }
     }
 
-    protected val isLoggedIn : Boolean
+    protected val isLoggedIn: Boolean
         get() {
             return zumpaApp?.zumpaPrefs?.isLoggedInNotOffline ?: false
         }

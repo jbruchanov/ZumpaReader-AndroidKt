@@ -1,11 +1,11 @@
 package com.scurab.android.zumpareader
 
 import com.scurab.android.zumpareader.model.*
-import retrofit.Call
-import retrofit.http.Body
-import retrofit.http.GET
-import retrofit.http.POST
-import retrofit.http.Query
+import retrofit2.Call
+import retrofit2.http.Body
+import retrofit2.http.GET
+import retrofit2.http.POST
+import retrofit2.http.Query
 import rx.Observable
 import java.util.*
 
@@ -13,16 +13,16 @@ import java.util.*
  * Created by JBruchanov on 24/11/2015.
  */
 
-public interface ZumpaAPI {
+interface ZumpaAPI {
 
     @GET("/phorum/list.php?f=2&a=2&af=2")
-    fun getMainPage(@Query(value = "af") filter: String): Observable<ZumpaMainPageResult>;
+    fun getMainPage(@Query(value = "af") filter: String): Observable<ZumpaMainPageResult>
 
     @GET("/phorum/list.php?f=2")
-    fun getMainPageHtml(): Call<ZumpaGenericResponse>;
+    fun getMainPageHtml(): Call<ZumpaGenericResponse>
 
     @GET("/phorum/list.php?f=2&a=2&af=2")
-    fun getMainPage(@Query(value = "t") fromThread: String, @Query(value = "af") filter: String): Observable<ZumpaMainPageResult>;
+    fun getMainPage(@Query(value = "t") fromThread: String, @Query(value = "af") filter: String): Observable<ZumpaMainPageResult>
 
     @GET("/phorum/read.php?f=2")
     fun getThreadPage(@Query(value = "i") id: String, @Query(value = "t") id2: String): Observable<ZumpaThreadResult>
@@ -40,12 +40,12 @@ public interface ZumpaAPI {
     fun voteSurvey(@Body body: ZumpaVoteSurveyBody): Observable<ZumpaGenericResponse>
 }
 
-public interface ZumpaWSAPI {
+interface ZumpaWSAPI {
     @POST("/zumpa")
     fun getZumpa(@Body body: ZumpaWSBody): Call<ZumpaGenericResponse>
 }
 
-public interface ZumpaPHPAPI {
+interface ZumpaPHPAPI {
     @GET("/CDM/RegisterHandler.php?register=true&platform=android")
     fun register(@Query("user") user: String, @Query("uid") uid: String, @Query("regid") regId: String): Call<ZumpaGenericResponse>
 
@@ -53,7 +53,7 @@ public interface ZumpaPHPAPI {
     fun unregister(@Query("user") user: String): Call<ZumpaGenericResponse>
 }
 
-public class ZumpaOfflineApi(public var offlineData: LinkedHashMap<String, ZumpaThread>) : ZumpaAPI {
+class ZumpaOfflineApi(var offlineData: LinkedHashMap<String, ZumpaThread>) : ZumpaAPI {
 
     override fun getMainPage(filter: String): Observable<ZumpaMainPageResult> {
         return Observable.just(ZumpaMainPageResult(null, "", offlineData))
@@ -68,7 +68,7 @@ public class ZumpaOfflineApi(public var offlineData: LinkedHashMap<String, Zumpa
     }
 
     override fun getThreadPage(id: String, id2: String): Observable<ZumpaThreadResult> {
-        var data = offlineData[id]?.offlineItems;
+        var data = offlineData[id]?.offlineItems
         if (data == null) {
             data = listOf<ZumpaThreadItem>()
         }

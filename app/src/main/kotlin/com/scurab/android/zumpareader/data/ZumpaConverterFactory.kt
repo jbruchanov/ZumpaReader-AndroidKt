@@ -4,17 +4,18 @@ import com.scurab.android.zumpareader.model.ZumpaBody
 import com.scurab.android.zumpareader.model.ZumpaMainPageResult
 import com.scurab.android.zumpareader.model.ZumpaThreadResult
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
-import com.squareup.okhttp.MediaType
-import com.squareup.okhttp.RequestBody
-import com.squareup.okhttp.ResponseBody
-import retrofit.Converter
+import okhttp3.MediaType
+import okhttp3.RequestBody
+import okhttp3.ResponseBody
+import retrofit2.Converter
+import retrofit2.Retrofit
 import java.io.InputStream
 import java.lang.reflect.Type
 
 /**
  * Created by JBruchanov on 24/11/2015.
  */
-public class ZumpaConverterFactory(val parser: ZumpaSimpleParser) : Converter.Factory() {
+class ZumpaConverterFactory(val parser: ZumpaSimpleParser) : Converter.Factory() {
 
     private val mainPageConverter: ZumpaMainPageConverter by lazy { ZumpaMainPageConverter(parser) }
     private val threadPageConverter: ZumpaThreadPageConverter by lazy { ZumpaThreadPageConverter(parser) }
@@ -27,7 +28,7 @@ public class ZumpaConverterFactory(val parser: ZumpaSimpleParser) : Converter.Fa
         }
     }
 
-    override fun fromResponseBody(type: Type?, annotations: Array<out Annotation>?): Converter<ResponseBody, *>? {
+    override fun responseBodyConverter(type: Type?, annotations: Array<out Annotation>?, retrofit: Retrofit?): Converter<ResponseBody, *>? {
         return when (type) {
             ZumpaMainPageResult::class.java -> mainPageConverter
             ZumpaThreadResult::class.java -> threadPageConverter
@@ -35,7 +36,8 @@ public class ZumpaConverterFactory(val parser: ZumpaSimpleParser) : Converter.Fa
         }
     }
 
-    override fun toRequestBody(type: Type?, annotations: Array<out Annotation>?): Converter<ZumpaBody, RequestBody>? {
+
+    override fun requestBodyConverter(type: Type?, parameterAnnotations: Array<out Annotation>?, methodAnnotations: Array<out Annotation>?, retrofit: Retrofit?): Converter<*, RequestBody>? {
         return httpPostConverter
     }
 }

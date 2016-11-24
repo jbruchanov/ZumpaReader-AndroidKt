@@ -13,33 +13,33 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TabWidget
-import com.pawegio.kandroid.find
-import com.pawegio.kandroid.layoutInflater
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.app.BaseFragment
 import com.scurab.android.zumpareader.app.MainActivity
 import com.scurab.android.zumpareader.ui.showAnimated
 import com.scurab.android.zumpareader.util.*
+import org.jetbrains.anko.find
+import org.jetbrains.anko.layoutInflater
 
 /**
  * Created by JBruchanov on 08/01/2016.
  */
-public class PostFragment : BaseFragment() {
+class PostFragment : BaseFragment() {
     companion object {
-        public val REQ_CODE_IMAGE = 123
-        public val REQ_CODE_CAMERA = 124
+        val REQ_CODE_IMAGE = 123
+        val REQ_CODE_CAMERA = 124
 
         private val POST_MESSAGE_TAG = "1"
         val THREAD_ID = "THREAD_UD"
         val FLAG = "FLAG"
 
-        public fun newInstance(subject: String?, message: String?, uris: Array<Uri>? = null, threadId: String? = null, flag:Int = 0): PostFragment {
+        fun newInstance(subject: String?, message: String?, uris: Array<Uri>? = null, threadId: String? = null, flag: Int = 0): PostFragment {
             return PostFragment().apply {
                 arguments = arguments(subject, message, uris, threadId, flag)
             }
         }
 
-        public fun arguments(subject: String?, message: String?, uris: Array<Uri>? = null, threadId: String? = null, flag:Int = 0): Bundle {
+        fun arguments(subject: String?, message: String?, uris: Array<Uri>? = null, threadId: String? = null, flag: Int = 0): Bundle {
             return Bundle().apply {
                 putString(Intent.EXTRA_SUBJECT, subject)
                 putString(Intent.EXTRA_TEXT, message)
@@ -55,8 +55,10 @@ public class PostFragment : BaseFragment() {
 
     }
 
-    val tabHost : FragmentTabHost? get() { return view.find<FragmentTabHost>(android.R.id.tabhost) }
-    val contextColor by lazy { context.obtainStyledColor(R.attr.contextColor)}
+    val tabHost: FragmentTabHost? get() {
+        return view!!.find<FragmentTabHost>(android.R.id.tabhost)
+    }
+    val contextColor by lazy { context.obtainStyledColor(R.attr.contextColor) }
     override val title: CharSequence?
         get() = null
 
@@ -80,7 +82,8 @@ public class PostFragment : BaseFragment() {
                 for (argUri in uris!!.asIterable()) {
                     addTab(newTabSpec((++i).toString()).setIndicator(createIndicator(R.drawable.ic_photo, contextColor, tabWidget)), PostImageFragment::class.java, PostImageFragment.arguments(argUri))
                 }
-                if (i == 2) {//just single image
+                if (i == 2) {
+                    //just single image
                     post { setCurrentTabByTag(i.toString()) }
                 }
             }
@@ -149,11 +152,11 @@ public class PostFragment : BaseFragment() {
 
     fun onPhotoClick() {
         try {
-            val intent = Intent();
-            intent.setType("image/*");
-            intent.setAction(Intent.ACTION_GET_CONTENT);
-            intent.addCategory(Intent.CATEGORY_OPENABLE);
-            mainActivity!!.startActivityForResult(intent, REQ_CODE_IMAGE);
+            val intent = Intent()
+            intent.type = "image/*"
+            intent.action = Intent.ACTION_GET_CONTENT
+            intent.addCategory(Intent.CATEGORY_OPENABLE)
+            mainActivity!!.startActivityForResult(intent, REQ_CODE_IMAGE)
         } catch(e: Exception) {
             context.toast(R.string.err_fail)
         }
@@ -164,8 +167,8 @@ public class PostFragment : BaseFragment() {
             val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
             val cameraFileUri = context.getRandomCameraFileUri()
             zumpaApp!!.zumpaPrefs.lastCameraUri = cameraFileUri
-            intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.parse( cameraFileUri))
-            mainActivity!!.startActivityForResult(intent, REQ_CODE_CAMERA);
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.parse(cameraFileUri))
+            mainActivity!!.startActivityForResult(intent, REQ_CODE_CAMERA)
         } catch(e: Exception) {
             context.toast(R.string.err_fail)
         }

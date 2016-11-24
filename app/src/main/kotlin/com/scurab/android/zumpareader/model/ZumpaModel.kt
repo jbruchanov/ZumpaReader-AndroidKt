@@ -23,18 +23,18 @@ import java.util.*
  * Created by JBruchanov on 24/11/2015.
  */
 
-public data class ZumpaThread
-public constructor(val id: String,
+data class ZumpaThread
+constructor(val id: String,
                    var subject: String) {
 
-    companion object{
-        public val STATE_NONE = 0
-        public val STATE_NEW = 1
-        public val STATE_UPDATED = 2
-        public val STATE_OWN = 3
-        public val STATE_RESPONSE_4U = 4
+    companion object {
+        val STATE_NONE = 0
+        val STATE_NEW = 1
+        val STATE_UPDATED = 2
+        val STATE_OWN = 3
+        val STATE_RESPONSE_4U = 4
 
-        public fun thread(elem: JsonObject): ZumpaThread {
+        fun thread(elem: JsonObject): ZumpaThread {
             return ZumpaThread(elem["id"].string, elem["subject"].string).apply {
                 this.author = elem["author"].string
                 this.time = elem["time"].long
@@ -56,7 +56,8 @@ public constructor(val id: String,
             }
         }
     }
-    public constructor(id: String,
+
+    constructor(id: String,
                        subject: String,
                        author: String,
                        contentUrl: String,
@@ -76,18 +77,19 @@ public constructor(val id: String,
             _items = value
         }
 
-    public fun setStateBasedOnReadValue(readCount: Int?, userName: String?) {
+    fun setStateBasedOnReadValue(readCount: Int?, userName: String?) {
         if (hasResponseForYou) {
             state = STATE_RESPONSE_4U
         } else if (readCount == null) {
             state = STATE_NEW
         } else if (items == readCount) {
-            if (userName != null && userName.equals(author)) {
+            if (userName != null && userName == author) {
                 state = STATE_OWN
             } else {
                 state = STATE_NONE
             }
-        } else if (items > readCount) {//< ignored because of offline mode
+        } else if (items > readCount) {
+            //< ignored because of offline mode
             state = STATE_UPDATED
         }
     }
@@ -96,36 +98,35 @@ public constructor(val id: String,
     val idLong by lazy { id.toLong() }
     var state: Int = STATE_NEW
 
-    @GsonExclude
-    public val date by lazy { Date(time) }
+    @GsonExclude val date by lazy { Date(time) }
 
     private var _styledSubject: CharSequence? = null
-    public fun styledSubject(context: Context): CharSequence {
+    fun styledSubject(context: Context): CharSequence {
         if (_styledSubject == null) {
             _styledSubject = ZumpaSimpleParser.parseBody(subject, context)
         }
         return _styledSubject!!
     }
 
-    public var hasResponseForYou: Boolean = false
-    public var lastAuthor: String? = null
-    public var offlineItems : List<ZumpaThreadItem>? = null
+    var hasResponseForYou: Boolean = false
+    var lastAuthor: String? = null
+    var offlineItems: List<ZumpaThreadItem>? = null
 }
 
-public data class ZumpaThreadItem(val author: String,
+data class ZumpaThreadItem(val author: String,
                                   val body: String,
                                   val time: Long) {
-    public var hasResponseForYou: Boolean = false
-    public var authorReal: String? = null
-    public var isOwnThread: Boolean? = null
-    public var survey: Survey? = null
-    public var urls: List<String>? = null
-    public var rating: String? = null
+    var hasResponseForYou: Boolean = false
+    var authorReal: String? = null
+    var isOwnThread: Boolean? = null
+    var survey: Survey? = null
+    var urls: List<String>? = null
+    var rating: String? = null
 
-    public val date by lazy { Date(time) }
+    val date by lazy { Date(time) }
 
     private var _styledBody: CharSequence? = null
-    public fun styledBody(context: Context): CharSequence {
+    fun styledBody(context: Context): CharSequence {
         if (_styledBody == null) {
             _styledBody = ZumpaSimpleParser.parseBody(body, context)
         }
@@ -133,15 +134,15 @@ public data class ZumpaThreadItem(val author: String,
     }
 
     private var _styledAuthor: CharSequence? = null
-    public fun styledAuthor(context: Context): CharSequence {
+    fun styledAuthor(context: Context): CharSequence {
         if (_styledAuthor == null) {
             if (rating.isNullOrEmpty()) {
                 _styledAuthor = author
             } else {
                 val r = rating!!
                 val ssb = SpannableString(author + " " + r)
-                val color = if (r[0] == '+') R.color.rating_good else R.color.rating_bad;
-                ssb.setSpan(ForegroundColorSpan(context.resources.getColor(color)), ssb.length - r.length, ssb.length, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+                val color = if (r[0] == '+') R.color.rating_good else R.color.rating_bad
+                ssb.setSpan(ForegroundColorSpan(context.resources.getColor(color)), ssb.length - r.length, ssb.length, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
                 _styledAuthor = ssb
             }
         }
@@ -149,12 +150,12 @@ public data class ZumpaThreadItem(val author: String,
     }
 }
 
-public data class Survey(val id: String,
+data class Survey(val id: String,
                          val question: String,
                          val responses: Int,
                          val items: List<SurveyItem>)
 
-public data class SurveyItem(val id: Int,
+data class SurveyItem(val id: Int,
                              val surveyId: String,
                              val text: String,
                              val percents: Int,
@@ -162,11 +163,11 @@ public data class SurveyItem(val id: Int,
 
 
 //region parsing result
-public data class ZumpaMainPageResult(val prevThreadId: String?,
+data class ZumpaMainPageResult(val prevThreadId: String?,
                                       val nextThreadId: String,
                                       val items: LinkedHashMap<String, ZumpaThread>)
 
-public data class ZumpaThreadResult(val items: List<ZumpaThreadItem>)
+data class ZumpaThreadResult(val items: List<ZumpaThreadItem>)
 //endregion
 
 /*
@@ -185,11 +186,11 @@ public data class ZumpaThreadResult(val items: List<ZumpaThreadItem>)
  */
 
 //region bodies
-public interface ZumpaBody {
-    public fun toHttpPostString(): String
+interface ZumpaBody {
+    fun toHttpPostString(): String
 }
 
-public class ZumpaLoginBody(
+class ZumpaLoginBody(
         val nick: String,
         val pass: String) : ZumpaBody {
 
@@ -205,7 +206,7 @@ public class ZumpaLoginBody(
     }
 }
 
-public data class ZumpaThreadBody(
+data class ZumpaThreadBody(
         val author: String,
         val subject: String,
         val body: String,
@@ -234,29 +235,30 @@ public data class ZumpaThreadBody(
     }
 }
 
-public class ZumpaVoteSurveyBody(
+class ZumpaVoteSurveyBody(
         val id: String,
         val item: Int) : ZumpaBody {
 
     override fun toHttpPostString(): String {
         val sb = StringBuilder(32)
-        .append("a=").append(id)
-        .append("&typ=A")
-        .append("&v=").append(item)
+                .append("a=").append(id)
+                .append("&typ=A")
+                .append("&v=").append(item)
         return sb.toString()
     }
 }
 
-public data class ZumpaPushMessage(val threadId: String, val from: String, val message: String?)
+data class ZumpaPushMessage(val threadId: String, val from: String, val message: String?)
 
-public data class ZumpaReadState(val threadId: String, var count: Int)
+data class ZumpaReadState(val threadId: String, var count: Int)
 
-open public class ZumpaGenericResponse(public val data: ByteArray, public val contentType: String?) {
-    public fun asString() = String(data, ZR.Constants.ENCODING)
-    public fun asUTFString() = String(data, Charset.forName("UTF-8"))
+open class ZumpaGenericResponse(val data: ByteArray, val contentType: String?) {
+    fun asString() = String(data, Charset.forName(ZR.Constants.ENCODING))
+    fun asUTFString() = String(data, Charset.forName("UTF-8"))
 
 }
-public data class ZumpaWSBody(private val pages: Int = 1) : ZumpaBody {
+
+data class ZumpaWSBody(private val pages: Int = 1) : ZumpaBody {
     override fun toHttpPostString(): String {
         return "{\"Pages\" : $pages}"
     }

@@ -20,50 +20,46 @@ import com.scurab.android.zumpareader.util.exec
 /**
  * Created by JBruchanov on 25/11/2015.
  */
-public class QuickHideBehavior : CoordinatorLayout.Behavior<FloatingActionButton> {
+class QuickHideBehavior : CoordinatorLayout.Behavior<FloatingActionButton> {
 
-    private val DIRECTION_UP = 1;
-    private val DIRECTION_DOWN = -1;
+    private val DIRECTION_UP = 1
+    private val DIRECTION_DOWN = -1
 
     private var scrollingDirection = 0
-    private var scrollTrigger = 0;
+    private var scrollTrigger = 0
     private var scrollDistance = 0
-    private var scrollThreshold = 0;
-    private var animator : Animator? = null;
+    private var scrollThreshold = 0
+    private var animator: Animator? = null
     private var _enabled = true
-    public var enabled : Boolean
+    var enabled: Boolean
         get() = _enabled
         set(value) {
             _enabled = value
             scrollDistance = 0
             scrollTrigger = DIRECTION_DOWN
         }
-    private val zumpaPrefs : ZumpaPrefs
+    private val zumpaPrefs: ZumpaPrefs
 
     //Required to attach behavior via XML
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
-        val a = context.getTheme().obtainStyledAttributes(intArrayOf(R.attr.actionBarSize));
-        try {
-            zumpaPrefs = (context.applicationContext as ZumpaReaderApp).zumpaPrefs
-        } catch(e: ClassCastException) {//preview
-            zumpaPrefs = ZumpaPrefs(context)
-        }
+        val a = context.theme.obtainStyledAttributes(intArrayOf(R.attr.actionBarSize))
+        zumpaPrefs = (context.applicationContext as ZumpaReaderApp).zumpaPrefs
         //Use half the standard action bar height
-        scrollThreshold = a.getDimensionPixelSize(0, 0) / 2;
-        a.recycle();
+        scrollThreshold = a.getDimensionPixelSize(0, 0) / 2
+        a.recycle()
     }
 
     override fun onStartNestedScroll(coordinatorLayout: CoordinatorLayout?, child: FloatingActionButton?, directTargetChild: View?, target: View?, nestedScrollAxes: Int): Boolean {
-        return (nestedScrollAxes and ViewCompat.SCROLL_AXIS_VERTICAL) != 0;
+        return (nestedScrollAxes and ViewCompat.SCROLL_AXIS_VERTICAL) != 0
     }
 
     override fun onNestedPreScroll(coordinatorLayout: CoordinatorLayout?, child: FloatingActionButton?, target: View?, dx: Int, dy: Int, consumed: IntArray?) {
         if (dy > 0 && scrollingDirection != DIRECTION_UP) {
-            scrollingDirection = DIRECTION_UP;
-            scrollDistance = 0;
+            scrollingDirection = DIRECTION_UP
+            scrollDistance = 0
         } else if (dy < 0 && scrollingDirection != DIRECTION_DOWN) {
-            scrollingDirection = DIRECTION_DOWN;
-            scrollDistance = 0;
+            scrollingDirection = DIRECTION_DOWN
+            scrollDistance = 0
         }
     }
 
@@ -74,20 +70,20 @@ public class QuickHideBehavior : CoordinatorLayout.Behavior<FloatingActionButton
                                 dxUnconsumed: Int, dyUnconsumed: Int) {
 
         if (!enabled || !zumpaPrefs.isLoggedInNotOffline) {
-            return;
+            return
         }
         //Consumed distance is the actual distance traveled by the scrolling view
-        scrollDistance += dyConsumed;
+        scrollDistance += dyConsumed
         if (scrollDistance > scrollThreshold
                 && scrollTrigger != DIRECTION_UP) {
             //Hide the target view
-            scrollTrigger = DIRECTION_UP;
-            restartAnimator(child, false, getTargetHideValue(coordinatorLayout, child));
+            scrollTrigger = DIRECTION_UP
+            restartAnimator(child, false, getTargetHideValue(coordinatorLayout, child))
         } else if (scrollDistance < -scrollThreshold
                 && scrollTrigger != DIRECTION_DOWN) {
             //Return the target view
-            scrollTrigger = DIRECTION_DOWN;
-            restartAnimator(child, true, 0f);
+            scrollTrigger = DIRECTION_DOWN
+            restartAnimator(child, true, 0f)
         }
     }
 
@@ -97,19 +93,19 @@ public class QuickHideBehavior : CoordinatorLayout.Behavior<FloatingActionButton
                                velocityX: Float, velocityY: Float,
                                consumed: Boolean): Boolean {
         if (!enabled || !zumpaPrefs.isLoggedInNotOffline) {
-            return false;
+            return false
         }
         if (consumed) {
             if (velocityY > 0 && scrollTrigger != DIRECTION_UP) {
-                scrollTrigger = DIRECTION_UP;
-                restartAnimator(child, false, getTargetHideValue(coordinatorLayout, child));
+                scrollTrigger = DIRECTION_UP
+                restartAnimator(child, false, getTargetHideValue(coordinatorLayout, child))
             } else if (velocityY < 0 && scrollTrigger != DIRECTION_DOWN) {
-                scrollTrigger = DIRECTION_DOWN;
-                restartAnimator(child, true, 0f);
+                scrollTrigger = DIRECTION_DOWN
+                restartAnimator(child, true, 0f)
             }
         }
 
-        return false;
+        return false
     }
 
     //Helper to trigger hide/show animation
@@ -136,7 +132,7 @@ public class QuickHideBehavior : CoordinatorLayout.Behavior<FloatingActionButton
                             target.visibility = View.INVISIBLE
                         }
                     }
-                });
+                })
                 it.start()
             }
         } else if (value != null) {

@@ -8,10 +8,10 @@ import com.google.gson.FieldAttributes
  */
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FIELD, AnnotationTarget.PROPERTY)
-public annotation class GsonExclude
+annotation class GsonExclude
 
 
-public class GsonExcludeStrategy : ExclusionStrategy {
+class GsonExcludeStrategy : ExclusionStrategy {
     override fun shouldSkipClass(type: Class<*>): Boolean = false
     override fun shouldSkipField(f: FieldAttributes): Boolean {
         return f.getAnnotation(GsonExclude::class.java) != null

@@ -6,7 +6,7 @@ import com.scurab.android.zumpareader.utils.FotoDiskProvider
 /**
  * Created by JBruchanov on 12/01/2016.
  */
-public abstract class UploadImageTask(val file: String) : AsyncTask<Void, Void, String>() {
+abstract class UploadImageTask(val file: String) : AsyncTask<Void, Void, String>() {
 
     override fun doInBackground(vararg params: Void?): String? {
         try {

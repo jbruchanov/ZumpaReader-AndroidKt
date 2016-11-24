@@ -11,7 +11,7 @@ import com.scurab.android.zumpareader.model.ZumpaThread
 /**
  * Created by JBruchanov on 03/02/2016.
  */
-public class TabletFragment : BaseFragment() {
+class TabletFragment : BaseFragment() {
     override val title: CharSequence?
         get() = null
 

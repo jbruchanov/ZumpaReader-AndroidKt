@@ -27,9 +27,9 @@ import java.util.*
 /**
  * Created by JBruchanov on 27/11/2015.
  */
-public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
+class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
 
-    public interface ItemClickListener {
+    interface ItemClickListener {
         fun onItemClick(item: ZumpaThreadItem, longClick: Boolean)
         fun onItemClick(url: String, longClick: Boolean)
     }
@@ -42,9 +42,9 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
     private val dateFormat = SimpleDateFormat("HH:mm.ss")
     private val items: ArrayList<ZumpaThreadItem>
     private val dataItems: ArrayList<SubListItem>
-    public var itemClickListener: ItemClickListener? = null
-    public var loadImages: Boolean
-    public var surveyClickListner: SurveyView.ItemClickListener? = null
+    var itemClickListener: ItemClickListener? = null
+    var loadImages: Boolean
+    var surveyClickListner: SurveyView.ItemClickListener? = null
 
     @ColorInt
     private var contextColor: Int = 0
@@ -83,7 +83,7 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
         super.onAttachedToRecyclerView(recyclerView)
         (recyclerView.context as Activity).exec {
             var outTypedValue = TypedValue()
-            it.theme.resolveAttribute(R.attr.contextColor, outTypedValue, true);
+            it.theme.resolveAttribute(R.attr.contextColor, outTypedValue, true)
             contextColor = outTypedValue.data
         }
     }
@@ -107,7 +107,7 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
         var dataItem = dataItems[position]
         val itemView = holder.itemView
         itemView.background.execOn {
-            setLevel(dataItem.itemPosition % 2)
+            level = dataItem.itemPosition % 2
         }
         when (getItemViewType(position)) {
             TYPE_ITEM -> {
@@ -187,7 +187,8 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
             } else {
                 notifyItemRangeInserted(oldSize, dataItems.size - oldSize - 1)
             }
-        } else if (items.size >= 0 && items[0].survey != null) {//update survey if necessary
+        } else if (items.size >= 0 && items[0].survey != null) {
+            //update survey if necessary
             items[0].survey = updated[0].survey
             val index = dataItems.indexOfFirst { it.type == TYPE_SURVEY }
             notifyItemChanged(index)
@@ -197,7 +198,7 @@ public class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
 
 private data class SubListItem(val item: ZumpaThreadItem, val itemPosition: Int, var type: Int, val data: String?)
 
-public class ZumpaSubItemViewHolder(val adapter: SubListAdapter, val view: View) : ZumpaItemViewHolder(view) {
+class ZumpaSubItemViewHolder(val adapter: SubListAdapter, val view: View) : ZumpaItemViewHolder(view) {
     internal val button by lazy { find<Button>(R.id.button) }
     internal val imageView by lazy { view as ImageView }
     internal var url: String? = null
@@ -205,12 +206,12 @@ public class ZumpaSubItemViewHolder(val adapter: SubListAdapter, val view: View)
     internal var imageTarget: ItemTarget? = null
     internal val surveyView by lazy { view as SurveyView }
 
-    public fun loadImage(url: String) {
-        if (url.equals(loadedUrl)) {
+    fun loadImage(url: String) {
+        if (url == loadedUrl) {
             return
         }
         this.url = url
-        imageTarget = ItemTarget(adapter, this, view.context.obtainStyledColor(R.attr.contextColor50p));
+        imageTarget = ItemTarget(adapter, this, view.context.obtainStyledColor(R.attr.contextColor50p))
         Picasso.with(imageView.context).load(url).into(imageTarget)
     }
 }

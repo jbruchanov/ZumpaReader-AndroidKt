@@ -8,21 +8,21 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
-import com.pawegio.kandroid.find
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.util.obtainStyledColor
 import com.scurab.android.zumpareader.util.setImageTint
+import org.jetbrains.anko.find
 
 /**
  * Created by JBruchanov on 09/01/2016.
  */
-public class PostImagePanelView : FrameLayout {
+class PostImagePanelView : FrameLayout {
 
-    public val upload by lazy { find<ImageButton>(R.id.send) }
-    public val copy by lazy { find<ImageButton>(R.id.copy) }
-    public val resize by lazy { find<ImageButton>(R.id.resize) }
-    public val rotateRight by lazy { find<ImageButton>(R.id.rotate_right) }
-    public val sizeSpinner by lazy { find<Spinner>(R.id.size_spinner) }
+    val upload by lazy { find<ImageButton>(R.id.send) }
+    val copy by lazy { find<ImageButton>(R.id.copy) }
+    val resize by lazy { find<ImageButton>(R.id.resize) }
+    val rotateRight by lazy { find<ImageButton>(R.id.rotate_right) }
+    val sizeSpinner by lazy { find<Spinner>(R.id.size_spinner) }
     private val resolutionOriginal by lazy { find<TextView>(R.id.resolution_original) }
     private val resolutionResized by lazy { find<TextView>(R.id.resolution_resized) }
     private val sizeOriginal by lazy { find<TextView>(R.id.size_original) }
@@ -56,29 +56,29 @@ public class PostImagePanelView : FrameLayout {
         }
     }
 
-    public fun setImageSize(resolution: Point?, fileSize: Long) {
+    fun setImageSize(resolution: Point?, fileSize: Long) {
         resolutionOriginal.text = resolution?.toResolution()
         sizeOriginal.text = fileSize.toReadableSize()
     }
 
-    public fun setResizedImageSize(resolution: Point, fileSize: Long) {
+    fun setResizedImageSize(resolution: Point, fileSize: Long) {
         resolutionResized.text = resolution.toResolution()
         sizeResized.text = fileSize.toReadableSize()
     }
 
     private fun Long.toReadableSize(): String {
         if (this == 0L) {
-            return "0 B";
+            return "0 B"
         }
-        val mod = 1024;
-        val units = arrayOf("B", "KiB", "MiB", "GiB", "TiB", "PiB");
-        var i = 0;
-        var size = this.toFloat();
-        while(size > mod){
-            size /= mod;
+        val mod = 1024
+        val units = arrayOf("B", "KiB", "MiB", "GiB", "TiB", "PiB")
+        var i = 0
+        var size = this.toFloat()
+        while (size > mod) {
+            size /= mod
             i++
         }
-        return "%.2f %s".format(size, units[i]);
+        return "%.2f %s".format(size, units[i])
     }
 
     private fun Point.toResolution(): String {
@@ -89,14 +89,14 @@ public class PostImagePanelView : FrameLayout {
 private class SizeSpinnerAdapter : BaseAdapter {
 
     private val data: Array<String>
-    private val layoutInflater : LayoutInflater
+    private val layoutInflater: LayoutInflater
 
     constructor(context: Context) : super() {
         data = arrayOf("1/1", "1/2", "1/4", "1/8")
         layoutInflater = LayoutInflater.from(context)
     }
 
-    override fun getCount() : Int {
+    override fun getCount(): Int {
         return data.size
     }
 

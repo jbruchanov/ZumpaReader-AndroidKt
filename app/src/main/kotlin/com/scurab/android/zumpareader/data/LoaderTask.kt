@@ -1,6 +1,5 @@
 package com.scurab.android.zumpareader.data
 
-import android.net.Uri
 import android.os.AsyncTask
 import com.github.salomonbrys.kotson.bool
 import com.github.salomonbrys.kotson.long
@@ -26,13 +25,13 @@ import java.util.*
 
 abstract class LoaderTask(private val zumpaApp: ZumpaReaderApp, val pages: Int, val downloadImages: Boolean, val outJsonFile: String?) : AsyncTask<Void, Void, LinkedHashMap<String, ZumpaThread>>() {
 
-    public var imagesDownloading = 0
+    var imagesDownloading = 0
         private set
-    public var imagesDownloaded = 0
+    var imagesDownloaded = 0
         private set
-    public var threadsDownloaded = 0
+    var threadsDownloaded = 0
         private set
-    public var exception : Throwable? = null
+    var exception: Throwable? = null
         private set
 
     override fun doInBackground(vararg params: Void?): LinkedHashMap<String, ZumpaThread>? {
@@ -40,7 +39,7 @@ abstract class LoaderTask(private val zumpaApp: ZumpaReaderApp, val pages: Int, 
         try {
             val body = zumpaApp.zumpaWebServiceAPI.getZumpa(ZumpaWSBody(pages)).execute().body()
             if (body != null) {
-                val parser = JsonParser();
+                val parser = JsonParser()
                 val items = parser.parse(InputStreamReader(ByteArrayInputStream(body.data)))
                         .asJsonObject.get("Context").asJsonObject
                         .get("Items").asJsonArray
@@ -74,20 +73,20 @@ abstract class LoaderTask(private val zumpaApp: ZumpaReaderApp, val pages: Int, 
                 notifyProgressChanged()
 
                 if (urls.size > 0) {
-                    val downloader = PicassoHttpDownloader.createDefault(zumpaApp, zumpaApp.zumpaHttpClient)
-                    for (url in urls) {
-                        try {
-                            val uri = Uri.parse(url)
-                            downloader.load(uri, 0, true)
-                        } catch(e: Exception) {
-                            e.printStackTrace()
-                        }
-                        imagesDownloaded++
-                        notifyProgressChanged()
-                        if (isCancelled) {
-                            break;
-                        }
-                    }
+//                    val downloader = PicassoHttpDownloader.createDefault(zumpaApp, zumpaApp.zumpaHttpClient)
+//                    for (url in urls) {
+//                        try {
+//                            val uri = Uri.parse(url)
+//                            downloader.load(uri, 0, true)
+//                        } catch(e: Exception) {
+//                            e.printStackTrace()
+//                        }
+//                        imagesDownloaded++
+//                        notifyProgressChanged()
+//                        if (isCancelled) {
+//                            break;
+//                        }
+//                    }
                 }
 
             }
@@ -103,7 +102,7 @@ abstract class LoaderTask(private val zumpaApp: ZumpaReaderApp, val pages: Int, 
 
     abstract override fun onPostExecute(result: LinkedHashMap<String, ZumpaThread>?)
 
-    fun JsonObject.asZumpaThread() : ZumpaThread {
+    fun JsonObject.asZumpaThread(): ZumpaThread {
         return ZumpaThread(get("ID").string, get("Subject").string).apply {
             time = get("Time").long
             author = get("Author").string
@@ -112,7 +111,7 @@ abstract class LoaderTask(private val zumpaApp: ZumpaReaderApp, val pages: Int, 
         }
     }
 
-    fun JsonArray.asZumpaThreadItems() : List<ZumpaThreadItem> {
+    fun JsonArray.asZumpaThreadItems(): List<ZumpaThreadItem> {
         val result = ArrayList<ZumpaThreadItem>()
         for (item in this) {
             val obj = item.asJsonObject
@@ -122,7 +121,7 @@ abstract class LoaderTask(private val zumpaApp: ZumpaReaderApp, val pages: Int, 
             val time = obj.get("Time").long
             result.add(ZumpaThreadItem(authorFake, body, time).apply {
                 this.authorReal = authorReal
-                urls = if(obj.has("InsideUris")) obj.get("InsideUris").asJsonArray.asStrings() else null
+                urls = if (obj.has("InsideUris")) obj.get("InsideUris").asJsonArray.asStrings() else null
             })
         }
         return result

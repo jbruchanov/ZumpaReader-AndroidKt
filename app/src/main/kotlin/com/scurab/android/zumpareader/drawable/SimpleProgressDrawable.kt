@@ -14,12 +14,12 @@ import com.scurab.android.zumpareader.util.obtainStyledColor
 class SimpleProgressDrawable : Drawable {
 
     private val paint: Paint
-    private val dispSize : Int
-    private val rect : RectF
+    private val dispSize: Int
+    private val rect: RectF
     private var diam: Float
     private var radius: Float
-    private var rotation : Float = 0f
-    private var rotation2 : Float = 0f
+    private var rotation: Float = 0f
+    private var rotation2: Float = 0f
 
     constructor(context: Context) : super() {
         val res = context.resources
@@ -30,9 +30,9 @@ class SimpleProgressDrawable : Drawable {
         paint.strokeWidth = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5f, dm)
         paint.style = Paint.Style.STROKE
         dispSize = Math.min(dm.widthPixels, dm.heightPixels)
-        paint.setShader(SweepGradient (radius, radius, context.obtainStyledColor(R.attr.contextColor50p), Color.TRANSPARENT))
+        paint.shader = SweepGradient (radius, radius, context.obtainStyledColor(R.attr.contextColor50p), Color.TRANSPARENT)
         rect = RectF()
-        rect.set(0f, 0f, diam, diam);
+        rect.set(0f, 0f, diam, diam)
     }
 
     override fun getOpacity(): Int {
@@ -46,13 +46,13 @@ class SimpleProgressDrawable : Drawable {
         canvas.save()
         canvas.translate(cx, cy)
         canvas.rotate(rotation, radius, radius)
-        canvas.drawArc(rect, -90f, 360f, false, paint);
+        canvas.drawArc(rect, -90f, 360f, false, paint)
         canvas.restore()
 
         canvas.save()
         canvas.translate(cx, cy)
         canvas.rotate(180 - rotation, radius, radius)
-        canvas.drawArc(rect, 180f, 360f, false, paint);
+        canvas.drawArc(rect, 180f, 360f, false, paint)
         canvas.restore()
 
         rotation += 5
@@ -68,7 +68,7 @@ class SimpleProgressDrawable : Drawable {
     }
 
     override fun setColorFilter(colorFilter: ColorFilter?) {
-        paint.setColorFilter(colorFilter)
+        paint.colorFilter = colorFilter
     }
 
     override fun setAlpha(alpha: Int) {

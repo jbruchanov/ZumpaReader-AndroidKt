@@ -7,7 +7,7 @@ import android.view.View
 /**
  * Created by JBruchanov on 25/11/2015.
  */
-public open class AnimatorListener : Animator.AnimatorListener, ViewPropertyAnimatorListener {
+open class AnimatorListener : Animator.AnimatorListener, ViewPropertyAnimatorListener {
     override fun onAnimationEnd(view: View?) {
         onAnimationEnd(view, null)
     }

@@ -13,8 +13,6 @@ import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection
-import com.pawegio.kandroid.find
-import com.pawegio.kandroid.toast
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.app.BaseFragment
 import com.scurab.android.zumpareader.content.post.PostFragment
@@ -28,6 +26,8 @@ import com.scurab.android.zumpareader.ui.showAnimated
 import com.scurab.android.zumpareader.util.*
 import com.scurab.android.zumpareader.widget.PostMessageView
 import com.scurab.android.zumpareader.widget.SurveyView
+import org.jetbrains.anko.find
+import org.jetbrains.anko.support.v4.toast
 import rx.Observer
 import rx.Subscriber
 import rx.android.schedulers.AndroidSchedulers
@@ -36,13 +36,13 @@ import rx.schedulers.Schedulers
 /**
  * Created by JBruchanov on 27/11/2015.
  */
-public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, SendingFragment, SurveyView.ItemClickListener {
+class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, SendingFragment, SurveyView.ItemClickListener {
 
     companion object {
         private val THREAD_ID: String = "THREAD_ID"
         private val SCROLL_DOWN: String = "SCROLL_DOWN"
 
-        public fun newInstance(threadId: String, scrollDown: Boolean = false): SubListFragment {
+        fun newInstance(threadId: String, scrollDown: Boolean = false): SubListFragment {
             return SubListFragment().apply {
                 var args = Bundle()
                 args.putString(THREAD_ID, threadId)
@@ -59,7 +59,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
 
     protected val argThreadId by lazy { arguments!!.getString(THREAD_ID) }
     protected val argScrollDown by lazy { arguments!!.getBoolean(SCROLL_DOWN) }
-    private var firstLoad : Boolean = true
+    private var firstLoad: Boolean = true
 
     private val recyclerView: RecyclerView? get() = view?.find<RecyclerView>(R.id.recycler_view)
     private val swipyRefreshLayout: SwipyRefreshLayout? get() = view?.find<SwipyRefreshLayout>(R.id.swipe_refresh_layout)
@@ -82,8 +82,8 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
 
     override var sendingDialog: ProgressDialog? = null
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup, savedInstanceState: Bundle?): View? {
-        var content = inflater.inflate(R.layout.view_recycler_refreshable_thread, container, false)
+    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        var content = inflater!!.inflate(R.layout.view_recycler_refreshable_thread, container, false)
         content.setBackgroundColor(Color.BLACK)
         return content
     }
@@ -122,12 +122,12 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
                 }
             }
         }
-        view.viewTreeObserver.addOnGlobalLayoutListener(treeViewObserver)
+        view!!.viewTreeObserver.addOnGlobalLayoutListener(treeViewObserver)
     }
 
-    private fun updateRecycleViewPadding(){
+    private fun updateRecycleViewPadding() {
         if (zumpaApp?.zumpaPrefs?.isLoggedInNotOffline ?: false) {
-            view.post { //set padding for response panel
+            view!!.post { //set padding for response panel
                 recyclerView.execOn {
                     setPadding(paddingLeft, paddingTop, paddingRight, postMessageView?.height ?: 0)
                 }
@@ -139,7 +139,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
         mainActivity?.setScrollStrategyEnabled(true)
         isLoading = false
         isSending = false
-        view.viewTreeObserver.removeGlobalLayoutListenerSafe(treeViewObserver)
+        view!!.viewTreeObserver.removeGlobalLayoutListenerSafe(treeViewObserver)
         super.onPause()
     }
 
@@ -185,11 +185,11 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
         }
     }
 
-    public fun loadData() {
+    fun loadData() {
         loadData(argThreadId)
     }
 
-    public fun loadData(tid: String, force: Boolean = false) {
+    fun loadData(tid: String, force: Boolean = false) {
         if ((isLoading && !force) || tid.isNullOrEmpty()) {
             isSending = false
             return
@@ -258,7 +258,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
         return false
     }
 
-    private fun onResultLoaded(result: ZumpaThreadResult, clearData:Boolean) {
+    private fun onResultLoaded(result: ZumpaThreadResult, clearData: Boolean) {
         result.items.exec {
             var items = it
             storeReadState(result)
@@ -326,7 +326,7 @@ public class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
 
                             override fun onNext(t: ZumpaGenericResponse) {
                                 var x = t.asString()
-                                Log.d("", x);
+                                Log.d("", x)
                             }
 
                             override fun onError(e: Throwable?) {

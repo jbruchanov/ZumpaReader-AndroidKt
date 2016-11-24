@@ -8,8 +8,6 @@ import android.text.Editable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.pawegio.kandroid.find
-import com.pawegio.kandroid.toast
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.app.MainActivity
@@ -22,6 +20,8 @@ import com.scurab.android.zumpareader.util.execOn
 import com.scurab.android.zumpareader.util.hideKeyboard
 import com.scurab.android.zumpareader.util.toast
 import com.scurab.android.zumpareader.widget.PostMessageView
+import org.jetbrains.anko.find
+import org.jetbrains.anko.support.v4.toast
 import rx.Observer
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
@@ -30,18 +30,18 @@ import java.util.*
 /**
  * Created by JBruchanov on 31/12/2015.
  */
-public class PostMessageFragment : DialogFragment(), SendingFragment {
+class PostMessageFragment : DialogFragment(), SendingFragment {
 
     companion object {
         private val SHOW_KEYBOARD = "SHOW_KEYBOARD"
 
-        public fun newInstance(subject: String?, message: String?): PostMessageFragment {
+        fun newInstance(subject: String?, message: String?): PostMessageFragment {
             return PostMessageFragment().apply {
                 arguments = PostFragment.arguments(subject, message)
             }
         }
 
-        public fun arguments(subject: String?, message: String?, showKeyboard: Boolean = true, threadId: String? = null): Bundle {
+        fun arguments(subject: String?, message: String?, showKeyboard: Boolean = true, threadId: String? = null): Bundle {
             return Bundle().apply {
                 putString(Intent.EXTRA_SUBJECT, subject)
                 putString(Intent.EXTRA_TEXT, message)
@@ -54,10 +54,10 @@ public class PostMessageFragment : DialogFragment(), SendingFragment {
     private val postMessageView: PostMessageView? get() = view?.find<PostMessageView>(R.id.post_message_view)
     override var sendingDialog: ProgressDialog? = null
 
-    public val mainActivity: MainActivity? get() {
+    val mainActivity: MainActivity? get() {
         return activity as MainActivity?
     }
-    public val zumpaApp: ZumpaReaderApp? get() {
+    val zumpaApp: ZumpaReaderApp? get() {
         return mainActivity?.zumpaApp
     }
 
@@ -108,7 +108,7 @@ public class PostMessageFragment : DialogFragment(), SendingFragment {
             return
         }
 
-        var postMessageView= this.postMessageView!!
+        var postMessageView = this.postMessageView!!
         var subject = postMessageView.subject.text.toString().trim()
         var message = postMessageView.message.text.toString().trim()
 
@@ -126,7 +126,7 @@ public class PostMessageFragment : DialogFragment(), SendingFragment {
             val app = zumpaApp!!
             val threadId = argThreadId
             isSending = true
-            if(threadId == null) {
+            if (threadId == null) {
                 val body = ZumpaThreadBody(app.zumpaPrefs.nickName, subject, message)
                 context.hideKeyboard(view)
                 it.sendThread(body)
@@ -137,7 +137,9 @@ public class PostMessageFragment : DialogFragment(), SendingFragment {
 
                             override fun onError(e: Throwable?) {
                                 isSending = false
-                                e?.message.exec { if (view != null) view.post { toast(it) } }
+                                e?.message.exec {
+                                    toast(it)
+                                }
                             }
 
                             override fun onCompleted() {
@@ -193,7 +195,7 @@ public class PostMessageFragment : DialogFragment(), SendingFragment {
         links.add(link)
     }
 
-    private fun String.asZumpaLinkWithNewLine() : String {
+    private fun String.asZumpaLinkWithNewLine(): String {
         return "<%s>\n".format(this)
     }
 

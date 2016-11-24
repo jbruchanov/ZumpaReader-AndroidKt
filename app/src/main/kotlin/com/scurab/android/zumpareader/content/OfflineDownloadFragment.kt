@@ -9,7 +9,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
-import com.pawegio.kandroid.find
 import com.scurab.android.zumpareader.BusProvider
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
@@ -20,6 +19,7 @@ import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.ui.isVisible
 import com.scurab.android.zumpareader.util.asVisibility
 import com.scurab.android.zumpareader.util.toast
+import org.jetbrains.anko.find
 import java.io.File
 import java.util.*
 
@@ -27,9 +27,9 @@ import java.util.*
  * Created by JBruchanov on 15/01/2016.
  */
 
-public class OfflineDownloadFragment : DialogFragment() {
+class OfflineDownloadFragment : DialogFragment() {
 
-    public val zumpaApp: ZumpaReaderApp?
+    val zumpaApp: ZumpaReaderApp?
         get() {
             return context.applicationContext as? ZumpaReaderApp
         }
@@ -57,12 +57,12 @@ public class OfflineDownloadFragment : DialogFragment() {
         setStyle(0, R.style.AppTheme_Dialog_Offline)
     }
 
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog? {
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialog = super.onCreateDialog(savedInstanceState)
         dialog.setOnKeyListener { dialogInterface, i, keyEvent ->
             (KeyEvent.KEYCODE_BACK == i && isLoading)
         }
-        return dialog;
+        return dialog
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {

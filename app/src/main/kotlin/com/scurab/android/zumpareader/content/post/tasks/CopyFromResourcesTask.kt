@@ -14,12 +14,12 @@ import java.io.FileOutputStream
 /**
  * Created by JBruchanov on 12/01/2016.
  */
-public abstract class CopyFromResourcesTask(private val context: Context, val uri: Uri) : AsyncTask<Void, Void, String>() {
+abstract class CopyFromResourcesTask(private val context: Context, val uri: Uri) : AsyncTask<Void, Void, String>() {
 
-    public var imageResolution: Point? = null
-    public var imageSize: Long = 0
-    public var imageMime: String? = null
-    public var thumbnail: File? = null
+    var imageResolution: Point? = null
+    var imageSize: Long = 0
+    var imageMime: String? = null
+    var thumbnail: File? = null
     private var output: File? = null
     private var imageStorage: File? = null
     private var hash: String? = null
@@ -40,7 +40,7 @@ public abstract class CopyFromResourcesTask(private val context: Context, val ur
         }
     }
 
-    public fun start() {
+    fun start() {
         imageStorage = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
         hash = ParseUtils.MD5(uri.toString())
         val output = File(imageStorage, hash)

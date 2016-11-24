@@ -34,61 +34,61 @@ import java.util.*
  */
 
 
-public fun <T : View> RecyclerView.ViewHolder.find(@IdRes resId: Int): T {
+fun <T : View> RecyclerView.ViewHolder.find(@IdRes resId: Int): T {
     var t = itemView.findViewById(resId) as T?
     t.execIfNull { throw NullPointerException("Unable to find view with id:'%s'".format(resId)) }
     return t!!
 }
 
-public inline fun <T> T?.exec(f: (T) -> Unit) {
+inline fun <T> T?.exec(f: (T) -> Unit) {
     if (this != null) {
         f(this)
     }
 }
 
-public inline fun <T> T?.execOn(f: T.() -> Unit) {
+inline fun <T> T?.execOn(f: T.() -> Unit) {
     if (this != null) {
         f(this)
     }
 }
 
-public fun <T> T?.execIfNull(f: () -> Unit) {
+fun <T> T?.execIfNull(f: () -> Unit) {
     if (this == null) {
         f()
     }
 }
 
-public fun String.encodeHttp(): String {
+fun String.encodeHttp(): String {
     return URLEncoder.encode(this, ZR.Constants.ENCODING)
 }
 
-public fun <K, V> Map<K, V>.asListOfValues(): ArrayList<V> = ArrayList(this.values);
-public fun <K, V> Map<K, V>.asListOfKeys(): ArrayList<K> = ArrayList(this.keys);
+fun <K, V> Map<K, V>.asListOfValues(): ArrayList<V> = ArrayList(this.values)
+fun <K, V> Map<K, V>.asListOfKeys(): ArrayList<K> = ArrayList(this.keys)
 
 
-private val typedValue = TypedValue();
-public fun Context.obtainStyledColor(attr: Int): Int {
-    theme.resolveAttribute(attr, typedValue, true);
-    return typedValue.data;
+private val typedValue = TypedValue()
+fun Context.obtainStyledColor(attr: Int): Int {
+    theme.resolveAttribute(attr, typedValue, true)
+    return typedValue.data
 }
 
-public fun Context.toast(@StringRes msgRes: Int) {
+fun Context.toast(@StringRes msgRes: Int) {
     toast(resources.getString(msgRes))
 }
 
-public fun Context.toast(msg: String?) {
+fun Context.toast(msg: String?) {
     if (msg != null) {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
     }
 }
 
-public fun Drawable.wrapWithTint(color: Int): Drawable {
-    var drawable = DrawableCompat.wrap(this);
-    DrawableCompat.setTintList(drawable, ColorStateList.valueOf(color));
+fun Drawable.wrapWithTint(color: Int): Drawable {
+    var drawable = DrawableCompat.wrap(this)
+    DrawableCompat.setTintList(drawable, ColorStateList.valueOf(color))
     return drawable
 }
 
-public fun List<Fragment?>.lastNonNullFragment(): Fragment? {
+fun List<Fragment?>.lastNonNullFragment(): Fragment? {
     for (i in Math.max(0, size - 1) downTo 0 step 1) {
         if (this[i] != null) {
             return this[i]
@@ -97,41 +97,41 @@ public fun List<Fragment?>.lastNonNullFragment(): Fragment? {
     return null
 }
 
-public fun Context.hideKeyboard() {
+fun Context.hideKeyboard() {
     hideKeyboard(null)
 }
 
-public fun Context.hideKeyboard(view: View?) {
-    var imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager;
+fun Context.hideKeyboard(view: View?) {
+    var imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
     imm.exec {
-        var focused = view?.findFocus() ?: null;
+        var focused = view?.findFocus() ?: null
         if (focused == null) {
-            imm.hideSoftInputFromInputMethod(null, 0);
+            imm.hideSoftInputFromInputMethod(null, 0)
         } else {
             if (!imm.hideSoftInputFromWindow(focused.windowToken, InputMethodManager.HIDE_IMPLICIT_ONLY)) {
-                imm.hideSoftInputFromWindow(focused.windowToken, 0);
+                imm.hideSoftInputFromWindow(focused.windowToken, 0)
             }
         }
     }
 }
 
-public fun Context.showKeyboard() {
+fun Context.showKeyboard() {
     showKeyboard()
 }
 
-public fun Context.showKeyboard(view: View?) {
-    var imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager;
+fun Context.showKeyboard(view: View?) {
+    var imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
     imm.exec {
         imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
         view?.requestFocus()
     }
 }
 
-public fun Context.post(runnable: Runnable) {
+fun Context.post(runnable: Runnable) {
     Handler(Looper.getMainLooper()).post(runnable)
 }
 
-public fun Context.postDelayed(runnable: Runnable, delay: Long) {
+fun Context.postDelayed(runnable: Runnable, delay: Long) {
     if (delay <= 0) {
         post(runnable)
     } else {
@@ -139,56 +139,56 @@ public fun Context.postDelayed(runnable: Runnable, delay: Long) {
     }
 }
 
-public fun Context.getRandomCameraFileUri(withScheme: Boolean = true): String {
-    val path = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+fun Context.getRandomCameraFileUri(withScheme: Boolean = true): String {
+    val path = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
     if (!path.exists()) {
-        path.mkdir();
+        path.mkdir()
     }
-    var file = File(path, "camera_%s.jpg".format(System.currentTimeMillis()));
+    var file = File(path, "camera_%s.jpg".format(System.currentTimeMillis()))
     return if (withScheme) "file://" + file.absolutePath else file.absolutePath
 }
 
-public fun ImageView.setImageTint(color: Int) {
+fun ImageView.setImageTint(color: Int) {
     if (drawable != null) {
         setImageDrawable(drawable.wrapWithTint(color))
     }
 }
 
-public fun ImageButton.setImageTint(color: Int) {
+fun ImageButton.setImageTint(color: Int) {
     if (drawable != null) {
         setImageDrawable(drawable.wrapWithTint(color))
     }
 }
 
-public fun Boolean.asVisibility(falseValue: Int = View.GONE) : Int {
+fun Boolean.asVisibility(falseValue: Int = View.GONE): Int {
     return if (this) View.VISIBLE else falseValue
 }
 
-public fun Context.saveToClipboard(text: String?) {
+fun Context.saveToClipboard(text: String?) {
     var clip = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     clip.primaryClip = ClipData.newPlainText(text, text)
 }
 
-public fun Context.saveToClipboard(uri: Uri) {
+fun Context.saveToClipboard(uri: Uri) {
     var clip = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     clip.primaryClip = ClipData.newRawUri(uri.toString(), uri)
 }
 
-public fun View.setPadding(px: Int) {
+fun View.setPadding(px: Int) {
     setPadding(px, px, px, px)
 }
 
-public fun View.setPaddingRes(@DimenRes dimenRes: Int) {
+fun View.setPaddingRes(@DimenRes dimenRes: Int) {
     val px = resources.getDimensionPixelSize(dimenRes)
     setPadding(px, px, px, px)
 }
 
-public fun Uri.isImage() : Boolean{
+fun Uri.isImage(): Boolean {
     val path = path.toLowerCase()
     return path.endsWith(".jpg") || path.endsWith(".jpeg") || path.endsWith(".png") || path.endsWith(".bmp") || path.endsWith(".gif")
 }
 
-public fun String.isImageUri(): Boolean {
+fun String.isImageUri(): Boolean {
     try {
         return Uri.parse(this).isImage()
     } catch(e: Exception) {
@@ -196,13 +196,13 @@ public fun String.isImageUri(): Boolean {
     }
 }
 
-public fun InputStream.contentAsString(): String {
+fun InputStream.contentAsString(): String {
     var bos = ByteArrayOutputStream()
     copyTo(bos)
     return String(bos.toByteArray())
 }
 
-public fun ViewTreeObserver.removeGlobalLayoutListenerSafe(listener: ViewTreeObserver.OnGlobalLayoutListener) {
+fun ViewTreeObserver.removeGlobalLayoutListenerSafe(listener: ViewTreeObserver.OnGlobalLayoutListener) {
     try {
         removeOnGlobalLayoutListener(listener)
     } catch(e: Throwable) {

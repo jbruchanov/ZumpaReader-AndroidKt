@@ -6,30 +6,30 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import com.pawegio.kandroid.find
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.ui.DelayClickListener
 import com.scurab.android.zumpareader.util.exec
+import org.jetbrains.anko.find
 import java.text.SimpleDateFormat
 import java.util.*
 
 /**
  * Created by JBruchanov on 25/11/2015.
  */
-public class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadViewHolder> {
+class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadViewHolder> {
 
-    public interface OnShowItemListener {
-        public fun onShowingItem(source: MainListAdapter, item: Int);
+    interface OnShowItemListener {
+        fun onShowingItem(source: MainListAdapter, item: Int)
     }
 
-    public interface OnItemClickListener {
-        public fun onItemClick(item: ZumpaThread, position: Int);
+    interface OnItemClickListener {
+        fun onItemClick(item: ZumpaThread, position: Int)
     }
 
-    public var onItemClickListener: OnItemClickListener? = null
+    var onItemClickListener: OnItemClickListener? = null
 
-    public var items: ArrayList<ZumpaThread>
+    var items: ArrayList<ZumpaThread>
     private val dataMap: HashMap<String, ZumpaThread> = HashMap()
     private var ownerRecyclerView: RecyclerView? = null
     private val dateFormat = SimpleDateFormat("dd.MM. HH:mm.ss")
@@ -39,13 +39,13 @@ public class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadV
 
     constructor(data: ArrayList<ZumpaThread>) : super() {
         items = ArrayList(data)
-        dataMap.putAll(items.toMapBy { it.id })
+        dataMap.putAll(items.associateBy { it.id })
     }
 
-    public fun addItems(newItems: ArrayList<ZumpaThread>) {
+    fun addItems(newItems: ArrayList<ZumpaThread>) {
         for (newItem in newItems) {
             //need to rewrite old stuff
-            dataMap.put(newItem.id, newItem);
+            dataMap.put(newItem.id, newItem)
         }
         items.clear()
         items.addAll(dataMap.values)
@@ -53,7 +53,7 @@ public class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadV
         notifyDataSetChanged()
     }
 
-    public fun removeAll() {
+    fun removeAll() {
         items.clear()
         dataMap.clear()
         try {
@@ -69,14 +69,14 @@ public class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadV
 
     override fun onBindViewHolder(holder: ZumpaThreadViewHolder, position: Int) {
         var item = items[position]
-        holder.itemView.background.setLevel(position % 2)
+        holder.itemView.background.level = position % 2
         holder.title.text = item.styledSubject(holder.itemView.context)
         holder.author.text = item.author
         holder.threads.text = item.items.toString()
         holder.time.text = if (item.lastAuthor == null) dateFormat.format(item.date) else shoreDateFormat.format(item.date)
         holder.lastAuthor.text = item.lastAuthor
         (holder.stateBar.background as? LevelListDrawable).exec {
-            it.setLevel(item.state)
+            it.level = item.state
         }
         if (position == itemCount - onShoItemListenerEndOffset) {
             onShowItemListener?.onShowingItem(this, position)
@@ -110,13 +110,13 @@ public class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadV
         ownerRecyclerView = null
     }
 
-    public fun setOnShowItemListener(listener: OnShowItemListener, endOffset: Int) {
+    fun setOnShowItemListener(listener: OnShowItemListener, endOffset: Int) {
         onShowItemListener = listener
         onShoItemListenerEndOffset = endOffset
     }
 
 
-    public class ZumpaThreadViewHolder(view: View) : ZumpaItemViewHolder(view) {
+    class ZumpaThreadViewHolder(view: View) : ZumpaItemViewHolder(view) {
         val stateBar by lazy { itemView.find<View>(R.id.item_state) }
         val lastAuthor by lazy { itemView.find<TextView>(R.id.last_author) }
     }
