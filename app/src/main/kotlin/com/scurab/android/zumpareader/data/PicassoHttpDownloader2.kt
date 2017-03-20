@@ -25,10 +25,18 @@ class PicassoHttpDownloader2(private val imageStorage: File,
 
     companion object {
         fun createDefault(context: Context, client: OkHttpClient, zumpaPrefs: ZumpaPrefs? = null): Downloader {
-            return PicassoHttpDownloader2(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
+            return PicassoHttpDownloader2(getPicturesDir(context),
                     Point(context.resources.displayMetrics.widthPixels, context.resources.displayMetrics.heightPixels),
                     zumpaPrefs,
                     client)
+        }
+
+        fun getPicturesDir(context: Context): File {
+            var externalFilesDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+            if (externalFilesDir == null) {
+                externalFilesDir = context.getDir(Environment.DIRECTORY_PICTURES, Context.MODE_PRIVATE)
+            }
+            return externalFilesDir;
         }
     }
 
