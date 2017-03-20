@@ -84,9 +84,10 @@ dependencies {
     compile 'org.jsoup:jsoup:1.8.3'
     compile 'com.pawegio.kandroid:kandroid:0.3.8@aar'
 
-    compile 'com.squareup.okhttp3:okhttp:3.2.0'
-    compile 'com.squareup.okhttp3:okhttp-urlconnection:3.2.0'
-    compile 'com.squareup.okhttp3:logging-interceptor:3.2.0'
+    def retrofit = "3.6.0"
+    compile "com.squareup.okhttp3:okhttp:${retrofit}"
+    compile "com.squareup.okhttp3:okhttp-urlconnection:${retrofit}"
+    compile "com.squareup.okhttp3:logging-interceptor:${retrofit}"
 
     compile 'com.squareup.retrofit2:retrofit:2.2.0'
     compile 'com.squareup.retrofit2:converter-gson:2.2.0'
