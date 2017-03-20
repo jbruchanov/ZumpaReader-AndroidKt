@@ -185,7 +185,7 @@ class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
             if (clearData) {
                 notifyDataSetChanged()
             } else {
-                notifyItemRangeInserted(oldSize, dataItems.size - oldSize - 1)
+                notifyItemRangeInserted(oldSize, dataItems.size - oldSize)
             }
         } else if (items.size >= 0 && items[0].survey != null) {
             //update survey if necessary
