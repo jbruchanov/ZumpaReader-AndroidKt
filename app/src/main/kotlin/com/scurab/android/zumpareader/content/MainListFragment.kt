@@ -21,11 +21,10 @@ import com.scurab.android.zumpareader.util.exec
 import com.scurab.android.zumpareader.util.execIfNull
 import com.scurab.android.zumpareader.util.execOn
 import com.squareup.otto.Subscribe
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import org.jetbrains.anko.find
 import org.jetbrains.anko.support.v4.toast
-import rx.Observer
-import rx.android.schedulers.AndroidSchedulers
-import rx.schedulers.Schedulers
 
 /**
  * Created by JBruchanov on 24/11/2015.
@@ -164,27 +163,19 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
             lastOffline = offline
             lastFilter = filter
             isLoading = true
+
             val mainPage = if (fromThread != null) zumpaApp.zumpaAPI.getMainPage(fromThread, filter) else zumpaApp.zumpaAPI.getMainPage(filter)
-            mainPage.exec {
-                it.observeOn(AndroidSchedulers.mainThread())
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(object : Observer<ZumpaMainPageResult?> {
-                            override fun onNext(t: ZumpaMainPageResult?) {
-                                t.exec {
-                                    onResultLoaded(it)
-                                }
-                            }
-
-                            override fun onError(e: Throwable?) {
+            mainPage.subscribeOn(Schedulers.io())
+                    .compose(bindToLifecycle<ZumpaMainPageResult>())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                            { result -> onResultLoaded(result) },
+                            { err ->
                                 isLoading = false
-                                e?.message?.exec { toast(it) }
-                            }
-
-                            override fun onCompleted() {
-                                isLoading = false
-                            }
-                        })
-            }
+                                err?.message?.exec { toast(it) }
+                            },
+                            { isLoading = false }
+                    )
         }
     }
 

@@ -110,11 +110,6 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
         }.execute()
     }
 
-    override fun onResume() {
-        super.onResume()
-        zumpaApp.followRedirects = false
-    }
-
     override fun onPause() {
         super.onPause()
         isSending = false
@@ -126,7 +121,6 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
         zumpaApp.cookieManager.cookieStore.removeAll()
         zumpaApp.cookieManager.put(URI.create(ZR.Constants.ZUMPA_MAIN_URL), zumpaApp.zumpaPrefs.cookiesMap)
         zumpaApp.zumpaParser.isShowLastUser = zumpaApp.zumpaPrefs.showLastAuthor
-        zumpaApp.followRedirects = true
     }
 }
 
@@ -135,12 +129,9 @@ private abstract class LoginTask(private val zumpaApp: ZumpaReaderApp, private v
     private var pushResult: Boolean = false
 
     override fun doInBackground(vararg params: Void?): Void? {
-        zumpaApp.followRedirects = false
-
-        val loginResponse = zumpaApp.zumpaOnlineAPI.login(zumpaLoginBody).execute()
+        val loginResponse = zumpaApp.zumpaSettingsAPI.login(zumpaLoginBody).execute()
         loginResult = loginResponse.code() == 302
 
-        zumpaApp.followRedirects = true
         zumpaApp.zumpaPrefs.isLoggedIn = loginResult
         zumpaApp.zumpaPrefs.cookies = if (loginResult) ParseUtils.extractCookies(loginResponse) else null
 
@@ -149,7 +140,7 @@ private abstract class LoginTask(private val zumpaApp: ZumpaReaderApp, private v
             val token = instanceID.getToken("542579595500", GoogleCloudMessaging.INSTANCE_ID_SCOPE, null)
             zumpaApp.zumpaPrefs.pushRegId = token
             if (token != null && loginResult) {
-                val body = zumpaApp.zumpaOnlineAPI.getMainPageHtml().execute().body().asString()
+                val body = zumpaApp.zumpaSettingsAPI.getMainPageHtml().execute().body().asString()
                 val uid = ZumpaSimpleParser.parseUID(body)
                 if (uid != null) {
                     val response = zumpaApp.zumpaPHPAPI.register(zumpaLoginBody.nick, uid, token).execute().body().asUTFString()

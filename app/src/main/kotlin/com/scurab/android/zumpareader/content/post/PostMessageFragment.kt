@@ -3,8 +3,8 @@ package com.scurab.android.zumpareader.content.post
 import android.app.ProgressDialog
 import android.content.Intent
 import android.os.Bundle
-import android.support.v4.app.DialogFragment
 import android.text.Editable
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,17 +20,17 @@ import com.scurab.android.zumpareader.util.execOn
 import com.scurab.android.zumpareader.util.hideKeyboard
 import com.scurab.android.zumpareader.util.toast
 import com.scurab.android.zumpareader.widget.PostMessageView
+import com.trello.rxlifecycle2.components.support.RxDialogFragment
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import org.jetbrains.anko.find
 import org.jetbrains.anko.support.v4.toast
-import rx.Observer
-import rx.android.schedulers.AndroidSchedulers
-import rx.schedulers.Schedulers
 import java.util.*
 
 /**
  * Created by JBruchanov on 31/12/2015.
  */
-class PostMessageFragment : DialogFragment(), SendingFragment {
+class PostMessageFragment : RxDialogFragment(), SendingFragment {
 
     companion object {
         private val SHOW_KEYBOARD = "SHOW_KEYBOARD"
@@ -131,55 +131,42 @@ class PostMessageFragment : DialogFragment(), SendingFragment {
                 context.hideKeyboard(view)
                 it.sendThread(body)
                         .subscribeOn(Schedulers.io())
-                        .subscribe(object : Observer<ZumpaThreadResult?> {
-                            override fun onNext(t: ZumpaThreadResult?) {
-                            }
-
-                            override fun onError(e: Throwable?) {
-                                isSending = false
-                                e?.message.exec {
-                                    toast(it)
-                                }
-                            }
-
-                            override fun onCompleted() {
-                                isSending = false
-                                if (isResumed) {
+                        .compose(bindToLifecycle<ZumpaThreadResult>())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(
+                                {
+                                    result ->
+                                    Log.d("X", result.toString())
+                                },
+                                {
+                                    err ->
+                                    err?.message?.exec { toast(it) }
+                                },
+                                {
                                     dismiss()
                                 }
-                            }
-                        })
+                        )
             } else {
                 val body = ZumpaThreadBody(app.zumpaPrefs.nickName, app.zumpaData[threadId]?.subject ?: argSubject!!, message, threadId)
                 val observable = it.sendResponse(threadId, threadId, body)
                 context.hideKeyboard(view)
                 observable
                         .subscribeOn(Schedulers.io())
+                        .compose(bindToLifecycle<ZumpaThreadResult>())
                         .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(object : Observer<ZumpaThreadResult?> {
-                            private var finish = false
-                            override fun onNext(t: ZumpaThreadResult?) {
-                                t.exec {
-                                    if (isResumed) {
-                                        isSending = false
-                                        finish = true
-                                    }
-                                }
-                            }
-
-                            override fun onError(e: Throwable?) {
-                                if (isResumed) {
-                                    e?.message?.exec { toast(it) }
-                                    isSending = false
-                                }
-                            }
-
-                            override fun onCompleted() {
-                                if (finish && isResumed) {
+                        .subscribe(
+                                {
+                                    result ->
+                                    Log.d("X", result.toString())
+                                },
+                                {
+                                    err ->
+                                    err?.message?.exec { toast(it) }
+                                },
+                                {
                                     dismiss()
                                 }
-                            }
-                        })
+                        )
             }
         }
     }

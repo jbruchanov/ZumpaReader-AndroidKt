@@ -6,7 +6,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -26,12 +25,10 @@ import com.scurab.android.zumpareader.ui.showAnimated
 import com.scurab.android.zumpareader.util.*
 import com.scurab.android.zumpareader.widget.PostMessageView
 import com.scurab.android.zumpareader.widget.SurveyView
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import org.jetbrains.anko.find
 import org.jetbrains.anko.support.v4.toast
-import rx.Observer
-import rx.Subscriber
-import rx.android.schedulers.AndroidSchedulers
-import rx.schedulers.Schedulers
 
 /**
  * Created by JBruchanov on 27/11/2015.
@@ -127,7 +124,8 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
 
     private fun updateRecycleViewPadding() {
         if (zumpaApp?.zumpaPrefs?.isLoggedInNotOffline ?: false) {
-            view!!.post { //set padding for response panel
+            view!!.post {
+                //set padding for response panel
                 recyclerView.execOn {
                     setPadding(paddingLeft, paddingTop, paddingRight, postMessageView?.height ?: 0)
                 }
@@ -158,30 +156,24 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
             context.hideKeyboard(view)
             observable
                     .subscribeOn(Schedulers.io())
+                    .compose(bindToLifecycle<ZumpaThreadResult>())
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(object : Observer<ZumpaThreadResult?> {
-                        override fun onNext(t: ZumpaThreadResult?) {
-                            t.exec {
-                                if (isResumed) {
-                                    hideMessagePanel(true)
-                                    isSending = false
-                                    isLoading = false
-                                    scrollDownAfterLoad = true
-                                    loadData()
-                                }
-                            }
-                        }
-
-                        override fun onError(e: Throwable?) {
-                            if (isResumed) {
-                                e?.message?.exec { toast(it) }
+                    .subscribe(
+                            { result ->
+                                hideMessagePanel(true)
+                                isSending = false
+                                scrollDownAfterLoad = true
+                                loadData()
+                            },
+                            { err ->
+                                isLoading = false
+                                err?.message?.exec { toast(it) }
+                            },
+                            {
+                                isLoading = false
                                 isSending = false
                             }
-                        }
-
-                        override fun onCompleted() {
-                        }
-                    })
+                    )
         }
     }
 
@@ -196,12 +188,12 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
         }
         isLoading = true
         zumpaApp?.zumpaAPI?.getThreadPage(tid, tid).exec {
-            it.observeOn(AndroidSchedulers.mainThread())
-                    .subscribeOn(Schedulers.io())
-                    .subscribe(object : Observer<ZumpaThreadResult?> {
-                        override fun onNext(t: ZumpaThreadResult?) {
-                            t.exec {
-                                onResultLoaded(it, force)
+            it.subscribeOn(Schedulers.io())
+                    .compose(bindToLifecycle<ZumpaThreadResult>())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                            { result ->
+                                onResultLoaded(result, force)
                                 if (scrollDownAfterLoad || (argScrollDown && firstLoad)) {
                                     scrollDownAfterLoad = false
                                     firstLoad = false
@@ -209,22 +201,18 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
                                         it.smoothScrollToPosition(it.adapter.itemCount)
                                     }
                                 }
+                            },
+                            { err ->
+                                err?.message?.exec { toast(it) }
+                            },
+                            {
+                                isSending = false
+                                isLoading = false
                             }
-                        }
-
-                        override fun onError(e: Throwable?) {
-                            isSending = false
-                            isLoading = false
-                            e?.message?.exec { toast(it) }
-                        }
-
-                        override fun onCompleted() {
-                            isSending = false
-                            isLoading = false
-                        }
-                    })
+                    )
         }
     }
+
 
     override fun onFloatingButtonClick() {
         postMessageView.exec {
@@ -317,26 +305,13 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
         if (zumpaApp?.zumpaPrefs?.isLoggedInNotOffline ?: false) {
             zumpaApp?.zumpaAPI?.voteSurvey(ZumpaVoteSurveyBody(item.surveyId, item.id)).exec {
                 isSending = true
-                it.observeOn(AndroidSchedulers.mainThread())
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(object : Subscriber<ZumpaGenericResponse>() {
-                            override fun onCompleted() {
-                                loadData()//hide dialog there
-                            }
-
-                            override fun onNext(t: ZumpaGenericResponse) {
-                                var x = t.asString()
-                                Log.d("", x)
-                            }
-
-                            override fun onError(e: Throwable?) {
-                                if (context != null) {
-                                    e?.message.exec {
-                                        context.toast(it)
-                                    }
-                                }
-                            }
-                        })
+                it.subscribeOn(Schedulers.io())
+                        .compose(bindToLifecycle<ZumpaGenericResponse>())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(
+                                { result -> loadData() },
+                                { err -> err?.message?.exec { toast(it) } }
+                        )
             }
         }
     }

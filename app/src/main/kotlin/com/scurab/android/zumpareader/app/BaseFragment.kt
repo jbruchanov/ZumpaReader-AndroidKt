@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.support.v4.app.Fragment
 import android.view.MenuItem
 import com.scurab.android.zumpareader.BusProvider
 import com.scurab.android.zumpareader.R
@@ -12,12 +11,13 @@ import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.util.execOn
 import com.scurab.android.zumpareader.util.toast
+import com.trello.rxlifecycle2.components.support.RxFragment
 import java.util.*
 
 /**
  * Created by JBruchanov on 25/11/2015.
  */
-abstract class BaseFragment : Fragment() {
+abstract class BaseFragment : RxFragment() {
 
     val mainActivity: MainActivity?
         get() {

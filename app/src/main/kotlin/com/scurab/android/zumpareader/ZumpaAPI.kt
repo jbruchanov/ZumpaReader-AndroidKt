@@ -1,13 +1,12 @@
 package com.scurab.android.zumpareader
 
 import com.scurab.android.zumpareader.model.*
+import io.reactivex.Observable
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Query
-import rx.Observable
-import java.util.*
 
 /**
  * Created by JBruchanov on 24/11/2015.

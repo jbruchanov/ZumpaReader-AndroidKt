@@ -25,7 +25,7 @@ import okhttp3.JavaNetCookieJar
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
-import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
@@ -61,7 +61,11 @@ class ZumpaReaderApp : Application() {
     private val MAX_STATES_TO_STORE = 100
     private val TIMEOUT = 5000L
 
-    val zumpaHttpClient by lazy {
+
+    val zumpaHttpClient by lazy { buildHttpClient(true) }
+    val zumpaSettingsHttpClient by lazy { buildHttpClient(false) }
+
+    private fun buildHttpClient(redirect: Boolean) : OkHttpClient {
         cookieManager.setCookiePolicy(java.net.CookiePolicy.ACCEPT_ALL)
         cookieManager.put(URI.create(ZR.Constants.ZUMPA_MAIN_URL), zumpaPrefs.cookiesMap)
 
@@ -69,8 +73,8 @@ class ZumpaReaderApp : Application() {
         // set your desired log level
         logging.level = HttpLoggingInterceptor.Level.BODY
 
-        OkHttpClient.Builder().apply {
-            followRedirects(followRedirects)
+        return OkHttpClient.Builder().apply {
+            followRedirects(redirect)
             connectTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
             readTimeout(TIMEOUT * 5, TimeUnit.MILLISECONDS)
             writeTimeout(TIMEOUT * 5, TimeUnit.MILLISECONDS)
@@ -174,8 +178,19 @@ class ZumpaReaderApp : Application() {
         val retrofit = Retrofit.Builder()
                 .baseUrl(ZR.Constants.ZUMPA_MAIN_URL)
                 .addConverterFactory(ZumpaConverterFactory(zumpaParser))
-                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .client(zumpaHttpClient)
+                .build()
+
+        retrofit.create(ZumpaAPI::class.java)
+    }
+
+    val zumpaSettingsAPI: ZumpaAPI by lazy {
+        val retrofit = Retrofit.Builder()
+                .baseUrl(ZR.Constants.ZUMPA_MAIN_URL)
+                .addConverterFactory(ZumpaConverterFactory(zumpaParser))
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .client(zumpaSettingsHttpClient)
                 .build()
 
         retrofit.create(ZumpaAPI::class.java)
@@ -189,7 +204,7 @@ class ZumpaReaderApp : Application() {
         val retrofit = Retrofit.Builder()
                 .baseUrl(ZR.Constants.ZUMPA_WS_MAIN_URL)
                 .addConverterFactory(ZumpaGenericConverterFactory())
-                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .client(zumpaHttpClient)
                 .build()
 
@@ -200,7 +215,7 @@ class ZumpaReaderApp : Application() {
         val retrofit = Retrofit.Builder()
                 .baseUrl(ZR.Constants.ZUMPA_PHP_MAIN_URL)
                 .addConverterFactory(ZumpaGenericConverterFactory())
-                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .client(zumpaHttpClient)
                 .build()
 
@@ -210,11 +225,4 @@ class ZumpaReaderApp : Application() {
     fun resetCookies() {
         cookieManager.cookieStore.removeAll()
     }
-
-    var followRedirects: Boolean
-        get() = false
-        set(value) {
-            //zumpaHttpClient.followRedirects = value
-        }
-
 }
