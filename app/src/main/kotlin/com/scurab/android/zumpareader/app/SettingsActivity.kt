@@ -2,7 +2,6 @@ package com.scurab.android.zumpareader.app
 
 import android.app.ProgressDialog
 import android.content.Context
-import android.os.AsyncTask
 import android.os.Bundle
 import android.preference.PreferenceActivity
 import com.google.android.gms.gcm.GoogleCloudMessaging
@@ -17,6 +16,11 @@ import com.scurab.android.zumpareader.util.ParseUtils
 import com.scurab.android.zumpareader.util.ZumpaPrefs
 import com.scurab.android.zumpareader.util.execOn
 import com.scurab.android.zumpareader.util.toast
+import io.reactivex.Single
+import io.reactivex.SingleObserver
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
+import io.reactivex.schedulers.Schedulers
 import java.net.URI
 
 /**
@@ -67,16 +71,24 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
         filterPref.isEnabled = false
         if (user != null) {
             isSending = true
-            object : LogoutTask(zumpaApp, user) {
-                override fun onPostExecute(loginResult: Boolean, pushResult: Boolean) {
-                    toast(R.string.done)
-                    isSending = false
-                }
-            }.execute()
+            logoutCall = LogoutCall(zumpaApp, user)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe { result, err ->
+                        isSending = false
+                        if (err == null) {
+                            toast(R.string.done)
+                        } else {
+                            toast(err.message)
+                        }
+                    }
         } else {
             toast(R.string.done)
         }
     }
+
+    private var loginCall: Disposable? = null
+    private var logoutCall: Disposable? = null
 
     protected fun dispatchLoginClicked() {
         var user = preferenceManager.sharedPreferences.getString(ZumpaPrefs.KEY_USER_NAME, "")
@@ -93,26 +105,36 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
         }
 
         isSending = true
-        object : LoginTask(zumpaApp, ZumpaLoginBody(user, pwd)) {
-            override fun onPostExecute(loginResult: Boolean, pushResult: Boolean) {
-                isSending = false
-                if (!isFinishing) {
-                    toast(if (loginResult) R.string.ok else R.string.err_fail)
-                    if (!pushResult) {
-                        toast(R.string.err_no_push_reg)
-                    }
-                    filterPref.isEnabled = loginResult
-                    if (loginResult) {
-                        buttonPref.title = resources.getString(R.string.logout)
-                    }
-                }
-            }
-        }.execute()
+        loginCall = LoginCall(zumpaApp, ZumpaLoginBody(user, pwd))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        { result ->
+                            isSending = false
+                            val loginResult = result.first
+                            val pushResult = result.second
+                            toast(if (loginResult) R.string.ok else R.string.err_fail)
+                            if (!pushResult) {
+                                toast(R.string.err_no_push_reg)
+                            }
+                            filterPref.isEnabled = loginResult
+                            if (loginResult) {
+                                buttonPref.title = resources.getString(R.string.logout)
+                            }
+                        },
+                        { err ->
+                            isSending = false
+                            toast(err.message)
+                        }
+                )
     }
 
     override fun onPause() {
         super.onPause()
         isSending = false
+
+        loginCall?.dispose()
+        logoutCall?.dispose()
 
         zumpaApp.zumpaParser.execOn {
             userName = zumpaApp.zumpaPrefs.loggedUserName
@@ -124,11 +146,11 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
     }
 }
 
-private abstract class LoginTask(private val zumpaApp: ZumpaReaderApp, private val zumpaLoginBody: ZumpaLoginBody) : AsyncTask<Void, Void, Void>() {
+private class LoginCall(private val zumpaApp: ZumpaReaderApp, private val zumpaLoginBody: ZumpaLoginBody) : Single<Pair<Boolean, Boolean>>() {
     private var loginResult: Boolean = false
     private var pushResult: Boolean = false
 
-    override fun doInBackground(vararg params: Void?): Void? {
+    override fun subscribeActual(observer: SingleObserver<in Pair<Boolean, Boolean>>) {
         val loginResponse = zumpaApp.zumpaSettingsAPI.login(zumpaLoginBody).execute()
         loginResult = loginResponse.code() == 302
 
@@ -150,33 +172,22 @@ private abstract class LoginTask(private val zumpaApp: ZumpaReaderApp, private v
         } catch(e: Throwable) {
             e.printStackTrace()
         }
-        return null
+        observer.onSuccess(Pair(loginResult, pushResult))
     }
-
-    final override fun onPostExecute(result: Void?) {
-        onPostExecute(loginResult, pushResult)
-    }
-
-    abstract fun onPostExecute(loginResult: Boolean, pushResult: Boolean)
 }
 
-private abstract class LogoutTask(private val zumpaApp: ZumpaReaderApp, private val zumpaUser: String) : AsyncTask<Void, Void, Void>() {
+
+private class LogoutCall(private val zumpaApp: ZumpaReaderApp, private val zumpaUser: String) : Single<Pair<Boolean, Boolean>>() {
     private var logoutResult: Boolean = false
     private var pushResult: Boolean = false
 
-    override fun doInBackground(vararg params: Void?): Void? {
+    override fun subscribeActual(observer: SingleObserver<in Pair<Boolean, Boolean>>) {
         try {
             val response = zumpaApp.zumpaPHPAPI.unregister(zumpaUser).execute().body().asUTFString()
             pushResult = "[OK]" == response
         } catch(e: Throwable) {
             e.printStackTrace()
         }
-        return null
+        observer.onSuccess(Pair(true, pushResult))
     }
-
-    final override fun onPostExecute(result: Void?) {
-        onPostExecute(logoutResult, pushResult)
-    }
-
-    abstract fun onPostExecute(loginResult: Boolean, pushResult: Boolean)
 }
