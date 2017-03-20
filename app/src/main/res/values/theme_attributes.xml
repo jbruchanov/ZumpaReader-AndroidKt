@@ -18,6 +18,7 @@
     <attr name="nickTextSize" format="dimension"/>
     <attr name="subjectColor" format="color"/>
     <attr name="subjectTextSize" format="dimension"/>
+    <attr name="subjectTextMinHeight" format="dimension"/>
     <attr name="authorColor" format="color"/>
     <attr name="scrollbarColor" format="color"/>
     <attr name="authorTextSize" format="dimension"/>

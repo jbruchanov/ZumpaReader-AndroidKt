@@ -526,10 +526,10 @@ public class ZumpaSimpleParser {
                 int end = matcher.end();
                 if (!ignore(links, start)) {
                     Drawable draw = context.getResources().getDrawable(drawable);
-                    final float v = 1.9f;
+                    final float v = 1.5f;
                     draw.setBounds(0, 0, (int) (draw.getIntrinsicWidth() / v), (int) (draw.getIntrinsicHeight() / v));
                     setSpans(ssb, start, end,
-                            new ImageSpan(draw, ImageSpan.ALIGN_BASELINE));
+                            new ImageSpan(draw, ImageSpan.ALIGN_BOTTOM));
                 }
             }
         }

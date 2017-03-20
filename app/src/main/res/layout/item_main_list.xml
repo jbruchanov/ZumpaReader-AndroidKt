@@ -27,7 +27,7 @@
             android:layout_height="wrap_content"
             android:textColor="?attr/subjectColor"
             android:textSize="?attr/subjectTextSize"
-            android:minHeight="?attr/subjectTextSize"
+            android:minHeight="?attr/subjectTextMinHeight"
             tools:text="@string/dummy_long"/>
 
         <RelativeLayout

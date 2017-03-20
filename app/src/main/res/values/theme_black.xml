@@ -19,6 +19,7 @@
         <item name="nickTextSize">@dimen/text_small</item>
         <item name="subjectColor">?primaryTextColor</item>
         <item name="subjectTextSize">@dimen/text_mid</item>
+        <item name="subjectTextMinHeight">@dimen/subjectTextMinHeight</item>
         <item name="authorColor">?contextColor</item>
         <item name="scrollbarColor">?contextColor50p</item>
         <item name="authorTextSize">@dimen/text_small</item>

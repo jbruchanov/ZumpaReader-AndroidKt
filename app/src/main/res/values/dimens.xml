@@ -19,6 +19,7 @@
     <dimen name="text_message">13sp</dimen>
     <dimen name="text_normal">14sp</dimen>
     <dimen name="text_mid">16sp</dimen>
+    <dimen name="subjectTextMinHeight">@dimen/text_mid</dimen>
     <dimen name="divider">1dp</dimen>
     <dimen name="scrollBarSize">3dp</dimen>
     <dimen name="edit_text_background_radius">@dimen/gap_tiny</dimen>
