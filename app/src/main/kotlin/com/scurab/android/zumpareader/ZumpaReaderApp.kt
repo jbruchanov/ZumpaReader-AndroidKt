@@ -62,8 +62,8 @@ class ZumpaReaderApp : Application() {
     private val TIMEOUT = 5000L
 
 
-    val zumpaHttpClient by lazy { buildHttpClient(true) }
-    val zumpaSettingsHttpClient by lazy { buildHttpClient(false) }
+    val zumpaHttpClient : OkHttpClient by lazy { buildHttpClient(true) }
+    val zumpaSettingsHttpClient : OkHttpClient by lazy { zumpaHttpClient.newBuilder().followRedirects(false).build() }
 
     private fun buildHttpClient(redirect: Boolean) : OkHttpClient {
         cookieManager.setCookiePolicy(java.net.CookiePolicy.ACCEPT_ALL)
@@ -79,8 +79,8 @@ class ZumpaReaderApp : Application() {
             readTimeout(TIMEOUT * 5, TimeUnit.MILLISECONDS)
             writeTimeout(TIMEOUT * 5, TimeUnit.MILLISECONDS)
             cookieJar(JavaNetCookieJar(cookieManager))
-            if (BuildConfig.VERBOSE_LOGGING) {
-                interceptors().add(logging)
+            if (BuildConfig.DEBUG) {
+                addNetworkInterceptor(logging)
             }
         }.build()
     }
