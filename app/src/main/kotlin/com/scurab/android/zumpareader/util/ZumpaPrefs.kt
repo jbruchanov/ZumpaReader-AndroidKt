@@ -81,8 +81,8 @@ class ZumpaPrefs(context: Context) {
     val nickName: String
         get() {
             val uname = sharedPrefs.getString(KEY_USER_NAME, "")
-            val nickname = sharedPrefs.getString(KEY_NICK_NAME, uname)
-            return if (nickname.isEmpty()) uname else nickName
+            val nick = sharedPrefs.getString(KEY_NICK_NAME, uname)
+            return if (nick.isEmpty()) uname else nick
         }
 
     var readStates: String?
