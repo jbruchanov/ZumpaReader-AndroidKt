@@ -55,9 +55,11 @@ class GCMReceiver : BroadcastReceiver() {
         return notification
     }
 
+    private val icon = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) R.mipmap.ic_silhouette else R.mipmap.ic_launcher
+
     fun onCreateSimpleNotification(context: Context, subject: String, msg: String): Notification {
         return NotificationCompat.Builder(context)
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(icon)
                 .setVibrate(VIBRATE_TEMPLATE)
                 .setColor(context.obtainStyledColor(R.attr.contextColor))
                 .setContentTitle(subject)
@@ -74,7 +76,7 @@ class GCMReceiver : BroadcastReceiver() {
         }
         val pIntent = PendingIntent.getActivity(context, MainActivity.PUSH_REQ_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT)
         return NotificationCompat.Builder(context)
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(icon)
                 .setVibrate(VIBRATE_TEMPLATE)
                 .setColor(context.obtainStyledColor(R.attr.contextColor))
                 .setContentTitle(context.getString(R.string.notification_header))
