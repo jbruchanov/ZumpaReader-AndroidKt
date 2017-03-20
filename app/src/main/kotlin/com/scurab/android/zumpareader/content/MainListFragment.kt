@@ -169,12 +169,14 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
                     .compose(bindToLifecycle<ZumpaMainPageResult>())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
-                            { result -> onResultLoaded(result) },
+                            { result ->
+                                onResultLoaded(result)
+                                isLoading = false
+                            },
                             { err ->
                                 isLoading = false
                                 err?.message?.exec { toast(it) }
-                            },
-                            { isLoading = false }
+                            }
                     )
         }
     }

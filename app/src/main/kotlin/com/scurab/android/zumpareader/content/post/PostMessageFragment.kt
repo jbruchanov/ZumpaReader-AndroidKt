@@ -134,16 +134,13 @@ class PostMessageFragment : RxDialogFragment(), SendingFragment {
                         .compose(bindToLifecycle<ZumpaThreadResult>())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(
-                                {
-                                    result ->
-                                    Log.d("X", result.toString())
-                                },
-                                {
-                                    err ->
-                                    err?.message?.exec { toast(it) }
-                                },
-                                {
+                                { result ->
+                                    isSending = false
                                     dismiss()
+                                },
+                                { err ->
+                                    err?.message?.exec { toast(it) }
+                                    isSending = false
                                 }
                         )
             } else {
@@ -155,16 +152,11 @@ class PostMessageFragment : RxDialogFragment(), SendingFragment {
                         .compose(bindToLifecycle<ZumpaThreadResult>())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(
-                                {
-                                    result ->
-                                    Log.d("X", result.toString())
-                                },
-                                {
-                                    err ->
-                                    err?.message?.exec { toast(it) }
-                                },
-                                {
+                                { result ->
                                     dismiss()
+                                },
+                                { err ->
+                                    err?.message?.exec { toast(it) }
                                 }
                         )
             }

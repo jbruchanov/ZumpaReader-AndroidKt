@@ -161,15 +161,12 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
                     .subscribe(
                             { result ->
                                 hideMessagePanel(true)
-                                isSending = false
                                 scrollDownAfterLoad = true
                                 loadData()
+                                isSending = false
                             },
                             { err ->
-                                isLoading = false
                                 err?.message?.exec { toast(it) }
-                            },
-                            {
                                 isLoading = false
                                 isSending = false
                             }
@@ -201,11 +198,11 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
                                         it.smoothScrollToPosition(it.adapter.itemCount)
                                     }
                                 }
+                                isSending = false
+                                isLoading = false
                             },
                             { err ->
                                 err?.message?.exec { toast(it) }
-                            },
-                            {
                                 isSending = false
                                 isLoading = false
                             }
@@ -310,7 +307,10 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(
                                 { result -> loadData() },
-                                { err -> err?.message?.exec { toast(it) } }
+                                { err ->
+                                    err?.message?.exec { toast(it) }
+                                    isSending = false
+                                }
                         )
             }
         }
