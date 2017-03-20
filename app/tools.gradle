@@ -1,13 +1,13 @@
-gradle.allprojects { ext.getDate = { return getDate(); } }
-gradle.allprojects { ext.gitSha = { return gitSha(); } }
+gradle.allprojects { ext.getDate = { return getDateImpl(); } }
+gradle.allprojects { ext.gitSha = { return gitShaImpl(); } }
 
-def getDate() {
+def getDateImpl() {
     def date = new Date()
     def formattedDate = date.format('yyyyMMdd')
     return formattedDate
 }
 
-def gitSha() {
+def gitShaImpl() {
     try {
         return 'git rev-parse --short HEAD'.execute().text.trim()
     } catch (any) {
