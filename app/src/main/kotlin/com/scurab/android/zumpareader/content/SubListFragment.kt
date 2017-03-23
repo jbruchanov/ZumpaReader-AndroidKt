@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.text.style.ImageSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -51,7 +52,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
 
     override val title: CharSequence get() {
         val subject = zumpaData[argThreadId]?.subject
-        return if (subject != null) ZumpaSimpleParser.parseBody(subject, context) else context.getString(R.string.app_name)
+        return if (subject != null) ZumpaSimpleParser.parseBody(subject, context, ImageSpan.ALIGN_BASELINE) else context.getString(R.string.app_name)
     }
 
     protected val argThreadId by lazy { arguments!!.getString(THREAD_ID) }

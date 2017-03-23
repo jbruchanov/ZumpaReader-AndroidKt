@@ -506,6 +506,10 @@ public class ZumpaSimpleParser {
     }
 
     public static CharSequence parseBody(String body, Context context) {
+        return parseBody(body, context, ImageSpan.ALIGN_BOTTOM);
+    }
+
+    public static CharSequence parseBody(String body, Context context, int iconAlign) {
         SpannableString ssb = new SpannableString(body.replaceAll(HTMLTags.NBSP_CHAR_STR, " "));
         Matcher matcher = URL_PATTERN2.matcher(body);
         List<Pair<Integer, Integer>> links = new ArrayList<>();
@@ -526,10 +530,10 @@ public class ZumpaSimpleParser {
                 int end = matcher.end();
                 if (!ignore(links, start)) {
                     Drawable draw = context.getResources().getDrawable(drawable);
-                    final float v = 1.5f;
+                    final float v = 1.85f;
                     draw.setBounds(0, 0, (int) (draw.getIntrinsicWidth() / v), (int) (draw.getIntrinsicHeight() / v));
                     setSpans(ssb, start, end,
-                            new ImageSpan(draw, ImageSpan.ALIGN_BOTTOM));
+                            new ImageSpan(draw, iconAlign));
                 }
             }
         }
