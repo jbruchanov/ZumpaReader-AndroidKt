@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.app.BaseFragment
-import com.scurab.android.zumpareader.model.ZumpaThread
 
 /**
  * Created by JBruchanov on 03/02/2016.

@@ -10,7 +10,6 @@ import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.ui.DelayClickListener
 import com.scurab.android.zumpareader.util.exec
-import com.scurab.android.zumpareader.util.execOn
 import org.jetbrains.anko.find
 import java.text.SimpleDateFormat
 import java.util.*
