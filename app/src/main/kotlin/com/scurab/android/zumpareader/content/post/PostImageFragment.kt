@@ -5,7 +5,6 @@ import android.content.Intent
 import android.graphics.Point
 import android.net.Uri
 import android.os.Bundle
-import android.support.v4.app.DialogFragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,18 +13,23 @@ import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.content.SendingFragment
 import com.scurab.android.zumpareader.content.post.tasks.CopyFromResourcesTask
 import com.scurab.android.zumpareader.content.post.tasks.ProcessImageTask
-import com.scurab.android.zumpareader.content.post.tasks.UploadImageTask
 import com.scurab.android.zumpareader.drawable.SimpleProgressDrawable
 import com.scurab.android.zumpareader.util.*
+import com.scurab.android.zumpareader.utils.FotoDiskProvider
 import com.scurab.android.zumpareader.widget.PostImagePanelView
 import com.squareup.picasso.Picasso
+import com.trello.rxlifecycle2.components.support.RxDialogFragment
+import io.reactivex.Single
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import org.jetbrains.anko.find
+import org.jetbrains.anko.support.v4.toast
 import java.io.File
 
 /**
  * Created by JBruchanov on 08/01/2016.
  */
-class PostImageFragment : DialogFragment(), SendingFragment {
+class PostImageFragment : RxDialogFragment(), SendingFragment {
 
     companion object {
         fun newInstance(uri: Uri): PostImageFragment {
@@ -70,23 +74,26 @@ class PostImageFragment : DialogFragment(), SendingFragment {
         return inflater.inflate(R.layout.fragment_post_image, container, false)
     }
 
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         try {
-            object : CopyFromResourcesTask(context, imageUri) {
-                override fun onPostExecute(result: String?) {
-                    if (context != null && result != null) {
-                        imageFile = result
-                        if (!restoreState) {
-                            this@PostImageFragment.imageSize = imageSize
-                            this@PostImageFragment.imageResolution = this.imageResolution
-                            imagePanel.setImageSize(this.imageResolution, imageSize)
+            CopyFromResourcesTask(view.context, imageUri)
+                    .compose(bindToLifecycle())
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe { result, err ->
+                        if (result != null) {
+                            imageFile = result.imageFile!!.absolutePath
+                            if (!restoreState) {
+                                this@PostImageFragment.imageSize = result.imageSize
+                                this@PostImageFragment.imageResolution = result.imageResolution
+                                imagePanel.setImageSize(this.imageResolution, imageSize)
+                            }
+                            Picasso.with(context).load(result.thumbnail).placeholder(SimpleProgressDrawable(context)).into(image)
+                        } else {
+                            toast(err.message.toString())
                         }
-                        Picasso.with(context).load(thumbnail).placeholder(SimpleProgressDrawable(context)).into(image)
-
                     }
-                }
-            }.start()
             if (restoreState) {
                 imagePanel.setImageSize(imageResolution, imageSize)
                 if (imageResizedResolution != null) {
@@ -126,23 +133,22 @@ class PostImageFragment : DialogFragment(), SendingFragment {
     private fun onImageProcess(inSample: Int, imageRotation: Int) {
         isSending = true
         imageFile.exec {
-            object : ProcessImageTask(it, imageFileToUpload!!, inSample, imageRotation) {
-
-                override fun onPostExecute(result: String?) {
-                    isSending = false
-                    context.exec {
+            ProcessImageTask(it, imageFileToUpload!!, inSample, imageRotation)
+                    .compose(bindToLifecycle())
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe { result, err ->
+                        isSending = false
                         if (result != null) {
                             image.animate().rotation(imageRotation.toFloat())
-                            imageResizedResolution = this.imageResolution!!
-                            imageResizedSize = this.imageSize
-                            imagePanel.setResizedImageSize(this.imageResolution!!, this.imageSize)
+                            imageResizedResolution = result.imageResolution!!
+                            imageResizedSize = result.imageSize
+                            imagePanel.setResizedImageSize(result.imageResolution!!, result.imageSize)
                         }
-                        if (exception != null) {
-                            it.toast(exception!!.message)
+                        if (err != null) {
+                            toast(err.message.toString())
                         }
                     }
-                }
-            }.execute()
         }
     }
 
@@ -153,9 +159,11 @@ class PostImageFragment : DialogFragment(), SendingFragment {
         }
 
         isSending = true
-        object : UploadImageTask(out.absolutePath) {
-            override fun onPostExecute(result: String?) {
-                if (context != null) {
+        Single.fromCallable { FotoDiskProvider.uploadPicture(out.absolutePath, null) }
+                .compose(bindToLifecycle())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { result, err ->
                     isSending = false
                     imageUploadedLink = result
                     if (result != null) {
@@ -164,8 +172,6 @@ class PostImageFragment : DialogFragment(), SendingFragment {
                         context.toast(R.string.err_fail)
                     }
                 }
-            }
-        }.execute()
     }
 
     protected fun dispatchImageUploaded(result: String) {
