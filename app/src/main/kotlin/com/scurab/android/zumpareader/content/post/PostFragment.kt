@@ -8,11 +8,13 @@ import android.provider.MediaStore
 import android.support.annotation.ColorInt
 import android.support.annotation.DrawableRes
 import android.support.v4.app.FragmentTabHost
+import android.support.v4.content.FileProvider
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TabWidget
+import com.scurab.android.zumpareader.BuildConfig
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.app.BaseDialogFragment
 import com.scurab.android.zumpareader.app.MainActivity
@@ -20,6 +22,7 @@ import com.scurab.android.zumpareader.ui.showAnimated
 import com.scurab.android.zumpareader.util.*
 import org.jetbrains.anko.find
 import org.jetbrains.anko.layoutInflater
+import java.io.File
 
 /**
  * Created by JBruchanov on 08/01/2016.
@@ -164,10 +167,9 @@ class PostFragment : BaseDialogFragment() {
         try {
             val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
             val cameraFileUri = context.getRandomCameraFileUri()
-            zumpaApp!!.zumpaPrefs.lastCameraUri = cameraFileUri
-            //TODO: create file provider for API24
-            //val photoURI = FileProvider.getUriForFile(context, "com.example.android.fileprovider", File(cameraFileUri))
-            intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.parse(cameraFileUri))
+            val photoURI = FileProvider.getUriForFile(context, BuildConfig.Authority, File(cameraFileUri))
+            zumpaApp!!.zumpaPrefs.lastCameraUri = photoURI.toString()
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
             startActivityForResult(intent, REQ_CODE_CAMERA)
         } catch(e: Exception) {
             context.toast(R.string.err_fail)

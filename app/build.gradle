@@ -2,6 +2,7 @@ buildscript {
     ext.kotlin_version = '1.1.1'
     ext.playServices = "10.2.0"
     ext.supportLibraryVersion = "25.3.0"
+    ext.fileProviderAuthority = "com.scurab.android.zumpareader.fileprovider"
 
     repositories {
         maven { url 'https://maven.fabric.io/public' }
@@ -28,10 +29,12 @@ android {
     defaultConfig {
         applicationId "com.scurab.android.zumpareader"
         buildConfigField "String", "BUILD_DETAIL", "\"build-" + getDate() + ",git-" + gitSha() + "\""
+        buildConfigField "String", "Authority", "\"" + fileProviderAuthority + "\""
         minSdkVersion 14
         targetSdkVersion 25
         versionCode 3
         versionName "0.1.3"
+        manifestPlaceholders = [authority: fileProviderAuthority]
     }
     buildTypes {
         debug {

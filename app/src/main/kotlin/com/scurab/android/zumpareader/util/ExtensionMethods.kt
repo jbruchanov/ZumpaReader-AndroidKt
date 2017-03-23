@@ -139,8 +139,8 @@ fun Context.postDelayed(runnable: Runnable, delay: Long) {
     }
 }
 
-fun Context.getRandomCameraFileUri(withScheme: Boolean = true): String {
-    val path = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+fun Context.getRandomCameraFileUri(withScheme: Boolean = false): String {
+    val path = File(applicationContext.filesDir.absolutePath, "Pictures" /*file_paths.xml Path */)
     if (!path.exists()) {
         path.mkdir()
     }
