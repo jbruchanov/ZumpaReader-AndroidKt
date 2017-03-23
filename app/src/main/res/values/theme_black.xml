@@ -9,6 +9,7 @@
         <item name="primaryTextColor">@color/white</item>
         <item name="primaryBackgroundColor">@color/black</item>
         <item name="secondaryBackgroundColor">@color/dark</item>
+        <item name="selectedBackgroundColor">@color/yellow_orange_25p</item>
 
         <item name="tabButtonBackground">@drawable/selectable_button_background_theme_black</item>
         <item name="surveyButtonBackground">@drawable/survey_button_background_theme_black</item>

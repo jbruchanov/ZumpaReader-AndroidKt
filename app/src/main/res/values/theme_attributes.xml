@@ -8,6 +8,7 @@
     <attr name="primaryTextColor" format="color" />
     <attr name="primaryBackgroundColor" format="color" />
     <attr name="secondaryBackgroundColor" format="color" />
+    <attr name="selectedBackgroundColor" format="color" />
 
     <attr name="imageButtonBackground" format="reference" />
     <attr name="surveyButtonBackground" format="reference" />
