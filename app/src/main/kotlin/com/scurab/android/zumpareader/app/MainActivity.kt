@@ -41,6 +41,7 @@ class MainActivity : AppCompatActivity() {
     private val progressBar by lazy { find<ProgressBar>(R.id.progress_bar) }
     private val coordinatorLayout by lazy { find<CoordinatorLayout>(R.id.coordinator_layout) }
     private val _floatingButton by lazy { find<FloatingActionButton>(R.id.fab) }
+    private val isTablet by lazy { resources.getBoolean(R.bool.is_tablet) }
 
     val floatingButton: FloatingActionButton  get() = _floatingButton
 
@@ -65,7 +66,6 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
         floatingButton.setOnClickListener(DelayClickListener() { onFloatingButtonClick() })
         supportFragmentManager.findFragmentById(R.id.fragment_container).execIfNull {
-            val isTablet = resources.getBoolean(R.bool.is_tablet)
             openFragment(if (isTablet) TabletFragment() else MainListFragment(), false)
         }
 
@@ -129,7 +129,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        val containsPostFragment = supportFragmentManager.fragments.firstOrNull() { it -> it is PostFragment } != null
+        val containsPostFragment = isTablet || supportFragmentManager.fragments.firstOrNull { it -> it is PostFragment } != null
         floatingButton.visibility = if (zumpaApp.zumpaPrefs.isLoggedInNotOffline && !containsPostFragment) View.VISIBLE else View.GONE
     }
 

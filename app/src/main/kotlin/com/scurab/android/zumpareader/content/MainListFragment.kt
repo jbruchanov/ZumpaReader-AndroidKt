@@ -71,7 +71,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
         onRefreshTitle()
         if (zumpaApp?.zumpaPrefs?.isOffline ?: false) {
             lastOffline = null
-            loadPage(null)
+            loadPage()
         }
     }
 
@@ -101,7 +101,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
 
         swipeToRefresh.setOnRefreshListener { loadPage() }
         recyclerView.adapter.execIfNull {
-            loadPage()
+            loadPage(true)
         }
     }
 
@@ -149,7 +149,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
         loadPage()
     }
 
-    private fun loadPage(fromThread: String? = null) {
+    private fun loadPage(firstLoad:Boolean = false, fromThread: String? = null) {
         if (isLoading || fromThread?.isEmpty() ?: false) {
             return
         }
@@ -172,7 +172,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
                             { result ->
-                                onResultLoaded(result)
+                                onResultLoaded(result, firstLoad)
                                 isLoading = false
                             },
                             { err ->
@@ -191,7 +191,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
         }
     }
 
-    protected fun onResultLoaded(response: ZumpaMainPageResult?) {
+    protected fun onResultLoaded(response: ZumpaMainPageResult?, firstLoad: Boolean) {
         response?.exec {
             zumpaData.putAll(it.items)
             nextThreadId = it.nextThreadId
@@ -215,9 +215,16 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
                     }
                     it.adapter = mainListAdapter
                 }
+                if (isTablet && firstLoad) {
+                    onThreadItemClick(zumpaData.lastEntry().value, 0)
+                }
             }
             isLoading = false
         }
+    }
+
+    fun test(f: (ZumpaThread, Int?) -> Unit) {
+
     }
 
     open fun onThreadItemClick(item: ZumpaThread, position: Int) {
@@ -244,7 +251,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
     override fun onShowingItem(source: MainListAdapter, item: Int) {
         if (!isLoading) {
             (recyclerView?.adapter as MainListAdapter).exec {
-                loadPage(nextThreadId)
+                loadPage(false, nextThreadId)
             }
 
         }
