@@ -259,7 +259,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
 
     override fun onFloatingButtonClick() {
         activity?.supportFragmentManager.exec {
-            openFragment(PostFragment())
+            openFragment(PostFragment(), !isTablet, false)
             mainActivity?.floatingButton?.hideAnimated()
         }
     }
