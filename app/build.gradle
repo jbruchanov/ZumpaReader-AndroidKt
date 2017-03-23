@@ -30,12 +30,12 @@ android {
         buildConfigField "String", "BUILD_DETAIL", "\"build-" + getDate() + ",git-" + gitSha() + "\""
         minSdkVersion 14
         targetSdkVersion 25
-        versionCode 2
-        versionName "0.1.2"
+        versionCode 3
+        versionName "0.1.3"
     }
     buildTypes {
         debug {
-            versionNameSuffix "-git" + gitSha()
+            versionNameSuffix "-" + getDate()
             minifyEnabled false
         }
         release {
