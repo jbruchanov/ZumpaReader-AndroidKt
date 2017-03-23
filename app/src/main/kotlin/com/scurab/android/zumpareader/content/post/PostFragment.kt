@@ -183,7 +183,7 @@ class PostFragment : BaseDialogFragment() {
     }
 
     override fun onDestroyView() {
-        if (!isTablet) {
+        if (!isTablet && argThreadId == null) {
             (activity as? MainActivity).exec {
                 it.floatingButton.showAnimated()
             }

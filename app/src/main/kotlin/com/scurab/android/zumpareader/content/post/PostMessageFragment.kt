@@ -134,7 +134,6 @@ class PostMessageFragment : RxDialogFragment(), SendingFragment {
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(
                                 { result ->
-                                    isSending = false
                                     dismiss()
                                 },
                                 { err ->
@@ -163,8 +162,9 @@ class PostMessageFragment : RxDialogFragment(), SendingFragment {
     }
 
     override fun dismiss() {
+        isSending = false
+        (parentFragment as PostFragment).dismissAllowingStateLoss()
         mainActivity.execOn {
-            supportFragmentManager.popBackStack()
             reloadData()
         }
     }

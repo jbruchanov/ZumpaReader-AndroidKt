@@ -69,7 +69,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
     private val postMessageView: PostMessageView? get() = view?.find<PostMessageView>(R.id.response_panel)
     private val contextColorText: Int by lazy { context.obtainStyledColor(R.attr.contextColorText2) }
     private val treeViewObserver: ViewTreeObserver.OnGlobalLayoutListener = ViewTreeObserver.OnGlobalLayoutListener { updateRecycleViewPadding() }
-    private lateinit var delegate : BehaviourDelegate
+    private lateinit var delegate: BehaviourDelegate
 
     override var isLoading: Boolean
         get() = super.isLoading
@@ -87,7 +87,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        delegate = if(isTablet) TabletBehaviour(this) else PhoneBehaviour(this)
+        delegate = if (isTablet) TabletBehaviour(this) else PhoneBehaviour(this)
     }
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -103,7 +103,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
         swipyRefreshLayout?.setOnRefreshListener { loadData() }
         postMessageView.execOn {
             addButton.visibility = isTabletVisibility
-            addButton.setOnClickListener { dispatchOpenPostFragment() }
+            addButton.setOnClickListener { dispatchOpenPostMessage() }
             sendButton.setOnClickListener { dispatchSend() }
             camera.setOnClickListener { dispatchOpenPostMessage(R.id.camera) }
             photo.setOnClickListener { dispatchOpenPostMessage(R.id.photo) }
@@ -112,16 +112,9 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
         loadData()
     }
 
-    protected fun dispatchOpenPostFragment() {
-        PostFragment().show(childFragmentManager, "PostFragment")
-    }
 
-    protected fun dispatchOpenPostMessage(flag: Int) {
-        mainActivity.execOn {
-            PostFragment
-                    .newInstance(title.toString(), postMessageView!!.message.text.toString(), null, argThreadId, flag)
-                    .show(childFragmentManager, "PostFragment")
-        }
+    protected fun dispatchOpenPostMessage(flag: Int? = null) {
+        delegate.openPostFragment(flag)
     }
 
     override fun onResume() {
@@ -191,7 +184,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
             arguments.putString(ARG_THREAD_ID, event.id)
         }
         delegate.onLoadThreadEvent(event)
-        loadData(event.id, true, if(sameThread) SCROLL_NONE else SCROLL_UP)
+        loadData(event.id, true, if (sameThread) SCROLL_NONE else SCROLL_UP)
     }
 
     fun loadData(scrollWay: Int = SCROLL_NONE) {
@@ -213,10 +206,10 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
                                 val rv = recyclerView!!
                                 val offsetY = -2 * rv.computeVerticalScrollOffset()
                                 onResultLoaded(result, force)
-                                val scrollWayValue = if(argScrollDown && firstLoad) SCROLL_DOWN else scrollWay
+                                val scrollWayValue = if (argScrollDown && firstLoad) SCROLL_DOWN else scrollWay
                                 if (scrollWayValue != 0) {
                                     firstLoad = false
-                                    when(scrollWayValue){
+                                    when (scrollWayValue) {
                                         SCROLL_UP -> rv.smoothScrollBy(0, offsetY)
                                         SCROLL_DOWN -> rv.smoothScrollToPosition(rv.adapter.itemCount - 1)
                                     }
@@ -347,10 +340,14 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
     private abstract class BehaviourDelegate(val fragment: SubListFragment) {
         open fun onThreadLinkClick(threadId: Int) {}
         open fun onItemClick(item: ZumpaThreadItem, longClick: Boolean) {}
-        open fun hideMessagePanel() : Boolean? {return null}
+        open fun hideMessagePanel(): Boolean? {
+            return null
+        }
+
         open fun onResume() {}
         open fun onViewCreated() {}
         open fun onLoadThreadEvent(event: LoadThreadEvent) {}
+        open fun openPostFragment(flag : Int?) {}
     }
 
     private class PhoneBehaviour(fragment: SubListFragment) : BehaviourDelegate(fragment) {
@@ -364,6 +361,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
                     fragment.mainActivity?.floatingButton?.hideAnimated()
                 } else {
                     fragment.mainActivity?.floatingButton?.showAnimated()
+                    hideMessagePanel()
                 }
             }
         }
@@ -390,6 +388,16 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
             fragment.openFragment(SubListFragment.newInstance(threadId.toString()), true, true)
         }
 
+        override fun openPostFragment(flag : Int?) {
+            val f = if (flag == null) {
+                PostFragment()
+            } else {
+                PostFragment
+                        .newInstance(fragment.title.toString(), fragment.postMessageView!!.message.text.toString(), null, fragment.argThreadId, flag)
+
+            }
+            fragment.openFragment(f, true, false)
+        }
     }
 
     private class TabletBehaviour(fragment: SubListFragment) : BehaviourDelegate(fragment) {
@@ -404,6 +412,17 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
         override fun onLoadThreadEvent(event: LoadThreadEvent) {
             fragment.postMessageView?.visibility = View.VISIBLE
             fragment.mainActivity?.floatingButton?.visibility = View.GONE
+        }
+
+        override fun openPostFragment(flag: Int?) {
+            val fragment = if (flag == null) {
+                PostFragment()
+            } else {
+                PostFragment
+                        .newInstance(fragment.title.toString(), fragment.postMessageView!!.message.text.toString(), null, fragment.argThreadId, flag)
+
+            }
+            fragment.show(fragment.childFragmentManager, "PostFragment")
         }
     }
 }
