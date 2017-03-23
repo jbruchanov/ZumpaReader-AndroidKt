@@ -209,7 +209,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
                                     firstLoad = false
                                     recyclerView.exec {
                                         when(scrollWayValue){
-                                            SCROLL_UP -> it.smoothScrollToPosition(0)
+                                            SCROLL_UP -> it.scrollTo(0, 0)
                                             SCROLL_DOWN -> it.smoothScrollToPosition(it.adapter.itemCount - 1)
                                         }
                                     }
