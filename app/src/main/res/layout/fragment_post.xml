@@ -9,7 +9,7 @@
     android:focusableInTouchMode="true"
     android:background="?primaryBackgroundColor"
     tools:context=".MainActivity">
-
+    <requestFocus />
     <LinearLayout
         android:id="@+id/content"
         android:layout_width="match_parent"
