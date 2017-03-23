@@ -26,6 +26,7 @@ class PostMessageView : FrameLayout {
     val photo by lazy { find<ImageButton>(R.id.photo) }
     val camera by lazy { find<ImageButton>(R.id.camera) }
     val sendButton by lazy { find<ImageButton>(R.id.send) }
+    val addButton by lazy { find<ImageButton>(R.id.add) }
 
     constructor(context: Context?) : this(context, null)
 

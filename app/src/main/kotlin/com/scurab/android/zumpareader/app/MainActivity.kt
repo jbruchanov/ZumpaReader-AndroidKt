@@ -5,14 +5,13 @@ import android.net.Uri
 import android.os.Bundle
 import android.support.design.widget.CoordinatorLayout
 import android.support.design.widget.FloatingActionButton
+import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentTransaction
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
 import android.view.View
 import android.widget.ProgressBar
 import com.crashlytics.android.Crashlytics
-import com.facebook.drawee.backends.pipeline.Fresco
-import com.facebook.imagepipeline.core.ImagePipelineConfig
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.content.MainListFragment
@@ -102,7 +101,9 @@ class MainActivity : AppCompatActivity() {
                         toast(R.string.err_login_first)
                     } else {
                         supportFragmentManager.exec {
-                            openFragment(PostFragment.newInstance(subject, text, uris))
+                            PostFragment
+                                    .newInstance(subject, text, uris)
+                                    .show(supportFragmentManager, "PostFragment")
                         }
                     }
                 }
@@ -110,7 +111,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun openFragment(fragment: BaseFragment, addToBackStack: Boolean = true, replace: Boolean = true) {
+    fun openFragment(fragment: Fragment, addToBackStack: Boolean = true, replace: Boolean = true) {
         val tr = supportFragmentManager.beginTransaction()
         if (addToBackStack) {
             tr.addToBackStack(fragment.javaClass.canonicalName)

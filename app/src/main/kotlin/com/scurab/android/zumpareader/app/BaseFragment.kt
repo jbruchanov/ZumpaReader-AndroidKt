@@ -4,7 +4,9 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.support.v4.app.Fragment
 import android.view.MenuItem
+import android.view.View
 import com.scurab.android.zumpareader.BusProvider
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
@@ -59,6 +61,10 @@ abstract class BaseFragment : RxFragment() {
             }
             return _isTablet!!
         }
+    protected val isTabletVisibility:Int
+        get() {
+            return if (isTablet) View.VISIBLE else View.INVISIBLE
+        }
 
     open fun onMenuItemClick(item: MenuItem): Boolean {
         return false
@@ -74,7 +80,7 @@ abstract class BaseFragment : RxFragment() {
         super.onDestroy()
     }
 
-    open fun openFragment(fragment: BaseFragment, addToBackStack: Boolean = true, replace: Boolean = true) {
+    open fun openFragment(fragment: Fragment, addToBackStack: Boolean = true, replace: Boolean = true) {
         mainActivity?.openFragment(fragment, addToBackStack, replace)
         isLoading = false
     }

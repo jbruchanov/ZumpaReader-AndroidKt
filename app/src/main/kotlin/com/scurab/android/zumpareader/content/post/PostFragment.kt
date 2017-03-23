@@ -14,7 +14,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TabWidget
 import com.scurab.android.zumpareader.R
-import com.scurab.android.zumpareader.app.BaseFragment
+import com.scurab.android.zumpareader.app.BaseDialogFragment
 import com.scurab.android.zumpareader.app.MainActivity
 import com.scurab.android.zumpareader.ui.showAnimated
 import com.scurab.android.zumpareader.util.*
@@ -24,7 +24,7 @@ import org.jetbrains.anko.layoutInflater
 /**
  * Created by JBruchanov on 08/01/2016.
  */
-class PostFragment : BaseFragment() {
+class PostFragment : BaseDialogFragment() {
     companion object {
         val REQ_CODE_IMAGE = 123
         val REQ_CODE_CAMERA = 124
@@ -59,8 +59,6 @@ class PostFragment : BaseFragment() {
         return view!!.find<FragmentTabHost>(android.R.id.tabhost)
     }
     val contextColor by lazy { context.obtainStyledColor(R.attr.contextColor) }
-    override val title: CharSequence?
-        get() = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -156,7 +154,7 @@ class PostFragment : BaseFragment() {
             intent.type = "image/*"
             intent.action = Intent.ACTION_GET_CONTENT
             intent.addCategory(Intent.CATEGORY_OPENABLE)
-            mainActivity!!.startActivityForResult(intent, REQ_CODE_IMAGE)
+            startActivityForResult(intent, REQ_CODE_IMAGE)
         } catch(e: Exception) {
             context.toast(R.string.err_fail)
         }
@@ -167,8 +165,10 @@ class PostFragment : BaseFragment() {
             val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
             val cameraFileUri = context.getRandomCameraFileUri()
             zumpaApp!!.zumpaPrefs.lastCameraUri = cameraFileUri
+            //TODO: create file provider for API24
+            //val photoURI = FileProvider.getUriForFile(context, "com.example.android.fileprovider", File(cameraFileUri))
             intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.parse(cameraFileUri))
-            mainActivity!!.startActivityForResult(intent, REQ_CODE_CAMERA)
+            startActivityForResult(intent, REQ_CODE_CAMERA)
         } catch(e: Exception) {
             context.toast(R.string.err_fail)
         }
@@ -182,16 +182,11 @@ class PostFragment : BaseFragment() {
         return btn
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        mainActivity.execOn {
-            showFloatingButton()
-        }
-    }
-
     override fun onDestroyView() {
-        (activity as? MainActivity).exec {
-            it.floatingButton.showAnimated()
+        if (!isTablet) {
+            (activity as? MainActivity).exec {
+                it.floatingButton.showAnimated()
+            }
         }
         super.onDestroyView()
     }
