@@ -1,22 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.percent.PercentFrameLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:showDividers="middle"
+    android:divider="@drawable/divider_vertical_fragments"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:tools="http://schemas.android.com/tools">
+    android:orientation="horizontal">
 
     <FrameLayout
         android:id="@+id/main_list"
-        tools:background="#4F00"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.4"
         app:layout_heightPercent="100%"
         app:layout_widthPercent="40%"
+        tools:background="#4F00"
         />
 
     <FrameLayout
         android:id="@+id/sub_list"
-        tools:background="#4FF0"
-        android:layout_gravity="right"
-        app:layout_heightPercent="100%"
-        app:layout_widthPercent="60%"/>
-</android.support.percent.PercentFrameLayout>
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.6"
+        tools:background="#4FF0"/>
+</LinearLayout>
