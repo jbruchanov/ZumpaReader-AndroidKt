@@ -415,14 +415,14 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
         }
 
         override fun openPostFragment(flag: Int?) {
-            val fragment = if (flag == null) {
+            val f = if (flag == null) {
                 PostFragment()
             } else {
                 PostFragment
                         .newInstance(fragment.title.toString(), fragment.postMessageView!!.message.text.toString(), null, fragment.argThreadId, flag)
 
             }
-            fragment.show(fragment.childFragmentManager, "PostFragment")
+            f.show(fragment.childFragmentManager, "PostFragment")
         }
     }
 }
