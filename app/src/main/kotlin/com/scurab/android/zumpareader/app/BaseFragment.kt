@@ -51,6 +51,15 @@ abstract class BaseFragment : RxFragment() {
     protected val zumpaData: TreeMap<String, ZumpaThread> by lazy { _zumpaData!! }
     protected abstract val title: CharSequence?
 
+    private var _isTablet: Boolean? = null
+    protected val isTablet: Boolean
+        get() {
+            if (_isTablet == null) {
+                _isTablet = resources.getBoolean(R.bool.is_tablet)
+            }
+            return _isTablet!!
+        }
+
     open fun onMenuItemClick(item: MenuItem): Boolean {
         return false
     }

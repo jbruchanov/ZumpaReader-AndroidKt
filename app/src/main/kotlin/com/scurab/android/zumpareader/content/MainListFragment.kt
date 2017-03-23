@@ -221,7 +221,6 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
     }
 
     open fun onThreadItemClick(item: ZumpaThread, position: Int) {
-        val isTablet = resources.getBoolean(R.bool.is_tablet)
         isLoading = false
         val oldState = item.state
         item.setStateBasedOnReadValue(item.items, zumpaApp?.zumpaPrefs?.loggedUserName)
