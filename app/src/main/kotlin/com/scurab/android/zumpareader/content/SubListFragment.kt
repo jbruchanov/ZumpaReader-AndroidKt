@@ -16,6 +16,7 @@ import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutD
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.app.BaseFragment
 import com.scurab.android.zumpareader.content.post.PostFragment
+import com.scurab.android.zumpareader.event.LoadThreadEvent
 import com.scurab.android.zumpareader.model.*
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.text.appendReply
@@ -26,6 +27,7 @@ import com.scurab.android.zumpareader.ui.showAnimated
 import com.scurab.android.zumpareader.util.*
 import com.scurab.android.zumpareader.widget.PostMessageView
 import com.scurab.android.zumpareader.widget.SurveyView
+import com.squareup.otto.Subscribe
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import org.jetbrains.anko.find
@@ -37,14 +39,17 @@ import org.jetbrains.anko.support.v4.toast
 class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, SendingFragment, SurveyView.ItemClickListener {
 
     companion object {
-        private val THREAD_ID: String = "THREAD_ID"
-        private val SCROLL_DOWN: String = "SCROLL_DOWN"
+        private val ARG_THREAD_ID: String = "ARG_THREAD_ID"
+        private val ARG_SCROLL_DOWN: String = "ARG_SCROLL_DOWN"
+        private val SCROLL_UP = -1
+        private val SCROLL_NONE = 0
+        private val SCROLL_DOWN = 1
 
         fun newInstance(threadId: String, scrollDown: Boolean = false): SubListFragment {
             return SubListFragment().apply {
                 var args = Bundle()
-                args.putString(THREAD_ID, threadId)
-                args.putBoolean(SCROLL_DOWN, scrollDown)
+                args.putString(ARG_THREAD_ID, threadId)
+                args.putBoolean(ARG_SCROLL_DOWN, scrollDown)
                 arguments = args
             }
         }
@@ -55,14 +60,13 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
         return if (subject != null) ZumpaSimpleParser.parseBody(subject, context, ImageSpan.ALIGN_BASELINE) else context.getString(R.string.app_name)
     }
 
-    protected val argThreadId by lazy { arguments!!.getString(THREAD_ID) }
-    protected val argScrollDown by lazy { arguments!!.getBoolean(SCROLL_DOWN) }
+    protected val argThreadId: String get() = arguments?.getString(ARG_THREAD_ID) ?: ""
+    protected val argScrollDown: Boolean get() = arguments?.getBoolean(ARG_SCROLL_DOWN) ?: false
     private var firstLoad: Boolean = true
 
     private val recyclerView: RecyclerView? get() = view?.find<RecyclerView>(R.id.recycler_view)
     private val swipyRefreshLayout: SwipyRefreshLayout? get() = view?.find<SwipyRefreshLayout>(R.id.swipe_refresh_layout)
     private val postMessageView: PostMessageView? get() = view?.find<PostMessageView>(R.id.response_panel)
-    private var scrollDownAfterLoad: Boolean = false
     private val contextColorText: Int by lazy { context.obtainStyledColor(R.attr.contextColorText2) }
     private val treeViewObserver: ViewTreeObserver.OnGlobalLayoutListener = ViewTreeObserver.OnGlobalLayoutListener { updateRecycleViewPadding() }
 
@@ -162,8 +166,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
                     .subscribe(
                             { result ->
                                 hideMessagePanel(true)
-                                scrollDownAfterLoad = true
-                                loadData()
+                                loadData(SCROLL_DOWN)
                                 isSending = false
                             },
                             { err ->
@@ -175,11 +178,20 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
         }
     }
 
-    fun loadData() {
-        loadData(argThreadId)
+    @Subscribe
+    fun onLoadThreadEvent(event: LoadThreadEvent) {
+        val sameThread = argThreadId == event.id
+        if (!sameThread) {
+            arguments.putString(ARG_THREAD_ID, event.id)
+        }
+        loadData(event.id, true, if(sameThread) SCROLL_NONE else SCROLL_UP)
     }
 
-    fun loadData(tid: String, force: Boolean = false) {
+    fun loadData(scrollWay: Int = SCROLL_NONE) {
+        loadData(argThreadId, false, scrollWay)
+    }
+
+    fun loadData(tid: String, force: Boolean = false, scrollWay: Int = SCROLL_NONE) {
         if ((isLoading && !force) || tid.isNullOrEmpty()) {
             isSending = false
             return
@@ -192,11 +204,14 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
                     .subscribe(
                             { result ->
                                 onResultLoaded(result, force)
-                                if (scrollDownAfterLoad || (argScrollDown && firstLoad)) {
-                                    scrollDownAfterLoad = false
+                                val scrollWayValue = if(argScrollDown && firstLoad) SCROLL_DOWN else scrollWay
+                                if (scrollWayValue != 0) {
                                     firstLoad = false
                                     recyclerView.exec {
-                                        it.smoothScrollToPosition(it.adapter.itemCount)
+                                        when(scrollWayValue){
+                                            SCROLL_UP -> it.smoothScrollToPosition(0)
+                                            SCROLL_DOWN -> it.smoothScrollToPosition(it.adapter.itemCount - 1)
+                                        }
                                     }
                                 }
                                 isSending = false

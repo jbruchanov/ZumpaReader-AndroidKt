@@ -10,6 +10,7 @@ import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.ui.DelayClickListener
 import com.scurab.android.zumpareader.util.exec
+import com.scurab.android.zumpareader.util.execOn
 import org.jetbrains.anko.find
 import java.text.SimpleDateFormat
 import java.util.*
@@ -30,6 +31,8 @@ class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadViewHold
     var onItemClickListener: OnItemClickListener? = null
 
     var items: ArrayList<ZumpaThread>
+
+    private var selectedItem: ZumpaThread? = null
     private val dataMap: HashMap<String, ZumpaThread> = HashMap()
     private var ownerRecyclerView: RecyclerView? = null
     private val dateFormat = SimpleDateFormat("dd.MM. HH:mm.ss")
@@ -40,6 +43,24 @@ class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadViewHold
     constructor(data: ArrayList<ZumpaThread>) : super() {
         items = ArrayList(data)
         dataMap.putAll(items.associateBy { it.id })
+    }
+
+    fun setSelectedItem(thread: ZumpaThread?, position: Int) {
+        if (selectedItem != null && ownerRecyclerView != null) {
+            val rv = ownerRecyclerView!!
+            for (i in 0..rv.childCount) {
+                val childAt = rv.getChildAt(i)
+                if (childAt != null) {
+                    val vh = rv.getChildViewHolder(childAt)
+                    if (selectedItem == items[vh.adapterPosition]) {
+                        notifyItemChanged(vh.adapterPosition)
+                        break
+                    }
+                }
+            }
+        }
+        selectedItem = thread
+        notifyItemChanged(position)
     }
 
     fun addItems(newItems: ArrayList<ZumpaThread>) {
@@ -81,6 +102,7 @@ class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadViewHold
         if (position == itemCount - onShoItemListenerEndOffset) {
             onShowItemListener?.onShowingItem(this, position)
         }
+        holder.itemView.isSelected = item == selectedItem
     }
 
     override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): ZumpaThreadViewHolder? {

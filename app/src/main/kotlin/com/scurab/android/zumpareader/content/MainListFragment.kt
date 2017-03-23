@@ -7,11 +7,13 @@ import android.support.v7.widget.RecyclerView
 import android.view.*
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection
+import com.scurab.android.zumpareader.BusProvider
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.app.BaseFragment
 import com.scurab.android.zumpareader.app.SettingsActivity
 import com.scurab.android.zumpareader.content.post.PostFragment
 import com.scurab.android.zumpareader.event.DialogEvent
+import com.scurab.android.zumpareader.event.LoadThreadEvent
 import com.scurab.android.zumpareader.model.ZumpaMainPageResult
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.ui.hideAnimated
@@ -219,15 +221,25 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
     }
 
     open fun onThreadItemClick(item: ZumpaThread, position: Int) {
+        val isTablet = resources.getBoolean(R.bool.is_tablet)
         isLoading = false
         val oldState = item.state
         item.setStateBasedOnReadValue(item.items, zumpaApp?.zumpaPrefs?.loggedUserName)
-        if (oldState != item.state) {
+        if (oldState != item.state || isTablet) {
             recyclerView?.adapter.exec {
-                it.notifyItemChanged(position)
+                if (isTablet) {
+                    (it as MainListAdapter).setSelectedItem(item, position)
+                } else {
+                    it.notifyItemChanged(position)
+                }
             }
         }
-        openFragment(SubListFragment.newInstance(item.id.toString()), true, true)
+
+        if (isTablet) {
+            BusProvider.post(LoadThreadEvent(item.id))
+        } else {
+            openFragment(SubListFragment.newInstance(item.id), true, true)
+        }
     }
 
     override fun onShowingItem(source: MainListAdapter, item: Int) {
