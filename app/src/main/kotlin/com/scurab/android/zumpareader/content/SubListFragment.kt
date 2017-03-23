@@ -211,7 +211,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
                                     firstLoad = false
                                     when (scrollWayValue) {
                                         SCROLL_UP -> rv.smoothScrollBy(0, offsetY)
-                                        SCROLL_DOWN -> rv.smoothScrollToPosition(rv.adapter.itemCount - 1)
+                                        SCROLL_DOWN -> rv.smoothScrollToPosition(rv.adapter.itemCount)
                                     }
                                 }
                                 isSending = false
