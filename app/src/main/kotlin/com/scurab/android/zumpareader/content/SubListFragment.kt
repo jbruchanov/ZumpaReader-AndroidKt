@@ -339,7 +339,11 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
         } else {
             val id = ZumpaSimpleParser.getZumpaThreadId(url)
             if (id != 0) {
-                openFragment(SubListFragment.newInstance(id.toString()), true, true)
+                if (isTablet) {
+                    onLoadThreadEvent(LoadThreadEvent(id.toString()))
+                } else {
+                    openFragment(SubListFragment.newInstance(id.toString()), true, true)
+                }
             } else {
                 startLinkActivity(url)
             }
