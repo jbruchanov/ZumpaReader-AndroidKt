@@ -30,19 +30,19 @@
             android:minHeight="?attr/subjectTextMinHeight"
             tools:text="@string/dummy_long"/>
 
-        <RelativeLayout
+        <LinearLayout
+            android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/gap_small">
 
             <TextView
                 android:id="@+id/author"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:layout_alignParentLeft="true"
-                android:layout_toLeftOf="@+id/last_author"
                 android:ellipsize="end"
-                android:singleLine="true"
+                android:maxLines="1"
                 android:textColor="?attr/authorColor"
                 android:textSize="?attr/authorTextSize"
                 tools:text="@string/dummy_long"/>
@@ -51,9 +51,8 @@
                 android:id="@+id/last_author"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_toLeftOf="@+id/threads"
                 android:ellipsize="end"
-                android:singleLine="true"
+                android:maxLines="1"
                 android:layout_marginLeft="@dimen/gap_normal"
                 android:textColor="?attr/authorColor"
                 android:textSize="?attr/authorTextSize"
@@ -65,7 +64,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="@dimen/gap_normal"
                 android:layout_marginRight="@dimen/gap_normal"
-                android:layout_toLeftOf="@+id/time"
                 android:textColor="?attr/dateColor"
                 android:textSize="?attr/dateTextSize"
                 android:textStyle="bold"
@@ -75,10 +73,9 @@
                 android:id="@+id/time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentRight="true"
                 android:textColor="?attr/dateColor"
                 android:textSize="?attr/dateTextSize"
                 tools:text="20:28:17 25.11."/>
-        </RelativeLayout>
+        </LinearLayout>
     </LinearLayout>
 </LinearLayout>
