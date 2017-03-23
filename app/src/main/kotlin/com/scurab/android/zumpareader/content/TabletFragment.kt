@@ -22,13 +22,8 @@ class TabletFragment : BaseFragment() {
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val subListFragment = SubListFragment.newInstance("", false)
-        childFragmentManager.beginTransaction().add(R.id.main_list, object : MainListFragment() {
-            override fun onThreadItemClick(item: ZumpaThread, position: Int) {
-                subListFragment.loadData(item.id, true)
-            }
-        }).commit()
-        childFragmentManager.beginTransaction().add(R.id.sub_list, subListFragment).commit()
+        childFragmentManager.beginTransaction().add(R.id.main_list, MainListFragment()).commit()
+        childFragmentManager.beginTransaction().add(R.id.sub_list, SubListFragment.newInstance("", false)).commit()
     }
 
     override fun onFloatingButtonClick() {
