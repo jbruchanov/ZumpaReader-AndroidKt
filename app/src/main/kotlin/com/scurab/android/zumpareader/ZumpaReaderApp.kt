@@ -6,6 +6,7 @@ import android.app.Application
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
+import com.facebook.drawee.backends.pipeline.Fresco
 import com.github.salomonbrys.kotson.registerTypeAdapter
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -90,6 +91,7 @@ class ZumpaReaderApp : Application() {
         loadReadStates()
 
         initPicasso()
+        Fresco.initialize(this)
 
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             private var activities = 0
