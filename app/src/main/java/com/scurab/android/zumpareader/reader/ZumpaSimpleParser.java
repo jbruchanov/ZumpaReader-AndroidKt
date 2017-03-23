@@ -593,7 +593,7 @@ public class ZumpaSimpleParser {
         return text;
     }
 
-    private static Set<String> getLinks(String text) {
+    public static Set<String> getLinks(String text) {
         return getLinks(text, null);
     }
 

@@ -25,7 +25,7 @@
         android:textColor="?messageTextColor"
         tools:visibility="visible"/>
 
-    <EditText
+    <com.scurab.android.zumpareader.widget.MessageEditText
         android:id="@+id/message"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
