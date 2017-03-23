@@ -203,15 +203,15 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
                             { result ->
+                                val rv = recyclerView!!
+                                val offsetY = -2 * rv.computeVerticalScrollOffset()
                                 onResultLoaded(result, force)
                                 val scrollWayValue = if(argScrollDown && firstLoad) SCROLL_DOWN else scrollWay
                                 if (scrollWayValue != 0) {
                                     firstLoad = false
-                                    recyclerView.exec {
-                                        when(scrollWayValue){
-                                            SCROLL_UP -> it.scrollTo(0, 0)
-                                            SCROLL_DOWN -> it.smoothScrollToPosition(it.adapter.itemCount - 1)
-                                        }
+                                    when(scrollWayValue){
+                                        SCROLL_UP -> rv.smoothScrollBy(0, offsetY)
+                                        SCROLL_DOWN -> rv.smoothScrollToPosition(rv.adapter.itemCount - 1)
                                     }
                                 }
                                 isSending = false

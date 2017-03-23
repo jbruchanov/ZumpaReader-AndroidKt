@@ -1,10 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ImageView
+<com.facebook.drawee.view.SimpleDraweeView
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    app:viewAspectRatio="1"
     android:padding="?listItemPadding"
-    tools:src="@drawable/ic_camera"
+    app:progressBarImage="@drawable/ic_progress"
+    app:progressBarImageScaleType="centerInside"
+    app:progressBarAutoRotateInterval="1000"
+    app:actualImageScaleType="fitCenter"
+    tools:actualImageResource="@drawable/ic_camera"
     tools:background="#8F00"
     />

@@ -1,11 +1,7 @@
 package com.scurab.android.zumpareader.content
 
 import android.app.Activity
-import android.content.res.ColorStateList
-import android.content.res.Resources
-import android.graphics.Bitmap
-import android.graphics.drawable.*
-import android.os.Build
+import android.graphics.drawable.Animatable
 import android.support.annotation.ColorInt
 import android.support.v7.widget.RecyclerView
 import android.util.TypedValue
@@ -13,16 +9,21 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.ImageView
+import com.facebook.drawee.backends.pipeline.Fresco
+import com.facebook.drawee.controller.BaseControllerListener
+import com.facebook.drawee.view.SimpleDraweeView
+import com.facebook.imagepipeline.image.ImageInfo
 import com.scurab.android.zumpareader.R
-import com.scurab.android.zumpareader.drawable.SimpleProgressDrawable
 import com.scurab.android.zumpareader.model.SurveyItem
 import com.scurab.android.zumpareader.model.ZumpaThreadItem
-import com.scurab.android.zumpareader.util.*
+import com.scurab.android.zumpareader.util.exec
+import com.scurab.android.zumpareader.util.execOn
+import com.scurab.android.zumpareader.util.find
+import com.scurab.android.zumpareader.util.isImageUri
 import com.scurab.android.zumpareader.widget.SurveyView
-import com.squareup.picasso.Picasso
 import java.text.SimpleDateFormat
 import java.util.*
+import javax.annotation.Nullable
 
 /**
  * Created by JBruchanov on 27/11/2015.
@@ -144,8 +145,8 @@ class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
                     vh
                 }
                 TYPE_IMAGE -> {
-                    val view = li.inflate(R.layout.item_sub_list_image, parent, false) as ImageView
-                    view.adjustViewBounds = true
+                    val view = li.inflate(R.layout.item_sub_list_image, parent, false) as SimpleDraweeView
+//                    view.adjustViewBounds = true
                     val vh = ZumpaSubItemViewHolder(this, view)
                     view.setOnClickListener { vh.loadedUrl.exec { dispatchClick(it) } }
                     view.setOnLongClickListener { vh.loadedUrl.exec { dispatchClick(it, true) }; true }
@@ -200,10 +201,9 @@ private data class SubListItem(val item: ZumpaThreadItem, val itemPosition: Int,
 
 class ZumpaSubItemViewHolder(val adapter: SubListAdapter, val view: View) : ZumpaItemViewHolder(view) {
     internal val button by lazy { find<Button>(R.id.button) }
-    internal val imageView by lazy { view as ImageView }
+    internal val imageView by lazy { view as SimpleDraweeView }
     internal var url: String? = null
     internal var loadedUrl: String? = null
-    internal var imageTarget: ItemTarget? = null
     internal val surveyView by lazy { view as SurveyView }
 
     fun loadImage(url: String) {
@@ -211,39 +211,25 @@ class ZumpaSubItemViewHolder(val adapter: SubListAdapter, val view: View) : Zump
             return
         }
         this.url = url
-        imageTarget = ItemTarget(adapter, this, view.context.obtainStyledColor(R.attr.contextColor50p))
-        Picasso.with(imageView.context).load(url).into(imageTarget)
-    }
-}
 
-internal class ItemTarget(val adapter: SubListAdapter, val holder: ZumpaSubItemViewHolder, @ColorInt val contextColor: Int) : com.squareup.picasso.Target {
-    val progressDrawable by lazy { SimpleProgressDrawable(holder.itemView.context) }
+        val controller = Fresco.newDraweeControllerBuilder()
+                .setControllerListener(object : BaseControllerListener<ImageInfo>() {
+                    override fun onFinalImageSet(id: String?, @Nullable imageInfo: ImageInfo?, @Nullable animatable: Animatable?) {
+                        loadedUrl = url
+                        imageInfo.exec {
+                            val aspectRatio = it.width / it.height.toFloat()
+                            imageView.aspectRatio = aspectRatio
+                        }
+                    }
 
-    override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
-        holder.imageView.setImageDrawable(progressDrawable)
-    }
-
-    override fun onBitmapLoaded(bitmap: Bitmap, from: Picasso.LoadedFrom?) {
-        holder.loadedUrl = holder.url
-        holder.imageView.setImageDrawable(createDrawable(holder.itemView.context.resources, bitmap))
-        holder.imageView.invalidate()
-    }
-
-    override fun onBitmapFailed(errorDrawable: Drawable?) {
-        adapter.updateItemForUrl(holder.adapterPosition)
-    }
-
-    fun createDrawable(res: Resources, bitmap: Bitmap): Drawable {
-        val img = BitmapDrawable(res, bitmap)
-        var result: Drawable
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            result = RippleDrawable(ColorStateList.valueOf(contextColor), img, null)
-        } else {
-            var pressed = LayerDrawable(arrayOf(img, ColorDrawable(contextColor)))
-            result = StateListDrawable()
-            result.addState(intArrayOf(android.R.attr.state_pressed), pressed)
-            result.addState(intArrayOf(), img)
-        }
-        return result
+                    override fun onFailure(id: String?, throwable: Throwable?) {
+                        loadedUrl = null
+                    }
+                })
+                .setUri(this.url)
+                .setAutoPlayAnimations(true)
+                .build()
+        imageView.aspectRatio = 1.778f
+        imageView.controller = controller
     }
 }

@@ -11,6 +11,7 @@ import android.support.v7.widget.Toolbar
 import android.view.View
 import android.widget.ProgressBar
 import com.crashlytics.android.Crashlytics
+import com.facebook.drawee.backends.pipeline.Fresco
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.content.MainListFragment
@@ -59,6 +60,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Fabric.with(this, Crashlytics())
+        Fresco.initialize(this)
 
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
