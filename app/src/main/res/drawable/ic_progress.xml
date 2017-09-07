@@ -4,7 +4,7 @@
         <shape xmlns:android="http://schemas.android.com/apk/res/android"
                android:innerRadius="@dimen/pbar_size"
                android:shape="ring"
-               android:thickness="@dimen/gap_normal"
+               android:thickness="@dimen/gap_small"
                android:useLevel="false">
             <gradient
                 android:endColor="@android:color/transparent"
