@@ -11,6 +11,12 @@ def gitShaImpl() {
     try {
         return 'git rev-parse --short HEAD'.execute().text.trim()
     } catch (any) {
-        throw new Exception("!!! Unable to execute 'git' => Git is not part of your system path !!!");
+
     }
+    try {
+        def git = '"' + System.getenv("GIT") + '\\git.exe"'
+        def gitCmd = git + " rev-parse --short HEAD"
+        return gitCmd.execute().text.trim()
+    } catch (any) {}
+    throw new Exception("!!! Unable to execute 'git' => Git is not part of your system path !!!");
 }
