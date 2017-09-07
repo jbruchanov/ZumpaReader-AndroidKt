@@ -116,8 +116,8 @@ dependencies {
         transitive = true
     }
 
-    compile 'com.facebook.fresco:fresco:1.2.0'
-    compile 'com.facebook.fresco:animated-gif:1.2.0'
+    compile 'com.facebook.fresco:fresco:1.5.0'
+    compile 'com.facebook.fresco:animated-gif:1.5.0'
 
     testCompile 'junit:junit:4.12'
     def robo = "3.3.1"

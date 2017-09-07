@@ -18,6 +18,10 @@ import java.io.ByteArrayInputStream
 import java.io.FileOutputStream
 import java.io.InputStreamReader
 import java.util.*
+import com.facebook.datasource.DataSources
+import com.facebook.drawee.backends.pipeline.Fresco
+import com.facebook.imagepipeline.request.ImageRequest
+
 
 /**
  * Created by JBruchanov on 15/01/2016.
@@ -73,20 +77,18 @@ abstract class LoaderTask(private val zumpaApp: ZumpaReaderApp, val pages: Int, 
                 notifyProgressChanged()
 
                 if (urls.size > 0) {
-//                    val downloader = PicassoHttpDownloader.createDefault(zumpaApp, zumpaApp.zumpaHttpClient)
-//                    for (url in urls) {
-//                        try {
-//                            val uri = Uri.parse(url)
-//                            downloader.load(uri, 0, true)
-//                        } catch(e: Exception) {
-//                            e.printStackTrace()
-//                        }
-//                        imagesDownloaded++
-//                        notifyProgressChanged()
-//                        if (isCancelled) {
-//                            break;
-//                        }
-//                    }
+                    urls.forEach {
+                        val imagePipeline = Fresco.getImagePipeline()
+                        val request = ImageRequest.fromUri(it)
+                        val dataSource = imagePipeline.prefetchToDiskCache(request, null)
+                        try {
+                            DataSources.waitForFinalResult(dataSource)
+                            imagesDownloaded++
+                            notifyProgressChanged()
+                        } finally {
+                            dataSource.close()
+                        }
+                    }
                 }
 
             }
