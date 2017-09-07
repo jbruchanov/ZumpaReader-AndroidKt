@@ -191,6 +191,11 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
         }
     }
 
+    override fun onPause() {
+        super.onPause()
+        isLoading = false
+    }
+
     protected fun onResultLoaded(response: ZumpaMainPageResult?, firstLoad: Boolean) {
         response?.exec {
             zumpaData.putAll(it.items)
