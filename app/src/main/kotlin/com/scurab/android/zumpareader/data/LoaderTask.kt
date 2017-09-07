@@ -83,11 +83,11 @@ abstract class LoaderTask(private val zumpaApp: ZumpaReaderApp, val pages: Int, 
                         val dataSource = imagePipeline.prefetchToDiskCache(request, null)
                         try {
                             DataSources.waitForFinalResult(dataSource)
-                            imagesDownloaded++
-                            notifyProgressChanged()
                         } finally {
                             dataSource.close()
                         }
+                        imagesDownloaded++
+                        notifyProgressChanged()
                     }
                 }
 
