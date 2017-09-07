@@ -162,10 +162,10 @@ private class LoginCall(private val zumpaApp: ZumpaReaderApp, private val zumpaL
             val token = instanceID.getToken("542579595500", GoogleCloudMessaging.INSTANCE_ID_SCOPE, null)
             zumpaApp.zumpaPrefs.pushRegId = token
             if (token != null && loginResult) {
-                val body = zumpaApp.zumpaSettingsAPI.getMainPageHtml().execute().body().asString()
+                val body = zumpaApp.zumpaSettingsAPI.getMainPageHtml().execute().body()!!.asString()
                 val uid = ZumpaSimpleParser.parseUID(body)
                 if (uid != null) {
-                    val response = zumpaApp.zumpaPHPAPI.register(zumpaLoginBody.nick, uid, token).execute().body().asUTFString()
+                    val response = zumpaApp.zumpaPHPAPI.register(zumpaLoginBody.nick, uid, token).execute().body()!!.asUTFString()
                     pushResult = "[OK]" == response
                 }
             }
@@ -183,7 +183,7 @@ private class LogoutCall(private val zumpaApp: ZumpaReaderApp, private val zumpa
 
     override fun subscribeActual(observer: SingleObserver<in Pair<Boolean, Boolean>>) {
         try {
-            val response = zumpaApp.zumpaPHPAPI.unregister(zumpaUser).execute().body().asUTFString()
+            val response = zumpaApp.zumpaPHPAPI.unregister(zumpaUser).execute().body()!!.asUTFString()
             pushResult = "[OK]" == response
         } catch(e: Throwable) {
             e.printStackTrace()

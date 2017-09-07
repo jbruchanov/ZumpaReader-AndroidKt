@@ -145,6 +145,6 @@ class PicassoHttpDownloader2(private val imageStorage: File,
     private fun download(uri: String): ByteArray {
         val request = Request.Builder().url(uri).build()
         var response = httpClient.newCall(request).execute()
-        return response.body().bytes()
+        return response.body()!!.bytes()
     }
 }

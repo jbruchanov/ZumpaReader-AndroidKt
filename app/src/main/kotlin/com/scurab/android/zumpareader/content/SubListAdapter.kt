@@ -3,6 +3,7 @@ package com.scurab.android.zumpareader.content
 import android.app.Activity
 import android.graphics.drawable.Animatable
 import android.support.annotation.ColorInt
+import android.support.annotation.Nullable
 import android.support.v7.widget.RecyclerView
 import android.util.TypedValue
 import android.view.LayoutInflater
@@ -23,7 +24,6 @@ import com.scurab.android.zumpareader.util.isImageUri
 import com.scurab.android.zumpareader.widget.SurveyView
 import java.text.SimpleDateFormat
 import java.util.*
-import javax.annotation.Nullable
 
 /**
  * Created by JBruchanov on 27/11/2015.

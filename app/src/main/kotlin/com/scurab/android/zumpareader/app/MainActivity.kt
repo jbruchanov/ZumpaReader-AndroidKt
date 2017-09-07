@@ -64,7 +64,7 @@ class MainActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
-        floatingButton.setOnClickListener(DelayClickListener() { onFloatingButtonClick() })
+        floatingButton.setOnClickListener(DelayClickListener { onFloatingButtonClick() })
         supportFragmentManager.findFragmentById(R.id.fragment_container).execIfNull {
             openFragment(if (isTablet) TabletFragment() else MainListFragment(), false)
         }

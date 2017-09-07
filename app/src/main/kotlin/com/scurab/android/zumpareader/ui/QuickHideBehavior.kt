@@ -49,11 +49,11 @@ class QuickHideBehavior : CoordinatorLayout.Behavior<FloatingActionButton> {
         a.recycle()
     }
 
-    override fun onStartNestedScroll(coordinatorLayout: CoordinatorLayout?, child: FloatingActionButton?, directTargetChild: View?, target: View?, nestedScrollAxes: Int): Boolean {
-        return (nestedScrollAxes and ViewCompat.SCROLL_AXIS_VERTICAL) != 0
+    override fun onStartNestedScroll(coordinatorLayout: CoordinatorLayout, child: FloatingActionButton, directTargetChild: View, target: View, axes: Int, type: Int): Boolean {
+        return (axes and ViewCompat.SCROLL_AXIS_VERTICAL) != 0
     }
 
-    override fun onNestedPreScroll(coordinatorLayout: CoordinatorLayout?, child: FloatingActionButton?, target: View?, dx: Int, dy: Int, consumed: IntArray?) {
+    override fun onNestedPreScroll(coordinatorLayout: CoordinatorLayout, child: FloatingActionButton, target: View, dx: Int, dy: Int, consumed: IntArray, type: Int) {
         if (dy > 0 && scrollingDirection != DIRECTION_UP) {
             scrollingDirection = DIRECTION_UP
             scrollDistance = 0

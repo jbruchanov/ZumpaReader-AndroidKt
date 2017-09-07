@@ -11,6 +11,7 @@ import android.text.Spanned
 import android.util.AttributeSet
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.util.exec
+import com.scurab.android.zumpareader.util.execOn
 
 /**
  * Created by JBruchanov on 23/03/2017.
@@ -52,8 +53,10 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = R
                 if (paste != null) {
                     var result = paste.toString()
                     val links = ZumpaSimpleParser.getLinks(result)
-                    for (link in links) {
-                        result = result.replace(link, "<$link>")
+                    links.exec {
+                        for (link in it) {
+                            result = result.replace(link, "<$link>")
+                        }
                     }
                     paste = result
                 }

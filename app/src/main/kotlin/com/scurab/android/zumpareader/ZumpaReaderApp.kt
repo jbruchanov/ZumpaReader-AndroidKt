@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.os.Environment
 import android.util.Log
 import com.facebook.drawee.backends.pipeline.Fresco
+import com.github.salomonbrys.kotson.DeserializerArg
 import com.github.salomonbrys.kotson.registerTypeAdapter
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -128,7 +129,11 @@ class ZumpaReaderApp : Application() {
             gsonBuilder.registerTypeAdapter<ZumpaThread> {
                 deserialize {
                     elem ->
-                    ZumpaThread.thread(elem as JsonObject)
+                    if (elem is DeserializerArg) {
+                        ZumpaThread.thread(elem.json as JsonObject)
+                    } else {
+                        ZumpaThread.thread(elem as JsonObject)
+                    }
                 }
             }
             val gson = gsonBuilder.create()

@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
 import android.os.Handler
 import android.os.Looper
@@ -33,9 +34,9 @@ import java.util.*
  * Created by JBruchanov on 25/11/2015.
  */
 
-
+@Suppress("UNCHECKED_CAST")
 fun <T : View> RecyclerView.ViewHolder.find(@IdRes resId: Int): T {
-    var t = itemView.findViewById(resId) as T?
+    var t = itemView.findViewById<View>(resId) as T?
     t.execIfNull { throw NullPointerException("Unable to find view with id:'%s'".format(resId)) }
     return t!!
 }
@@ -203,9 +204,9 @@ fun InputStream.contentAsString(): String {
 }
 
 fun ViewTreeObserver.removeGlobalLayoutListenerSafe(listener: ViewTreeObserver.OnGlobalLayoutListener) {
-    try {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
         removeOnGlobalLayoutListener(listener)
-    } catch(e: Throwable) {
+    } else {
         removeGlobalOnLayoutListener(listener)
     }
 }
