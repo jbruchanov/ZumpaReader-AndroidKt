@@ -11,6 +11,8 @@
     app:progressBarImageScaleType="centerInside"
     app:progressBarAutoRotateInterval="1000"
     app:actualImageScaleType="fitCenter"
+    app:failureImage="@mipmap/ic_launcher"
+    app:failureImageScaleType="centerInside"
     tools:actualImageResource="@drawable/ic_camera"
     tools:background="#8F00"
     />

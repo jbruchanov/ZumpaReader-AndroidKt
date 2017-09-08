@@ -204,6 +204,7 @@ class ZumpaSubItemViewHolder(val adapter: SubListAdapter, val view: View) : Zump
     internal val imageView by lazy { view as SimpleDraweeView }
     internal var url: String? = null
     internal var loadedUrl: String? = null
+    internal var hasFailed: Boolean = false
     internal val surveyView by lazy { view as SurveyView }
 
     fun loadImage(url: String) {
@@ -211,7 +212,7 @@ class ZumpaSubItemViewHolder(val adapter: SubListAdapter, val view: View) : Zump
             return
         }
         this.url = url
-
+        hasFailed = false
         val controller = Fresco.newDraweeControllerBuilder()
                 .setControllerListener(object : BaseControllerListener<ImageInfo>() {
                     override fun onFinalImageSet(id: String?, @Nullable imageInfo: ImageInfo?, @Nullable animatable: Animatable?) {
@@ -223,7 +224,8 @@ class ZumpaSubItemViewHolder(val adapter: SubListAdapter, val view: View) : Zump
                     }
 
                     override fun onFailure(id: String?, throwable: Throwable?) {
-                        loadedUrl = null
+                        hasFailed = true
+                        loadedUrl = url
                     }
                 })
                 .setUri(this.url)
