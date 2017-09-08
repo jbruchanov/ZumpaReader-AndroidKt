@@ -108,7 +108,8 @@ class PostFragment : BaseDialogFragment() {
                     icon = R.drawable.ic_photo
                 }
                 tabHost.execOn {
-                    var newIndex = (childFragmentManager.fragments.size + 1).toString()
+                    //childFragmentManager.fragments doesn't have tabs anymore :/ i'd guess it's a bug
+                    var newIndex = "%s - %s".format(System.currentTimeMillis(), uri)
                     addTab(newTabSpec(newIndex).setIndicator(createIndicator(icon, contextColor, tabWidget)), PostImageFragment::class.java, PostImageFragment.arguments(Uri.parse(uri)))
                     post { setCurrentTabByTag(newIndex) }
                 }

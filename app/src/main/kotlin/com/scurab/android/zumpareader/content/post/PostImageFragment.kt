@@ -19,6 +19,7 @@ import com.scurab.android.zumpareader.utils.FotoDiskProvider
 import com.scurab.android.zumpareader.widget.PostImagePanelView
 import com.squareup.picasso.Picasso
 import com.trello.rxlifecycle2.components.support.RxDialogFragment
+import com.trello.rxlifecycle2.components.support.RxFragment
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -29,7 +30,7 @@ import java.io.File
 /**
  * Created by JBruchanov on 08/01/2016.
  */
-class PostImageFragment : RxDialogFragment(), SendingFragment {
+class PostImageFragment : RxFragment(), SendingFragment {
 
     companion object {
         fun newInstance(uri: Uri): PostImageFragment {
