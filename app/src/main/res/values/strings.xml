@@ -49,4 +49,5 @@
     <string name="action_start">Start</string>
     <string name="action_stop">Stop</string>
     <string name="pages">Pages</string>
+    <string name="transition_image">transition_image</string>
 </resources>

@@ -31,8 +31,8 @@ import java.util.*
 class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
 
     interface ItemClickListener {
-        fun onItemClick(item: ZumpaThreadItem, longClick: Boolean)
-        fun onItemClick(url: String, longClick: Boolean)
+        fun onItemClick(item: ZumpaThreadItem, longClick: Boolean, view: View)
+        fun onItemClick(url: String, longClick: Boolean, view: View)
     }
 
     private val TYPE_ITEM = 1
@@ -134,22 +134,22 @@ class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
             when (viewType) {
                 TYPE_ITEM -> {
                     var vh = ZumpaSubItemViewHolder(this, li.inflate(R.layout.item_sub_list, parent, false))
-                    vh.itemView.setOnClickListener { dispatchClick(dataItems[vh.adapterPosition].item) }
-                    vh.itemView.setOnLongClickListener { dispatchClick(dataItems[vh.adapterPosition].item, true); true }
+                    vh.itemView.setOnClickListener { v -> dispatchClick(dataItems[vh.adapterPosition].item, v) }
+                    vh.itemView.setOnLongClickListener { v -> dispatchClick(dataItems[vh.adapterPosition].item, v, true); true }
                     vh
                 }
                 TYPE_URL -> {
                     var vh = ZumpaSubItemViewHolder(this, li.inflate(R.layout.item_sub_list_button, parent, false))
-                    vh.button.setOnClickListener { dispatchClick(vh.button.text.toString()) }
-                    vh.button.setOnLongClickListener { dispatchClick(vh.button.text.toString(), true); true }
+                    vh.button.setOnClickListener { v -> dispatchClick(vh.button.text.toString(), v) }
+                    vh.button.setOnLongClickListener { v -> dispatchClick(vh.button.text.toString(), v, true); true }
                     vh
                 }
                 TYPE_IMAGE -> {
                     val view = li.inflate(R.layout.item_sub_list_image, parent, false) as SimpleDraweeView
 //                    view.adjustViewBounds = true
                     val vh = ZumpaSubItemViewHolder(this, view)
-                    view.setOnClickListener { vh.loadedUrl.exec { dispatchClick(it) } }
-                    view.setOnLongClickListener { vh.loadedUrl.exec { dispatchClick(it, true) }; true }
+                    view.setOnClickListener { v -> vh.loadedUrl.exec { dispatchClick(it, v) } }
+                    view.setOnLongClickListener { v -> vh.loadedUrl.exec { dispatchClick(it, v, true) }; true }
                     vh
                 }
                 TYPE_SURVEY -> {
@@ -166,12 +166,12 @@ class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
         }
     }
 
-    protected fun dispatchClick(item: ZumpaThreadItem, longClick: Boolean = false) {
-        itemClickListener.exec { it.onItemClick(item, longClick) }
+    protected fun dispatchClick(item: ZumpaThreadItem, view: View, longClick: Boolean = false) {
+        itemClickListener.exec { it.onItemClick(item, longClick, view) }
     }
 
-    protected fun dispatchClick(url: String, longClick: Boolean = false) {
-        itemClickListener.exec { it.onItemClick(url, longClick) }
+    protected fun dispatchClick(url: String, view: View, longClick: Boolean = false) {
+        itemClickListener.exec { it.onItemClick(url, longClick, view) }
     }
 
     fun updateItems(updated: List<ZumpaThreadItem>, clearData: Boolean) {

@@ -33,6 +33,9 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import org.jetbrains.anko.find
 import org.jetbrains.anko.support.v4.toast
+import android.support.v4.app.ActivityOptionsCompat
+
+
 
 /**
  * Created by JBruchanov on 27/11/2015.
@@ -287,7 +290,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
         }
     }
 
-    override fun onItemClick(item: ZumpaThreadItem, longClick: Boolean) {
+    override fun onItemClick(item: ZumpaThreadItem, longClick: Boolean, view: View) {
         if (postMessageView != null && zumpaApp?.zumpaPrefs?.isLoggedInNotOffline ?: false) {
             val postMessageView = this.postMessageView!!
             delegate.onItemClick(item, longClick)
@@ -324,7 +327,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
         }
     }
 
-    override fun onItemClick(url: String, longClick: Boolean) {
+    override fun onItemClick(url: String, longClick: Boolean, view: View) {
         if (longClick) {
             context.saveToClipboard(Uri.parse(url))
             context.toast(R.string.saved_into_clipboard)
@@ -334,7 +337,8 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
                 delegate.onThreadLinkClick(id)
             } else {
                 if (url.isImageUri()) {
-                    startActivity(ImageActivity.createIntent(activity, url))
+                    val bundle = ActivityOptionsCompat.makeSceneTransitionAnimation(activity, view, getString(R.string.transition_image)).toBundle()
+                    startActivity(ImageActivity.createIntent(activity, url), bundle)
                 } else {
                     context.startLinkActivity(url)
                 }
