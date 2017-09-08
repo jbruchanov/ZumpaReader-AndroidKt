@@ -3,6 +3,7 @@ package com.scurab.android.zumpareader.util
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
 import android.net.Uri
@@ -23,6 +24,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.Toast
+import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZR
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -208,5 +210,16 @@ fun ViewTreeObserver.removeGlobalLayoutListenerSafe(listener: ViewTreeObserver.O
         removeOnGlobalLayoutListener(listener)
     } else {
         removeGlobalOnLayoutListener(listener)
+    }
+}
+
+fun Context.startLinkActivity(url: String) {
+    try {
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.data = Uri.parse(url)
+        startActivity(intent)
+    } catch(e: Throwable) {
+        e.printStackTrace()
+        toast(R.string.unable_to_finish_operation)
     }
 }

@@ -109,19 +109,6 @@ abstract class BaseFragment : RxFragment() {
         return false
     }
 
-    fun startLinkActivity(url: String) {
-        try {
-            val intent = Intent(Intent.ACTION_VIEW)
-            intent.data = Uri.parse(url)
-            startActivity(intent)
-        } catch(e: Throwable) {
-            e.printStackTrace()
-            context.execOn {
-                toast(R.string.unable_to_finish_operation)
-            }
-        }
-    }
-
     protected val isLoggedIn: Boolean
         get() {
             return zumpaApp?.zumpaPrefs?.isLoggedInNotOffline ?: false
