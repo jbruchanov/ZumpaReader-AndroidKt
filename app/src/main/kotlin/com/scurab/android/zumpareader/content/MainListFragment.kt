@@ -71,6 +71,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
         onRefreshTitle()
         if (zumpaApp?.zumpaPrefs?.isOffline ?: false) {
             lastOffline = null
+            zumpaApp?.loadOfflineData()
             loadPage()
         }
     }

@@ -122,7 +122,10 @@ class ZumpaReaderApp : Application() {
                 }
             }
         })
+        loadOfflineData();
+    }
 
+    fun loadOfflineData() {
         val offline = File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), OFFLINE_FILE_NAME)
         if (offline.exists() && zumpaPrefs.isOffline) {
             val gsonBuilder = GsonBuilder().setExclusionStrategies(GsonExcludeStrategy())
