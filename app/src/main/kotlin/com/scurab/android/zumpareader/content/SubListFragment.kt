@@ -15,6 +15,7 @@ import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.app.BaseFragment
+import com.scurab.android.zumpareader.app.ImageActivity
 import com.scurab.android.zumpareader.content.post.PostFragment
 import com.scurab.android.zumpareader.event.LoadThreadEvent
 import com.scurab.android.zumpareader.model.*
@@ -332,7 +333,11 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
             if (id != 0) {
                 delegate.onThreadLinkClick(id)
             } else {
-                startLinkActivity(url)
+                if (url.isImageUri()) {
+                    startActivity(ImageActivity.createIntent(activity, url))
+                } else {
+                    context.startLinkActivity(url)
+                }
             }
         }
     }
