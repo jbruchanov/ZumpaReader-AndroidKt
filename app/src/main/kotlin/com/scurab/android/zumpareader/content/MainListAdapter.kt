@@ -5,6 +5,7 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.model.ZumpaThread
@@ -102,6 +103,7 @@ class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadViewHold
             onShowItemListener?.onShowingItem(this, position)
         }
         holder.itemView.isSelected = item == selectedItem
+        holder.isFavorite.visibility = if (item.isFavorite) View.VISIBLE else View.GONE
     }
 
     override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): ZumpaThreadViewHolder? {
@@ -140,5 +142,6 @@ class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadViewHold
     class ZumpaThreadViewHolder(view: View) : ZumpaItemViewHolder(view) {
         val stateBar by lazy { itemView.find<View>(R.id.item_state) }
         val lastAuthor by lazy { itemView.find<TextView>(R.id.last_author) }
+        val isFavorite by lazy { itemView.find<ImageView>(R.id.is_favorite) }
     }
 }
