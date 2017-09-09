@@ -277,6 +277,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
                         .subscribe(
                                 { result ->
                                     isLoading = false
+                                    zumpaData.remove(item.id)
                                     mainListAdapter()?.removeItem(item)
                                 },
                                 { err ->

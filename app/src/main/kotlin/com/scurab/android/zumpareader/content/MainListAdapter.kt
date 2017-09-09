@@ -200,6 +200,7 @@ class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadViewHold
     }
 
     fun removeItem(item: ZumpaThread) {
+        dataMap.remove(item.id)
         val index = items.indexOf(item)
         if (index != -1) {
             items.removeAt(index)
