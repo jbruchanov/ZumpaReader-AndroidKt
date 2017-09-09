@@ -10,9 +10,18 @@
                 </shape>
             </item>
             <item android:state_selected="true">
-                <shape>
-                    <solid android:color="@color/yellow_orange_25p"/>
-                </shape>
+                <layer-list>
+                    <item>
+                        <shape>
+                            <solid android:color="@color/black"/>
+                        </shape>
+                    </item>
+                    <item>
+                        <shape>
+                            <solid android:color="@color/yellow_orange_25p"/>
+                        </shape>
+                    </item>
+                </layer-list>
             </item>
             <item>
                 <shape>
@@ -32,9 +41,18 @@
                 </shape>
             </item>
             <item android:state_selected="true">
-                <shape>
-                    <solid android:color="@color/yellow_orange_25p"/>
-                </shape>
+                <layer-list>
+                    <item>
+                        <shape>
+                            <solid android:color="@color/dark"/>
+                        </shape>
+                    </item>
+                    <item>
+                        <shape>
+                            <solid android:color="@color/yellow_orange_25p"/>
+                        </shape>
+                    </item>
+                </layer-list>
             </item>
             <item>
                 <shape>

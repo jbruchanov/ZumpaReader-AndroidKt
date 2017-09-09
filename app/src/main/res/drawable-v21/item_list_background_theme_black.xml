@@ -7,9 +7,18 @@
             <item>
                 <selector>
                     <item android:state_selected="true">
-                        <shape>
-                            <solid android:color="?selectedBackgroundColor"/>
-                        </shape>
+                        <layer-list>
+                            <item>
+                                <shape>
+                                    <solid android:color="?primaryBackgroundColor"/>
+                                </shape>
+                            </item>
+                            <item>
+                                <shape>
+                                    <solid android:color="?selectedBackgroundColor"/>
+                                </shape>
+                            </item>
+                        </layer-list>
                     </item>
                     <item>
                         <shape>
@@ -27,9 +36,18 @@
             <item>
                 <selector>
                     <item android:state_selected="true">
-                        <shape>
-                            <solid android:color="?selectedBackgroundColor"/>
-                        </shape>
+                        <layer-list>
+                            <item>
+                                <shape>
+                                    <solid android:color="?secondaryBackgroundColor"/>
+                                </shape>
+                            </item>
+                            <item>
+                                <shape>
+                                    <solid android:color="?selectedBackgroundColor"/>
+                                </shape>
+                            </item>
+                        </layer-list>
                     </item>
                     <item>
                         <shape>
