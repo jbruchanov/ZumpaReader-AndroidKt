@@ -1,96 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="?threadItemBackground"
-    android:clickable="true"
-    android:orientation="horizontal">
+    android:layout_height="wrap_content">
 
-    <View
-        android:id="@+id/item_state"
-        android:layout_width="?itemStateWidth"
-        android:layout_height="match_parent"
-        android:background="@drawable/item_status_bar_background"/>
+    <include layout="@layout/item_main_list_menu"/>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="?listItemPadding"
-        tools:ignore="RtlHardcoded">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/subject"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:minHeight="?attr/subjectTextMinHeight"
-                android:textColor="?attr/subjectColor"
-                android:textSize="?attr/subjectTextSize"
-                tools:text="@string/dummy_long"/>
-
-            <ImageView
-                android:id="@+id/is_favorite"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="@dimen/gap_tiny"
-                android:src="@drawable/ic_grade_black"
-                android:tint="?attr/contextColor"/>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_small"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/author"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:textColor="?attr/authorColor"
-                android:textSize="?attr/authorTextSize"
-                tools:text="@string/dummy_long"/>
-
-            <TextView
-                android:id="@+id/last_author"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="@dimen/gap_normal"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:textColor="?attr/authorColor"
-                android:textSize="?attr/authorTextSize"
-                tools:text="@string/dummy_short"/>
-
-            <TextView
-                android:id="@+id/threads"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="@dimen/gap_normal"
-                android:layout_marginRight="@dimen/gap_normal"
-                android:textColor="?attr/dateColor"
-                android:textSize="?attr/dateTextSize"
-                android:textStyle="bold"
-                tools:text="99"/>
-
-            <TextView
-                android:id="@+id/time"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="?attr/dateColor"
-                android:textSize="?attr/dateTextSize"
-                tools:text="20:28:17 25.11."/>
-        </LinearLayout>
-    </LinearLayout>
-</LinearLayout>
+    <include layout="@layout/item_main_list_content"/>
+</FrameLayout>

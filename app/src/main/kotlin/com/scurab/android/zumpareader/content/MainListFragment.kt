@@ -14,8 +14,10 @@ import com.scurab.android.zumpareader.app.SettingsActivity
 import com.scurab.android.zumpareader.content.post.PostFragment
 import com.scurab.android.zumpareader.event.DialogEvent
 import com.scurab.android.zumpareader.event.LoadThreadEvent
+import com.scurab.android.zumpareader.model.ZumpaGenericResponse
 import com.scurab.android.zumpareader.model.ZumpaMainPageResult
 import com.scurab.android.zumpareader.model.ZumpaThread
+import com.scurab.android.zumpareader.model.ZumpaToggleBody
 import com.scurab.android.zumpareader.ui.hideAnimated
 import com.scurab.android.zumpareader.ui.showAnimated
 import com.scurab.android.zumpareader.util.asListOfValues
@@ -215,8 +217,13 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
                     val mainListAdapter = MainListAdapter(values)
                     mainListAdapter.setOnShowItemListener(this@MainListFragment, 15)
                     mainListAdapter.onItemClickListener = object : MainListAdapter.OnItemClickListener {
-                        override fun onItemClick(item: ZumpaThread, position: Int) {
-                            onThreadItemClick(item, position)
+                        override fun onItemClick(item: ZumpaThread, position: Int, type: Int) {
+                            when(type) {
+                                MainListAdapter.tThread -> onThreadItemClick(item, position)
+                                MainListAdapter.tThreadLongClick -> onThreadItemLongClick(item, position)
+                                MainListAdapter.tFavorite -> onThreadFavoriteClick(item, position)
+                                MainListAdapter.tIgnore -> onThreadIgnoreClick(item, position)
+                            }
                         }
                     }
                     it.adapter = mainListAdapter
@@ -229,18 +236,22 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
         }
     }
 
-    fun test(f: (ZumpaThread, Int?) -> Unit) {
-
+    private fun onThreadItemLongClick(item: ZumpaThread, position: Int) {
+        if (zumpaApp?.zumpaPrefs?.isOffline == false) {
+            (recyclerView?.adapter as? MainListAdapter)?.toggleOpenState(position)
+        }
     }
+
+    private fun mainListAdapter() = (recyclerView?.adapter as? MainListAdapter)
 
     open fun onThreadItemClick(item: ZumpaThread, position: Int) {
         isLoading = false
         val oldState = item.state
         item.setStateBasedOnReadValue(item.items, zumpaApp?.zumpaPrefs?.loggedUserName)
         if (oldState != item.state || isTablet) {
-            recyclerView?.adapter.exec {
+            mainListAdapter().exec {
                 if (isTablet) {
-                    (it as MainListAdapter).setSelectedItem(item, position)
+                    it.setSelectedItem(item, position)
                 } else {
                     it.notifyItemChanged(position)
                 }
@@ -251,6 +262,53 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
             BusProvider.post(LoadThreadEvent(item.id))
         } else {
             openFragment(SubListFragment.newInstance(item.id), true, true)
+        }
+    }
+
+    private fun onThreadIgnoreClick(item: ZumpaThread, position: Int) {
+        mainListAdapter()?.let {
+            it.toggleOpenState(position)
+            zumpaApp?.zumpaAPI?.let {
+                isLoading = true
+                it.toggleRate(ZumpaToggleBody(item.id, ZumpaToggleBody.tIgnore))
+                        .compose(bindToLifecycle<ZumpaGenericResponse>())
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(
+                                { result ->
+                                    isLoading = false
+                                    mainListAdapter()?.removeItem(item)
+                                },
+                                { err ->
+                                    isLoading = false
+                                    err?.message?.exec { toast(it) }
+                                }
+                        )
+            }
+        }
+    }
+
+    private fun onThreadFavoriteClick(item: ZumpaThread, position: Int) {
+        mainListAdapter()?.let {
+            it.toggleOpenState(position)
+            zumpaApp?.zumpaAPI?.let {
+                isLoading = true
+                it.toggleRate(ZumpaToggleBody(item.id, ZumpaToggleBody.tFavorite))
+                        .compose(bindToLifecycle<ZumpaGenericResponse>())
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(
+                                { result ->
+                                    isLoading = false
+                                    item.isFavorite = !item.isFavorite
+                                    mainListAdapter()?.notifyItemChanged(position)
+                                },
+                                { err ->
+                                    isLoading = false
+                                    err?.message?.exec { toast(it) }
+                                }
+                        )
+            }
         }
     }
 

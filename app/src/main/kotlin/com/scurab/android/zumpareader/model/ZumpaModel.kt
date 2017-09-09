@@ -248,6 +248,23 @@ class ZumpaVoteSurveyBody(
     }
 }
 
+class ZumpaToggleBody(
+        val id: String,
+        val type: String
+) : ZumpaBody {
+    companion object {
+        val tFavorite = "F"
+        val tIgnore = "I"
+    }
+
+    override fun toHttpPostString(): String {
+        val sb = StringBuilder(32)
+                .append("threadid=").append(id)
+                .append("&typ=").append(type)
+        return sb.toString()
+    }
+}
+
 data class ZumpaPushMessage(val threadId: String, val from: String, val message: String?)
 
 data class ZumpaReadState(val threadId: String, var count: Int)

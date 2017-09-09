@@ -16,6 +16,7 @@
         <item name="imageButtonBackground">@drawable/image_button_background_theme_black</item>
         <item name="listItemPadding">@dimen/gap_normal</item>
         <item name="threadItemBackground">@drawable/item_list_background_theme_black</item>
+        <item name="threadItemBackgroundNoPressedState">@drawable/item_list_background_no_pressed_state_theme_black</item>
         <item name="nickNameColor">?contextColor</item>
         <item name="nickTextSize">@dimen/text_small</item>
         <item name="subjectColor">?primaryTextColor</item>

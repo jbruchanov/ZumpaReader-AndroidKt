@@ -14,6 +14,7 @@
     <attr name="surveyButtonBackground" format="reference" />
     <attr name="listItemPadding" format="dimension"/>
     <attr name="threadItemBackground" format="reference"/>
+    <attr name="threadItemBackgroundNoPressedState" format="reference"/>
     <attr name="tabButtonBackground" format="reference"/>
     <attr name="nickNameColor" format="color"/>
     <attr name="nickTextSize" format="dimension"/>

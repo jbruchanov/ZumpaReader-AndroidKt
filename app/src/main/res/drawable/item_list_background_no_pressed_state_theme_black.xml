@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<level-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:maxLevel="0"
+        android:minLevel="0">
+        <selector>
+            <item>
+                <shape>
+                    <solid android:color="@color/black"/>
+                </shape>
+            </item>
+        </selector>
+
+    </item>
+    <item
+        android:maxLevel="1"
+        android:minLevel="1">
+        <selector>
+            <item>
+                <shape>
+                    <solid android:color="@color/dark"/>
+                </shape>
+            </item>
+        </selector>
+    </item>
+</level-list>

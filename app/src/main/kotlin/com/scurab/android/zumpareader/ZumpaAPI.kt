@@ -37,6 +37,9 @@ interface ZumpaAPI {
 
     @POST("/phorum/rate.php")
     fun voteSurvey(@Body body: ZumpaVoteSurveyBody): Observable<ZumpaGenericResponse>
+
+    @POST("/phorum/rate.php")
+    fun toggleRate(@Body body: ZumpaToggleBody): Observable<ZumpaGenericResponse>
 }
 
 interface ZumpaWSAPI {
@@ -87,6 +90,10 @@ class ZumpaOfflineApi(var offlineData: LinkedHashMap<String, ZumpaThread>) : Zum
     }
 
     override fun voteSurvey(body: ZumpaVoteSurveyBody): Observable<ZumpaGenericResponse> {
+        throw UnsupportedOperationException()
+    }
+
+    override fun toggleRate(body: ZumpaToggleBody): Observable<ZumpaGenericResponse> {
         throw UnsupportedOperationException()
     }
 }
