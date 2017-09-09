@@ -237,7 +237,8 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
     }
 
     private fun onThreadItemLongClick(item: ZumpaThread, position: Int) {
-        if (zumpaApp?.zumpaPrefs?.isOffline == false) {
+        val prefs = zumpaApp?.zumpaPrefs
+        if (prefs?.isOffline == false && prefs?.isLoggedIn == true) {
             (recyclerView?.adapter as? MainListAdapter)?.toggleOpenState(position)
         }
     }
