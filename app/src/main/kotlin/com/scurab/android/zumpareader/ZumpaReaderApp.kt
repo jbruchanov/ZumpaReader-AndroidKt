@@ -77,10 +77,20 @@ class ZumpaReaderApp : Application() {
 
         return OkHttpClient.Builder().apply {
             followRedirects(redirect)
+            cache(null)
             connectTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
             readTimeout(TIMEOUT * 5, TimeUnit.MILLISECONDS)
             writeTimeout(TIMEOUT * 5, TimeUnit.MILLISECONDS)
             cookieJar(JavaNetCookieJar(cookieManager))
+            addNetworkInterceptor { chain ->
+                val req = chain.request()
+                val rb = req
+                        .newBuilder()
+                        .addHeader("Cache-Control", "max-age=0")
+                        .url(req.url().newBuilder().addQueryParameter("_ts", System.currentTimeMillis().toString()).build())
+
+                chain.proceed(rb.build())
+            }
             if (BuildConfig.DEBUG) {
                 addNetworkInterceptor(logging)
             }
