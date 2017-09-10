@@ -2,20 +2,21 @@ package com.scurab.android.zumpareader.app
 
 import android.app.ProgressDialog
 import android.content.Context
+import android.net.Uri
 import android.os.Bundle
 import android.preference.PreferenceActivity
+import com.bugfender.sdk.Bugfender
 import com.google.android.gms.gcm.GoogleCloudMessaging
 import com.google.android.gms.iid.InstanceID
+import com.scurab.android.zumpareader.BuildConfig
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZR
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.content.SendingFragment
 import com.scurab.android.zumpareader.model.ZumpaLoginBody
+import com.scurab.android.zumpareader.preferences.ButtonPreference
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
-import com.scurab.android.zumpareader.util.ParseUtils
-import com.scurab.android.zumpareader.util.ZumpaPrefs
-import com.scurab.android.zumpareader.util.execOn
-import com.scurab.android.zumpareader.util.toast
+import com.scurab.android.zumpareader.util.*
 import io.reactivex.Single
 import io.reactivex.SingleObserver
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -60,6 +61,19 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
         }
         buttonPref.title = resources.getString(if (zumpaApp.zumpaPrefs.isLoggedIn) R.string.logout else R.string.login)
         filterPref.isEnabled = zumpaApp.zumpaPrefs.isLoggedIn
+
+        if (BuildConfig.DEBUG) {
+            val bugFender: ButtonPreference = object : ButtonPreference(this, null) {
+                override fun onClick() {
+                    val msg = "DevId:'${Bugfender.getDeviceIdentifier()}\nSessId:'${Bugfender.getSessionIdentifier()}'"
+                    context.saveToClipboard(msg)
+                    context.toast(R.string.saved_into_clipboard)
+                }
+            }
+            bugFender.title = "BugFender"
+            bugFender.summary = "DevId:'${Bugfender.getDeviceIdentifier()}\nSessId:'${Bugfender.getSessionIdentifier()}'"
+            preferenceScreen.addPreference(bugFender)
+        }
     }
 
     protected fun dispatchLogoutClicked() {

@@ -6,6 +6,7 @@ import android.app.Application
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
+import com.bugfender.sdk.Bugfender
 import com.facebook.drawee.backends.pipeline.Fresco
 import com.github.salomonbrys.kotson.DeserializerArg
 import com.github.salomonbrys.kotson.registerTypeAdapter
@@ -99,6 +100,11 @@ class ZumpaReaderApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        if (BuildConfig.DEBUG) {
+            Bugfender.init(this, "kzaufEwHl2xPh3nwfAZNSP8aRNdJwGJ1", BuildConfig.DEBUG)
+            Bugfender.enableLogcatLogging()
+            Bugfender.enableUIEventLogging(this)
+        }
         loadReadStates()
 
         initPicasso()

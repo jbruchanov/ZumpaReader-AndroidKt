@@ -7,7 +7,7 @@ import android.util.AttributeSet
 /**
  * Created by JBruchanov on 29/12/2015.
  */
-class ButtonPreference(context: Context?, attrs: AttributeSet?) : DialogPreference(context, attrs) {
+open class ButtonPreference(context: Context?, attrs: AttributeSet?) : DialogPreference(context, attrs) {
 
     override fun onClick() {
 

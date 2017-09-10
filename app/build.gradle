@@ -121,6 +121,8 @@ dependencies {
 
     compile 'com.bogdwellers:pinchtozoom:0.1'
 
+    compile 'com.bugfender.sdk:android:0.+'
+
     testCompile 'junit:junit:4.12'
     def robo = "3.3.1"
     testCompile "org.robolectric:robolectric:$robo"
