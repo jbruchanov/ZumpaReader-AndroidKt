@@ -16,6 +16,7 @@ import com.facebook.imagepipeline.image.CloseableBitmap
 import com.facebook.imagepipeline.image.CloseableImage
 import com.facebook.imagepipeline.request.ImageRequest
 import com.scurab.android.zumpareader.R
+import com.scurab.android.zumpareader.util.scaledImageRequest
 import com.scurab.android.zumpareader.util.startLinkActivity
 import org.jetbrains.anko.imageBitmap
 
@@ -47,9 +48,8 @@ class ImageActivity : AppCompatActivity() {
     }
 
     private fun loadImage(url: String) {
-        val imageRequest = ImageRequest.fromUri(url)
         val imagePipeline = Fresco.getImagePipeline()
-        var dataSource = imagePipeline.fetchDecodedImage(imageRequest, this)
+        var dataSource = imagePipeline.fetchDecodedImage(scaledImageRequest(url, this), this)
         try {
             val result = DataSources.waitForFinalResult(dataSource)
             if (result != null) {

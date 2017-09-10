@@ -2,6 +2,7 @@ package com.scurab.android.zumpareader.content
 
 import android.app.Activity
 import android.graphics.drawable.Animatable
+import android.net.Uri
 import android.support.annotation.ColorInt
 import android.support.annotation.Nullable
 import android.support.v7.widget.RecyclerView
@@ -13,14 +14,14 @@ import android.widget.Button
 import com.facebook.drawee.backends.pipeline.Fresco
 import com.facebook.drawee.controller.BaseControllerListener
 import com.facebook.drawee.view.SimpleDraweeView
+import com.facebook.imagepipeline.common.ResizeOptions
 import com.facebook.imagepipeline.image.ImageInfo
+import com.facebook.imagepipeline.request.ImageRequest
+import com.facebook.imagepipeline.request.ImageRequestBuilder
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.model.SurveyItem
 import com.scurab.android.zumpareader.model.ZumpaThreadItem
-import com.scurab.android.zumpareader.util.exec
-import com.scurab.android.zumpareader.util.execOn
-import com.scurab.android.zumpareader.util.find
-import com.scurab.android.zumpareader.util.isImageUri
+import com.scurab.android.zumpareader.util.*
 import com.scurab.android.zumpareader.widget.SurveyView
 import java.text.SimpleDateFormat
 import java.util.*
@@ -228,7 +229,7 @@ class ZumpaSubItemViewHolder(val adapter: SubListAdapter, val view: View) : Zump
                         loadedUrl = url
                     }
                 })
-                .setUri(this.url)
+                .setImageRequest(scaledImageRequest(url, imageView.context))
                 .setAutoPlayAnimations(true)
                 .build()
         imageView.aspectRatio = 1.778f
