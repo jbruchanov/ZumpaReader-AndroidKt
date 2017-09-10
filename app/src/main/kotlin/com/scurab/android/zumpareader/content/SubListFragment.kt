@@ -215,6 +215,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
             it.subscribeOn(Schedulers.io())
                     .compose(bindToLifecycle<ZumpaThreadResult>())
                     .observeOn(AndroidSchedulers.mainThread())
+                    .retry(3)
                     .subscribe(
                             { result ->
                                 val rv = recyclerView!!

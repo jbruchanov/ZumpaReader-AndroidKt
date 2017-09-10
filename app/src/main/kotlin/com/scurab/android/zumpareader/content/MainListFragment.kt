@@ -172,6 +172,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
             mainPage.subscribeOn(Schedulers.io())
                     .compose(bindToLifecycle<ZumpaMainPageResult>())
                     .observeOn(AndroidSchedulers.mainThread())
+                    .retry(3)
                     .subscribe(
                             { result ->
                                 onResultLoaded(result, firstLoad)
