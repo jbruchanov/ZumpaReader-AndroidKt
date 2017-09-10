@@ -21,6 +21,7 @@ import io.reactivex.SingleObserver
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
+import java.net.HttpURLConnection
 import java.net.URI
 
 /**
@@ -151,8 +152,8 @@ private class LoginCall(private val zumpaApp: ZumpaReaderApp, private val zumpaL
     private var pushResult: Boolean = false
 
     override fun subscribeActual(observer: SingleObserver<in Pair<Boolean, Boolean>>) {
-        val loginResponse = zumpaApp.zumpaSettingsAPI.login(zumpaLoginBody).execute()
-        loginResult = loginResponse.code() == 302
+        val loginResponse = zumpaApp.zumpaAPI.login(zumpaLoginBody).execute()
+        loginResult = loginResponse.code() == HttpURLConnection.HTTP_MOVED_TEMP
 
         zumpaApp.zumpaPrefs.isLoggedIn = loginResult
         zumpaApp.zumpaPrefs.cookies = if (loginResult) ParseUtils.extractCookies(loginResponse) else null
@@ -162,7 +163,7 @@ private class LoginCall(private val zumpaApp: ZumpaReaderApp, private val zumpaL
             val token = instanceID.getToken("542579595500", GoogleCloudMessaging.INSTANCE_ID_SCOPE, null)
             zumpaApp.zumpaPrefs.pushRegId = token
             if (token != null && loginResult) {
-                val body = zumpaApp.zumpaSettingsAPI.getMainPageHtml().execute().body()!!.asString()
+                val body = zumpaApp.zumpaAPI.getMainPageHtml().execute().body()!!.asString()
                 val uid = ZumpaSimpleParser.parseUID(body)
                 if (uid != null) {
                     val response = zumpaApp.zumpaPHPAPI.register(zumpaLoginBody.nick, uid, token).execute().body()!!.asUTFString()

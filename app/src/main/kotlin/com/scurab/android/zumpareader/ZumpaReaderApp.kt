@@ -64,7 +64,7 @@ class ZumpaReaderApp : Application() {
     private val TIMEOUT = 5000L
 
 
-    val zumpaHttpClient : OkHttpClient by lazy { buildHttpClient(true) }
+    val zumpaHttpClient : OkHttpClient by lazy { buildHttpClient(false) }
     val zumpaSettingsHttpClient : OkHttpClient by lazy { zumpaHttpClient.newBuilder().followRedirects(false).build() }
 
     private fun buildHttpClient(redirect: Boolean) : OkHttpClient {
@@ -200,17 +200,6 @@ class ZumpaReaderApp : Application() {
                 .addConverterFactory(ZumpaConverterFactory(zumpaParser))
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .client(zumpaHttpClient)
-                .build()
-
-        retrofit.create(ZumpaAPI::class.java)
-    }
-
-    val zumpaSettingsAPI: ZumpaAPI by lazy {
-        val retrofit = Retrofit.Builder()
-                .baseUrl(ZR.Constants.ZUMPA_MAIN_URL)
-                .addConverterFactory(ZumpaConverterFactory(zumpaParser))
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .client(zumpaSettingsHttpClient)
                 .build()
 
         retrofit.create(ZumpaAPI::class.java)

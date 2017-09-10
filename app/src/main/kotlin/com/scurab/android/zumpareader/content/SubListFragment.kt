@@ -34,7 +34,8 @@ import io.reactivex.schedulers.Schedulers
 import org.jetbrains.anko.find
 import org.jetbrains.anko.support.v4.toast
 import android.support.v4.app.ActivityOptionsCompat
-
+import retrofit2.HttpException
+import java.net.HttpURLConnection
 
 
 /**
@@ -168,13 +169,19 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
                             { result ->
+                                //this should be never called
                                 hideMessagePanel(true)
                                 loadData(SCROLL_DOWN)
                                 isSending = false
                             },
                             { err ->
-                                err?.message?.exec { toast(it) }
-                                isLoading = false
+                                if ((err as? HttpException)?.code() == HttpURLConnection.HTTP_MOVED_TEMP) {
+                                    hideMessagePanel(true)
+                                    loadData(SCROLL_DOWN)
+                                } else {
+                                    err?.message?.exec { toast(it) }
+                                    isLoading = false
+                                }
                                 isSending = false
                             }
                     )

@@ -11,6 +11,7 @@ import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.app.MainActivity
 import com.scurab.android.zumpareader.content.SendingFragment
+import com.scurab.android.zumpareader.content.SubListFragment
 import com.scurab.android.zumpareader.model.ZumpaThreadBody
 import com.scurab.android.zumpareader.model.ZumpaThreadResult
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
@@ -24,6 +25,8 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import org.jetbrains.anko.find
 import org.jetbrains.anko.support.v4.toast
+import retrofit2.HttpException
+import java.net.HttpURLConnection
 import java.util.*
 
 /**
@@ -134,11 +137,16 @@ class PostMessageFragment : RxDialogFragment(), SendingFragment {
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(
                                 { result ->
+                                    //this should never happen, redirect in error handles that
                                     dismiss()
                                 },
                                 { err ->
-                                    err?.message?.exec { toast(it) }
-                                    isSending = false
+                                    if ((err as? HttpException)?.code() == HttpURLConnection.HTTP_MOVED_TEMP) {
+                                        dismiss()
+                                    } else {
+                                        err?.message?.exec { toast(it) }
+                                        isSending = false
+                                    }
                                 }
                         )
             } else {
