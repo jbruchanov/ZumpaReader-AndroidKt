@@ -5,15 +5,13 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
+import android.content.res.Resources
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build
-import android.os.Environment
 import android.os.Handler
 import android.os.Looper
-import android.support.annotation.DimenRes
-import android.support.annotation.IdRes
-import android.support.annotation.StringRes
+import android.support.annotation.*
 import android.support.v4.app.Fragment
 import android.support.v4.graphics.drawable.DrawableCompat
 import android.support.v7.widget.RecyclerView
@@ -222,4 +220,10 @@ fun Context.startLinkActivity(url: String) {
         e.printStackTrace()
         toast(R.string.unable_to_finish_operation)
     }
+}
+
+fun Context.getColorFromTheme(@AttrRes attrResId: Int): Int {
+    val typedValue = TypedValue()
+    theme.resolveAttribute(attrResId, typedValue, true)
+    return typedValue.data
 }

@@ -1,6 +1,7 @@
 package com.scurab.android.zumpareader.content
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -20,10 +21,7 @@ import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.model.ZumpaToggleBody
 import com.scurab.android.zumpareader.ui.hideAnimated
 import com.scurab.android.zumpareader.ui.showAnimated
-import com.scurab.android.zumpareader.util.asListOfValues
-import com.scurab.android.zumpareader.util.exec
-import com.scurab.android.zumpareader.util.execIfNull
-import com.scurab.android.zumpareader.util.execOn
+import com.scurab.android.zumpareader.util.*
 import com.squareup.otto.Subscribe
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -83,6 +81,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
             content = inflater!!.inflate(R.layout.view_recycler_refreshable, container, false)
             content.exec {
                 swipeToRefresh.direction = SwipyRefreshLayoutDirection.TOP
+                swipeToRefresh.setColorSchemeColors(context.getColorFromTheme(R.attr.contextColor))
                 recyclerView.apply {
                     layoutManager = LinearLayoutManager(inflater.context, LinearLayoutManager.VERTICAL, false)
                 }

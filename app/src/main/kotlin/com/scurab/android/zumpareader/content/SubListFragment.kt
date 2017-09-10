@@ -104,8 +104,11 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         recyclerView?.layoutManager = LinearLayoutManager(view.context, LinearLayoutManager.VERTICAL, false)
-        swipyRefreshLayout?.direction = SwipyRefreshLayoutDirection.BOTTOM
-        swipyRefreshLayout?.setOnRefreshListener { loadData() }
+        swipyRefreshLayout?.apply {
+            direction = SwipyRefreshLayoutDirection.BOTTOM
+            setOnRefreshListener { loadData() }
+            setColorSchemeColors(context.getColorFromTheme(R.attr.contextColor))
+        }
         postMessageView.execOn {
             addButton.visibility = isTabletVisibility
             addButton.setOnClickListener { dispatchOpenPostMessage() }
