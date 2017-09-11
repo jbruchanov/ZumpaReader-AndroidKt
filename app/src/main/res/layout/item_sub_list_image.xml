@@ -1,18 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.facebook.drawee.view.SimpleDraweeView
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    app:viewAspectRatio="1"
-    android:padding="?listItemPadding"
-    app:progressBarImage="@drawable/ic_progress"
-    app:progressBarImageScaleType="centerInside"
-    app:progressBarAutoRotateInterval="1000"
-    app:actualImageScaleType="fitCenter"
-    app:failureImage="@mipmap/ic_launcher"
-    app:failureImageScaleType="centerInside"
-    tools:actualImageResource="@drawable/ic_camera"
-    tools:background="#8F00"
-    />
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <com.facebook.drawee.view.SimpleDraweeView
+        android:id="@+id/image"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="?listItemPadding"
+        app:actualImageScaleType="fitCenter"
+        app:failureImage="@mipmap/ic_launcher"
+        app:failureImageScaleType="centerInside"
+        app:progressBarAutoRotateInterval="1000"
+        app:progressBarImage="@drawable/ic_progress"
+        app:progressBarImageScaleType="centerInside"
+        app:viewAspectRatio="1"
+        tools:actualImageResource="@drawable/ic_camera"
+        tools:background="#8F00"
+        />
+
+    <View
+        android:id="@+id/overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="?imageButtonBackground"
+        android:duplicateParentState="true"/>
+</FrameLayout>

@@ -146,8 +146,7 @@ class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
                     vh
                 }
                 TYPE_IMAGE -> {
-                    val view = li.inflate(R.layout.item_sub_list_image, parent, false) as SimpleDraweeView
-//                    view.adjustViewBounds = true
+                    val view = li.inflate(R.layout.item_sub_list_image, parent, false)
                     val vh = ZumpaSubItemViewHolder(this, view)
                     view.setOnClickListener { v -> vh.loadedUrl.exec { dispatchClick(it, v) } }
                     view.setOnLongClickListener { v -> vh.loadedUrl.exec { dispatchClick(it, v, true) }; true }
@@ -202,7 +201,7 @@ private data class SubListItem(val item: ZumpaThreadItem, val itemPosition: Int,
 
 class ZumpaSubItemViewHolder(val adapter: SubListAdapter, val view: View) : ZumpaItemViewHolder(view) {
     internal val button by lazy { find<Button>(R.id.button) }
-    internal val imageView by lazy { view as SimpleDraweeView }
+    internal val imageView by lazy { find<Button>(R.id.image) as SimpleDraweeView }
     internal var url: String? = null
     internal var loadedUrl: String? = null
     internal var hasFailed: Boolean = false
@@ -227,12 +226,13 @@ class ZumpaSubItemViewHolder(val adapter: SubListAdapter, val view: View) : Zump
                     override fun onFailure(id: String?, throwable: Throwable?) {
                         hasFailed = true
                         loadedUrl = url
+                        imageView.aspectRatio = 5f
                     }
                 })
                 .setImageRequest(scaledImageRequest(url, imageView.context))
                 .setAutoPlayAnimations(true)
                 .build()
-        imageView.aspectRatio = 1.778f
+        imageView.aspectRatio = 16 / 9f
         imageView.controller = controller
     }
 }
