@@ -201,7 +201,8 @@ private data class SubListItem(val item: ZumpaThreadItem, val itemPosition: Int,
 
 class ZumpaSubItemViewHolder(val adapter: SubListAdapter, val view: View) : ZumpaItemViewHolder(view) {
     internal val button by lazy { find<Button>(R.id.button) }
-    internal val imageView by lazy { find<Button>(R.id.image) as SimpleDraweeView }
+    internal val imageView by lazy { find<SimpleDraweeView>(R.id.image) }
+    internal val imageViewOverlay by lazy { find<View>(R.id.overlay) }
     internal var url: String? = null
     internal var loadedUrl: String? = null
     internal var hasFailed: Boolean = false
