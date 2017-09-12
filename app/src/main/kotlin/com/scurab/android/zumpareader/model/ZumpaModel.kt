@@ -216,7 +216,7 @@ data class ZumpaThreadBody(
     private val a: String = "post"//postType
     private val t by lazy { threadId }//postId1
     private val p by lazy { threadId }//postId2
-    private val post = "Odeslat"//postButton
+    private val post = "+Odeslat+"//postButton
 
     override fun toHttpPostString(): String {
         val sb = StringBuilder(64)
@@ -225,7 +225,7 @@ data class ZumpaThreadBody(
                 .append("&body=", body.encodeHttp())
                 .append("&f=", f)
                 .append("&a=", a)
-                .append("&post=", post)
+                .append("&post=", post.encodeHttp())
         threadId.exec {
             sb.append("&threadId=", it.encodeHttp())
                     .append("&t=", t)
