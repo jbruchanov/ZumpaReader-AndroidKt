@@ -170,6 +170,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
                     .subscribeOn(Schedulers.io())
                     .compose(bindToLifecycle<ZumpaThreadResult>())
                     .observeOn(AndroidSchedulers.mainThread())
+                    .compose(RxTransformers.zumpaRedirectHandler())
                     .subscribe(
                             { result ->
                                 //this should be never called
@@ -178,12 +179,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
                                 isSending = false
                             },
                             { err ->
-                                if ((err as? HttpException)?.code() == HttpURLConnection.HTTP_MOVED_TEMP) {
-                                    hideMessagePanel(true)
-                                    loadData(SCROLL_DOWN)
-                                } else {
-                                    err?.message?.exec { toast(it) }
-                                }
+                                err.message?.exec { toast(it) }
                                 isSending = false
                             }
                     )

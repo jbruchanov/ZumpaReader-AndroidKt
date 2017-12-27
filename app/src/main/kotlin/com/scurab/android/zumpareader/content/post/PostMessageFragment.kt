@@ -15,10 +15,7 @@ import com.scurab.android.zumpareader.content.SubListFragment
 import com.scurab.android.zumpareader.model.ZumpaThreadBody
 import com.scurab.android.zumpareader.model.ZumpaThreadResult
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
-import com.scurab.android.zumpareader.util.exec
-import com.scurab.android.zumpareader.util.execOn
-import com.scurab.android.zumpareader.util.hideKeyboard
-import com.scurab.android.zumpareader.util.toast
+import com.scurab.android.zumpareader.util.*
 import com.scurab.android.zumpareader.widget.PostMessageView
 import com.trello.rxlifecycle2.components.support.RxDialogFragment
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -135,18 +132,14 @@ class PostMessageFragment : RxDialogFragment(), SendingFragment {
                         .subscribeOn(Schedulers.io())
                         .compose(bindToLifecycle<ZumpaThreadResult>())
                         .observeOn(AndroidSchedulers.mainThread())
+                        .compose(RxTransformers.zumpaRedirectHandler())
                         .subscribe(
                                 { result ->
-                                    //this should never happen, redirect in error handles that
                                     dismiss()
                                 },
                                 { err ->
-                                    if ((err as? HttpException)?.code() == HttpURLConnection.HTTP_MOVED_TEMP) {
-                                        dismiss()
-                                    } else {
-                                        err?.message?.exec { toast(it) }
-                                        isSending = false
-                                    }
+                                    err.message?.exec { toast(it) }
+                                    isSending = false
                                 }
                         )
             } else {
@@ -155,16 +148,13 @@ class PostMessageFragment : RxDialogFragment(), SendingFragment {
                         .subscribeOn(Schedulers.io())
                         .compose(bindToLifecycle<ZumpaThreadResult>())
                         .observeOn(AndroidSchedulers.mainThread())
+                        .compose(RxTransformers.zumpaRedirectHandler())
                         .subscribe(
                                 { result ->
                                     dismiss()
                                 },
                                 { err ->
-                                    if ((err as? HttpException)?.code() == HttpURLConnection.HTTP_MOVED_TEMP) {
-                                        dismiss()
-                                    } else {
-                                        err?.message?.exec { toast(it) }
-                                    }
+                                    err.message?.exec { toast(it) }
                                     isSending = false
                                 }
                         )
