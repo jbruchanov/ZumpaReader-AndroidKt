@@ -538,6 +538,11 @@ public class ZumpaSimpleParser {
             }
         }
 
+        //some weird issue in http://portal2.dkm.cz/phorum/read.php?f=2&i=2013474&t=2013474, where the text has 65k of ?s and `responses.find()` blocks for long
+        if (body.length() > 20000) {
+            return ssb;
+        }
+
         Matcher responses = RESPONSE_PATTERN.matcher(body);
         int color = ExtensionMethodsKt.obtainStyledColor(context, R.attr.contextColorText2);
         while (responses.find()) {
