@@ -1,7 +1,6 @@
 package com.scurab.android.zumpareader.content
 
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -31,7 +30,7 @@ import org.jetbrains.anko.support.v4.toast
 /**
  * Created by JBruchanov on 24/11/2015.
  */
-open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener {
+open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener, IsReloadable {
 
     private var content: View? = null
     private val recyclerView: RecyclerView get() = content!!.find<RecyclerView>(R.id.recycler_view)
@@ -147,7 +146,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
         }
     }
 
-    fun reloadData() {
+    override fun reloadData() {
         loadPage()
     }
 

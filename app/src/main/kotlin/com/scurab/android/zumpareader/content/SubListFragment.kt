@@ -34,14 +34,12 @@ import io.reactivex.schedulers.Schedulers
 import org.jetbrains.anko.find
 import org.jetbrains.anko.support.v4.toast
 import android.support.v4.app.ActivityOptionsCompat
-import retrofit2.HttpException
-import java.net.HttpURLConnection
 
 
 /**
  * Created by JBruchanov on 27/11/2015.
  */
-class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, SendingFragment, SurveyView.ItemClickListener {
+class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, SendingFragment, SurveyView.ItemClickListener, IsReloadable {
 
     companion object {
         private val ARG_THREAD_ID: String = "ARG_THREAD_ID"
@@ -198,6 +196,16 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
 
     fun loadData(scrollWay: Int = SCROLL_NONE) {
         loadData(argThreadId, false, scrollWay)
+    }
+
+    override fun reloadData() {
+        loadData(argThreadId, true, SCROLL_DOWN)
+        postMessageView.exec {
+            if (it.isVisible()) {
+                it.hideAnimated()
+            }
+        }
+        mainActivity?.floatingButton?.showAnimated()
     }
 
     fun loadData(tid: String, force: Boolean = false, scrollWay: Int = SCROLL_NONE) {
