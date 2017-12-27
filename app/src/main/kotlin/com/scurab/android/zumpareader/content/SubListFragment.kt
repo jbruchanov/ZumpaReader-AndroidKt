@@ -183,7 +183,6 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
                                     loadData(SCROLL_DOWN)
                                 } else {
                                     err?.message?.exec { toast(it) }
-                                    isLoading = false
                                 }
                                 isSending = false
                             }
