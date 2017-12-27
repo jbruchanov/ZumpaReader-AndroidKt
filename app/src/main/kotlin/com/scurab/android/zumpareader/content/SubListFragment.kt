@@ -209,11 +209,19 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
             isSending = false
             return
         }
+        val context = activity
         isLoading = true
         zumpaApp?.zumpaAPI?.getThreadPage(tid, tid).exec {
             it.subscribeOn(Schedulers.io())
                     .compose(bindToLifecycle<ZumpaThreadResult>())
                     .observeOn(AndroidSchedulers.mainThread())
+                    .map {
+                        it.items.forEach { item ->
+                            item.styledAuthor(context)
+                            item.styledBody(context)
+                        }
+                        it
+                    }
                     .retry(3)
                     .subscribe(
                             { result ->
