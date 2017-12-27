@@ -151,9 +151,7 @@ class PostMessageFragment : RxDialogFragment(), SendingFragment {
                         )
             } else {
                 val body = ZumpaThreadBody(app.zumpaPrefs.nickName, app.zumpaData[threadId]?.subject ?: argSubject!!, message, threadId)
-                val observable = it.sendResponse(threadId, threadId, body)
-                context.hideKeyboard(view)
-                observable
+                it.sendResponse(threadId, threadId, body)
                         .subscribeOn(Schedulers.io())
                         .compose(bindToLifecycle<ZumpaThreadResult>())
                         .observeOn(AndroidSchedulers.mainThread())
@@ -162,7 +160,12 @@ class PostMessageFragment : RxDialogFragment(), SendingFragment {
                                     dismiss()
                                 },
                                 { err ->
-                                    err?.message?.exec { toast(it) }
+                                    if ((err as? HttpException)?.code() == HttpURLConnection.HTTP_MOVED_TEMP) {
+                                        dismiss()
+                                    } else {
+                                        err?.message?.exec { toast(it) }
+                                    }
+                                    isSending = false
                                 }
                         )
             }
