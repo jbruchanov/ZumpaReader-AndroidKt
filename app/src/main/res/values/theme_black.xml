@@ -35,6 +35,7 @@
         <item name="buttonBackground">@drawable/url_button_background_theme_black</item>
         <item name="itemStateWidth">@dimen/item_left_bar_width</item>
         <item name="messageTextColor">@color/message_text_black</item>
+        <item name="android:listDivider">@drawable/divider_vertical_transparent_normal</item>
     </style>
 
 </resources>

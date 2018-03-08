@@ -175,6 +175,10 @@ class PostMessageFragment : RxDialogFragment(), SendingFragment {
         links.add(link)
     }
 
+    fun addGiphyLink(link: String) {
+        postMessageView?.message?.append(link.asZumpaLinkWithNewLine())
+    }
+
     private fun String.asZumpaLinkWithNewLine(): String {
         return "<%s>\n".format(this)
     }

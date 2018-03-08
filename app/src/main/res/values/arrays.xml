@@ -10,4 +10,18 @@
         <item>@string/favorites</item>
         <item>@string/own</item>
     </string-array>
+
+    <string-array name="giphy">
+        <item>OMG</item>
+        <item>WTF</item>
+        <item>Cool</item>
+        <item>Nice</item>
+        <item>Dafuq</item>
+        <item>Shit</item>
+        <item>Fuck off</item>
+        <item>Orly</item>
+        <item>Bitch please</item>
+        <item>Face palm</item>
+        <item>Boobs</item>
+    </string-array>
 </resources>

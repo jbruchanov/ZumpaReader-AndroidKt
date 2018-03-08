@@ -5,7 +5,16 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:padding="@dimen/gap_normal"
     tools:context=".MainActivity">
+
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="invisible"
+        android:indeterminate="true"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal" />
 
     <EditText
         android:id="@+id/giphy_search"
@@ -17,8 +26,16 @@
 
 
     <android.support.v7.widget.RecyclerView
+        android:id="@+id/recycler_view_horizontal"
+        android:scrollbars="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/button_min_size" />
+
+    <android.support.v7.widget.RecyclerView
         android:id="@+id/recycler_view"
         android:layout_width="match_parent"
+        android:scrollbars="vertical"
+        android:layout_marginTop="@dimen/gap_small"
         android:layout_height="0dp"
         android:layout_weight="1" />
 </LinearLayout>

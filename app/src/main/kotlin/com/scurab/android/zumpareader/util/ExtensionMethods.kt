@@ -132,6 +132,10 @@ fun Context.post(runnable: Runnable) {
     Handler(Looper.getMainLooper()).post(runnable)
 }
 
+fun Context.post(runnable: () -> Unit) {
+    Handler(Looper.getMainLooper()).post(runnable)
+}
+
 fun Context.postDelayed(runnable: Runnable, delay: Long) {
     if (delay <= 0) {
         post(runnable)

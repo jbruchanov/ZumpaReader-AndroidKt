@@ -18,6 +18,8 @@ import com.scurab.android.zumpareader.BuildConfig
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.app.BaseDialogFragment
 import com.scurab.android.zumpareader.app.MainActivity
+import com.scurab.android.zumpareader.extension.app
+import com.scurab.android.zumpareader.giphy.GiphyActivity
 import com.scurab.android.zumpareader.ui.showAnimated
 import com.scurab.android.zumpareader.util.*
 import org.jetbrains.anko.find
@@ -54,20 +56,20 @@ class PostFragment : BaseDialogFragment() {
         }
 
         fun isRequestCode(requestCode: Int): Boolean {
-            return REQ_CODE_CAMERA == requestCode || REQ_CODE_IMAGE == requestCode
+            return REQ_CODE_CAMERA == requestCode || REQ_CODE_IMAGE == requestCode || REQ_CODE_GIPHY == requestCode
         }
 
     }
 
     val tabHost: FragmentTabHost? get() {
-        return view!!.find<FragmentTabHost>(android.R.id.tabhost)
+        return view!!.find(android.R.id.tabhost)
     }
     val contextColor by lazy { context.obtainStyledColor(R.attr.contextColor) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mainActivity.execOn {
-            hideFloatingButton()
+        mainActivity?.let {
+            it.post { it.hideFloatingButton() }
         }
     }
 
@@ -94,30 +96,42 @@ class PostFragment : BaseDialogFragment() {
         return view
     }
 
+    private var pendingGiphyLink: String? = null
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        val isImage = (REQ_CODE_IMAGE == requestCode || REQ_CODE_CAMERA == requestCode)
-        if (isImage && resultCode == Activity.RESULT_OK) {
-            try {
-                val uri: String
-                val icon: Int
-                if (REQ_CODE_CAMERA == requestCode) {
-                    uri = zumpaApp!!.zumpaPrefs.lastCameraUri
-                    icon = R.drawable.ic_camera
-                } else {
-                    uri = data!!.dataString
-                    icon = R.drawable.ic_photo
+        resultCode
+                .takeIf { it == Activity.RESULT_OK }
+                ?.let {
+                    when (requestCode) {
+                        REQ_CODE_CAMERA,
+                        REQ_CODE_IMAGE -> {
+                            try {
+                                val uri: String
+                                val icon: Int
+                                if (REQ_CODE_CAMERA == requestCode) {
+                                    uri = app().zumpaPrefs.lastCameraUri
+                                    icon = R.drawable.ic_camera
+                                } else {
+                                    uri = data!!.dataString
+                                    icon = R.drawable.ic_photo
+                                }
+                                tabHost.execOn {
+                                    //childFragmentManager.fragments doesn't have tabs anymore :/ i'd guess it's a bug
+                                    var newIndex = "%s - %s".format(System.currentTimeMillis(), uri)
+                                    addTab(newTabSpec(newIndex).setIndicator(createIndicator(icon, contextColor, tabWidget)), PostImageFragment::class.java, PostImageFragment.arguments(Uri.parse(uri)))
+                                    post { setCurrentTabByTag(newIndex) }
+                                }
+                            } catch (e: Throwable) {
+                                context.toast(e.message)
+                            }
+                        }
+                        REQ_CODE_GIPHY -> {
+                            pendingGiphyLink = data?.data.toString()
+                        }
+                        else -> Unit
+                    }
                 }
-                tabHost.execOn {
-                    //childFragmentManager.fragments doesn't have tabs anymore :/ i'd guess it's a bug
-                    var newIndex = "%s - %s".format(System.currentTimeMillis(), uri)
-                    addTab(newTabSpec(newIndex).setIndicator(createIndicator(icon, contextColor, tabWidget)), PostImageFragment::class.java, PostImageFragment.arguments(Uri.parse(uri)))
-                    post { setCurrentTabByTag(newIndex) }
-                }
-            } catch(e: Throwable) {
-                context.toast(e.message)
-            }
-        }
     }
 
     private val argSubject: String? by lazy { arguments?.getString(Intent.EXTRA_SUBJECT) }
@@ -148,8 +162,17 @@ class PostFragment : BaseDialogFragment() {
                 when (argFlag) {
                     R.id.photo -> onPhotoClick()
                     R.id.camera -> onCameraClick()
+                    R.id.giphy -> onGiphyClick()
                 }
             })
+        }
+
+        pendingGiphyLink?.let {
+            (childFragmentManager.findFragmentByTag(POST_MESSAGE_TAG) as? PostMessageFragment)
+                    ?.apply {
+                        addGiphyLink(it)
+                    }
+            pendingGiphyLink = null
         }
     }
 
@@ -170,7 +193,7 @@ class PostFragment : BaseDialogFragment() {
             val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
             val cameraFileUri = context.getRandomCameraFileUri()
             val photoURI = FileProvider.getUriForFile(context, BuildConfig.Authority, File(cameraFileUri))
-            zumpaApp!!.zumpaPrefs.lastCameraUri = photoURI.toString()
+            app().zumpaPrefs.lastCameraUri = photoURI.toString()
             intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
             startActivityForResult(intent, REQ_CODE_CAMERA)
         } catch(e: Exception) {
@@ -180,8 +203,7 @@ class PostFragment : BaseDialogFragment() {
 
     fun onGiphyClick() {
         try {
-            val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-            startActivityForResult(intent, REQ_CODE_CAMERA)
+            startActivityForResult(Intent(context, GiphyActivity::class.java), REQ_CODE_GIPHY)
         } catch(e: Exception) {
             context.toast(R.string.err_fail)
         }

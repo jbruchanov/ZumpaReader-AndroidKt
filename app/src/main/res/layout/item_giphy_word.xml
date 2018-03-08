@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="?surveyButtonBackground"
+    android:gravity="center"
+    android:minHeight="@dimen/button_min_size"
+    android:minWidth="@dimen/button_min_size"
+    android:padding="@dimen/gap_normal"
+    android:textColor="?contextColor"
+    android:textSize="?surveyButtonTextSize"
+    tools:text="@string/app_name" />

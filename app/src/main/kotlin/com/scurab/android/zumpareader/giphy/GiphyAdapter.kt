@@ -9,6 +9,7 @@ import com.facebook.drawee.backends.pipeline.Fresco
 import com.facebook.drawee.view.SimpleDraweeView
 import com.giphy.sdk.core.models.Media
 import com.giphy.sdk.core.network.api.GPHApiClient
+import com.scurab.android.zumpareader.R
 import org.jetbrains.anko.padding
 import kotlin.math.roundToInt
 import kotlin.properties.Delegates
@@ -42,15 +43,13 @@ class GiphyAdapter(private val giphyAPI: GPHApiClient) : RecyclerView.Adapter<Gi
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GiphyViewHolder {
         val view = SimpleDraweeView(parent.context).apply {
-            padding = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5f, parent.resources.displayMetrics).roundToInt()
-            hierarchy.setPlaceholderImage(GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, intArrayOf(Color.BLACK, Color.BLACK)))
-
+            padding = resources.getDimensionPixelSize(R.dimen.gap_small)
+            hierarchy.setPlaceholderImage(R.drawable.giphy_placeholder)
         }
+
         val giphyViewHolder = GiphyViewHolder(view)
         view.setOnClickListener {
-            onItemClickListener?.let {
-                it.invoke(items[giphyViewHolder.adapterPosition])
-            }
+            onItemClickListener?.invoke(items[giphyViewHolder.adapterPosition])
         }
         return giphyViewHolder
     }
