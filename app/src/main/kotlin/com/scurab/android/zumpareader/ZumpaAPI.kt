@@ -2,11 +2,10 @@ package com.scurab.android.zumpareader
 
 import com.scurab.android.zumpareader.model.*
 import io.reactivex.Observable
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.Call
-import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.POST
-import retrofit2.http.Query
+import retrofit2.http.*
 
 /**
  * Created by JBruchanov on 24/11/2015.
@@ -53,6 +52,10 @@ interface ZumpaPHPAPI {
 
     @GET("/CDM/RegisterHandler.php?unregister=true")
     fun unregister(@Query("user") user: String): Call<ZumpaGenericResponse>
+
+    @Multipart()
+    @POST("/fotodisk.php")
+    fun postImage(@Part image: MultipartBody.Part, @Part("name") name: RequestBody) : Observable<ZumpaGenericResponse>
 }
 
 class ZumpaOfflineApi(var offlineData: LinkedHashMap<String, ZumpaThread>) : ZumpaAPI {

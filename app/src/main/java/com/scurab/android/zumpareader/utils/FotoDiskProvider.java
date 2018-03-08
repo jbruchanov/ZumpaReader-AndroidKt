@@ -8,6 +8,7 @@ import java.net.URL;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Deprecated//Fotodisk is down, kept for example how to do lowlevel multipart upload
 public class FotoDiskProvider {
 
     public interface OnProgressChange {

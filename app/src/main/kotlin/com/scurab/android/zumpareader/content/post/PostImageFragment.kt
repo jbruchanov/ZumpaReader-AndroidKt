@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import com.scurab.android.zumpareader.R
+import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.content.SendingFragment
 import com.scurab.android.zumpareader.content.post.tasks.CopyFromResourcesTask
 import com.scurab.android.zumpareader.content.post.tasks.ProcessImageTask
@@ -23,9 +24,14 @@ import com.trello.rxlifecycle2.components.support.RxFragment
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import okhttp3.MediaType
 import org.jetbrains.anko.find
 import org.jetbrains.anko.support.v4.toast
 import java.io.File
+import okhttp3.RequestBody
+import okhttp3.MultipartBody
+
+
 
 /**
  * Created by JBruchanov on 08/01/2016.
@@ -160,19 +166,27 @@ class PostImageFragment : RxFragment(), SendingFragment {
         }
 
         isSending = true
-        Single.fromCallable { FotoDiskProvider.uploadPicture(out.absolutePath, null) }
+        val reqFile = RequestBody.create(MediaType.parse("image/*"), out)
+        val body = MultipartBody.Part.createFormData("image", out.name, reqFile)
+        val name = RequestBody.create(MediaType.parse("text/plain"), "Submit")
+
+        (activity.application as ZumpaReaderApp).zumpaPHPAPI.postImage(body, name)
                 .compose(bindToLifecycle())
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe { result, err ->
+                .subscribe({
                     isSending = false
-                    imageUploadedLink = result
-                    if (result != null) {
-                        dispatchImageUploaded(result)
+                    val url = it.asUTFString()
+                    if (url.isNotEmpty()) {
+                        imageUploadedLink = url
+                        dispatchImageUploaded(url)
                     } else {
                         context.toast(R.string.err_fail)
                     }
-                }
+                }, { err ->
+                    err.printStackTrace()
+                    context.toast(R.string.err_fail)
+                })
     }
 
     protected fun dispatchImageUploaded(result: String) {
