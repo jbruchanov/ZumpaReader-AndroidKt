@@ -113,6 +113,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
             sendButton.setOnClickListener { dispatchSend() }
             camera.setOnClickListener { dispatchOpenPostMessage(R.id.camera) }
             photo.setOnClickListener { dispatchOpenPostMessage(R.id.photo) }
+            giphy.setOnClickListener { dispatchOpenPostMessage(R.id.giphy) }
         }
         delegate.onViewCreated()
         loadData()

@@ -31,6 +31,7 @@ class PostFragment : BaseDialogFragment() {
     companion object {
         val REQ_CODE_IMAGE = 123
         val REQ_CODE_CAMERA = 124
+        val REQ_CODE_GIPHY = 125
 
         private val POST_MESSAGE_TAG = "1"
         val THREAD_ID = "THREAD_UD"
@@ -171,6 +172,15 @@ class PostFragment : BaseDialogFragment() {
             val photoURI = FileProvider.getUriForFile(context, BuildConfig.Authority, File(cameraFileUri))
             zumpaApp!!.zumpaPrefs.lastCameraUri = photoURI.toString()
             intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
+            startActivityForResult(intent, REQ_CODE_CAMERA)
+        } catch(e: Exception) {
+            context.toast(R.string.err_fail)
+        }
+    }
+
+    fun onGiphyClick() {
+        try {
+            val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
             startActivityForResult(intent, REQ_CODE_CAMERA)
         } catch(e: Exception) {
             context.toast(R.string.err_fail)

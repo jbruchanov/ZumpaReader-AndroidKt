@@ -31,4 +31,5 @@
     <dimen name="item_left_bar_width">2dp</dimen>
     <dimen name="dialog_offline_min_width">250dp</dimen>
     <dimen name="pbar_size">24dp</dimen>
+    <dimen name="button_min_width">48dp</dimen>
 </resources>

@@ -84,6 +84,7 @@ class PostMessageFragment : RxDialogFragment(), SendingFragment {
 
             camera.setOnClickListener { parentPostFragment?.onCameraClick() }
             photo.setOnClickListener { parentPostFragment?.onPhotoClick() }
+            giphy.setOnClickListener { parentPostFragment?.onGiphyClick() }
         }
     }
 
