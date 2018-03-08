@@ -1,6 +1,6 @@
 buildscript {
     ext.kotlin_version = '1.2.30'
-    ext.playServices = "11.2.2"
+    ext.playServices = "11.8.0"
     ext.supportLibraryVersion = "26.0.2"
     ext.fileProviderAuthority = "com.scurab.android.zumpareader.fileprovider"
 
@@ -36,6 +36,7 @@ android {
         versionCode 57
         versionName "3.0.4"
         manifestPlaceholders = [authority: fileProviderAuthority]
+        multiDexEnabled true
     }
 
     buildTypes {
@@ -104,11 +105,11 @@ dependencies {
     compile 'com.github.salomonbrys.kotson:kotson:2.5.0'
     compile 'com.squareup:otto:1.3.8'
 
-    compile "io.reactivex.rxjava2:rxjava:2.1.0"
+    compile "io.reactivex.rxjava2:rxjava:2.1.5"
     compile 'io.reactivex.rxjava2:rxandroid:2.0.1'
-    compile 'com.trello.rxlifecycle2:rxlifecycle:2.1.0'
+    compile 'com.trello.rxlifecycle2:rxlifecycle:2.2.1'
     compile 'com.jakewharton.rxbinding2:rxbinding:2.0.0'
-    compile 'com.trello.rxlifecycle2:rxlifecycle-android:2.1.0'
+    compile 'com.trello.rxlifecycle2:rxlifecycle-android:2.2.1'
     compile 'com.trello.rxlifecycle2:rxlifecycle-components:2.1.0'
     compile 'com.trello.rxlifecycle2:rxlifecycle-navi:2.0.1'
     
