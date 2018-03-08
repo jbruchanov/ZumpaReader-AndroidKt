@@ -1,6 +1,5 @@
 package com.scurab.android.zumpareader
 
-//import com.scurab.android.zumpareader.data.PicassoHttpDownloader
 import android.app.Activity
 import android.app.Application
 import android.os.Bundle
@@ -8,6 +7,7 @@ import android.os.Environment
 import android.util.Log
 import com.bugfender.sdk.Bugfender
 import com.facebook.drawee.backends.pipeline.Fresco
+import com.giphy.sdk.core.network.api.GPHApiClient
 import com.github.salomonbrys.kotson.DeserializerArg
 import com.github.salomonbrys.kotson.registerTypeAdapter
 import com.google.gson.Gson
@@ -138,7 +138,7 @@ class ZumpaReaderApp : Application() {
                 }
             }
         })
-        loadOfflineData();
+        loadOfflineData()
     }
 
     fun loadOfflineData() {
@@ -235,6 +235,10 @@ class ZumpaReaderApp : Application() {
                 .build()
 
         retrofit.create(ZumpaPHPAPI::class.java)
+    }
+
+    val giphyAPI: GPHApiClient by lazy {
+        GPHApiClient("BKCus6OcOlVnsZQwQQ4WllKPEIzKAeEO")
     }
 
     fun resetCookies() {
