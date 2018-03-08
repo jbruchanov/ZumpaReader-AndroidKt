@@ -26,6 +26,7 @@ import com.scurab.android.zumpareader.ui.showAnimated
 import com.scurab.android.zumpareader.util.*
 import io.fabric.sdk.android.Fabric
 import org.jetbrains.anko.find
+import org.jetbrains.anko.findOptional
 
 /**
  * Created by JBruchanov on 24/11/2015.
@@ -41,10 +42,10 @@ class MainActivity : AppCompatActivity() {
     private val toolbar by lazy { find<Toolbar>(R.id.toolbar) }
     private val progressBar by lazy { find<ProgressBar>(R.id.progress_bar) }
     private val coordinatorLayout by lazy { find<CoordinatorLayout>(R.id.coordinator_layout) }
-    private val _floatingButton by lazy { find<FloatingActionButton>(R.id.fab) }
+    private val _floatingButton by lazy { findOptional<FloatingActionButton>(R.id.fab) }
     private val isTablet by lazy { resources.getBoolean(R.bool.is_tablet) }
 
-    val floatingButton: FloatingActionButton  get() = _floatingButton
+    val floatingButton: FloatingActionButton  get() = _floatingButton!!
 
     val zumpaApp: ZumpaReaderApp
         get() {
@@ -153,13 +154,18 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun hideFloatingButton() {
-        floatingButton.hideAnimated()
-        ((floatingButton.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior as QuickHideBehavior?)?.enabled = false
+        _floatingButton?.let {
+            it.hideAnimated()
+            ((it.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior as QuickHideBehavior?)?.enabled = false
+        }
+
     }
 
     fun showFloatingButton() {
-        floatingButton.showAnimated()
-        ((floatingButton.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior as QuickHideBehavior?)?.enabled = true
+        _floatingButton?.let {
+            it.showAnimated()
+            ((it.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior as QuickHideBehavior?)?.enabled = true
+        }
     }
 
 

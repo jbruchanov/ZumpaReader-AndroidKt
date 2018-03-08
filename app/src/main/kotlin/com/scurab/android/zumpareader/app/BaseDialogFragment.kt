@@ -16,11 +16,6 @@ abstract class BaseDialogFragment : RxDialogFragment() {
             return activity as MainActivity?
         }
 
-    val zumpaApp: ZumpaReaderApp?
-        get() {
-            return mainActivity?.zumpaApp
-        }
-
     private var _isTablet: Boolean? = null
     protected val isTablet: Boolean
         get() {
