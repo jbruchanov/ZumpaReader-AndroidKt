@@ -47,12 +47,6 @@ inline fun <T> T?.exec(f: (T) -> Unit) {
     }
 }
 
-inline fun <T> T?.execOn(f: T.() -> Unit) {
-    if (this != null) {
-        f(this)
-    }
-}
-
 fun <T> T?.execIfNull(f: () -> Unit) {
     if (this == null) {
         f()

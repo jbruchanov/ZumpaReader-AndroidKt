@@ -108,7 +108,7 @@ class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
     override fun onBindViewHolder(holder: ZumpaSubItemViewHolder, position: Int) {
         var dataItem = dataItems[position]
         val itemView = holder.itemView
-        itemView.background.execOn {
+        itemView.background.apply {
             level = dataItem.itemPosition % 2
         }
         when (getItemViewType(position)) {
@@ -156,7 +156,7 @@ class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
                     val view = li.inflate(R.layout.item_sub_list_survey, parent, false) as SurveyView
                     view.surveyItemClickListener = object : SurveyView.ItemClickListener {
                         override fun onItemClick(item: SurveyItem) {
-                            surveyClickListner.execOn { onItemClick(item) }
+                            surveyClickListner.apply { onItemClick(item) }
                         }
                     }
                     ZumpaSubItemViewHolder(this, view)

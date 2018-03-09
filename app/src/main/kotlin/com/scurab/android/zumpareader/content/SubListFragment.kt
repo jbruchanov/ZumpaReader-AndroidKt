@@ -107,7 +107,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
             setOnRefreshListener { loadData() }
             setColorSchemeColors(context.getColorFromTheme(R.attr.contextColor))
         }
-        postMessageView.execOn {
+        postMessageView?.apply {
             addButton.visibility = isTabletVisibility
             addButton.setOnClickListener { dispatchOpenPostMessage() }
             sendButton.setOnClickListener { dispatchSend() }
@@ -137,7 +137,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
         if (zumpaApp?.zumpaPrefs?.isLoggedInNotOffline ?: false) {
             view!!.post {
                 //set padding for response panel
-                recyclerView.execOn {
+                recyclerView?.apply {
                     setPadding(paddingLeft, paddingTop, paddingRight, postMessageView?.height ?: 0)
                 }
             }
@@ -292,7 +292,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
                         surveyClickListner = this@SubListFragment
                     }
                 } else {
-                    (recyclerView?.adapter as SubListAdapter).execOn {
+                    (recyclerView?.adapter as SubListAdapter).apply {
                         this.loadImages = loadImages
                         updateItems(items, clearData)
                     }
@@ -318,7 +318,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
             val postMessageView = this.postMessageView!!
             delegate.onItemClick(item, longClick)
             if (postMessageView.isVisible()) {
-                postMessageView.message.text.execOn {
+                postMessageView.message.text.apply {
                     var text = "@%s: \n".format(item.authorReal)
                     val outRange = OutRef<IntRange>()
                     if (containsAuthor(text, outRange)) {

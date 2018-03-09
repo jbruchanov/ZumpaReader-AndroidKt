@@ -190,7 +190,7 @@ class PostImageFragment : RxFragment(), SendingFragment {
     }
 
     protected fun dispatchImageUploaded(result: String) {
-        (parentFragment as? PostFragment).execOn {
+        (parentFragment as? PostFragment)?.apply {
             onSharedImage(result)
             context.toast(R.string.done)
         }

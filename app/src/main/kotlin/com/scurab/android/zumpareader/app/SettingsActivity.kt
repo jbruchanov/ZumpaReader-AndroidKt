@@ -151,7 +151,7 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
         loginCall?.dispose()
         logoutCall?.dispose()
 
-        zumpaApp.zumpaParser.execOn {
+        zumpaApp.zumpaParser.apply {
             userName = zumpaApp.zumpaPrefs.loggedUserName
             isShowLastUser = zumpaApp.zumpaPrefs.showLastAuthor
         }

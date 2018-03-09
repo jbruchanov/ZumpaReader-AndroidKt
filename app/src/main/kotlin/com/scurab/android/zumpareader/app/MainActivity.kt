@@ -181,7 +181,7 @@ class MainActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (PostFragment.isRequestCode(requestCode)) {
-            (supportFragmentManager.findFragmentByTag(PostFragment::class.java.name) as PostFragment?).execOn {
+            (supportFragmentManager.findFragmentByTag(PostFragment::class.java.name) as PostFragment?)?.apply {
                 onActivityResult(requestCode, resultCode, data)
             }
         }

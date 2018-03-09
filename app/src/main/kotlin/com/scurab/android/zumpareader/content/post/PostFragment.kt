@@ -77,7 +77,7 @@ class PostFragment : BaseDialogFragment() {
         val view = inflater.inflate(R.layout.fragment_post, container, false)
         val tabHost = view.find<FragmentTabHost>(android.R.id.tabhost)
         val tabWidget = view.find<TabWidget>(android.R.id.tabs)
-        tabHost.execOn {
+        tabHost.apply {
             setup(context, childFragmentManager, android.R.id.tabcontent)
             addTab(newTabSpec(POST_MESSAGE_TAG).setIndicator(createIndicator(R.drawable.ic_pen, contextColor, tabWidget)), PostMessageFragment::class.java, PostMessageFragment.arguments(argSubject, argMessage, argUris == null, argThreadId))
             if (argUris != null) {
@@ -116,7 +116,7 @@ class PostFragment : BaseDialogFragment() {
                                     uri = data!!.dataString
                                     icon = R.drawable.ic_photo
                                 }
-                                tabHost.execOn {
+                                tabHost?.apply {
                                     //childFragmentManager.fragments doesn't have tabs anymore :/ i'd guess it's a bug
                                     var newIndex = "%s - %s".format(System.currentTimeMillis(), uri)
                                     addTab(newTabSpec(newIndex).setIndicator(createIndicator(icon, contextColor, tabWidget)), PostImageFragment::class.java, PostImageFragment.arguments(Uri.parse(uri)))

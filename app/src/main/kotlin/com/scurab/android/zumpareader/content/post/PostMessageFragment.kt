@@ -75,7 +75,7 @@ class PostMessageFragment : RxDialogFragment(), SendingFragment {
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        postMessageView.execOn {
+        postMessageView?.apply {
             setUIForNewMessage()
             sendButton.setOnClickListener { dispatchSend() }
             subject.setText(argSubject)
@@ -166,7 +166,7 @@ class PostMessageFragment : RxDialogFragment(), SendingFragment {
     override fun dismiss() {
         isSending = false
         (parentFragment as PostFragment).dismissAllowingStateLoss()
-        mainActivity.execOn {
+        mainActivity?.apply {
             reloadData()
         }
     }

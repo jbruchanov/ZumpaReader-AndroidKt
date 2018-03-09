@@ -8,7 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import com.scurab.android.zumpareader.R
-import com.scurab.android.zumpareader.util.execOn
 import com.scurab.android.zumpareader.util.obtainStyledColor
 import com.scurab.android.zumpareader.util.setImageTint
 import org.jetbrains.anko.find
@@ -47,7 +46,7 @@ class PostMessageView : FrameLayout {
         subject.visibility = View.VISIBLE
         message.maxLines = Integer.MAX_VALUE
         message.gravity = Gravity.TOP or Gravity.LEFT
-        (message.layoutParams as LinearLayout.LayoutParams).execOn {
+        (message.layoutParams as LinearLayout.LayoutParams).apply {
             weight = 1f
             height = 0
             requestLayout()

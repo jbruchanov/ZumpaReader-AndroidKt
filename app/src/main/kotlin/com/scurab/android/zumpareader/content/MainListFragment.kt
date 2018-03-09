@@ -124,7 +124,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
                     reloadData()
                 }
                 onRefreshTitle()
-                mainActivity.execOn {
+                mainActivity?.apply {
                     invalidateOptionsMenu()
                     if (app.zumpaPrefs.isOffline) {
                         floatingButton.hideAnimated()
@@ -141,7 +141,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.menu, menu)
-        menu.findItem(R.id.offline).execOn {
+        menu.findItem(R.id.offline).apply {
             setTitle(if (zumpaApp!!.zumpaPrefs.isOffline) R.string.online else R.string.offline)
         }
     }

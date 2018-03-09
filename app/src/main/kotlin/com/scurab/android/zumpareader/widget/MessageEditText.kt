@@ -11,7 +11,6 @@ import android.text.Spanned
 import android.util.AttributeSet
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.util.exec
-import com.scurab.android.zumpareader.util.execOn
 
 /**
  * Created by JBruchanov on 23/03/2017.
