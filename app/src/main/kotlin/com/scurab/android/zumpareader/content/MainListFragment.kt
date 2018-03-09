@@ -76,7 +76,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
     }
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        content.execIfNull {
+        content.ifNull {
             content = inflater!!.inflate(R.layout.view_recycler_refreshable, container, false)
             content.exec {
                 swipeToRefresh.direction = SwipyRefreshLayoutDirection.TOP
@@ -101,7 +101,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
         super.onViewCreated(view, savedInstanceState)
 
         swipeToRefresh.setOnRefreshListener { loadPage() }
-        recyclerView.adapter.execIfNull {
+        recyclerView.adapter.ifNull {
             loadPage(true)
         }
     }

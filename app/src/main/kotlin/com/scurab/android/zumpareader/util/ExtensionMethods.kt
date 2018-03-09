@@ -5,7 +5,6 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
-import android.content.res.Resources
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build
@@ -36,9 +35,7 @@ import java.util.*
 
 @Suppress("UNCHECKED_CAST")
 fun <T : View> RecyclerView.ViewHolder.find(@IdRes resId: Int): T {
-    var t = itemView.findViewById<View>(resId) as T?
-    t.execIfNull { throw NullPointerException("Unable to find view with id:'%s'".format(resId)) }
-    return t!!
+    return itemView.findViewById<View>(resId) as T? ?: throw NullPointerException("Unable to find view with id:'%s'".format(resId))
 }
 
 inline fun <T> T?.exec(f: (T) -> Unit) {
@@ -47,7 +44,7 @@ inline fun <T> T?.exec(f: (T) -> Unit) {
     }
 }
 
-fun <T> T?.execIfNull(f: () -> Unit) {
+fun <T> T?.ifNull(f: () -> Unit) {
     if (this == null) {
         f()
     }
