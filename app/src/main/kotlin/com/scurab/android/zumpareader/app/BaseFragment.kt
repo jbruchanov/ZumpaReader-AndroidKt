@@ -8,6 +8,7 @@ import android.view.View
 import com.scurab.android.zumpareader.BusProvider
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
+import com.scurab.android.zumpareader.extension.app
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.trello.rxlifecycle2.components.support.RxFragment
 import java.util.*
@@ -22,10 +23,7 @@ abstract class BaseFragment : RxFragment() {
             return activity as MainActivity?
         }
 
-    val zumpaApp: ZumpaReaderApp?
-        get() {
-            return mainActivity?.zumpaApp
-        }
+    val zumpaApp: ZumpaReaderApp get() = app()
 
     var progressBarVisible: Boolean
         get() {

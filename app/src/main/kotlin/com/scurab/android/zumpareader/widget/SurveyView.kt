@@ -11,7 +11,6 @@ import android.widget.TextView
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.model.Survey
 import com.scurab.android.zumpareader.model.SurveyItem
-import com.scurab.android.zumpareader.util.exec
 import org.jetbrains.anko.find
 
 /**
@@ -56,14 +55,11 @@ class SurveyView : FrameLayout {
     }
 
     private fun dispatchButtonClick(v: View) {
-        surveyItemClickListener.exec {
-            val surveyItem = v.tag as SurveyItem
-            it.onItemClick(surveyItem)
-        }
+        surveyItemClickListener?.onItemClick(v.tag as SurveyItem)
     }
 
     protected fun onUpdateUI() {
-        survey.exec {
+        survey?.let {
             surveyText.text = "${it.question}\n${it.responses}"
             ensureButtons(it.items.size)
             for (i in 1..buttonCount) {

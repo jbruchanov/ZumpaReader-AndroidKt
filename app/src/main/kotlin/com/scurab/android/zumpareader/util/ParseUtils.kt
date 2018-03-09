@@ -43,7 +43,7 @@ class ParseUtils {
         }
 
         fun extractPHPSessionId(headers: Headers?): String? {
-            headers.exec {
+            headers?.let {
                 for (i in 0..it.size()) {
                     if ("Set-Cookie".equals(it.name(i), true)) {
                         val value = it.value(i)
@@ -60,8 +60,8 @@ class ParseUtils {
         }
 
         fun extractPHPSessionId(value: String?): String? {
-            value.exec {
-                phpSessionPattern.matcher(value).exec {
+            value.let {
+                phpSessionPattern.matcher(value).let {
                     if (it.find()) {
                         return it.group(1)
                     }

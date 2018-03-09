@@ -11,7 +11,6 @@ import android.text.Html
 import android.view.ContextThemeWrapper
 import com.scurab.android.zumpareader.app.MainActivity
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
-import com.scurab.android.zumpareader.util.exec
 import com.scurab.android.zumpareader.util.obtainStyledColor
 import org.jetbrains.anko.notificationManager
 import java.net.URLDecoder
@@ -27,7 +26,7 @@ class GCMReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent?) {
         try {
-            intent.exec {
+            intent?.let {
                 if (RECEIVE == it.action) {
                     val n = onReceiveMessage(ContextThemeWrapper(context, R.style.ThemeBlack), it)
                     context.notificationManager.notify(NOTIFY_ID, n)

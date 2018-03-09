@@ -149,9 +149,8 @@ class PostFragment : BaseDialogFragment() {
 
     fun onSharedImage(link: String, activateFragment: Boolean = true) {
         tabHost?.currentTab = 0
-        (childFragmentManager.findFragmentByTag(POST_MESSAGE_TAG) as? PostMessageFragment).exec {
-            it.addLink(link)
-        }
+        (childFragmentManager.findFragmentByTag(POST_MESSAGE_TAG) as? PostMessageFragment)
+                ?.addLink(link)
     }
 
     override fun onResume() {
@@ -219,9 +218,7 @@ class PostFragment : BaseDialogFragment() {
 
     override fun onDestroyView() {
         if (!isTablet && argThreadId == null) {
-            (activity as? MainActivity).exec {
-                it.floatingButton.showAnimated()
-            }
+            (activity as? MainActivity)?.floatingButton?.showAnimated()
         }
         super.onDestroyView()
     }

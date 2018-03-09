@@ -34,6 +34,7 @@ import io.reactivex.schedulers.Schedulers
 import org.jetbrains.anko.find
 import org.jetbrains.anko.support.v4.toast
 import android.support.v4.app.ActivityOptionsCompat
+import com.scurab.android.zumpareader.extension.app
 
 
 /**
@@ -79,7 +80,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
         set(value) {
             super.isLoading = value
             progressBarVisible = value
-            swipyRefreshLayout.exec {
+            swipyRefreshLayout?.let {
                 if (it.isRefreshing) {
                     it.isRefreshing = value
                 }
@@ -126,7 +127,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
 
     override fun onResume() {
         super.onResume()
-        mainActivity.exec {
+        mainActivity?.let {
             it.setScrollStrategyEnabled(false)
             delegate.onResume()
         }
@@ -159,7 +160,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
             return
         }
 
-        zumpaApp?.zumpaAPI.exec {
+        app().zumpaAPI.let {
             val app = zumpaApp!!
             val body = ZumpaThreadBody(app.zumpaPrefs.nickName, app.zumpaData[argThreadId]?.subject ?: "", msg, argThreadId)
             val observable = it.sendResponse(argThreadId, argThreadId, body)
@@ -178,7 +179,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
                                 isSending = false
                             },
                             { err ->
-                                err.message?.exec { toast(it) }
+                                err.message?.let { toast(it) }
                                 isSending = false
                             }
                     )
@@ -201,7 +202,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
 
     override fun reloadData() {
         loadData(argThreadId, true, SCROLL_DOWN)
-        postMessageView.exec {
+        postMessageView?.let {
             if (it.isVisible()) {
                 it.hideAnimated()
             }
@@ -216,7 +217,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
         }
         val context = activity
         isLoading = true
-        zumpaApp?.zumpaAPI?.getThreadPage(tid, tid).exec {
+        zumpaApp?.zumpaAPI?.getThreadPage(tid, tid).let {
             it.subscribeOn(Schedulers.io())
                     .compose(bindToLifecycle<ZumpaThreadResult>())
                     .observeOn(AndroidSchedulers.mainThread())
@@ -245,7 +246,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
                                 isLoading = false
                             },
                             { err ->
-                                err?.message?.exec { toast(it) }
+                                err?.message?.let { toast(it) }
                                 isSending = false
                                 isLoading = false
                             }
@@ -255,7 +256,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
 
 
     override fun onFloatingButtonClick() {
-        postMessageView.exec {
+        postMessageView?.let {
             if (!it.isVisible()) {
                 it.showAnimated()
             }
@@ -281,10 +282,10 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
     }
 
     private fun onResultLoaded(result: ZumpaThreadResult, clearData: Boolean) {
-        result.items.exec {
+        result.items.let {
             var items = it
             storeReadState(result)
-            recyclerView.exec {
+            recyclerView?.let {
                 val loadImages = zumpaApp?.zumpaPrefs?.loadImages ?: true
                 if (it.adapter == null) {
                     recyclerView?.adapter = SubListAdapter(items, loadImages).apply {
@@ -303,7 +304,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
 
     private fun storeReadState(result: ZumpaThreadResult) {
         val zumpaReadStates = zumpaApp?.zumpaReadStates
-        zumpaReadStates.exec {
+        zumpaReadStates?.let {
             val size = result.items.size - 1
             if (it.containsKey(argThreadId)) {
                 it[argThreadId]!!.count = size//don't count 1st one as it's actual post
@@ -333,8 +334,8 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
     }
 
     override fun onItemClick(item: SurveyItem) {
-        if (zumpaApp?.zumpaPrefs?.isLoggedInNotOffline ?: false) {
-            zumpaApp?.zumpaAPI?.voteSurvey(ZumpaVoteSurveyBody(item.surveyId, item.id)).exec {
+        if (zumpaApp.zumpaPrefs.isLoggedInNotOffline) {
+            zumpaApp.zumpaAPI.voteSurvey(ZumpaVoteSurveyBody(item.surveyId, item.id)).let {
                 isSending = true
                 it.subscribeOn(Schedulers.io())
                         .compose(bindToLifecycle<ZumpaGenericResponse>())
@@ -342,7 +343,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
                         .subscribe(
                                 { result -> loadData() },
                                 { err ->
-                                    err?.message?.exec { toast(it) }
+                                    err?.message?.let { toast(it) }
                                     isSending = false
                                 }
                         )
@@ -399,7 +400,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
         }
 
         override fun hideMessagePanel(): Boolean? {
-            fragment.postMessageView.exec {
+            fragment.postMessageView?.let {
                 if (it.isVisible()) {
                     it.hideAnimated()
                     fragment.mainActivity?.floatingButton?.showAnimated()

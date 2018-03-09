@@ -10,7 +10,6 @@ import android.text.Spannable
 import android.text.Spanned
 import android.util.AttributeSet
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
-import com.scurab.android.zumpareader.util.exec
 
 /**
  * Created by JBruchanov on 23/03/2017.
@@ -41,7 +40,7 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = R
         }
         val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         var result = false
-        cm.primaryClip.exec {
+        cm.primaryClip.let {
             var didFirst = false
             for (i in 0..cm.primaryClip.itemCount - 1) {
                 val clip = cm.primaryClip.getItemAt(i)
@@ -52,7 +51,7 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = R
                 if (paste != null) {
                     var result = paste.toString()
                     val links = ZumpaSimpleParser.getLinks(result)
-                    links.exec {
+                    links.let {
                         for (link in it) {
                             result = result.replace(link, "<$link>")
                         }

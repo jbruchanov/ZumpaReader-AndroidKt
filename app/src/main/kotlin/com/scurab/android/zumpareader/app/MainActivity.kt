@@ -83,7 +83,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkIntent(intent: Intent?) {
-        intent.exec {
+        intent?.let {
             val pushThreadId = it.getStringExtra(EXTRA_THREAD_ID)
             if (pushThreadId != null) {
                 openFragment(SubListFragment.newInstance(pushThreadId), true, true)
@@ -102,7 +102,7 @@ class MainActivity : AppCompatActivity() {
                     if (!zumpaApp.zumpaPrefs.isLoggedIn) {
                         toast(R.string.err_login_first)
                     } else {
-                        supportFragmentManager.exec {
+                        supportFragmentManager.let {
                             PostFragment
                                     .newInstance(subject, text, uris)
                                     .show(supportFragmentManager, "PostFragment")
@@ -137,14 +137,14 @@ class MainActivity : AppCompatActivity() {
 
     fun onFloatingButtonClick() {
         if (zumpaApp.zumpaPrefs.isLoggedInNotOffline) {
-            (supportFragmentManager.fragments.lastNonNullFragment() as? BaseFragment).exec {
+            (supportFragmentManager.fragments.lastNonNullFragment() as? BaseFragment)?.let {
                 it.onFloatingButtonClick()
             }
         }
     }
 
     override fun onBackPressed() {
-        (supportFragmentManager.fragments.lastNonNullFragment() as? BaseFragment).exec {
+        (supportFragmentManager.fragments.lastNonNullFragment() as? BaseFragment)?.let {
             if (!it.onBackButtonClick()) {
                 super.onBackPressed()
             }

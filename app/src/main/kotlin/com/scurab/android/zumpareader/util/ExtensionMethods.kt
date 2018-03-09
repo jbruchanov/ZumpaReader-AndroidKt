@@ -38,12 +38,6 @@ fun <T : View> RecyclerView.ViewHolder.find(@IdRes resId: Int): T {
     return itemView.findViewById<View>(resId) as T? ?: throw NullPointerException("Unable to find view with id:'%s'".format(resId))
 }
 
-inline fun <T> T?.exec(f: (T) -> Unit) {
-    if (this != null) {
-        f(this)
-    }
-}
-
 fun <T> T?.ifNull(f: () -> Unit) {
     if (this == null) {
         f()
@@ -95,7 +89,7 @@ fun Context.hideKeyboard() {
 
 fun Context.hideKeyboard(view: View?) {
     var imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-    imm.exec {
+    imm.let {
         var focused = view?.findFocus() ?: null
         if (focused == null) {
             imm.hideSoftInputFromInputMethod(null, 0)
@@ -113,7 +107,7 @@ fun Context.showKeyboard() {
 
 fun Context.showKeyboard(view: View?) {
     var imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-    imm.exec {
+    imm.let {
         imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
         view?.requestFocus()
     }

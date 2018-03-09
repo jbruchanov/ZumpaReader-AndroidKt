@@ -119,7 +119,7 @@ class PostImageFragment : RxFragment(), SendingFragment {
     }
 
     protected fun onCopyLinkToClipboard() {
-        imageUploadedLink.exec {
+        imageUploadedLink.let {
             context.saveToClipboard(Uri.parse(it))
             context.toast(R.string.saved_into_clipboard)
         }
@@ -139,7 +139,7 @@ class PostImageFragment : RxFragment(), SendingFragment {
 
     private fun onImageProcess(inSample: Int, imageRotation: Int) {
         isSending = true
-        imageFile.exec {
+        imageFile?.let {
             ProcessImageTask(it, imageFileToUpload!!, inSample, imageRotation)
                     .compose(bindToLifecycle())
                     .subscribeOn(Schedulers.io())

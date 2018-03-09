@@ -45,7 +45,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
         set(value) {
             super.isLoading = value
             progressBarVisible = value
-            swipeToRefresh?.exec {
+            swipeToRefresh?.let {
                 if (it.isRefreshing) {
                     it.isRefreshing = value
                 }
@@ -78,7 +78,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         content.ifNull {
             content = inflater!!.inflate(R.layout.view_recycler_refreshable, container, false)
-            content.exec {
+            content.let {
                 swipeToRefresh.direction = SwipyRefreshLayoutDirection.TOP
                 swipeToRefresh.setColorSchemeColors(context.getColorFromTheme(R.attr.contextColor))
                 recyclerView.apply {
@@ -92,9 +92,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
 
     override fun onDestroyView() {
         super.onDestroyView()
-        content.exec {
-            (it.parent as? ViewGroup)?.removeView(content)
-        }
+        (content?.parent as? ViewGroup)?.removeView(content)
     }
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
@@ -159,7 +157,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
             var filter = zumpaApp.zumpaPrefs.filter
             var offline = zumpaApp.zumpaPrefs.isOffline
             if (lastFilter != filter || lastOffline != offline) {
-                recyclerView.adapter.exec {
+                recyclerView.adapter.let {
                     (it as MainListAdapter).removeAll()
                 }
             }
@@ -179,7 +177,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
                             },
                             { err ->
                                 isLoading = false
-                                err?.message?.exec { toast(it) }
+                                err?.message?.let { toast(it) }
                             }
                     )
         }
@@ -199,13 +197,13 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
     }
 
     protected fun onResultLoaded(response: ZumpaMainPageResult?, firstLoad: Boolean) {
-        response?.exec {
+        response?.let {
             zumpaData.putAll(it.items)
             nextThreadId = it.nextThreadId
             val values = it.items.asListOfValues()
-            recyclerView.exec {
+            recyclerView.let {
                 var user = zumpaApp?.zumpaPrefs?.loggedUserName
-                zumpaApp?.zumpaReadStates.exec {
+                zumpaApp?.zumpaReadStates?.let {
                     for (zumpaThread in values) {
                         zumpaThread.setStateBasedOnReadValue(it[zumpaThread.id]?.count, user)
                     }
@@ -249,7 +247,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
         val oldState = item.state
         item.setStateBasedOnReadValue(item.items, zumpaApp?.zumpaPrefs?.loggedUserName)
         if (oldState != item.state || isTablet) {
-            mainListAdapter().exec {
+            mainListAdapter()?.let {
                 if (isTablet) {
                     it.setSelectedItem(item, position)
                 } else {
@@ -282,7 +280,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
                                 },
                                 { err ->
                                     isLoading = false
-                                    err?.message?.exec { toast(it) }
+                                    err?.message?.let { toast(it) }
                                 }
                         )
             }
@@ -306,7 +304,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
                                 },
                                 { err ->
                                     isLoading = false
-                                    err?.message?.exec { toast(it) }
+                                    err?.message?.let { toast(it) }
                                 }
                         )
             }
@@ -315,7 +313,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
 
     override fun onShowingItem(source: MainListAdapter, item: Int) {
         if (!isLoading) {
-            (recyclerView?.adapter as MainListAdapter).exec {
+            (recyclerView?.adapter as MainListAdapter).let {
                 loadPage(false, nextThreadId)
             }
 
@@ -323,7 +321,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
     }
 
     override fun onFloatingButtonClick() {
-        activity?.supportFragmentManager.exec {
+        activity?.supportFragmentManager.let {
             openFragment(PostFragment(), !isTablet, false)
             mainActivity?.floatingButton?.hideAnimated()
         }
