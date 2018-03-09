@@ -68,9 +68,9 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
     protected val argScrollDown: Boolean get() = arguments?.getBoolean(ARG_SCROLL_DOWN) ?: false
     private var firstLoad: Boolean = true
 
-    private val recyclerView: RecyclerView? get() = view?.find<RecyclerView>(R.id.recycler_view)
-    private val swipyRefreshLayout: SwipyRefreshLayout? get() = view?.find<SwipyRefreshLayout>(R.id.swipe_refresh_layout)
-    private val postMessageView: PostMessageView? get() = view?.find<PostMessageView>(R.id.response_panel)
+    private val recyclerView: RecyclerView? get() = view?.find(R.id.recycler_view)
+    private val swipyRefreshLayout: SwipyRefreshLayout? get() = view?.find(R.id.swipe_refresh_layout)
+    private val postMessageView: PostMessageView? get() = view?.find(R.id.response_panel)
     private val contextColorText: Int by lazy { context.obtainStyledColor(R.attr.contextColorText2) }
     private val treeViewObserver: ViewTreeObserver.OnGlobalLayoutListener = ViewTreeObserver.OnGlobalLayoutListener { updateRecycleViewPadding() }
     private lateinit var delegate: BehaviourDelegate

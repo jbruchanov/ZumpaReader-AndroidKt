@@ -212,7 +212,7 @@ class ZumpaReaderApp : Application() {
     }
 
     val zumpaOfflineApi: ZumpaOfflineApi by lazy {
-        ZumpaOfflineApi(LinkedHashMap<String, ZumpaThread>())
+        ZumpaOfflineApi(LinkedHashMap())
     }
 
     val zumpaWebServiceAPI: ZumpaWSAPI by lazy {

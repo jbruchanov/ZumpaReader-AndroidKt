@@ -137,9 +137,7 @@ class MainActivity : AppCompatActivity() {
 
     fun onFloatingButtonClick() {
         if (zumpaApp.zumpaPrefs.isLoggedInNotOffline) {
-            (supportFragmentManager.fragments.lastNonNullFragment() as? BaseFragment)?.let {
-                it.onFloatingButtonClick()
-            }
+            (supportFragmentManager.fragments.lastNonNullFragment() as? BaseFragment)?.onFloatingButtonClick()
         }
     }
 

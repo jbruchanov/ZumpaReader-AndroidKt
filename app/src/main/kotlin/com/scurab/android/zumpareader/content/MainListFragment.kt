@@ -33,8 +33,8 @@ import org.jetbrains.anko.support.v4.toast
 open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener, IsReloadable {
 
     private var content: View? = null
-    private val recyclerView: RecyclerView get() = content!!.find<RecyclerView>(R.id.recycler_view)
-    private val swipeToRefresh: SwipyRefreshLayout get() = content!!.find<SwipyRefreshLayout>(R.id.swipe_refresh_layout)
+    private val recyclerView: RecyclerView get() = content!!.find(R.id.recycler_view)
+    private val swipeToRefresh: SwipyRefreshLayout get() = content!!.find(R.id.swipe_refresh_layout)
     private var lastFilter: String = ""
     private var lastOffline: Boolean? = null
     private var invalidateOptionsMenu = false

@@ -1,9 +1,6 @@
 package com.scurab.android.zumpareader.giphy
 
-import android.graphics.Color
-import android.graphics.drawable.GradientDrawable
 import android.support.v7.widget.RecyclerView
-import android.util.TypedValue
 import android.view.ViewGroup
 import com.facebook.drawee.backends.pipeline.Fresco
 import com.facebook.drawee.view.SimpleDraweeView
@@ -11,7 +8,6 @@ import com.giphy.sdk.core.models.Media
 import com.giphy.sdk.core.network.api.GPHApiClient
 import com.scurab.android.zumpareader.R
 import org.jetbrains.anko.padding
-import kotlin.math.roundToInt
 import kotlin.properties.Delegates
 
 /**

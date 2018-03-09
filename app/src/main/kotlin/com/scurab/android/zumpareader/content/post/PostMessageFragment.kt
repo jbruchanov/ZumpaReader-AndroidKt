@@ -11,20 +11,19 @@ import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.app.MainActivity
 import com.scurab.android.zumpareader.content.SendingFragment
-import com.scurab.android.zumpareader.content.SubListFragment
 import com.scurab.android.zumpareader.extension.app
 import com.scurab.android.zumpareader.model.ZumpaThreadBody
 import com.scurab.android.zumpareader.model.ZumpaThreadResult
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
-import com.scurab.android.zumpareader.util.*
+import com.scurab.android.zumpareader.util.RxTransformers
+import com.scurab.android.zumpareader.util.hideKeyboard
+import com.scurab.android.zumpareader.util.toast
 import com.scurab.android.zumpareader.widget.PostMessageView
 import com.trello.rxlifecycle2.components.support.RxDialogFragment
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import org.jetbrains.anko.find
 import org.jetbrains.anko.support.v4.toast
-import retrofit2.HttpException
-import java.net.HttpURLConnection
 import java.util.*
 
 /**
@@ -51,7 +50,7 @@ class PostMessageFragment : RxDialogFragment(), SendingFragment {
         }
     }
 
-    private val postMessageView: PostMessageView? get() = view?.find<PostMessageView>(R.id.post_message_view)
+    private val postMessageView: PostMessageView? get() = view?.find(R.id.post_message_view)
     override var sendingDialog: ProgressDialog? = null
 
     val mainActivity: MainActivity? get() {

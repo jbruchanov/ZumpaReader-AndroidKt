@@ -36,7 +36,7 @@ class PicassoHttpDownloader2(private val imageStorage: File,
             if (externalFilesDir == null) {
                 externalFilesDir = context.getDir(Environment.DIRECTORY_PICTURES, Context.MODE_PRIVATE)
             }
-            return externalFilesDir;
+            return externalFilesDir
         }
     }
 
@@ -136,7 +136,7 @@ class PicassoHttpDownloader2(private val imageStorage: File,
     private fun saveImage(image: Bitmap, md5: String) {
         try {
             var file = File(imageStorage.absolutePath + "/" + md5)
-            image.compress(Bitmap.CompressFormat.JPEG, 85, FileOutputStream(file));
+            image.compress(Bitmap.CompressFormat.JPEG, 85, FileOutputStream(file))
         } catch(e: Exception) {
             e.printStackTrace()
         }

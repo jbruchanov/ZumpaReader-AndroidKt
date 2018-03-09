@@ -15,22 +15,20 @@ import com.scurab.android.zumpareader.content.SendingFragment
 import com.scurab.android.zumpareader.content.post.tasks.CopyFromResourcesTask
 import com.scurab.android.zumpareader.content.post.tasks.ProcessImageTask
 import com.scurab.android.zumpareader.drawable.SimpleProgressDrawable
-import com.scurab.android.zumpareader.util.*
-import com.scurab.android.zumpareader.utils.FotoDiskProvider
+import com.scurab.android.zumpareader.util.asVisibility
+import com.scurab.android.zumpareader.util.saveToClipboard
+import com.scurab.android.zumpareader.util.toast
 import com.scurab.android.zumpareader.widget.PostImagePanelView
 import com.squareup.picasso.Picasso
-import com.trello.rxlifecycle2.components.support.RxDialogFragment
 import com.trello.rxlifecycle2.components.support.RxFragment
-import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import okhttp3.MediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import org.jetbrains.anko.find
 import org.jetbrains.anko.support.v4.toast
 import java.io.File
-import okhttp3.RequestBody
-import okhttp3.MultipartBody
-
 
 
 /**
@@ -55,11 +53,11 @@ class PostImageFragment : RxFragment(), SendingFragment {
     override var sendingDialog: ProgressDialog? = null
 
     private val image: ImageView get() {
-        return view!!.find<ImageView>(R.id.image)
+        return view!!.find(R.id.image)
     }
 
     private val imagePanel: PostImagePanelView get() {
-        return view!!.find<PostImagePanelView>(R.id.post_image_panel_view)
+        return view!!.find(R.id.post_image_panel_view)
     }
 
     private val imageUri by lazy { arguments.getParcelable<Uri>(Intent.EXTRA_STREAM) }

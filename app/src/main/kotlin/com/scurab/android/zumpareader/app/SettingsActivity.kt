@@ -2,7 +2,6 @@ package com.scurab.android.zumpareader.app
 
 import android.app.ProgressDialog
 import android.content.Context
-import android.net.Uri
 import android.os.Bundle
 import android.preference.PreferenceActivity
 import com.bugfender.sdk.Bugfender
@@ -16,7 +15,10 @@ import com.scurab.android.zumpareader.content.SendingFragment
 import com.scurab.android.zumpareader.model.ZumpaLoginBody
 import com.scurab.android.zumpareader.preferences.ButtonPreference
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
-import com.scurab.android.zumpareader.util.*
+import com.scurab.android.zumpareader.util.ParseUtils
+import com.scurab.android.zumpareader.util.ZumpaPrefs
+import com.scurab.android.zumpareader.util.saveToClipboard
+import com.scurab.android.zumpareader.util.toast
 import io.reactivex.Single
 import io.reactivex.SingleObserver
 import io.reactivex.android.schedulers.AndroidSchedulers
