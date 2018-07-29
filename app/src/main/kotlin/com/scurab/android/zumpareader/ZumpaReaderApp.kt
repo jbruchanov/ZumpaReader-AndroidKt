@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.os.Bundle
 import android.os.Environment
+import android.support.multidex.MultiDexApplication
 import android.util.Log
 import com.bugfender.sdk.Bugfender
 import com.facebook.drawee.backends.pipeline.Fresco
@@ -40,7 +41,7 @@ import java.util.concurrent.TimeUnit
 /**
  * Created by JBruchanov on 24/11/2015.
  */
-class ZumpaReaderApp : Application() {
+class ZumpaReaderApp : MultiDexApplication() {
 
     companion object {
         val OFFLINE_FILE_NAME = "offline.json"
