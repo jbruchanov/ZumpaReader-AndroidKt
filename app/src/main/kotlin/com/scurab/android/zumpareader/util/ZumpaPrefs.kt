@@ -46,7 +46,7 @@ class ZumpaPrefs(context: Context) {
     val cookiesMap: MutableMap<String, MutableList<String>>
         get() {
             var map: MutableMap<String, MutableList<String>> = HashMap()
-            cookies.exec {
+            cookies?.let {
                 var list: MutableList<String> = ArrayList()
                 list.addAll(it)
                 if (showLastAuthor) {

@@ -15,7 +15,6 @@ import com.scurab.android.zumpareader.ZR
 import com.scurab.android.zumpareader.gson.GsonExclude
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.util.encodeHttp
-import com.scurab.android.zumpareader.util.exec
 import java.nio.charset.Charset
 import java.util.*
 
@@ -226,7 +225,7 @@ data class ZumpaThreadBody(
                 .append("&f=", f)
                 .append("&a=", a)
                 .append("&post=", post.encodeHttp())
-        threadId.exec {
+        threadId?.let {
             sb.append("&threadId=", it.encodeHttp())
                     .append("&t=", t)
                     .append("&p=", p)

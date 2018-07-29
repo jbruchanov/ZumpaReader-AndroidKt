@@ -73,10 +73,7 @@ class ZumpaOfflineApi(var offlineData: LinkedHashMap<String, ZumpaThread>) : Zum
     }
 
     override fun getThreadPage(id: String, id2: String): Observable<ZumpaThreadResult> {
-        var data = offlineData[id]?.offlineItems
-        if (data == null) {
-            data = listOf<ZumpaThreadItem>()
-        }
+        var data = offlineData[id]?.offlineItems ?: listOf()
         return Observable.just(ZumpaThreadResult(data))
     }
 

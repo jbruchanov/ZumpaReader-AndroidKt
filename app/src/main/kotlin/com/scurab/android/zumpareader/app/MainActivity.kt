@@ -67,7 +67,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
         floatingButton.setOnClickListener(DelayClickListener { onFloatingButtonClick() })
-        supportFragmentManager.findFragmentById(R.id.fragment_container).execIfNull {
+        supportFragmentManager.findFragmentById(R.id.fragment_container).ifNull {
             openFragment(if (isTablet) TabletFragment() else MainListFragment(), false)
         }
 
@@ -83,7 +83,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkIntent(intent: Intent?) {
-        intent.exec {
+        intent?.let {
             val pushThreadId = it.getStringExtra(EXTRA_THREAD_ID)
             if (pushThreadId != null) {
                 openFragment(SubListFragment.newInstance(pushThreadId), true, true)
@@ -102,7 +102,7 @@ class MainActivity : AppCompatActivity() {
                     if (!zumpaApp.zumpaPrefs.isLoggedIn) {
                         toast(R.string.err_login_first)
                     } else {
-                        supportFragmentManager.exec {
+                        supportFragmentManager.let {
                             PostFragment
                                     .newInstance(subject, text, uris)
                                     .show(supportFragmentManager, "PostFragment")
@@ -137,14 +137,12 @@ class MainActivity : AppCompatActivity() {
 
     fun onFloatingButtonClick() {
         if (zumpaApp.zumpaPrefs.isLoggedInNotOffline) {
-            (supportFragmentManager.fragments.lastNonNullFragment() as? BaseFragment).exec {
-                it.onFloatingButtonClick()
-            }
+            (supportFragmentManager.fragments.lastNonNullFragment() as? BaseFragment)?.onFloatingButtonClick()
         }
     }
 
     override fun onBackPressed() {
-        (supportFragmentManager.fragments.lastNonNullFragment() as? BaseFragment).exec {
+        (supportFragmentManager.fragments.lastNonNullFragment() as? BaseFragment)?.let {
             if (!it.onBackButtonClick()) {
                 super.onBackPressed()
             }
@@ -181,7 +179,7 @@ class MainActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (PostFragment.isRequestCode(requestCode)) {
-            (supportFragmentManager.findFragmentByTag(PostFragment::class.java.name) as PostFragment?).execOn {
+            (supportFragmentManager.findFragmentByTag(PostFragment::class.java.name) as PostFragment?)?.apply {
                 onActivityResult(requestCode, resultCode, data)
             }
         }

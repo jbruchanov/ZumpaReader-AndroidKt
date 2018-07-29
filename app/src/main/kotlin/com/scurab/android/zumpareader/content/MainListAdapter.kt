@@ -11,7 +11,6 @@ import android.widget.TextView
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.ui.DelayClickListener
-import com.scurab.android.zumpareader.util.exec
 import org.jetbrains.anko.find
 import java.text.SimpleDateFormat
 import java.util.*
@@ -107,9 +106,7 @@ class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadViewHold
             threads.text = item.items.toString()
             time.text = if (item.lastAuthor == null) dateFormat.format(item.date) else shoreDateFormat.format(item.date)
             lastAuthor.text = item.lastAuthor
-            (stateBar.background as? LevelListDrawable).exec {
-                it.level = item.state
-            }
+            (stateBar.background as? LevelListDrawable)?.level = item.state
             if (position == itemCount - onShoItemListenerEndOffset) {
                 onShowItemListener?.onShowingItem(this@MainListAdapter, position)
             }

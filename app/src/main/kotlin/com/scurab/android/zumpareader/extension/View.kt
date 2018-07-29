@@ -4,8 +4,6 @@ import android.os.Looper
 import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewPropertyAnimator
-import android.view.animation.DecelerateInterpolator
 
 /**
  * Created by jbruchanov on 07/11/2017.

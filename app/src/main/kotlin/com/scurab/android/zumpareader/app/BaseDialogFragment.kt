@@ -3,7 +3,6 @@ package com.scurab.android.zumpareader.app
 import android.os.Bundle
 import com.scurab.android.zumpareader.BusProvider
 import com.scurab.android.zumpareader.R
-import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.trello.rxlifecycle2.components.support.RxDialogFragment
 
 /**

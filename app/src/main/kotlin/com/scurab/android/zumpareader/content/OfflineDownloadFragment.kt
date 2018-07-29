@@ -34,13 +34,13 @@ class OfflineDownloadFragment : DialogFragment() {
             return context.applicationContext as? ZumpaReaderApp
         }
 
-    private val start: Button  get() = view!!.find<Button>(R.id.start)
-    private val stop: Button get() = view!!.find<Button>(R.id.stop)
-    private val threads: TextView get() = view!!.find<TextView>(R.id.threads)
-    private val images: TextView get() = view!!.find<TextView>(R.id.images)
-    private val pages: EditText get() = view!!.find<EditText>(R.id.pages)
-    private val imagesDownload: CheckBox get() = view!!.find<CheckBox>(R.id.images_download)
-    private val progressBar: ProgressBar get() = view!!.find<ProgressBar>(R.id.progress_bar)
+    private val start: Button  get() = view!!.find(R.id.start)
+    private val stop: Button get() = view!!.find(R.id.stop)
+    private val threads: TextView get() = view!!.find(R.id.threads)
+    private val images: TextView get() = view!!.find(R.id.images)
+    private val pages: EditText get() = view!!.find(R.id.pages)
+    private val imagesDownload: CheckBox get() = view!!.find(R.id.images_download)
+    private val progressBar: ProgressBar get() = view!!.find(R.id.progress_bar)
 
     private var isLoading: Boolean
         get() {

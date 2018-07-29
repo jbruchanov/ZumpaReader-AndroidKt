@@ -11,19 +11,19 @@ import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.app.MainActivity
 import com.scurab.android.zumpareader.content.SendingFragment
-import com.scurab.android.zumpareader.content.SubListFragment
+import com.scurab.android.zumpareader.extension.app
 import com.scurab.android.zumpareader.model.ZumpaThreadBody
 import com.scurab.android.zumpareader.model.ZumpaThreadResult
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
-import com.scurab.android.zumpareader.util.*
+import com.scurab.android.zumpareader.util.RxTransformers
+import com.scurab.android.zumpareader.util.hideKeyboard
+import com.scurab.android.zumpareader.util.toast
 import com.scurab.android.zumpareader.widget.PostMessageView
 import com.trello.rxlifecycle2.components.support.RxDialogFragment
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import org.jetbrains.anko.find
 import org.jetbrains.anko.support.v4.toast
-import retrofit2.HttpException
-import java.net.HttpURLConnection
 import java.util.*
 
 /**
@@ -50,15 +50,13 @@ class PostMessageFragment : RxDialogFragment(), SendingFragment {
         }
     }
 
-    private val postMessageView: PostMessageView? get() = view?.find<PostMessageView>(R.id.post_message_view)
+    private val postMessageView: PostMessageView? get() = view?.find(R.id.post_message_view)
     override var sendingDialog: ProgressDialog? = null
 
     val mainActivity: MainActivity? get() {
         return activity as MainActivity?
     }
-    val zumpaApp: ZumpaReaderApp? get() {
-        return mainActivity?.zumpaApp
-    }
+    val zumpaApp: ZumpaReaderApp get() = app()
 
     private val parentPostFragment: PostFragment? get() = parentFragment as PostFragment?
 
@@ -75,7 +73,7 @@ class PostMessageFragment : RxDialogFragment(), SendingFragment {
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        postMessageView.execOn {
+        postMessageView?.apply {
             setUIForNewMessage()
             sendButton.setOnClickListener { dispatchSend() }
             subject.setText(argSubject)
@@ -91,7 +89,7 @@ class PostMessageFragment : RxDialogFragment(), SendingFragment {
     override fun onViewStateRestored(savedInstanceState: Bundle?) {
         super.onViewStateRestored(savedInstanceState)
         if (links.size > 0) {
-            postMessageView?.message.exec {
+            postMessageView?.message?.let {
                 if (!it.text.isLastCharNewLine()) {
                     it.append("\n")
                 }
@@ -122,14 +120,13 @@ class PostMessageFragment : RxDialogFragment(), SendingFragment {
             return
         }
 
-        zumpaApp?.zumpaAPI.exec {
-            val app = zumpaApp!!
+        zumpaApp.zumpaAPI.let { api ->
             val threadId = argThreadId
             isSending = true
             if (threadId == null) {
-                val body = ZumpaThreadBody(app.zumpaPrefs.nickName, subject, message)
+                val body = ZumpaThreadBody(zumpaApp.zumpaPrefs.nickName, subject, message)
                 context.hideKeyboard(view)
-                it.sendThread(body)
+                api.sendThread(body)
                         .subscribeOn(Schedulers.io())
                         .compose(bindToLifecycle<ZumpaThreadResult>())
                         .observeOn(AndroidSchedulers.mainThread())
@@ -139,13 +136,13 @@ class PostMessageFragment : RxDialogFragment(), SendingFragment {
                                     dismiss()
                                 },
                                 { err ->
-                                    err.message?.exec { toast(it) }
+                                    err.message?.let { toast(it) }
                                     isSending = false
                                 }
                         )
             } else {
-                val body = ZumpaThreadBody(app.zumpaPrefs.nickName, app.zumpaData[threadId]?.subject ?: argSubject!!, message, threadId)
-                it.sendResponse(threadId, threadId, body)
+                val body = ZumpaThreadBody(zumpaApp.zumpaPrefs.nickName, zumpaApp.zumpaData[threadId]?.subject ?: argSubject!!, message, threadId)
+                api.sendResponse(threadId, threadId, body)
                         .subscribeOn(Schedulers.io())
                         .compose(bindToLifecycle<ZumpaThreadResult>())
                         .observeOn(AndroidSchedulers.mainThread())
@@ -155,7 +152,7 @@ class PostMessageFragment : RxDialogFragment(), SendingFragment {
                                     dismiss()
                                 },
                                 { err ->
-                                    err.message?.exec { toast(it) }
+                                    err.message?.let { toast(it) }
                                     isSending = false
                                 }
                         )
@@ -166,7 +163,7 @@ class PostMessageFragment : RxDialogFragment(), SendingFragment {
     override fun dismiss() {
         isSending = false
         (parentFragment as PostFragment).dismissAllowingStateLoss()
-        mainActivity.execOn {
+        mainActivity?.apply {
             reloadData()
         }
     }

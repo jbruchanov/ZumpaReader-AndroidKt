@@ -2,7 +2,6 @@ package com.scurab.android.zumpareader.content
 
 import android.app.Activity
 import android.graphics.drawable.Animatable
-import android.net.Uri
 import android.support.annotation.ColorInt
 import android.support.annotation.Nullable
 import android.support.v7.widget.RecyclerView
@@ -14,14 +13,13 @@ import android.widget.Button
 import com.facebook.drawee.backends.pipeline.Fresco
 import com.facebook.drawee.controller.BaseControllerListener
 import com.facebook.drawee.view.SimpleDraweeView
-import com.facebook.imagepipeline.common.ResizeOptions
 import com.facebook.imagepipeline.image.ImageInfo
-import com.facebook.imagepipeline.request.ImageRequest
-import com.facebook.imagepipeline.request.ImageRequestBuilder
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.model.SurveyItem
 import com.scurab.android.zumpareader.model.ZumpaThreadItem
-import com.scurab.android.zumpareader.util.*
+import com.scurab.android.zumpareader.util.find
+import com.scurab.android.zumpareader.util.isImageUri
+import com.scurab.android.zumpareader.util.scaledImageRequest
 import com.scurab.android.zumpareader.widget.SurveyView
 import java.text.SimpleDateFormat
 import java.util.*
@@ -67,7 +65,7 @@ class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
             val item = items[i]
             outDataItems.add(SubListItem(item, i, TYPE_ITEM, null))
             sub.clear()
-            item.urls.exec {
+            item.urls?.let {
                 for (url in it) {
                     val element = SubListItem(item, i, if (url.isImageUri() && loadImages) TYPE_IMAGE else TYPE_URL, url)
                     sub.add(element)
@@ -83,7 +81,7 @@ class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
 
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)
-        (recyclerView.context as Activity).exec {
+        (recyclerView.context as Activity).let {
             var outTypedValue = TypedValue()
             it.theme.resolveAttribute(R.attr.contextColor, outTypedValue, true)
             contextColor = outTypedValue.data
@@ -108,7 +106,7 @@ class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
     override fun onBindViewHolder(holder: ZumpaSubItemViewHolder, position: Int) {
         var dataItem = dataItems[position]
         val itemView = holder.itemView
-        itemView.background.execOn {
+        itemView.background.apply {
             level = dataItem.itemPosition % 2
         }
         when (getItemViewType(position)) {
@@ -148,15 +146,15 @@ class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
                 TYPE_IMAGE -> {
                     val view = li.inflate(R.layout.item_sub_list_image, parent, false)
                     val vh = ZumpaSubItemViewHolder(this, view)
-                    view.setOnClickListener { v -> vh.loadedUrl.exec { dispatchClick(it, v) } }
-                    view.setOnLongClickListener { v -> vh.loadedUrl.exec { dispatchClick(it, v, true) }; true }
+                    view.setOnClickListener { v -> vh.loadedUrl?.let { dispatchClick(it, v) } }
+                    view.setOnLongClickListener { v -> vh.loadedUrl?.let { dispatchClick(it, v, true) }; true }
                     vh
                 }
                 TYPE_SURVEY -> {
                     val view = li.inflate(R.layout.item_sub_list_survey, parent, false) as SurveyView
                     view.surveyItemClickListener = object : SurveyView.ItemClickListener {
                         override fun onItemClick(item: SurveyItem) {
-                            surveyClickListner.execOn { onItemClick(item) }
+                            surveyClickListner.apply { onItemClick(item) }
                         }
                     }
                     ZumpaSubItemViewHolder(this, view)
@@ -167,11 +165,11 @@ class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
     }
 
     protected fun dispatchClick(item: ZumpaThreadItem, view: View, longClick: Boolean = false) {
-        itemClickListener.exec { it.onItemClick(item, longClick, view) }
+        itemClickListener?.onItemClick(item, longClick, view)
     }
 
     protected fun dispatchClick(url: String, view: View, longClick: Boolean = false) {
-        itemClickListener.exec { it.onItemClick(url, longClick, view) }
+        itemClickListener?.onItemClick(url, longClick, view)
     }
 
     fun updateItems(updated: List<ZumpaThreadItem>, clearData: Boolean) {
@@ -218,7 +216,7 @@ class ZumpaSubItemViewHolder(val adapter: SubListAdapter, val view: View) : Zump
                 .setControllerListener(object : BaseControllerListener<ImageInfo>() {
                     override fun onFinalImageSet(id: String?, @Nullable imageInfo: ImageInfo?, @Nullable animatable: Animatable?) {
                         loadedUrl = url
-                        imageInfo.exec {
+                        imageInfo?.let {
                             val aspectRatio = it.width / it.height.toFloat()
                             imageView.aspectRatio = aspectRatio
                         }

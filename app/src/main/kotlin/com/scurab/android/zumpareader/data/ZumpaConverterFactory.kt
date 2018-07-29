@@ -21,11 +21,7 @@ class ZumpaConverterFactory(val parser: ZumpaSimpleParser) : Converter.Factory()
     private val threadPageConverter: ZumpaThreadPageConverter by lazy { ZumpaThreadPageConverter(parser) }
     private val postConverter: ZumpaGenericConverter by lazy { ZumpaGenericConverter() }
     private val httpPostConverter by lazy {
-        object : Converter<ZumpaBody, RequestBody> {
-            override fun convert(value: ZumpaBody?): RequestBody? {
-                return RequestBody.create(MediaType.parse("application/x-www-form-urlencoded"), value?.toHttpPostString())
-            }
-        }
+        Converter<ZumpaBody, RequestBody> { value -> RequestBody.create(MediaType.parse("application/x-www-form-urlencoded"), value?.toHttpPostString()) }
     }
 
     override fun responseBodyConverter(type: Type?, annotations: Array<out Annotation>?, retrofit: Retrofit?): Converter<ResponseBody, *>? {

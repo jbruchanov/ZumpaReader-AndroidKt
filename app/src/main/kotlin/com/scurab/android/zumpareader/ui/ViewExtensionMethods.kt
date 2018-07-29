@@ -5,7 +5,6 @@ import android.os.Build
 import android.support.v4.view.ViewCompat
 import android.view.View
 import android.view.ViewAnimationUtils
-import com.scurab.android.zumpareader.util.exec
 
 /**
  * Created by jiribruchanov on 12/8/15.
@@ -51,7 +50,7 @@ fun <T : View> T.changeVisibilityAnimated(show: Boolean) {
             var init = 0f
             var max = Math.max(width, height).toFloat()
             var animator = ViewAnimationUtils.createCircularReveal(this, width / 2, height / 2, if (show) init else max, if (show) max else init)
-            animator.exec {
+            animator.let {
                 it.addListener(animListener)
                 it.start()
             }

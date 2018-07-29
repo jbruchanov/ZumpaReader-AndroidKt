@@ -7,7 +7,6 @@ import android.support.design.widget.FloatingActionButton
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
-import com.scurab.android.zumpareader.util.exec
 
 /**
  * Created by JBruchanov on 25/11/2015.
@@ -27,7 +26,7 @@ class ScrollAppBarFABBehavior(context: Context, attrs: AttributeSet) : Coordinat
             dependencyOffset = dependency.top
 
             var margin = 0
-            (child.layoutParams as? ViewGroup.MarginLayoutParams).exec {
+            (child.layoutParams as? ViewGroup.MarginLayoutParams)?.let {
                 margin = it.topMargin + it.bottomMargin
             }
             val offsetSpeed = (child.height + margin) / dependency.height.toFloat()
