@@ -1,7 +1,7 @@
 buildscript {
-    ext.kotlin_version = '1.2.30'
-    ext.playServices = "11.8.0"
-    ext.supportLibraryVersion = "26.1.0"
+    ext.kotlin_version = '1.2.71'
+    ext.playServices = "16.0.1"
+    ext.supportLibraryVersion = "28.0.0"
     ext.fileProviderAuthority = "com.scurab.android.zumpareader.fileprovider"
 
     repositories {
@@ -12,7 +12,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.0.1'
+        classpath 'com.android.tools.build:gradle:3.2.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'io.fabric.tools:gradle:1.+'
     }
@@ -24,15 +24,15 @@ apply plugin: 'kotlin-android'
 apply plugin: 'io.fabric'
 
 android {
-    compileSdkVersion 26
-    buildToolsVersion '26.0.2'
+    compileSdkVersion 28
+    buildToolsVersion '28.0.3'
 
     defaultConfig {
         applicationId "com.scurab.zumpareader"
         buildConfigField "String", "BUILD_DETAIL", "\"build-" + getDate() + ",git-" + gitSha() + "\""
         buildConfigField "String", "Authority", "\"" + fileProviderAuthority + "\""
         minSdkVersion 16
-        targetSdkVersion 26
+        targetSdkVersion 28
         versionCode 59
         versionName "3.0.6"
         manifestPlaceholders = [authority: fileProviderAuthority]
@@ -79,66 +79,66 @@ task (depsize) << {
 
 dependencies {
     //compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile "com.google.android.gms:play-services-base:${playServices}"
-    compile "com.google.android.gms:play-services-gcm:${playServices}"
+    implementation "com.google.android.gms:play-services-base:${playServices}"
+    implementation 'com.google.firebase:firebase-messaging:17.3.3'
 
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    compile "com.android.support:appcompat-v7:${supportLibraryVersion}"
-    compile "com.android.support:design:${supportLibraryVersion}"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation "com.android.support:appcompat-v7:${supportLibraryVersion}"
+    implementation "com.android.support:design:${supportLibraryVersion}"
 
-    compile 'org.jetbrains.anko:anko-sdk15:0.8.3' // sdk19, sdk21, sdk23 are also available
-    compile 'org.jetbrains.anko:anko-support-v4:0.8.3' // In case you need support-v4 bindings
-    compile 'org.jetbrains.anko:anko-appcompat-v7:0.8.3' // For appcompat-v7 bindings
+    implementation 'org.jetbrains.anko:anko-sdk15:0.8.3' // sdk19, sdk21, sdk23 are also available
+    implementation 'org.jetbrains.anko:anko-support-v4:0.8.3' // In case you need support-v4 bindings
+    implementation 'org.jetbrains.anko:anko-appcompat-v7:0.8.3' // For appcompat-v7 bindings
 
-    compile 'org.jsoup:jsoup:1.8.3'
-    compile 'com.pawegio.kandroid:kandroid:0.8.2@aar'
+    implementation 'org.jsoup:jsoup:1.11.2'
+    implementation 'com.pawegio.kandroid:kandroid:0.8.2@aar'
 
-    def retrofit = "3.6.0"
-    compile "com.squareup.okhttp3:okhttp:${retrofit}"
-    compile "com.squareup.okhttp3:okhttp-urlconnection:${retrofit}"
-    compile "com.squareup.okhttp3:logging-interceptor:${retrofit}"
+    def square = "3.11.0"
+    implementation "com.squareup.okhttp3:okhttp:${square}"
+    implementation "com.squareup.okhttp3:okhttp-urlconnection:${square}"
+    implementation "com.squareup.okhttp3:logging-interceptor:${square}"
 
     def retrofit = "2.4.0"
-    compile "com.squareup.retrofit2:retrofit:$retrofit"
-    compile "com.squareup.retrofit2:converter-gson:$retrofit"
-    compile "com.squareup.retrofit2:adapter-rxjava2:$retrofit"
+    implementation "com.squareup.retrofit2:retrofit:$retrofit"
+    implementation "com.squareup.retrofit2:converter-gson:$retrofit"
+    implementation "com.squareup.retrofit2:adapter-rxjava2:$retrofit"
 
-    compile 'com.github.orangegangsters:swipy:1.2.3@aar'
+    implementation 'com.github.orangegangsters:swipy:1.2.3@aar'
 
-    compile 'com.squareup.picasso:picasso:2.5.2'
+    implementation 'com.squareup.picasso:picasso:2.5.2'
 
-    compile 'com.github.salomonbrys.kotson:kotson:2.5.0'
-    compile 'com.squareup:otto:1.3.8'
+    implementation 'com.github.salomonbrys.kotson:kotson:2.5.0'
+    implementation 'com.squareup:otto:1.3.8'
 
-    compile "io.reactivex.rxjava2:rxjava:2.1.13"
-    compile 'io.reactivex.rxjava2:rxandroid:2.0.2'
-    compile 'com.trello.rxlifecycle2:rxlifecycle:2.2.1'
-    compile 'com.jakewharton.rxbinding2:rxbinding:2.0.0'
-    compile 'com.trello.rxlifecycle2:rxlifecycle-android:2.2.1'
-    compile 'com.trello.rxlifecycle2:rxlifecycle-components:2.1.0'
-    compile 'com.trello.rxlifecycle2:rxlifecycle-navi:2.0.1'
+    implementation "io.reactivex.rxjava2:rxjava:2.2.2"
+    implementation 'io.reactivex.rxjava2:rxandroid:2.0.2'
+    implementation 'com.trello.rxlifecycle2:rxlifecycle:2.2.1'
+    implementation 'com.jakewharton.rxbinding2:rxbinding:2.0.0'
+    implementation 'com.trello.rxlifecycle2:rxlifecycle-android:2.2.1'
+    implementation 'com.trello.rxlifecycle2:rxlifecycle-components:2.1.0'
+    implementation 'com.trello.rxlifecycle2:rxlifecycle-navi:2.0.1'
     
-    compile('com.crashlytics.sdk.android:crashlytics:2.5.5@aar') {
+    implementation('com.crashlytics.sdk.android:crashlytics:2.5.5@aar') {
         transitive = true
     }
 
-    compile 'com.facebook.fresco:fresco:1.5.0'
-    compile 'com.facebook.fresco:animated-gif:1.5.0'
+    implementation 'com.facebook.fresco:fresco:1.5.0'
+    implementation 'com.facebook.fresco:animated-gif:1.5.0'
 
-    compile 'com.bogdwellers:pinchtozoom:0.1'
+    implementation 'com.bogdwellers:pinchtozoom:0.1'
 
-    compile 'com.bugfender.sdk:android:0.+'
+    implementation 'com.bugfender.sdk:android:1.+'
 
-    compile('com.giphy.sdk:core:1.0.0@aar') {
+    implementation('com.giphy.sdk:core:1.0.0@aar') {
         transitive=true
     }
 
-    testCompile 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.12'
     def robo = "3.3.1"
-    testCompile "org.robolectric:robolectric:$robo"
-    testCompile "org.robolectric:shadows-support-v4:$robo"
-    testCompile ('com.squareup:fest-android:1.0.8') {
+    testImplementation "org.robolectric:robolectric:$robo"
+    testImplementation "org.robolectric:shadows-support-v4:$robo"
+    testImplementation ('com.squareup:fest-android:1.0.8') {
         exclude module: 'support-v4'//some weird incompatibility issue
     }
-    testCompile 'org.mockito:mockito-core:2.8.47'
+    testImplementation 'org.mockito:mockito-core:2.11.0'
 }
