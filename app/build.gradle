@@ -22,6 +22,7 @@ apply from: 'tools.gradle'
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'io.fabric'
+apply plugin: 'com.google.gms.google-services'
 
 android {
     compileSdkVersion 28
@@ -66,7 +67,7 @@ repositories {
     mavenCentral()
 }
 
-task (depsize) << {
+task(depsize) << {
     def size = 0;
     configurations._debugApk.collect { it.length() / (1024 * 1024) }.each { size += it }
     println "Total dependencies size: ${Math.round(size * 100) / 100} Mb"
@@ -79,7 +80,6 @@ task (depsize) << {
 
 dependencies {
     //compile fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "com.google.android.gms:play-services-base:${playServices}"
     implementation 'com.google.firebase:firebase-messaging:17.3.3'
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
@@ -87,7 +87,8 @@ dependencies {
     implementation "com.android.support:design:${supportLibraryVersion}"
 
     implementation 'org.jetbrains.anko:anko-sdk15:0.8.3' // sdk19, sdk21, sdk23 are also available
-    implementation 'org.jetbrains.anko:anko-support-v4:0.8.3' // In case you need support-v4 bindings
+    implementation 'org.jetbrains.anko:anko-support-v4:0.8.3'
+    // In case you need support-v4 bindings
     implementation 'org.jetbrains.anko:anko-appcompat-v7:0.8.3' // For appcompat-v7 bindings
 
     implementation 'org.jsoup:jsoup:1.11.2'
@@ -112,12 +113,13 @@ dependencies {
 
     implementation "io.reactivex.rxjava2:rxjava:2.2.2"
     implementation 'io.reactivex.rxjava2:rxandroid:2.0.2'
-    implementation 'com.trello.rxlifecycle2:rxlifecycle:2.2.1'
     implementation 'com.jakewharton.rxbinding2:rxbinding:2.0.0'
-    implementation 'com.trello.rxlifecycle2:rxlifecycle-android:2.2.1'
-    implementation 'com.trello.rxlifecycle2:rxlifecycle-components:2.1.0'
-    implementation 'com.trello.rxlifecycle2:rxlifecycle-navi:2.0.1'
-    
+    def trelo = "2.2.2"
+    implementation "com.trello.rxlifecycle2:rxlifecycle:${trelo}"
+    implementation "com.trello.rxlifecycle2:rxlifecycle-android:${trelo}"
+    implementation "com.trello.rxlifecycle2:rxlifecycle-components:${trelo}"
+    implementation "com.trello.rxlifecycle2:rxlifecycle-navi:${trelo}"
+
     implementation('com.crashlytics.sdk.android:crashlytics:2.5.5@aar') {
         transitive = true
     }
@@ -130,14 +132,14 @@ dependencies {
     implementation 'com.bugfender.sdk:android:1.+'
 
     implementation('com.giphy.sdk:core:1.0.0@aar') {
-        transitive=true
+        transitive = true
     }
 
     testImplementation 'junit:junit:4.12'
     def robo = "3.3.1"
     testImplementation "org.robolectric:robolectric:$robo"
     testImplementation "org.robolectric:shadows-support-v4:$robo"
-    testImplementation ('com.squareup:fest-android:1.0.8') {
+    testImplementation('com.squareup:fest-android:1.0.8') {
         exclude module: 'support-v4'//some weird incompatibility issue
     }
     testImplementation 'org.mockito:mockito-core:2.11.0'

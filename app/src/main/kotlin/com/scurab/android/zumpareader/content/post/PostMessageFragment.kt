@@ -67,11 +67,11 @@ class PostMessageFragment : RxDialogFragment(), SendingFragment {
 
     private val links = ArrayList<String>()
 
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater?.inflate(R.layout.fragment_post_message, container, false)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        return inflater.inflate(R.layout.fragment_post_message, container, false)
     }
 
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         postMessageView?.apply {
             setUIForNewMessage()
@@ -106,9 +106,10 @@ class PostMessageFragment : RxDialogFragment(), SendingFragment {
             return
         }
 
-        var postMessageView = this.postMessageView!!
-        var subject = postMessageView.subject.text.toString().trim()
-        var message = postMessageView.message.text.toString().trim()
+        val postMessageView = this.postMessageView!!
+        val subject = postMessageView.subject.text.toString().trim()
+        val message = postMessageView.message.text.toString().trim()
+        val context = requireContext()
 
         if (subject.isEmpty()) {
             context.toast(R.string.err_empty_subject)

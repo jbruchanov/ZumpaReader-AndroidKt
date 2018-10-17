@@ -27,7 +27,7 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = R
     }
 
     protected fun onInsertTextFromClipboard() : Boolean {
-        val mText : Editable = text
+        val mText : String = text?.toString() ?: ""
         var min = 0
         var max = mText.length
 
@@ -40,10 +40,10 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = R
         }
         val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         var result = false
-        cm.primaryClip.let {
+        cm.primaryClip?.let { primaryClip ->
             var didFirst = false
-            for (i in 0..cm.primaryClip.itemCount - 1) {
-                val clip = cm.primaryClip.getItemAt(i)
+            for (i in 0 until primaryClip.itemCount) {
+                val clip = primaryClip.getItemAt(i)
                 var paste: CharSequence?
                 // Get an item as text and remove all spans by toString().
                 val text = clip.coerceToText(context)

@@ -1,73 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest
-    package="com.scurab.android.zumpareader"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.scurab.android.zumpareader">
 
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.STORAGE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-    <permission android:name="com.scurab.android.zumpareader.permission.C2D_MESSAGE" android:protectionLevel="signature" />
+    <permission
+        android:name="com.scurab.android.zumpareader.permission.C2D_MESSAGE"
+        android:protectionLevel="signature" />
+
     <uses-permission android:name="com.scurab.android.zumpareader.permission.C2D_MESSAGE" />
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
 
 
     <application
         android:name=".ZumpaReaderApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher_foreground"
         android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_foreground"
         android:supportsRtl="true"
         android:theme="@style/ThemeBlack">
         <activity
             android:name=".app.MainActivity"
             android:configChanges="orientation|screenSize"
             android:exported="true"
-            android:launchMode="singleTask"
-            android:label="@string/app_name">
+            android:label="@string/app_name"
+            android:launchMode="singleTask">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <intent-filter>
-                <action android:name="android.intent.action.SEND"/>
+                <action android:name="android.intent.action.SEND" />
                 <action android:name="android.intent.action.SEND_MULTIPLE" />
-                <category android:name="android.intent.category.DEFAULT"/>
-                <data android:mimeType="text/plain"/>
-                <data android:mimeType="image/*"/>
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="text/plain" />
+                <data android:mimeType="image/*" />
             </intent-filter>
         </activity>
 
         <activity
             android:name=".app.SettingsActivity"
             android:configChanges="orientation|screenSize"
-            android:theme="@style/AppTheme.Settings"
-            android:label="@string/app_name"/>
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme.Settings" />
 
         <activity
             android:name=".app.ImageActivity"
             android:configChanges="orientation|screenSize"
-            android:theme="@style/AppTheme.Image"
-            android:label="@string/app_name"/>
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme.Image" />
 
         <activity
             android:name=".giphy.GiphyActivity"
             android:configChanges="orientation|screenSize"
-            android:label="@string/app_name"/>
+            android:label="@string/app_name" />
 
         <meta-data
             android:name="io.fabric.ApiKey"
             android:value="1dcf380e1e5890c2c982152db1933ee9d7e8bde8" />
 
-        <receiver android:name=".GCMReceiver" android:permission="com.google.android.c2dm.permission.SEND" >
+        <service android:name=".MyFirebaseService"
+            android:permission="com.google.android.c2dm.permission.SEND">
             <intent-filter>
-                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
-                <category android:name="${applicationId}" />
+                <!--<action android:name="com.google.android.c2dm.intent.RECEIVE" />-->
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
-        </receiver>
+        </service>
 
         <provider
             android:name="android.support.v4.content.FileProvider"

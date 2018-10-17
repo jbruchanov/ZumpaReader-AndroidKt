@@ -81,7 +81,7 @@ abstract class BaseFragment : RxFragment() {
 
     override fun onAttach(context: Context?) {
         super.onAttach(context)
-        _zumpaData = zumpaApp!!.zumpaData
+        _zumpaData = zumpaApp.zumpaData
     }
 
     override fun onResume() {
@@ -105,6 +105,6 @@ abstract class BaseFragment : RxFragment() {
 
     protected val isLoggedIn: Boolean
         get() {
-            return zumpaApp?.zumpaPrefs?.isLoggedInNotOffline ?: false
+            return zumpaApp.zumpaPrefs.isLoggedInNotOffline ?: false
         }
 }

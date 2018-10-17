@@ -64,7 +64,7 @@ class PostFragment : BaseDialogFragment() {
     val tabHost: FragmentTabHost? get() {
         return view!!.find(android.R.id.tabhost)
     }
-    val contextColor by lazy { context.obtainStyledColor(R.attr.contextColor) }
+    val contextColor by lazy { requireContext().obtainStyledColor(R.attr.contextColor) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -123,7 +123,7 @@ class PostFragment : BaseDialogFragment() {
                                     post { setCurrentTabByTag(newIndex) }
                                 }
                             } catch (e: Throwable) {
-                                context.toast(e.message)
+                                requireContext().toast(e.message)
                             }
                         }
                         REQ_CODE_GIPHY -> {
@@ -138,8 +138,10 @@ class PostFragment : BaseDialogFragment() {
     private val argMessage: String? by lazy { arguments?.getString(Intent.EXTRA_TEXT) }
     private val argUris: Array<Uri>? by lazy {
         var result: Array<Uri>? = null
-        if (arguments != null && arguments.containsKey(Intent.EXTRA_STREAM)) {
-            result = arguments.getParcelableArray(Intent.EXTRA_STREAM) as Array<Uri>?
+        arguments?.let {
+            if (it.containsKey(Intent.EXTRA_STREAM)) {
+                result = it.getParcelableArray(Intent.EXTRA_STREAM) as Array<Uri>?
+            }
         }
         result
     }
@@ -157,7 +159,7 @@ class PostFragment : BaseDialogFragment() {
         super.onResume()
         if (!argFlagUsed && argFlag != 0) {
             argFlagUsed = true
-            context.post(Runnable {
+            requireContext().post(Runnable {
                 when (argFlag) {
                     R.id.photo -> onPhotoClick()
                     R.id.camera -> onCameraClick()
@@ -183,20 +185,20 @@ class PostFragment : BaseDialogFragment() {
             intent.addCategory(Intent.CATEGORY_OPENABLE)
             startActivityForResult(intent, REQ_CODE_IMAGE)
         } catch(e: Exception) {
-            context.toast(R.string.err_fail)
+            requireContext().toast(R.string.err_fail)
         }
     }
 
     fun onCameraClick() {
         try {
             val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-            val cameraFileUri = context.getRandomCameraFileUri()
-            val photoURI = FileProvider.getUriForFile(context, BuildConfig.Authority, File(cameraFileUri))
+            val cameraFileUri = requireContext().getRandomCameraFileUri()
+            val photoURI = FileProvider.getUriForFile(requireContext(), BuildConfig.Authority, File(cameraFileUri))
             app().zumpaPrefs.lastCameraUri = photoURI.toString()
             intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
             startActivityForResult(intent, REQ_CODE_CAMERA)
         } catch(e: Exception) {
-            context.toast(R.string.err_fail)
+            requireContext().toast(R.string.err_fail)
         }
     }
 
@@ -204,11 +206,12 @@ class PostFragment : BaseDialogFragment() {
         try {
             startActivityForResult(Intent(context, GiphyActivity::class.java), REQ_CODE_GIPHY)
         } catch(e: Exception) {
-            context.toast(R.string.err_fail)
+            requireContext().toast(R.string.err_fail)
         }
     }
 
     private fun createIndicator(@DrawableRes resId: Int, @ColorInt color: Int, parent: ViewGroup?): View {
+        val context = requireContext()
         val btn = context.layoutInflater.inflate(R.layout.view_tab_button, parent, false) as ImageView
         val res = context.resources
         val icon = res.getDrawable(resId).wrapWithTint(color)

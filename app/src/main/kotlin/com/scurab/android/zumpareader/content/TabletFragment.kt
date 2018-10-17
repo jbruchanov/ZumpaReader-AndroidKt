@@ -19,7 +19,7 @@ class TabletFragment : BaseFragment() {
         return inflater.inflate(R.layout.fragment_tablet, container, false)
     }
 
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         childFragmentManager.beginTransaction().add(R.id.main_list, MainListFragment()).commit()

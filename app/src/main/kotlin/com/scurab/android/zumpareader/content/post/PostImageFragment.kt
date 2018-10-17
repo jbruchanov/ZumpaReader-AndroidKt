@@ -15,6 +15,7 @@ import com.scurab.android.zumpareader.content.SendingFragment
 import com.scurab.android.zumpareader.content.post.tasks.CopyFromResourcesTask
 import com.scurab.android.zumpareader.content.post.tasks.ProcessImageTask
 import com.scurab.android.zumpareader.drawable.SimpleProgressDrawable
+import com.scurab.android.zumpareader.extension.app
 import com.scurab.android.zumpareader.util.asVisibility
 import com.scurab.android.zumpareader.util.saveToClipboard
 import com.scurab.android.zumpareader.util.toast
@@ -29,6 +30,7 @@ import okhttp3.RequestBody
 import org.jetbrains.anko.find
 import org.jetbrains.anko.support.v4.toast
 import java.io.File
+import java.lang.NullPointerException
 
 
 /**
@@ -60,7 +62,7 @@ class PostImageFragment : RxFragment(), SendingFragment {
         return view!!.find(R.id.post_image_panel_view)
     }
 
-    private val imageUri by lazy { arguments.getParcelable<Uri>(Intent.EXTRA_STREAM) }
+    private val imageUri by lazy { arguments?.getParcelable<Uri>(Intent.EXTRA_STREAM) ?: throw NullPointerException("Arguments") }
     private var imageFile: String? = null
     private var imageRotation = 0
     private var restoreState = false
@@ -81,6 +83,7 @@ class PostImageFragment : RxFragment(), SendingFragment {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val context = requireContext()
         try {
             CopyFromResourcesTask(view.context, imageUri)
                     .compose(bindToLifecycle())
@@ -117,6 +120,7 @@ class PostImageFragment : RxFragment(), SendingFragment {
     }
 
     protected fun onCopyLinkToClipboard() {
+        val context = requireContext()
         imageUploadedLink.let {
             context.saveToClipboard(Uri.parse(it))
             context.toast(R.string.saved_into_clipboard)
@@ -168,7 +172,8 @@ class PostImageFragment : RxFragment(), SendingFragment {
         val body = MultipartBody.Part.createFormData("image", out.name, reqFile)
         val name = RequestBody.create(MediaType.parse("text/plain"), "Submit")
 
-        (activity.application as ZumpaReaderApp).zumpaPHPAPI.postImage(body, name)
+        val context = requireContext()
+        app().zumpaPHPAPI.postImage(body, name)
                 .compose(bindToLifecycle())
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -190,7 +195,7 @@ class PostImageFragment : RxFragment(), SendingFragment {
     protected fun dispatchImageUploaded(result: String) {
         (parentFragment as? PostFragment)?.apply {
             onSharedImage(result)
-            context.toast(R.string.done)
+            requireContext().toast(R.string.done)
         }
     }
 

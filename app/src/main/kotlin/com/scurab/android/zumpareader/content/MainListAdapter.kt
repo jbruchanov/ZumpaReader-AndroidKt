@@ -22,10 +22,10 @@ import java.util.*
 class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadViewHolder> {
 
     companion object {
-        val tThread = 0
-        val tThreadLongClick = 1
-        val tFavorite = 2
-        val tIgnore = 3
+        const val tThread = 0
+        const val tThreadLongClick = 1
+        const val tFavorite = 2
+        const val tIgnore = 3
     }
 
     interface OnShowItemListener {
@@ -43,8 +43,8 @@ class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadViewHold
     private var selectedItem: ZumpaThread? = null
     private val dataMap: HashMap<String, ZumpaThread> = HashMap()
     private var ownerRecyclerView: RecyclerView? = null
-    private val dateFormat = SimpleDateFormat("dd.MM. HH:mm.ss")
-    private val shoreDateFormat = SimpleDateFormat("HH:mm")
+    private val dateFormat = SimpleDateFormat("dd.MM. HH:mm.ss", Locale.US)
+    private val shoreDateFormat = SimpleDateFormat("HH:mm", Locale.US)
     private var onShowItemListener: OnShowItemListener? = null
     private var onShoItemListenerEndOffset: Int = 0
 
@@ -74,7 +74,7 @@ class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadViewHold
     fun addItems(newItems: ArrayList<ZumpaThread>) {
         for (newItem in newItems) {
             //need to rewrite old stuff
-            dataMap.put(newItem.id, newItem)
+            dataMap[newItem.id] = newItem
         }
         items.clear()
         items.addAll(dataMap.values)
@@ -116,27 +116,27 @@ class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadViewHold
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): ZumpaThreadViewHolder? {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ZumpaThreadViewHolder {
         return parent.let {
-            var li = LayoutInflater.from(it!!.context)
+            val li = LayoutInflater.from(it.context)
             val zumpaThreadViewHolder = ZumpaThreadViewHolder(li.inflate(R.layout.item_main_list, parent, false))
             zumpaThreadViewHolder.apply {
-                content.setOnClickListener(DelayClickListener {
+                content.setOnClickListener(DelayClickListener {_ ->
                     if (isValidPosition()) {
                         dispatchItemClick(items[adapterPosition], adapterPosition, tThread)
                     }
                 })
-                favorite.setOnClickListener(DelayClickListener {
+                favorite.setOnClickListener(DelayClickListener {_ ->
                     if (isValidPosition()) {
                         dispatchItemClick(items[adapterPosition], adapterPosition, tFavorite)
                     }
                 })
-                ignore.setOnClickListener(DelayClickListener {
+                ignore.setOnClickListener(DelayClickListener {_ ->
                     if (isValidPosition()) {
                         dispatchItemClick(items[adapterPosition], adapterPosition, tIgnore)
                     }
                 })
-                content.setOnLongClickListener {
+                content.setOnLongClickListener {_ ->
                     if (isValidPosition()) {
                         dispatchItemLongClick(zumpaThreadViewHolder, items[adapterPosition], adapterPosition)
                     }
@@ -161,7 +161,7 @@ class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadViewHold
         }
     }
 
-    fun toggleOpenState(vh: ZumpaThreadViewHolder) {
+    private fun toggleOpenState(vh: ZumpaThreadViewHolder) {
         val offset = if (vh.content.translationX == 0f) vh.menu.width.toFloat() else -vh.content.translationX
         vh.content.animate().translationXBy(offset).setInterpolator(decelerateInterpolator).start()
     }
@@ -170,12 +170,12 @@ class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadViewHold
         onItemClickListener?.onItemClick(zumpaThread, adapterPosition, type)
     }
 
-    override fun onAttachedToRecyclerView(recyclerView: RecyclerView?) {
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)
         ownerRecyclerView = recyclerView
     }
 
-    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView?) {
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
         super.onDetachedFromRecyclerView(recyclerView)
         ownerRecyclerView = null
     }

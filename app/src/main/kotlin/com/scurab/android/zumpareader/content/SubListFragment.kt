@@ -1,5 +1,6 @@
 package com.scurab.android.zumpareader.content
 
+import android.annotation.SuppressLint
 import android.app.ProgressDialog
 import android.graphics.Color
 import android.net.Uri
@@ -61,7 +62,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
 
     override val title: CharSequence get() {
         val subject = zumpaData[argThreadId]?.subject
-        return if (subject != null) ZumpaSimpleParser.parseBody(subject, context, ImageSpan.ALIGN_BASELINE) else context.getString(R.string.app_name)
+        return if (subject != null) ZumpaSimpleParser.parseBody(subject, context, ImageSpan.ALIGN_BASELINE) else getString(R.string.app_name)
     }
 
     protected val argThreadId: String get() = arguments?.getString(ARG_THREAD_ID) ?: ""
@@ -71,7 +72,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
     private val recyclerView: RecyclerView? get() = view?.find(R.id.recycler_view)
     private val swipyRefreshLayout: SwipyRefreshLayout? get() = view?.find(R.id.swipe_refresh_layout)
     private val postMessageView: PostMessageView? get() = view?.find(R.id.response_panel)
-    private val contextColorText: Int by lazy { context.obtainStyledColor(R.attr.contextColorText2) }
+    private val contextColorText: Int by lazy { requireContext().obtainStyledColor(R.attr.contextColorText2) }
     private val treeViewObserver: ViewTreeObserver.OnGlobalLayoutListener = ViewTreeObserver.OnGlobalLayoutListener { updateRecycleViewPadding() }
     private lateinit var delegate: BehaviourDelegate
 
@@ -94,8 +95,8 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
         delegate = if (isTablet) TabletBehaviour(this) else PhoneBehaviour(this)
     }
 
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        var content = inflater!!.inflate(R.layout.view_recycler_refreshable_thread, container, false)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        val content = inflater.inflate(R.layout.view_recycler_refreshable_thread, container, false)
         content.setBackgroundColor(Color.BLACK)
         return content
     }
@@ -135,7 +136,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
     }
 
     private fun updateRecycleViewPadding() {
-        if (zumpaApp?.zumpaPrefs?.isLoggedInNotOffline ?: false) {
+        if (zumpaApp.zumpaPrefs.isLoggedInNotOffline ?: false) {
             view!!.post {
                 //set padding for response panel
                 recyclerView?.apply {
@@ -155,13 +156,14 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
 
     protected fun dispatchSend() {
         var msg = postMessageView?.message?.text?.toString() ?: ""
-        if (msg.length == 0) {
+        val context = requireContext()
+        if (msg.isEmpty()) {
             context.toast(R.string.err_empty_msg)
             return
         }
 
         app().zumpaAPI.let {
-            val app = zumpaApp!!
+            val app = zumpaApp
             val body = ZumpaThreadBody(app.zumpaPrefs.nickName, app.zumpaData[argThreadId]?.subject ?: "", msg, argThreadId)
             val observable = it.sendResponse(argThreadId, argThreadId, body)
             isSending = true
@@ -190,7 +192,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
     fun onLoadThreadEvent(event: LoadThreadEvent) {
         val sameThread = argThreadId == event.id
         if (!sameThread) {
-            arguments.putString(ARG_THREAD_ID, event.id)
+            arguments?.putString(ARG_THREAD_ID, event.id)
         }
         delegate.onLoadThreadEvent(event)
         loadData(event.id, true, if (sameThread) SCROLL_NONE else SCROLL_UP)
@@ -215,9 +217,9 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
             isSending = false
             return
         }
-        val context = activity
+        val context = requireActivity()
         isLoading = true
-        zumpaApp?.zumpaAPI?.getThreadPage(tid, tid).let {
+        zumpaApp.zumpaAPI.getThreadPage(tid, tid).let {
             it.subscribeOn(Schedulers.io())
                     .compose(bindToLifecycle<ZumpaThreadResult>())
                     .observeOn(AndroidSchedulers.mainThread())
@@ -239,7 +241,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
                                     firstLoad = false
                                     when (scrollWayValue) {
                                         SCROLL_UP -> rv.smoothScrollBy(0, offsetY)
-                                        SCROLL_DOWN -> rv.smoothScrollToPosition(rv.adapter.itemCount)
+                                        SCROLL_DOWN -> rv.smoothScrollToPosition(rv.adapter?.itemCount ?: 0)
                                     }
                                 }
                                 isSending = false
@@ -286,7 +288,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
             var items = it
             storeReadState(result)
             recyclerView?.let {
-                val loadImages = zumpaApp?.zumpaPrefs?.loadImages ?: true
+                val loadImages = zumpaApp.zumpaPrefs.loadImages ?: true
                 if (it.adapter == null) {
                     recyclerView?.adapter = SubListAdapter(items, loadImages).apply {
                         itemClickListener = this@SubListFragment
@@ -303,7 +305,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
     }
 
     private fun storeReadState(result: ZumpaThreadResult) {
-        val zumpaReadStates = zumpaApp?.zumpaReadStates
+        val zumpaReadStates = zumpaApp.zumpaReadStates
         zumpaReadStates?.let {
             val size = result.items.size - 1
             if (it.containsKey(argThreadId)) {
@@ -315,7 +317,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
     }
 
     override fun onItemClick(item: ZumpaThreadItem, longClick: Boolean, view: View) {
-        if (postMessageView != null && zumpaApp?.zumpaPrefs?.isLoggedInNotOffline ?: false) {
+        if (postMessageView != null && zumpaApp.zumpaPrefs.isLoggedInNotOffline ?: false) {
             val postMessageView = this.postMessageView!!
             delegate.onItemClick(item, longClick)
             if (postMessageView.isVisible()) {
@@ -352,6 +354,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
     }
 
     override fun onItemClick(url: String, longClick: Boolean, view: View) {
+        val context = requireContext()
         if (longClick) {
             context.saveToClipboard(Uri.parse(url))
             context.toast(R.string.saved_into_clipboard)
@@ -360,6 +363,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
             if (id != 0) {
                 delegate.onThreadLinkClick(id)
             } else {
+                val activity = requireActivity()
                 if (url.isImageUri()) {
                     val bundle = ActivityOptionsCompat.makeSceneTransitionAnimation(activity, view, getString(R.string.transition_image)).toBundle()
                     startActivity(ImageActivity.createIntent(activity, url), bundle)
@@ -442,6 +446,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
             fragment.onLoadThreadEvent(LoadThreadEvent(threadId.toString()))
         }
 
+        @SuppressLint("RestrictedApi")
         override fun onLoadThreadEvent(event: LoadThreadEvent) {
             fragment.postMessageView?.visibility = View.VISIBLE
             fragment.mainActivity?.floatingButton?.visibility = View.GONE

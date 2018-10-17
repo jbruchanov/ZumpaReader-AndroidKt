@@ -29,9 +29,9 @@ import java.util.*
 
 class OfflineDownloadFragment : DialogFragment() {
 
-    val zumpaApp: ZumpaReaderApp?
+    val zumpaApp: ZumpaReaderApp
         get() {
-            return context.applicationContext as? ZumpaReaderApp
+            return requireContext().applicationContext as ZumpaReaderApp
         }
 
     private val start: Button  get() = view!!.find(R.id.start)
@@ -69,7 +69,7 @@ class OfflineDownloadFragment : DialogFragment() {
         return inflater.inflate(R.layout.dialog_offline, container, false)
     }
 
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         start.setOnClickListener { onStartLoading() }
@@ -94,6 +94,7 @@ class OfflineDownloadFragment : DialogFragment() {
 
     private fun onStartLoading() {
         isLoading = true
+        val context = requireContext()
         val offline = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), ZumpaReaderApp.OFFLINE_FILE_NAME).absolutePath
         loaderTask = object : LoaderTask(context.applicationContext as ZumpaReaderApp, pages.text.toString().toInt(), imagesDownload.isChecked, offline) {
 
@@ -101,7 +102,7 @@ class OfflineDownloadFragment : DialogFragment() {
                 if (isResumed) {
                     isLoading = false
                     if (result != null) {
-                        zumpaApp?.zumpaOfflineApi?.offlineData = result
+                        zumpaApp.zumpaOfflineApi?.offlineData = result
                     }
                     if (exception != null) {
                         context.toast(exception!!.message)

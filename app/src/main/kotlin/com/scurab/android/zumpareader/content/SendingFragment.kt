@@ -18,7 +18,7 @@ interface SendingFragment {
         set(value) {
             if (value != isSending) {
                 if (value) {
-                    getContext().let {
+                    requireContext().let {
                         sendingDialog = createDialog(it).apply { show() }
                     }
                 } else {
@@ -38,5 +38,5 @@ interface SendingFragment {
         return dialog
     }
 
-    fun getContext(): Context
+    fun requireContext() : Context
 }

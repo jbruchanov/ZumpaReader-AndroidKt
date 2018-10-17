@@ -5,8 +5,7 @@ import android.content.Context
 import android.os.Bundle
 import android.preference.PreferenceActivity
 import com.bugfender.sdk.Bugfender
-import com.google.android.gms.gcm.GoogleCloudMessaging
-import com.google.android.gms.iid.InstanceID
+import com.google.firebase.iid.FirebaseInstanceId
 import com.scurab.android.zumpareader.BuildConfig
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZR
@@ -19,6 +18,8 @@ import com.scurab.android.zumpareader.util.ParseUtils
 import com.scurab.android.zumpareader.util.ZumpaPrefs
 import com.scurab.android.zumpareader.util.saveToClipboard
 import com.scurab.android.zumpareader.util.toast
+import io.reactivex.Completable
+import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.SingleObserver
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -27,12 +28,13 @@ import io.reactivex.schedulers.Schedulers
 import java.net.HttpURLConnection
 import java.net.URI
 
+
 /**
  * Created by JBruchanov on 29/12/2015.
  */
 class SettingsActivity : PreferenceActivity(), SendingFragment {
 
-
+    override fun requireContext(): Context = this
     private val buttonPref by lazy { findPreference(ZumpaPrefs.KEY_LOGIN) }
     private val showLastAuthorPref by lazy { findPreference(ZumpaPrefs.KEY_SHOW_LAST_AUTHOR) }
     private val filterPref by lazy { findPreference(ZumpaPrefs.KEY_FILTER) }
@@ -44,10 +46,6 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
 
     private var progressDialog: ProgressDialog? = null
     override var sendingDialog: ProgressDialog? = null
-
-    override fun getContext(): Context {
-        return this
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -165,31 +163,50 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
 
 private class LoginCall(private val zumpaApp: ZumpaReaderApp, private val zumpaLoginBody: ZumpaLoginBody) : Single<Pair<Boolean, Boolean>>() {
     private var loginResult: Boolean = false
-    private var pushResult: Boolean = false
 
     override fun subscribeActual(observer: SingleObserver<in Pair<Boolean, Boolean>>) {
-        val loginResponse = zumpaApp.zumpaAPI.login(zumpaLoginBody).execute()
+        val api = zumpaApp.zumpaOnlineAPI
+        val loginResponse = api.login(zumpaLoginBody).execute()
         loginResult = loginResponse.code() == HttpURLConnection.HTTP_MOVED_TEMP
 
         zumpaApp.zumpaPrefs.isLoggedIn = loginResult
         zumpaApp.zumpaPrefs.cookies = if (loginResult) ParseUtils.extractCookies(loginResponse) else null
 
-        try {
-            val instanceID = InstanceID.getInstance(zumpaApp)
-            val token = instanceID.getToken("542579595500", GoogleCloudMessaging.INSTANCE_ID_SCOPE, null)
-            zumpaApp.zumpaPrefs.pushRegId = token
-            if (token != null && loginResult) {
-                val body = zumpaApp.zumpaAPI.getMainPageHtml().execute().body()!!.asString()
-                val uid = ZumpaSimpleParser.parseUID(body)
-                if (uid != null) {
-                    val response = zumpaApp.zumpaPHPAPI.register(zumpaLoginBody.nick, uid, token).execute().body()!!.asUTFString()
-                    pushResult = "[OK]" == response
-                }
-            }
-        } catch(e: Throwable) {
-            e.printStackTrace()
+        if (!loginResult) {
+            observer.onSuccess(Pair(loginResult, false))
+            return
         }
-        observer.onSuccess(Pair(loginResult, pushResult))
+
+        try {
+            FirebaseInstanceId
+                    .getInstance().instanceId
+                    .addOnCompleteListener { task ->
+                        Observable
+                                .fromCallable {
+                                    // Get new Instance ID token
+                                    val token = task.result?.token
+                                    zumpaApp.zumpaPrefs.pushRegId = token
+                                    var pushResult = false
+                                    if (token != null && loginResult) {
+                                        val body = api.getMainPageHtml().execute().body()!!.asString()
+                                        val uid = ZumpaSimpleParser.parseUID(body)
+                                        if (uid != null) {
+                                            val response = zumpaApp.zumpaPHPAPI.register(zumpaLoginBody.nick, uid, token).execute().body()!!.asUTFString()
+                                            pushResult = "[OK]" == response
+                                        }
+                                    }
+                                    Pair(loginResult, pushResult)
+                                }
+                                .subscribeOn(Schedulers.io())
+                                .subscribe(
+                                        { result -> observer.onSuccess(result) },
+                                        { err -> observer.onError(err) }
+                                )
+                    }
+        } catch (e: Throwable) {
+            e.printStackTrace()
+            observer.onError(e)
+        }
     }
 }
 

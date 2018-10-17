@@ -45,7 +45,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
         set(value) {
             super.isLoading = value
             progressBarVisible = value
-            swipeToRefresh?.let {
+            swipeToRefresh.let {
                 if (it.isRefreshing) {
                     it.isRefreshing = value
                 }
@@ -54,7 +54,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
 
     override val title: CharSequence get() {
         val appName = getString(R.string.app_name)
-        return if (zumpaApp?.zumpaPrefs?.isOffline ?: false) {
+        return if (zumpaApp.zumpaPrefs.isOffline) {
             "%s (%s)".format(appName, getString(R.string.offline))
         } else {
             appName
@@ -68,19 +68,19 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
 
     @Subscribe fun onDialogEvent(dialogEvent: DialogEvent) {
         onRefreshTitle()
-        if (zumpaApp?.zumpaPrefs?.isOffline ?: false) {
+        if (zumpaApp.zumpaPrefs.isOffline) {
             lastOffline = null
-            zumpaApp?.loadOfflineData()
+            zumpaApp.loadOfflineData()
             loadPage()
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         content.ifNull {
-            content = inflater!!.inflate(R.layout.view_recycler_refreshable, container, false)
+            content = inflater.inflate(R.layout.view_recycler_refreshable, container, false)
             content.let {
                 swipeToRefresh.direction = SwipyRefreshLayoutDirection.TOP
-                swipeToRefresh.setColorSchemeColors(context.getColorFromTheme(R.attr.contextColor))
+                swipeToRefresh.setColorSchemeColors(requireContext().getColorFromTheme(R.attr.contextColor))
                 recyclerView.apply {
                     layoutManager = LinearLayoutManager(inflater.context, LinearLayoutManager.VERTICAL, false)
                 }
@@ -95,7 +95,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
         (content?.parent as? ViewGroup)?.removeView(content)
     }
 
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         swipeToRefresh.setOnRefreshListener { loadPage() }
@@ -112,7 +112,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
                 return true
             }
             R.id.offline -> {
-                var app = zumpaApp!!
+                var app = zumpaApp
                 if (!app.zumpaPrefs.isOffline) {
                     app.zumpaPrefs.isOffline = !app.zumpaPrefs.isOffline
                     OfflineDownloadFragment().show(mainActivity!!.supportFragmentManager, OfflineDownloadFragment::class.java.name)
@@ -140,7 +140,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.menu, menu)
         menu.findItem(R.id.offline).apply {
-            setTitle(if (zumpaApp!!.zumpaPrefs.isOffline) R.string.online else R.string.offline)
+            setTitle(if (zumpaApp.zumpaPrefs.isOffline) R.string.online else R.string.offline)
         }
     }
 
@@ -149,38 +149,35 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
     }
 
     private fun loadPage(firstLoad:Boolean = false, fromThread: String? = null) {
-        if (isLoading || fromThread?.isEmpty() ?: false) {
+        if (isLoading || fromThread?.isEmpty() == true) {
             return
         }
-        if (zumpaApp != null) {
-            var zumpaApp = this.zumpaApp!!
-            var filter = zumpaApp.zumpaPrefs.filter
-            var offline = zumpaApp.zumpaPrefs.isOffline
-            if (lastFilter != filter || lastOffline != offline) {
-                recyclerView.adapter.let {
-                    (it as MainListAdapter).removeAll()
-                }
+        val filter = zumpaApp.zumpaPrefs.filter
+        val offline = zumpaApp.zumpaPrefs.isOffline
+        if (lastFilter != filter || lastOffline != offline) {
+            (recyclerView.adapter as? MainListAdapter)?.apply {
+                removeAll()
             }
-            lastOffline = offline
-            lastFilter = filter
-            isLoading = true
-
-            val mainPage = if (fromThread != null) zumpaApp.zumpaAPI.getMainPage(fromThread, filter) else zumpaApp.zumpaAPI.getMainPage(filter)
-            mainPage.subscribeOn(Schedulers.io())
-                    .compose(bindToLifecycle<ZumpaMainPageResult>())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .retry(3)
-                    .subscribe(
-                            { result ->
-                                onResultLoaded(result, firstLoad)
-                                isLoading = false
-                            },
-                            { err ->
-                                isLoading = false
-                                err?.message?.let { toast(it) }
-                            }
-                    )
         }
+        lastOffline = offline
+        lastFilter = filter
+        isLoading = true
+
+        val mainPage = if (fromThread != null) zumpaApp.zumpaAPI.getMainPage(fromThread, filter) else zumpaApp.zumpaAPI.getMainPage(filter)
+        mainPage.subscribeOn(Schedulers.io())
+                .compose(bindToLifecycle<ZumpaMainPageResult>())
+                .observeOn(AndroidSchedulers.mainThread())
+                .retry(3)
+                .subscribe(
+                        { result ->
+                            onResultLoaded(result, firstLoad)
+                            isLoading = false
+                        },
+                        { err ->
+                            isLoading = false
+                            err?.message?.let { toast(it) }
+                        }
+                )
     }
 
     override fun onStart() {
@@ -202,8 +199,8 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
             nextThreadId = it.nextThreadId
             val values = it.items.asListOfValues()
             recyclerView.let {
-                var user = zumpaApp?.zumpaPrefs?.loggedUserName
-                zumpaApp?.zumpaReadStates?.let {
+                var user = zumpaApp.zumpaPrefs.loggedUserName
+                zumpaApp.zumpaReadStates?.let {
                     for (zumpaThread in values) {
                         zumpaThread.setStateBasedOnReadValue(it[zumpaThread.id]?.count, user)
                     }
@@ -234,18 +231,18 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
     }
 
     private fun onThreadItemLongClick(item: ZumpaThread, position: Int) {
-        val prefs = zumpaApp?.zumpaPrefs
-        if (prefs?.isOffline == false && prefs?.isLoggedIn == true) {
-            (recyclerView?.adapter as? MainListAdapter)?.toggleOpenState(position)
+        val prefs = zumpaApp.zumpaPrefs
+        if (!prefs.isOffline && prefs.isLoggedIn) {
+            (recyclerView.adapter as? MainListAdapter)?.toggleOpenState(position)
         }
     }
 
-    private fun mainListAdapter() = (recyclerView?.adapter as? MainListAdapter)
+    private fun mainListAdapter() = (recyclerView.adapter as? MainListAdapter)
 
     open fun onThreadItemClick(item: ZumpaThread, position: Int) {
         isLoading = false
         val oldState = item.state
-        item.setStateBasedOnReadValue(item.items, zumpaApp?.zumpaPrefs?.loggedUserName)
+        item.setStateBasedOnReadValue(item.items, zumpaApp.zumpaPrefs.loggedUserName)
         if (oldState != item.state || isTablet) {
             mainListAdapter()?.let {
                 if (isTablet) {
@@ -264,9 +261,9 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
     }
 
     private fun onThreadIgnoreClick(item: ZumpaThread, position: Int) {
-        mainListAdapter()?.let {
-            it.toggleOpenState(position)
-            zumpaApp?.zumpaAPI?.let {
+        mainListAdapter()?.let { adapter ->
+            adapter.toggleOpenState(position)
+            zumpaApp.zumpaAPI.let {
                 isLoading = true
                 it.toggleRate(ZumpaToggleBody(item.id, ZumpaToggleBody.tIgnore))
                         .compose(bindToLifecycle<ZumpaGenericResponse>())
@@ -288,9 +285,9 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
     }
 
     private fun onThreadFavoriteClick(item: ZumpaThread, position: Int) {
-        mainListAdapter()?.let {
-            it.toggleOpenState(position)
-            zumpaApp?.zumpaAPI?.let {
+        mainListAdapter()?.let {adapter ->
+            adapter.toggleOpenState(position)
+            zumpaApp.zumpaAPI.let {
                 isLoading = true
                 it.toggleRate(ZumpaToggleBody(item.id, ZumpaToggleBody.tFavorite))
                         .compose(bindToLifecycle<ZumpaGenericResponse>())

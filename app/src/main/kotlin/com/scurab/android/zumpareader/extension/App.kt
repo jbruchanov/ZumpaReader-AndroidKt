@@ -20,7 +20,7 @@ import com.scurab.android.zumpareader.ZumpaReaderApp
  * Get application as typed object
  */
 fun Context.app(): ZumpaReaderApp = this.applicationContext as ZumpaReaderApp
-fun Fragment.app(): ZumpaReaderApp = this.context.app()
+fun Fragment.app(): ZumpaReaderApp = this.requireContext().app()
 
 /**
  * Load asset as string

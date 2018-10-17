@@ -39,7 +39,7 @@ class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
     private val TYPE_URL = 3
     private val TYPE_SURVEY = 4
 
-    private val dateFormat = SimpleDateFormat("HH:mm.ss")
+    private val dateFormat = SimpleDateFormat("HH:mm.ss", Locale.US)
     private val items: ArrayList<ZumpaThreadItem>
     private val dataItems: ArrayList<SubListItem>
     var itemClickListener: ItemClickListener? = null
@@ -106,7 +106,7 @@ class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
     override fun onBindViewHolder(holder: ZumpaSubItemViewHolder, position: Int) {
         var dataItem = dataItems[position]
         val itemView = holder.itemView
-        itemView.background.apply {
+        itemView.background?.apply {
             level = dataItem.itemPosition % 2
         }
         when (getItemViewType(position)) {
@@ -127,40 +127,38 @@ class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
         itemView.postInvalidate()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): ZumpaSubItemViewHolder? {
-        return parent.let {
-            var li = LayoutInflater.from(it!!.context)
-            when (viewType) {
-                TYPE_ITEM -> {
-                    var vh = ZumpaSubItemViewHolder(this, li.inflate(R.layout.item_sub_list, parent, false))
-                    vh.itemView.setOnClickListener { v -> dispatchClick(dataItems[vh.adapterPosition].item, v) }
-                    vh.itemView.setOnLongClickListener { v -> dispatchClick(dataItems[vh.adapterPosition].item, v, true); true }
-                    vh
-                }
-                TYPE_URL -> {
-                    var vh = ZumpaSubItemViewHolder(this, li.inflate(R.layout.item_sub_list_button, parent, false))
-                    vh.button.setOnClickListener { v -> dispatchClick(vh.button.text.toString(), v) }
-                    vh.button.setOnLongClickListener { v -> dispatchClick(vh.button.text.toString(), v, true); true }
-                    vh
-                }
-                TYPE_IMAGE -> {
-                    val view = li.inflate(R.layout.item_sub_list_image, parent, false)
-                    val vh = ZumpaSubItemViewHolder(this, view)
-                    view.setOnClickListener { v -> vh.loadedUrl?.let { dispatchClick(it, v) } }
-                    view.setOnLongClickListener { v -> vh.loadedUrl?.let { dispatchClick(it, v, true) }; true }
-                    vh
-                }
-                TYPE_SURVEY -> {
-                    val view = li.inflate(R.layout.item_sub_list_survey, parent, false) as SurveyView
-                    view.surveyItemClickListener = object : SurveyView.ItemClickListener {
-                        override fun onItemClick(item: SurveyItem) {
-                            surveyClickListner.apply { onItemClick(item) }
-                        }
-                    }
-                    ZumpaSubItemViewHolder(this, view)
-                }
-                else -> throw IllegalStateException("Invalid view type:" + viewType)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ZumpaSubItemViewHolder {
+        val li = LayoutInflater.from(parent.context)
+        return when (viewType) {
+            TYPE_ITEM -> {
+                val vh = ZumpaSubItemViewHolder(this, li.inflate(R.layout.item_sub_list, parent, false))
+                vh.itemView.setOnClickListener { v -> dispatchClick(dataItems[vh.adapterPosition].item, v) }
+                vh.itemView.setOnLongClickListener { v -> dispatchClick(dataItems[vh.adapterPosition].item, v, true); true }
+                vh
             }
+            TYPE_URL -> {
+                val vh = ZumpaSubItemViewHolder(this, li.inflate(R.layout.item_sub_list_button, parent, false))
+                vh.button.setOnClickListener { v -> dispatchClick(vh.button.text.toString(), v) }
+                vh.button.setOnLongClickListener { v -> dispatchClick(vh.button.text.toString(), v, true); true }
+                vh
+            }
+            TYPE_IMAGE -> {
+                val view = li.inflate(R.layout.item_sub_list_image, parent, false)
+                val vh = ZumpaSubItemViewHolder(this, view)
+                view.setOnClickListener { v -> vh.loadedUrl?.let { dispatchClick(it, v) } }
+                view.setOnLongClickListener { v -> vh.loadedUrl?.let { dispatchClick(it, v, true) }; true }
+                vh
+            }
+            TYPE_SURVEY -> {
+                val view = li.inflate(R.layout.item_sub_list_survey, parent, false) as SurveyView
+                view.surveyItemClickListener = object : SurveyView.ItemClickListener {
+                    override fun onItemClick(item: SurveyItem) {
+                        surveyClickListner.apply { onItemClick(item) }
+                    }
+                }
+                ZumpaSubItemViewHolder(this, view)
+            }
+            else -> throw IllegalStateException("Invalid view type:$viewType")
         }
     }
 

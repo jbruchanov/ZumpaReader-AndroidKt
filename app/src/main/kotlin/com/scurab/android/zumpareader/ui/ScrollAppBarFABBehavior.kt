@@ -16,7 +16,7 @@ class ScrollAppBarFABBehavior(context: Context, attrs: AttributeSet) : Coordinat
     private var childInitialOffset: Int = 0
     private var dependencyOffset: Int = 0
 
-    override fun layoutDependsOn(parent: CoordinatorLayout?, child: FloatingActionButton?, dependency: View?): Boolean {
+    override fun layoutDependsOn(parent: CoordinatorLayout, child: FloatingActionButton, dependency: View): Boolean {
         return dependency is AppBarLayout
     }
 
@@ -39,8 +39,8 @@ class ScrollAppBarFABBehavior(context: Context, attrs: AttributeSet) : Coordinat
         return false
     }
 
-    override fun onLayoutChild(parent: CoordinatorLayout?, child: FloatingActionButton?, layoutDirection: Int): Boolean {
-        childInitialOffset = child?.top ?: 0
+    override fun onLayoutChild(parent: CoordinatorLayout, child: FloatingActionButton, layoutDirection: Int): Boolean {
+        childInitialOffset = child.top
         return super.onLayoutChild(parent, child, layoutDirection)
     }
 }
