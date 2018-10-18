@@ -116,7 +116,7 @@ class SubListAdapter : ToggleAdapter<ZumpaSubItemViewHolder> {
     override fun onBindViewHolder(holder: ZumpaSubItemViewHolder, position: Int) {
         var dataItem = dataItems[position]
         val itemView = holder.itemView
-        itemView.background?.apply {
+        holder.content.background?.apply {
             level = dataItem.itemPosition % 2
         }
         when (getItemViewType(position)) {
