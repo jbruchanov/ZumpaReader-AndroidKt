@@ -1,6 +1,7 @@
 package com.scurab.android.zumpareader.content
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -9,6 +10,7 @@ import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection
 import com.scurab.android.zumpareader.BusProvider
 import com.scurab.android.zumpareader.R
+import com.scurab.android.zumpareader.ZR
 import com.scurab.android.zumpareader.app.BaseFragment
 import com.scurab.android.zumpareader.app.SettingsActivity
 import com.scurab.android.zumpareader.content.post.PostFragment
@@ -21,6 +23,7 @@ import com.scurab.android.zumpareader.model.ZumpaToggleBody
 import com.scurab.android.zumpareader.ui.hideAnimated
 import com.scurab.android.zumpareader.ui.showAnimated
 import com.scurab.android.zumpareader.util.*
+import com.scurab.android.zumpareader.widget.ToggleAdapter
 import com.squareup.otto.Subscribe
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -217,6 +220,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
                                 MainListAdapter.tThreadLongClick -> onThreadItemLongClick(item, position)
                                 MainListAdapter.tFavorite -> onThreadFavoriteClick(item, position)
                                 MainListAdapter.tIgnore -> onThreadIgnoreClick(item, position)
+                                MainListAdapter.tShare -> onThreadShareClick(item, position)
                             }
                         }
                     }
@@ -233,7 +237,25 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
     private fun onThreadItemLongClick(item: ZumpaThread, position: Int) {
         val prefs = zumpaApp.zumpaPrefs
         if (!prefs.isOffline && prefs.isLoggedIn) {
-            (recyclerView.adapter as? MainListAdapter)?.toggleOpenState(position)
+            (recyclerView.adapter as? ToggleAdapter)?.toggleOpenState(position)
+        }
+    }
+
+    private fun onThreadShareClick(item: ZumpaThread, position: Int) {
+        val prefs = zumpaApp.zumpaPrefs
+        if (!prefs.isOffline && prefs.isLoggedIn) {
+            (recyclerView.adapter as? MainListAdapter)
+                    ?.items
+                    ?.get(position)
+                    ?.let {
+                        try {
+                            val link = String.format(ZR.Constants.ZUMPA_THREAD_LINK, it.id)
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(link))
+                            requireContext().startActivity(intent)
+                        } catch (e: Exception) {
+                            toast(R.string.unable_to_finish_operation)
+                        }
+                    }
         }
     }
 

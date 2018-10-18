@@ -21,17 +21,27 @@ import com.scurab.android.zumpareader.util.find
 import com.scurab.android.zumpareader.util.isImageUri
 import com.scurab.android.zumpareader.util.scaledImageRequest
 import com.scurab.android.zumpareader.widget.SurveyView
+import com.scurab.android.zumpareader.widget.ToggleAdapter
+import com.scurab.android.zumpareader.widget.ToggleViewHolder
+import org.jetbrains.anko.find
 import java.text.SimpleDateFormat
 import java.util.*
 
 /**
  * Created by JBruchanov on 27/11/2015.
  */
-class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
+class SubListAdapter : ToggleAdapter<ZumpaSubItemViewHolder> {
 
     interface ItemClickListener {
-        fun onItemClick(item: ZumpaThreadItem, longClick: Boolean, view: View)
+        fun onItemClick(position: Int, item: ZumpaThreadItem, longClick: Boolean, view: View)
         fun onItemClick(url: String, longClick: Boolean, view: View)
+        fun onMenuItemClick(position: Int, item: ZumpaThreadItem, type: Int)
+    }
+
+    companion object {
+        val tReply = 1
+        val tCopy = 2
+        val tSpeak = 3
     }
 
     private val TYPE_ITEM = 1
@@ -132,8 +142,11 @@ class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
         return when (viewType) {
             TYPE_ITEM -> {
                 val vh = ZumpaSubItemViewHolder(this, li.inflate(R.layout.item_sub_list, parent, false))
-                vh.itemView.setOnClickListener { v -> dispatchClick(dataItems[vh.adapterPosition].item, v) }
-                vh.itemView.setOnLongClickListener { v -> dispatchClick(dataItems[vh.adapterPosition].item, v, true); true }
+                vh.content.setOnClickListener { v -> dispatchClick(vh.adapterPosition, dataItems[vh.adapterPosition].item, v) }
+                vh.content.setOnLongClickListener { v -> dispatchClick(vh.adapterPosition, dataItems[vh.adapterPosition].item, v, true); true }
+                vh.menuReply.setOnClickListener { _ -> dispatchMenuItemClick(vh.adapterPosition, dataItems[vh.adapterPosition].item, tReply) }
+                vh.menuCopy.setOnClickListener { _ -> dispatchMenuItemClick(vh.adapterPosition, dataItems[vh.adapterPosition].item, tCopy) }
+                vh.menuSpeak.setOnClickListener { _ -> dispatchMenuItemClick(vh.adapterPosition, dataItems[vh.adapterPosition].item, tSpeak) }
                 vh
             }
             TYPE_URL -> {
@@ -162,12 +175,16 @@ class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
         }
     }
 
-    protected fun dispatchClick(item: ZumpaThreadItem, view: View, longClick: Boolean = false) {
-        itemClickListener?.onItemClick(item, longClick, view)
+    protected fun dispatchClick(position: Int, item: ZumpaThreadItem, view: View, longClick: Boolean = false) {
+        itemClickListener?.onItemClick(position, item, longClick, view)
     }
 
     protected fun dispatchClick(url: String, view: View, longClick: Boolean = false) {
         itemClickListener?.onItemClick(url, longClick, view)
+    }
+
+    protected fun dispatchMenuItemClick(position: Int, item: ZumpaThreadItem, type: Int) {
+        itemClickListener?.onMenuItemClick(position, item, type)
     }
 
     fun updateItems(updated: List<ZumpaThreadItem>, clearData: Boolean) {
@@ -195,7 +212,9 @@ class SubListAdapter : RecyclerView.Adapter<ZumpaSubItemViewHolder> {
 
 private data class SubListItem(val item: ZumpaThreadItem, val itemPosition: Int, var type: Int, val data: String?)
 
-class ZumpaSubItemViewHolder(val adapter: SubListAdapter, val view: View) : ZumpaItemViewHolder(view) {
+class ZumpaSubItemViewHolder(val adapter: SubListAdapter, val view: View) : ZumpaItemViewHolder(view), ToggleViewHolder {
+    override val content by lazy { itemView.find<View>(R.id.item_content) }
+    override val menu by lazy { itemView.find<View>(R.id.item_menu) }
     internal val button by lazy { find<Button>(R.id.button) }
     internal val imageView by lazy { find<SimpleDraweeView>(R.id.image) }
     internal val imageViewOverlay by lazy { find<View>(R.id.overlay) }
@@ -203,6 +222,10 @@ class ZumpaSubItemViewHolder(val adapter: SubListAdapter, val view: View) : Zump
     internal var loadedUrl: String? = null
     internal var hasFailed: Boolean = false
     internal val surveyView by lazy { view as SurveyView }
+
+    internal val menuReply by lazy {itemView.find<View>(R.id.reply)}
+    internal val menuCopy by lazy {itemView.find<View>(R.id.copy)}
+    internal val menuSpeak by lazy {itemView.find<View>(R.id.speak)}
 
     fun loadImage(url: String) {
         if (url == loadedUrl) {

@@ -1,16 +1,16 @@
 package com.scurab.android.zumpareader.content
 
 import android.graphics.drawable.LevelListDrawable
-import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.DecelerateInterpolator
 import android.widget.ImageView
 import android.widget.TextView
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.ui.DelayClickListener
+import com.scurab.android.zumpareader.widget.ToggleAdapter
+import com.scurab.android.zumpareader.widget.ToggleViewHolder
 import org.jetbrains.anko.find
 import java.text.SimpleDateFormat
 import java.util.*
@@ -19,13 +19,14 @@ import java.util.*
  * Created by JBruchanov on 25/11/2015.
  */
 
-class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadViewHolder> {
+class MainListAdapter : ToggleAdapter<MainListAdapter.ZumpaThreadViewHolder> {
 
     companion object {
         const val tThread = 0
         const val tThreadLongClick = 1
         const val tFavorite = 2
         const val tIgnore = 3
+        const val tShare = 4
     }
 
     interface OnShowItemListener {
@@ -42,7 +43,6 @@ class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadViewHold
 
     private var selectedItem: ZumpaThread? = null
     private val dataMap: HashMap<String, ZumpaThread> = HashMap()
-    private var ownerRecyclerView: RecyclerView? = null
     private val dateFormat = SimpleDateFormat("dd.MM. HH:mm.ss", Locale.US)
     private val shoreDateFormat = SimpleDateFormat("HH:mm", Locale.US)
     private var onShowItemListener: OnShowItemListener? = null
@@ -136,6 +136,11 @@ class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadViewHold
                         dispatchItemClick(items[adapterPosition], adapterPosition, tIgnore)
                     }
                 })
+                share.setOnClickListener(DelayClickListener {_ ->
+                    if (isValidPosition()) {
+                        dispatchItemClick(items[adapterPosition], adapterPosition, tShare)
+                    }
+                })
                 content.setOnLongClickListener {_ ->
                     if (isValidPosition()) {
                         dispatchItemLongClick(zumpaThreadViewHolder, items[adapterPosition], adapterPosition)
@@ -149,35 +154,12 @@ class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadViewHold
     private fun ZumpaThreadViewHolder.isValidPosition() =
             adapterPosition < items.size && adapterPosition >= 0
 
-    private val decelerateInterpolator = DecelerateInterpolator()
-
     private fun dispatchItemLongClick(vh: ZumpaThreadViewHolder, thread: ZumpaThread, position: Int) {
         onItemClickListener?.onItemClick(thread, position, tThreadLongClick)
     }
 
-    fun toggleOpenState(position: Int) {
-        ownerRecyclerView?.findViewHolderForAdapterPosition(position)?.let {
-            toggleOpenState(it as ZumpaThreadViewHolder)
-        }
-    }
-
-    private fun toggleOpenState(vh: ZumpaThreadViewHolder) {
-        val offset = if (vh.content.translationX == 0f) vh.menu.width.toFloat() else -vh.content.translationX
-        vh.content.animate().translationXBy(offset).setInterpolator(decelerateInterpolator).start()
-    }
-
     private fun dispatchItemClick(zumpaThread: ZumpaThread, adapterPosition: Int, type: Int) {
         onItemClickListener?.onItemClick(zumpaThread, adapterPosition, type)
-    }
-
-    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
-        super.onAttachedToRecyclerView(recyclerView)
-        ownerRecyclerView = recyclerView
-    }
-
-    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
-        super.onDetachedFromRecyclerView(recyclerView)
-        ownerRecyclerView = null
     }
 
     fun setOnShowItemListener(listener: OnShowItemListener, endOffset: Int) {
@@ -186,14 +168,15 @@ class MainListAdapter : RecyclerView.Adapter<MainListAdapter.ZumpaThreadViewHold
     }
 
 
-    class ZumpaThreadViewHolder(view: View) : ZumpaItemViewHolder(view) {
+    class ZumpaThreadViewHolder(view: View) : ZumpaItemViewHolder(view), ToggleViewHolder {
         val stateBar by lazy { itemView.find<View>(R.id.item_state) }
         val lastAuthor by lazy { itemView.find<TextView>(R.id.last_author) }
         val isFavorite by lazy { itemView.find<ImageView>(R.id.is_favorite) }
-        val content by lazy { itemView.find<View>(R.id.item_thread_content) }
-        val menu by lazy { itemView.find<View>(R.id.item_thread_menu) }
         val favorite by lazy { itemView.find<View>(R.id.favorite) }
         val ignore by lazy { itemView.find<View>(R.id.ignore) }
+        val share by lazy { itemView.find<View>(R.id.share) }
+        override val content by lazy { itemView.find<View>(R.id.item_thread_content) }
+        override val menu by lazy { itemView.find<View>(R.id.item_thread_menu) }
     }
 
     fun removeItem(item: ZumpaThread) {

@@ -2,6 +2,7 @@ package com.scurab.android.zumpareader.content
 
 import android.annotation.SuppressLint
 import android.app.ProgressDialog
+import android.content.Context
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
@@ -35,7 +36,12 @@ import io.reactivex.schedulers.Schedulers
 import org.jetbrains.anko.find
 import org.jetbrains.anko.support.v4.toast
 import android.support.v4.app.ActivityOptionsCompat
+import android.support.v4.text.TextUtilsCompat
+import android.text.ClipboardManager
+import android.text.TextUtils
+import com.scurab.android.zumpareader.content.SubListAdapter.Companion.tReply
 import com.scurab.android.zumpareader.extension.app
+import com.scurab.android.zumpareader.widget.ToggleAdapter
 
 
 /**
@@ -258,13 +264,9 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
 
 
     override fun onFloatingButtonClick() {
-        postMessageView?.let {
-            if (!it.isVisible()) {
-                it.showAnimated()
-            }
-            mainActivity?.floatingButton?.hideAnimated()
-        }
+        showMessagePanel()
     }
+
 
     override fun onBackButtonClick(): Boolean {
         if (isLoggedIn) {
@@ -273,6 +275,15 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
             }
         }
         return super.onBackButtonClick()
+    }
+
+    fun showMessagePanel() {
+        postMessageView?.let {
+            if (!it.isVisible()) {
+                it.showAnimated()
+            }
+            mainActivity?.floatingButton?.hideAnimated()
+        }
     }
 
     fun hideMessagePanel(clearText: Boolean = false): Boolean {
@@ -316,22 +327,51 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
         }
     }
 
-    override fun onItemClick(item: ZumpaThreadItem, longClick: Boolean, view: View) {
-        if (postMessageView != null && zumpaApp.zumpaPrefs.isLoggedInNotOffline ?: false) {
-            val postMessageView = this.postMessageView!!
-            delegate.onItemClick(item, longClick)
-            if (postMessageView.isVisible()) {
-                postMessageView.message.text.apply {
-                    var text = "@%s: \n".format(item.authorReal)
-                    val outRange = OutRef<IntRange>()
-                    if (containsAuthor(text, outRange)) {
-                        val range = outRange.data!!
-                        replace(range.first, range.last, "")
-                    } else {
-                        appendReply(text, contextColorText)
-                    }
+    override fun onMenuItemClick(position: Int, item: ZumpaThreadItem, type: Int) {
+        when(type) {
+            SubListAdapter.tReply -> {
+                postMessageView
+                        ?.takeIf { zumpaApp.zumpaPrefs.isLoggedInNotOffline }
+                        ?.let {
+                            showMessagePanel()
+                            it.message.text.apply {
+                                val text = "@${item.authorReal}: \n"
+                                val outRange = OutRef<IntRange>()
+                                if (containsAuthor(text, outRange)) {
+                                    val range = outRange.data!!
+                                    replace(range.first, range.last, "")
+                                } else {
+                                    appendReply(text, contextColorText)
+                                }
+                            }
+                        }
+                }
+            SubListAdapter.tCopy -> {
+                (requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).apply {
+                    text = item.body
+                    toast(R.string.saved_into_clipboard)
                 }
             }
+            SubListAdapter.tSpeak -> {
+                postMessageView
+                        ?.takeIf { zumpaApp.zumpaPrefs.isLoggedInNotOffline }
+                        ?.let {
+                            showMessagePanel()
+                            val result = it.message.text
+                            if (result.isNotEmpty()) {
+                                result.append("\n")
+                            }
+                            result.append("${item.author}: ${item.body}\n\n")
+                            it.message.text = result
+                            it.message.setSelection(it.message.length())
+                        }
+            }
+        }
+    }
+
+    override fun onItemClick(position: Int, item: ZumpaThreadItem, longClick: Boolean, view: View) {
+        if (postMessageView != null && zumpaApp.zumpaPrefs.isLoggedInNotOffline ?: false) {
+            delegate.onItemClick(position, item, longClick)
         }
     }
 
@@ -376,7 +416,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
 
     private abstract class BehaviourDelegate(val fragment: SubListFragment) {
         open fun onThreadLinkClick(threadId: Int) {}
-        open fun onItemClick(item: ZumpaThreadItem, longClick: Boolean) {}
+        open fun onItemClick(position: Int, item: ZumpaThreadItem, longClick: Boolean) {}
         open fun hideMessagePanel(): Boolean? {
             return null
         }
@@ -394,7 +434,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
 
         override fun onResume() {
             if (fragment.isLoggedIn) {
-                if (fragment.postMessageView?.isVisible() ?: false) {
+                if (fragment.postMessageView?.isVisible() == true) {
                     fragment.mainActivity?.floatingButton?.hideAnimated()
                 } else {
                     fragment.mainActivity?.floatingButton?.showAnimated()
@@ -414,10 +454,11 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
             return null
         }
 
-        override fun onItemClick(item: ZumpaThreadItem, longClick: Boolean) {
+        override fun onItemClick(position: Int, item: ZumpaThreadItem, longClick: Boolean) {
             if (longClick) {
-                fragment.postMessageView?.showAnimated()
-                fragment.mainActivity?.floatingButton?.hideAnimated()
+                (fragment.recyclerView?.adapter as? ToggleAdapter)?.toggleOpenState(position)
+            } else if (fragment.postMessageView?.isVisible() == true) {
+                fragment.onMenuItemClick(position, item, tReply)
             }
         }
 

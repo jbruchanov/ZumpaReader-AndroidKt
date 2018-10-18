@@ -1,45 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
-    android:id="@+id/item_thread_menu"
+    android:id="@+id/item_menu"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
-    android:layout_height="match_parent"
-    tools:layout_height="56dp"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/gap_small"
     android:background="?threadItemBackgroundNoPressedState"
     android:divider="@drawable/divider_vertical_transparent_normal"
-    android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:showDividers="middle|beginning|end">
+    android:showDividers="middle">
 
     <ImageButton
-        android:id="@+id/favorite"
+        android:id="@+id/reply"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="?attr/buttonBackground"
-        android:padding="@dimen/gap_small"
-        android:src="@drawable/ic_grade_black_36dp"
+        android:padding="@dimen/gap_tiny"
+        android:src="@drawable/ic_reply_black"
         android:tint="?attr/contextColor"
         />
 
     <ImageButton
-        android:id="@+id/ignore"
+        android:id="@+id/copy"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="?attr/buttonBackground"
-        android:padding="@dimen/gap_small"
-        android:src="@drawable/ic_block_black_36dp"
+        android:padding="@dimen/gap_tiny"
+        android:src="@drawable/ic_copy"
         android:tint="?attr/contextColor"
         />
 
     <ImageButton
-        android:id="@+id/share"
+        android:id="@+id/speak"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="?attr/buttonBackground"
-        android:padding="@dimen/gap_small"
-        android:src="@drawable/ic_share"
+        android:padding="@dimen/gap_tiny"
+        android:src="@drawable/ic_speak"
         android:tint="?attr/contextColor"
         />
-
 </LinearLayout>

@@ -1,44 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:tools="http://schemas.android.com/tools"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:background="?threadItemBackground"
-              android:clickable="true"
-              android:orientation="vertical"
-              android:padding="?listItemPadding"
-              tools:ignore="RtlHardcoded">
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
 
-    <LinearLayout
-        android:layout_marginBottom="@dimen/gap_small"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+    <include layout="@layout/item_sub_list_menu"/>
 
-        <TextView
-            android:id="@+id/author"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="?attr/authorColor"
-            android:textSize="?attr/authorTextSize"
-            tools:text="@string/dummy_long"/>
-
-        <TextView
-            android:id="@+id/time"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="?attr/dateColor"
-            android:textSize="?attr/dateTextSize"
-            tools:text="20:28:17 25.11."/>
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/subject"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="?attr/subjectColor"
-        android:textSize="?attr/subjectTextSize"
-        tools:text="@string/dummy_long"/>
-</LinearLayout>
+    <include layout="@layout/item_sub_list_content"/>
+</FrameLayout>
