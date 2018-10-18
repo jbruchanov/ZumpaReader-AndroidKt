@@ -124,8 +124,9 @@ dependencies {
         transitive = true
     }
 
-    implementation 'com.facebook.fresco:fresco:1.5.0'
-    implementation 'com.facebook.fresco:animated-gif:1.5.0'
+    def fresco = "1.11.0"
+    implementation "com.facebook.fresco:fresco:${fresco}"
+    implementation "com.facebook.fresco:animated-gif:${fresco}"
 
     implementation 'com.bogdwellers:pinchtozoom:0.1'
 
