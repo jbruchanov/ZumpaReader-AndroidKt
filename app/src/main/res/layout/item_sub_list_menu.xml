@@ -4,10 +4,11 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:padding="@dimen/gap_small"
     android:background="?threadItemBackgroundNoPressedState"
     android:divider="@drawable/divider_vertical_transparent_normal"
+    android:gravity="center_vertical"
     android:orientation="horizontal"
     android:showDividers="middle">
 

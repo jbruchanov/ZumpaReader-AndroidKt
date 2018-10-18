@@ -32,7 +32,7 @@
         android:layout_margin="@dimen/gap_tiny"
         android:background="@drawable/edit_text_background"
         android:hint="@string/message"
-        android:maxLines="5"
+        android:maxLines="10"
         android:minHeight="@dimen/response_edit_text_min_height"
         android:minLines="2"
         android:padding="@dimen/gap_small"
