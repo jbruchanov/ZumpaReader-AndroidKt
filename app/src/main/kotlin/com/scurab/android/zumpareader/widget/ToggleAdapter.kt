@@ -16,6 +16,16 @@ abstract class ToggleAdapter<VH : RecyclerView.ViewHolder> : RecyclerView.Adapte
         }
     }
 
+    fun closeMenu(position: Int) {
+        ownerRecyclerView
+                ?.findViewHolderForAdapterPosition(position)
+                ?.let { it as? ToggleViewHolder }
+                ?.takeIf { it.content.translationX > 0f }
+                ?.let {
+                    toggleOpenState(it)
+                }
+    }
+
     private fun toggleOpenState(vh: ToggleViewHolder) {
         val offset = if (vh.content.translationX == 0f) vh.menu.width.toFloat() else -vh.content.translationX
         vh.content.animate().translationXBy(offset).setInterpolator(decelerateInterpolator).start()

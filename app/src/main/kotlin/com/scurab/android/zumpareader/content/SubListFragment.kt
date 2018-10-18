@@ -367,6 +367,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
                         }
             }
         }
+        (recyclerView?.adapter as? ToggleAdapter)?.closeMenu(position)
     }
 
     override fun onItemClick(position: Int, item: ZumpaThreadItem, longClick: Boolean, view: View) {
