@@ -116,18 +116,17 @@ class SubListAdapter : ToggleAdapter<ZumpaSubItemViewHolder> {
     override fun onBindViewHolder(holder: ZumpaSubItemViewHolder, position: Int) {
         var dataItem = dataItems[position]
         val itemView = holder.itemView
-        holder.content.background?.apply {
-            level = dataItem.itemPosition % 2
-        }
+        holder.content.background?.apply { level = dataItem.itemPosition % 2 }
         when (getItemViewType(position)) {
             TYPE_ITEM -> {
-                var item = dataItem.item
+                val item = dataItem.item
                 holder.title.text = item.styledBody(itemView.context)
                 holder.author.text = item.styledAuthor(itemView.context)
                 holder.time.text = dateFormat.format(item.date)
+                holder.menu.background?.apply { level = dataItem.itemPosition % 2 }
             }
             TYPE_URL -> {
-                var lastButton = (position + 1) > dataItems.size - 1 || dataItems[position + 1].type != TYPE_URL
+                val lastButton = (position + 1) > dataItems.size - 1 || dataItems[position + 1].type != TYPE_URL
                 itemView.setPadding(itemView.paddingLeft, itemView.paddingTop, itemView.paddingRight, if (lastButton) itemView.paddingLeft else itemView.paddingLeft / 2)
                 holder.button.text = dataItem.data
             }
