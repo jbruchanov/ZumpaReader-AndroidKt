@@ -61,6 +61,7 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
         }
         buttonPref.title = resources.getString(if (zumpaApp.zumpaPrefs.isLoggedIn) R.string.logout else R.string.login)
         filterPref.isEnabled = zumpaApp.zumpaPrefs.isLoggedIn
+        showLastAuthorPref.isEnabled = zumpaApp.zumpaPrefs.isLoggedIn
 
         if (BuildConfig.DEBUG) {
             val bugFender: ButtonPreference = object : ButtonPreference(this, null) {
@@ -92,6 +93,7 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
                     .subscribe { result, err ->
                         isSending = false
                         if (err == null) {
+                            showLastAuthorPref.isEnabled = false
                             toast(R.string.done)
                         } else {
                             toast(err.message)
@@ -134,6 +136,7 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
                             }
                             filterPref.isEnabled = loginResult
                             if (loginResult) {
+                                showLastAuthorPref.isEnabled = true
                                 buttonPref.title = resources.getString(R.string.logout)
                             }
                         },

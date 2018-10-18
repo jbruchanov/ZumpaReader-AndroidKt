@@ -174,7 +174,7 @@ public class ZumpaSimpleParser {
         if (mShowLastUser) {
             try {
                 String sub = sixth.text();
-                String[] vals = sub.split(String.valueOf(HTMLTags.NBSP_CHAR));
+                String[] vals = sub.split(" ");
                 time = vals[0];
                 lastAnswerAuthor = vals[vals.length - 1];// can be date between
             } catch (Throwable t) {
