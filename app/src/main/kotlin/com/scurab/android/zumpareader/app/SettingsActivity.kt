@@ -3,6 +3,7 @@ package com.scurab.android.zumpareader.app
 import android.app.ProgressDialog
 import android.content.Context
 import android.os.Bundle
+import android.preference.CheckBoxPreference
 import android.preference.PreferenceActivity
 import com.bugfender.sdk.Bugfender
 import com.google.firebase.iid.FirebaseInstanceId
@@ -36,7 +37,7 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
 
     override fun requireContext(): Context = this
     private val buttonPref by lazy { findPreference(ZumpaPrefs.KEY_LOGIN) }
-    private val showLastAuthorPref by lazy { findPreference(ZumpaPrefs.KEY_SHOW_LAST_AUTHOR) }
+    private val showLastAuthorPref by lazy { findPreference(ZumpaPrefs.KEY_SHOW_LAST_AUTHOR) as CheckBoxPreference }
     private val filterPref by lazy { findPreference(ZumpaPrefs.KEY_FILTER) }
 
     val zumpaApp: ZumpaReaderApp
@@ -93,6 +94,7 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
                     .subscribe { result, err ->
                         isSending = false
                         if (err == null) {
+                            showLastAuthorPref.isChecked = false
                             showLastAuthorPref.isEnabled = false
                             toast(R.string.done)
                         } else {
