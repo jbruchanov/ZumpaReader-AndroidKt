@@ -124,6 +124,7 @@ class SubListAdapter : ToggleAdapter<ZumpaSubItemViewHolder> {
                 holder.author.text = item.styledAuthor(itemView.context)
                 holder.time.text = dateFormat.format(item.date)
                 holder.menu.background?.apply { level = dataItem.itemPosition % 2 }
+                holder.content.translationX = 0f
             }
             TYPE_URL -> {
                 val lastButton = (position + 1) > dataItems.size - 1 || dataItems[position + 1].type != TYPE_URL

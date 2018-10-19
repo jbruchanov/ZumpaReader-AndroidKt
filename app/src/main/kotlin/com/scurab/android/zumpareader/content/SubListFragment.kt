@@ -361,7 +361,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
                             if (result.isNotEmpty()) {
                                 result.append("\n")
                             }
-                            result.append("${item.author}: ${item.body}\n\n")
+                            result.append("${item.author}: ${item.body}\n----\n")
                             it.message.text = result
                             it.message.setSelection(it.message.length())
                         }
