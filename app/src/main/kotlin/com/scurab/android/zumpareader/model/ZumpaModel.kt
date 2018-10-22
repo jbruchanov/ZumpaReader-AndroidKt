@@ -39,7 +39,7 @@ constructor(val id: String,
                 this.time = elem["time"].long
                 this.lastAuthor = elem.get("lastAuthor").nullString
                 this.offlineItems = elem["offlineItems"].asJsonArray.asItems()
-                this.items = Math.max(0, (this.offlineItems?.count() ?: 0))
+                this.items = Math.max(0, (this.offlineItems?.count() ?: 0) - 1)
                 this.state = STATE_NONE
             }
         }
