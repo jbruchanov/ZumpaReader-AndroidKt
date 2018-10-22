@@ -1,7 +1,6 @@
 package com.scurab.android.zumpareader.content
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -249,8 +248,11 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
                     ?.get(position)
                     ?.let {
                         try {
+                            val intent = Intent(Intent.ACTION_SEND)
+                            intent.type = "text/plain"
                             val link = String.format(ZR.Constants.ZUMPA_THREAD_LINK, it.id)
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(link))
+                            intent.putExtra(Intent.EXTRA_TEXT, link)
+                            startActivity(Intent.createChooser(intent, getString(R.string.share)))
                             requireContext().startActivity(intent)
                         } catch (e: Exception) {
                             toast(R.string.unable_to_finish_operation)

@@ -50,4 +50,5 @@
     <string name="action_stop">Stop</string>
     <string name="pages">Pages</string>
     <string name="transition_image">transition_image</string>
+    <string name="share">Share</string>
 </resources>
