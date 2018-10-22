@@ -46,7 +46,7 @@ class MainListAdapter : ToggleAdapter<MainListAdapter.ZumpaThreadViewHolder> {
     private val dateFormat = SimpleDateFormat("dd.MM. HH:mm.ss", Locale.US)
     private val shoreDateFormat = SimpleDateFormat("HH:mm", Locale.US)
     private var onShowItemListener: OnShowItemListener? = null
-    private var onShoItemListenerEndOffset: Int = 0
+    private var onShowItemListenerEndOffset: Int = 0
 
     constructor(data: ArrayList<ZumpaThread>) : super() {
         items = ArrayList(data)
@@ -107,7 +107,7 @@ class MainListAdapter : ToggleAdapter<MainListAdapter.ZumpaThreadViewHolder> {
             time.text = if (item.lastAuthor == null) dateFormat.format(item.date) else shoreDateFormat.format(item.date)
             lastAuthor.text = item.lastAuthor
             (stateBar.background as? LevelListDrawable)?.level = item.state
-            if (position == itemCount - onShoItemListenerEndOffset) {
+            if (position == itemCount - onShowItemListenerEndOffset) {
                 onShowItemListener?.onShowingItem(this@MainListAdapter, position)
             }
             itemView.isSelected = item == selectedItem
@@ -164,7 +164,7 @@ class MainListAdapter : ToggleAdapter<MainListAdapter.ZumpaThreadViewHolder> {
 
     fun setOnShowItemListener(listener: OnShowItemListener, endOffset: Int) {
         onShowItemListener = listener
-        onShoItemListenerEndOffset = endOffset
+        onShowItemListenerEndOffset = endOffset
     }
 
 
