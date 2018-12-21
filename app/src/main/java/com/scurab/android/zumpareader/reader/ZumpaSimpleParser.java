@@ -598,8 +598,9 @@ public class ZumpaSimpleParser {
         return text;
     }
 
+    @NonNull
     public static Set<String> getLinks(String text) {
-        return getLinks(text, null);
+        return getLinks(text, new HashSet<String>());
     }
 
     private static Set<String> getLinks(String text, @Nullable Set<String> toFill) {

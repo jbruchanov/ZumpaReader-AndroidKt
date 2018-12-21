@@ -62,11 +62,11 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = R
                 if (paste != null) {
                     if (!didFirst) {
                         Selection.setSelection(mText as Spannable, max)
-                        (mText as Editable).replace(min, max, paste)
+                        mText.replace(min, max, paste)
                         didFirst = true
                     } else {
-                        (mText as Editable).insert(selectionEnd, "\n")
-                        (mText as Editable).insert(selectionEnd, paste)
+                        mText.insert(selectionEnd, "\n")
+                        mText.insert(selectionEnd, paste)
                     }
                     result = true
                 }
