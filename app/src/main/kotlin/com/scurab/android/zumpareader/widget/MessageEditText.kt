@@ -4,12 +4,10 @@ import android.content.Context
 import android.content.ClipboardManager
 import android.support.v7.appcompat.R
 import android.support.v7.widget.AppCompatEditText
-import android.text.Editable
-import android.text.Selection
-import android.text.Spannable
-import android.text.Spanned
+import android.text.*
 import android.util.AttributeSet
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
+import java.lang.NullPointerException
 
 /**
  * Created by JBruchanov on 23/03/2017.
@@ -27,7 +25,10 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = R
     }
 
     protected fun onInsertTextFromClipboard() : Boolean {
-        val mText : String = text?.toString() ?: ""
+        if (text == null) {
+            text = SpannableStringBuilder()
+        }
+        val mText : Editable = text ?: throw NullPointerException("Just assigned value and still null?")
         var min = 0
         var max = mText.length
 
