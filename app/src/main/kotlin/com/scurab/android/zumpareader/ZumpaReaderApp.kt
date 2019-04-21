@@ -102,7 +102,7 @@ class ZumpaReaderApp : MultiDexApplication() {
 
     override fun onCreate() {
         super.onCreate()
-        if (BuildConfig.DEBUG) {
+        if (true) {
             Bugfender.init(this, "kzaufEwHl2xPh3nwfAZNSP8aRNdJwGJ1", BuildConfig.DEBUG)
             Bugfender.enableLogcatLogging()
             Bugfender.enableUIEventLogging(this)
