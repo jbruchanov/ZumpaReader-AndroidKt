@@ -34,8 +34,8 @@ android {
         buildConfigField "String", "Authority", "\"" + fileProviderAuthority + "\""
         minSdkVersion 16
         targetSdkVersion 28
-        versionCode 61
-        versionName "3.0.8"
+        versionCode 63
+        versionName "3.0.10"
         manifestPlaceholders = [authority: fileProviderAuthority]
         multiDexEnabled true
     }
@@ -91,7 +91,7 @@ dependencies {
     // In case you need support-v4 bindings
     implementation 'org.jetbrains.anko:anko-appcompat-v7:0.8.3' // For appcompat-v7 bindings
 
-    implementation 'org.jsoup:jsoup:1.11.2'
+    implementation 'org.jsoup:jsoup:1.10.3'
     implementation 'com.pawegio.kandroid:kandroid:0.8.2@aar'
 
     def square = "3.11.0"
