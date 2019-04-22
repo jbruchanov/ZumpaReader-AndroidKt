@@ -6,8 +6,8 @@ import android.content.Context
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import android.text.style.ImageSpan
 import android.view.LayoutInflater
 import android.view.View
@@ -35,8 +35,8 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import org.jetbrains.anko.find
 import org.jetbrains.anko.support.v4.toast
-import android.support.v4.app.ActivityOptionsCompat
-import android.support.v4.text.TextUtilsCompat
+import androidx.core.app.ActivityOptionsCompat
+import androidx.core.text.TextUtilsCompat
 import android.text.ClipboardManager
 import android.text.TextUtils
 import com.scurab.android.zumpareader.content.SubListAdapter.Companion.tReply
@@ -329,7 +329,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
 
     override fun onMenuItemClick(position: Int, item: ZumpaThreadItem, type: Int) {
         when(type) {
-            SubListAdapter.tReply -> {
+            tReply -> {
                 postMessageView
                         ?.takeIf { zumpaApp.zumpaPrefs.isLoggedInNotOffline }
                         ?.let {
@@ -464,7 +464,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
         }
 
         override fun onThreadLinkClick(threadId: Int) {
-            fragment.openFragment(SubListFragment.newInstance(threadId.toString()), true, true)
+            fragment.openFragment(newInstance(threadId.toString()), true, true)
         }
 
         override fun openPostFragment(flag : Int?) {

@@ -3,7 +3,7 @@ package com.scurab.android.zumpareader.content
 import android.app.Dialog
 import android.os.Bundle
 import android.os.Environment
-import android.support.v4.app.DialogFragment
+import androidx.fragment.app.DialogFragment
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
@@ -27,7 +27,7 @@ import java.util.*
  * Created by JBruchanov on 15/01/2016.
  */
 
-class OfflineDownloadFragment : DialogFragment() {
+class OfflineDownloadFragment : androidx.fragment.app.DialogFragment() {
 
     val zumpaApp: ZumpaReaderApp
         get() {

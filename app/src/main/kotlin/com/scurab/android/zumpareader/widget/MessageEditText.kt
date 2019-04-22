@@ -2,10 +2,10 @@ package com.scurab.android.zumpareader.widget
 
 import android.content.Context
 import android.content.ClipboardManager
-import android.support.v7.appcompat.R
-import android.support.v7.widget.AppCompatEditText
+import androidx.appcompat.widget.AppCompatEditText
 import android.text.*
 import android.util.AttributeSet
+import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import java.lang.NullPointerException
 

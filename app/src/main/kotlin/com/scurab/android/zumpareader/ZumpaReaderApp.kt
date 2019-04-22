@@ -4,7 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.os.Bundle
 import android.os.Environment
-import android.support.multidex.MultiDexApplication
+import androidx.multidex.MultiDexApplication
 import android.util.Log
 import com.bugfender.sdk.Bugfender
 import com.facebook.drawee.backends.pipeline.Fresco

@@ -1,7 +1,7 @@
 package com.scurab.android.zumpareader.ui
 
 import android.animation.Animator
-import android.support.v4.view.ViewPropertyAnimatorListener
+import androidx.core.view.ViewPropertyAnimatorListener
 import android.view.View
 
 /**

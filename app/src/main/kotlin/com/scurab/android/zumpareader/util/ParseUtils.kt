@@ -47,7 +47,7 @@ class ParseUtils {
                 for (i in 0..it.size()) {
                     if ("Set-Cookie".equals(it.name(i), true)) {
                         val value = it.value(i)
-                        if (ParseUtils.hasPHPSessionId(value)) {
+                        if (hasPHPSessionId(value)) {
                             val sessionId = Companion.extractPHPSessionId(value)
                             if (sessionId != null) {
                                 return sessionId

@@ -25,13 +25,13 @@
         android:singleLine="true"/>
 
 
-    <android.support.v7.widget.RecyclerView
+    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view_horizontal"
         android:scrollbars="horizontal"
         android:layout_width="match_parent"
         android:layout_height="@dimen/button_min_size" />
 
-    <android.support.v7.widget.RecyclerView
+    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view"
         android:layout_width="match_parent"
         android:scrollbars="vertical"

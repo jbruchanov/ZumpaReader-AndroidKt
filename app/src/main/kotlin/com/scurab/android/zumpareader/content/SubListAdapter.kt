@@ -2,9 +2,9 @@ package com.scurab.android.zumpareader.content
 
 import android.app.Activity
 import android.graphics.drawable.Animatable
-import android.support.annotation.ColorInt
-import android.support.annotation.Nullable
-import android.support.v7.widget.RecyclerView
+import androidx.annotation.ColorInt
+import androidx.annotation.Nullable
+import androidx.recyclerview.widget.RecyclerView
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View

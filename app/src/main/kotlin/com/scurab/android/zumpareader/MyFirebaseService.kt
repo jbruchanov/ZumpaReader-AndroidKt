@@ -8,7 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.media.RingtoneManager
 import android.os.Build
-import android.support.v4.app.NotificationCompat
+import androidx.core.app.NotificationCompat
 import android.text.Html
 import android.util.Log
 import android.view.ContextThemeWrapper
@@ -57,7 +57,7 @@ class MyFirebaseService : FirebaseMessagingService() {
         }
     }
 
-    private val icon = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) R.mipmap.ic_silhouette else R.mipmap.ic_launcher
+    private val icon = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) R.mipmap.ic_silhouette else R.mipmap.ic_launcher
 
     private fun onCreateSimpleNotification(context: Context, subject: String, msg: String): Notification {
         return NotificationCompat.Builder(context, ZUMPA_CHANNEL)

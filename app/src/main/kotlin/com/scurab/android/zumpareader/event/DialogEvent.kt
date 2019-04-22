@@ -1,6 +1,6 @@
 package com.scurab.android.zumpareader.event
 
-import android.support.v4.app.DialogFragment
+import androidx.fragment.app.DialogFragment
 
 /**
  * Created by JBruchanov on 19/01/2016.
