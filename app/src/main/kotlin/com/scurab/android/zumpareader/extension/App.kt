@@ -38,7 +38,7 @@ fun Context.loadAsset(file: String): String {
 inline fun FragmentManager.transaction(crossinline op: FragmentTransaction.() -> Unit) {
     val transaction = this.beginTransaction()
     op(transaction)
-    transaction.commit()
+    transaction.commitAllowingStateLoss()
 }
 
 fun Context.hideKeyboard() {

@@ -126,7 +126,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         tr.setTransitionStyle(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-        tr.commit()
+        tr.commitAllowingStateLoss()
     }
 
     override fun onResume() {
