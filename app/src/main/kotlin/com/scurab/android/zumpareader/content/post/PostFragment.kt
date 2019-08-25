@@ -29,6 +29,9 @@ import java.io.File
 /**
  * Created by JBruchanov on 08/01/2016.
  */
+
+private const val ARG_FLAG_USED = "ARG_FLAG_USED"
+
 class PostFragment : BaseDialogFragment() {
     companion object {
         val REQ_CODE_IMAGE = 123
@@ -74,6 +77,7 @@ class PostFragment : BaseDialogFragment() {
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        argFlagUsed = savedInstanceState?.getBoolean(ARG_FLAG_USED, false) ?: false
         val view = inflater.inflate(R.layout.fragment_post, container, false)
         val tabHost = view.find<FragmentTabHost>(android.R.id.tabhost)
         val tabWidget = view.find<TabWidget>(android.R.id.tabs)
@@ -146,6 +150,7 @@ class PostFragment : BaseDialogFragment() {
         result
     }
     private val argThreadId: String? by lazy { arguments?.getString(THREAD_ID) }
+    //TODO: doesn't work with lifecycle!, has to be saved
     private var argFlagUsed = false//use it just for first time
     private val argFlag: Int by lazy { arguments?.getInt(FLAG) ?: 0 }
 
@@ -224,5 +229,10 @@ class PostFragment : BaseDialogFragment() {
             (activity as? MainActivity)?.floatingButton?.showAnimated()
         }
         super.onDestroyView()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(ARG_FLAG_USED, argFlagUsed)
     }
 }
