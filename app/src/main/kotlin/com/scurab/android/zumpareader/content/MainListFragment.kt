@@ -84,7 +84,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
                 swipeToRefresh.direction = SwipyRefreshLayoutDirection.TOP
                 swipeToRefresh.setColorSchemeColors(requireContext().getColorFromTheme(R.attr.contextColor))
                 recyclerView.apply {
-                    layoutManager = LinearLayoutManager(inflater.context, LinearLayoutManager.VERTICAL, false)
+                    layoutManager = LinearLayoutManager(inflater.context, RecyclerView.VERTICAL, false)
                 }
             }
         }
