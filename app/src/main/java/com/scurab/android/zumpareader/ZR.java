@@ -2,7 +2,7 @@ package com.scurab.android.zumpareader;
 
 public final class ZR {
     public static final class Constants {
-        public static final String ZUMPA_MAIN_URL = "http://portal2.dkm.cz";
+        public static final String ZUMPA_MAIN_URL = "https://zunpa.cz";
         public static final String ZUMPA_WS_MAIN_URL = "http://zumpaws.scurab.com:8104";
         public static final String ZUMPA_PHP_MAIN_URL = "http://zumpareader.scurab.com";
         public static final String ENCODING = "ISO-8859-2";
