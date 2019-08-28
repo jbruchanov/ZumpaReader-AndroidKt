@@ -59,7 +59,7 @@ public class ZumpaSimpleParser {
     private static final Pattern URL_PATTERN2 = Pattern.compile(">?(http[s]?://[^<\"\\s]*)<?", Pattern.CASE_INSENSITIVE);
     private static final Pattern DATE_PATTERN = Pattern.compile("Datum:&nbsp;([^<]+)", Pattern.CASE_INSENSITIVE);
     private static Pattern SURVEY_RESPONSE_PATTERN = Pattern.compile("\\((\\d*) odp.\\)", Pattern.CASE_INSENSITIVE);
-    private static Pattern ZUMPA_LINK = Pattern.compile("portal2.dkm.cz/phorum/read.php.*t=(\\d+)", Pattern.CASE_INSENSITIVE);
+    private static Pattern ZUMPA_LINK = Pattern.compile("zunpa.cz/phorum/read.php.*t=(\\d+)", Pattern.CASE_INSENSITIVE);
     private static Pattern IMG_OBJECT = Pattern.compile("<img.*src=\"([^\"]*)\"", Pattern.CASE_INSENSITIVE);
     private static Pattern USER_ID_PATTERN = Pattern.compile("profile.php\\?uid=([a-z0-9]*)'", Pattern.CASE_INSENSITIVE);
     private String mUserName;
