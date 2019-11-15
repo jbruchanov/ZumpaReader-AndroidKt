@@ -1,5 +1,6 @@
 package com.scurab.android.zumpareader
 
+import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -15,8 +16,11 @@ import android.view.ContextThemeWrapper
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.scurab.android.zumpareader.app.MainActivity
+import com.scurab.android.zumpareader.extension.app
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.util.obtainStyledColor
+import io.reactivex.Observable
+import io.reactivex.schedulers.Schedulers
 import org.jetbrains.anko.notificationManager
 
 private const val ZUMPA_CHANNEL = "Zumpa"
@@ -26,14 +30,40 @@ class MyFirebaseService : FirebaseMessagingService() {
     private val VIBRATE_TEMPLATE = longArrayOf(100L, 600L, 200L, 200L, 200L, 200L)
     private val NOTIFY_ID = 974561
 
-    override fun onMessageReceived(msg: RemoteMessage?) {
-        Log.i("MyFirebaseService","Received")
-        msg?.data?.let { n ->
+    override fun onMessageReceived(msg: RemoteMessage) {
+        Log.i("MyFirebaseService", "Received")
+        msg.data.let { n ->
             try {
                 onReceiveMessage(n.getValue("subject") ?: "", n.getValue("body"))
             } catch (e: Throwable) {
                 e.printStackTrace()
             }
+        }
+    }
+
+    @SuppressLint("CheckResult")
+    override fun onNewToken(token: String) {
+        super.onNewToken(token)
+        //we need to
+        val app = baseContext.app()
+        val userName = app.zumpaPrefs.loggedUserName
+        if (userName != null) {
+            Observable.fromCallable {
+                val body = app.zumpaAPI.getMainPageHtml().execute().body()!!.asString()
+                app.zumpaPrefs.loggedUserName
+                val uid = ZumpaSimpleParser.parseUID(body)
+                if (uid != null) {
+                    val response = app.zumpaPHPAPI.register(userName, uid, token).execute().body()!!.asUTFString()
+                    Log.i("MyFirebaseService", "Result:" + ("[OK]" == response))
+                }
+            }.subscribeOn(Schedulers.io())
+                    .subscribe({
+                        //ok we are done, nothing to do here
+                    }, {
+                        //just ignore it
+                        Log.i("MyFirebaseService", "Unable to send newToken to server")
+                        it.printStackTrace()
+                    })
         }
     }
 

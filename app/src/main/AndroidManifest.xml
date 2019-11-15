@@ -70,13 +70,18 @@
             android:name="io.fabric.ApiKey"
             android:value="1dcf380e1e5890c2c982152db1933ee9d7e8bde8" />
 
+        <!--android:permission="com.google.android.c2dm.permission.SEND"-->
         <service android:name=".MyFirebaseService"
-            android:permission="com.google.android.c2dm.permission.SEND">
+            android:exported="true">
             <intent-filter>
                 <!--<action android:name="com.google.android.c2dm.intent.RECEIVE" />-->
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="@string/default_notification_channel_id" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

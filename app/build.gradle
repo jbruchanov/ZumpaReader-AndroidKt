@@ -81,9 +81,9 @@ task(depsize) {
 
 dependencies {
     //compile fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.google.firebase:firebase-messaging:17.6.0'
+    implementation 'com.google.firebase:firebase-messaging:20.0.1'
 
-    def androidx = "1.0.2"
+    def androidx = "1.1.0"
     def material = "1.0.0"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "androidx.appcompat:appcompat:$androidx"
@@ -146,5 +146,5 @@ dependencies {
     testImplementation('com.squareup:fest-android:1.0.8') {
         exclude module: 'support-v4'//some weird incompatibility issue
     }
-    testImplementation 'org.mockito:mockito-core:2.11.0'
+    testImplementation 'org.mockito:mockito-core:2.23.0'
 }

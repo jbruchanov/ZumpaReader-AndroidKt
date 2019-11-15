@@ -79,7 +79,7 @@ abstract class BaseFragment : RxFragment() {
         isLoading = false
     }
 
-    override fun onAttach(context: Context?) {
+    override fun onAttach(context: Context) {
         super.onAttach(context)
         _zumpaData = zumpaApp.zumpaData
     }

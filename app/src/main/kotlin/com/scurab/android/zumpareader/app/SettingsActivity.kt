@@ -188,16 +188,18 @@ private class LoginCall(private val zumpaApp: ZumpaReaderApp, private val zumpaL
                     .addOnCompleteListener { task ->
                         Observable
                                 .fromCallable {
-                                    // Get new Instance ID token
-                                    val token = task.result?.token
-                                    zumpaApp.zumpaPrefs.pushRegId = token
                                     var pushResult = false
-                                    if (token != null && loginResult) {
-                                        val body = api.getMainPageHtml().execute().body()!!.asString()
-                                        val uid = ZumpaSimpleParser.parseUID(body)
-                                        if (uid != null) {
-                                            val response = zumpaApp.zumpaPHPAPI.register(zumpaLoginBody.nick, uid, token).execute().body()!!.asUTFString()
-                                            pushResult = "[OK]" == response
+                                    if(task.isSuccessful) {
+                                        // Get new Instance ID token
+                                        val token = task.result?.token
+                                        zumpaApp.zumpaPrefs.pushRegId = token
+                                        if (token != null && loginResult) {
+                                            val body = api.getMainPageHtml().execute().body()!!.asString()
+                                            val uid = ZumpaSimpleParser.parseUID(body)
+                                            if (uid != null) {
+                                                val response = zumpaApp.zumpaPHPAPI.register(zumpaLoginBody.nick, uid, token).execute().body()!!.asUTFString()
+                                                pushResult = "[OK]" == response
+                                            }
                                         }
                                     }
                                     Pair(loginResult, pushResult)
@@ -210,7 +212,7 @@ private class LoginCall(private val zumpaApp: ZumpaReaderApp, private val zumpaL
                     }
         } catch (e: Throwable) {
             e.printStackTrace()
-            observer.onError(e)
+            observer.onSuccess(Pair(loginResult, false))
         }
     }
 }

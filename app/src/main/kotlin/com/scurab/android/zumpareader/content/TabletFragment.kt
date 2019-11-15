@@ -27,6 +27,6 @@ class TabletFragment : BaseFragment() {
     }
 
     override fun onFloatingButtonClick() {
-        PostFragment().show(fragmentManager, "PostFragment")
+        PostFragment().show(requireFragmentManager(), "PostFragment")
     }
 }
