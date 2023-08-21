@@ -4,15 +4,14 @@ import android.animation.Animator
 import android.animation.ObjectAnimator
 import android.content.Context
 import android.os.Build
-import com.google.android.material.appbar.AppBarLayout
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import androidx.core.view.ViewCompat
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewAnimationUtils
 import android.view.ViewGroup
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import com.scurab.android.zumpareader.R
+import androidx.core.view.ViewCompat
+import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.util.ZumpaPrefs
 

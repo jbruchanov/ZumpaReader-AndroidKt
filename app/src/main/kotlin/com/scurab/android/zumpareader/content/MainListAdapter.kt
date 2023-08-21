@@ -11,7 +11,7 @@ import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.ui.DelayClickListener
 import com.scurab.android.zumpareader.widget.ToggleAdapter
 import com.scurab.android.zumpareader.widget.ToggleViewHolder
-import org.jetbrains.anko.find
+
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -55,7 +55,7 @@ class MainListAdapter : ToggleAdapter<MainListAdapter.ZumpaThreadViewHolder> {
 
     fun setSelectedItem(thread: ZumpaThread?, position: Int) {
         if (selectedItem != null && ownerRecyclerView != null) {
-            val rv = ownerRecyclerView!!
+            val rv = ownerRecyclerView ?: return
             for (i in 0..rv.childCount) {
                 val childAt = rv.getChildAt(i)
                 if (childAt != null) {
@@ -87,7 +87,7 @@ class MainListAdapter : ToggleAdapter<MainListAdapter.ZumpaThreadViewHolder> {
         dataMap.clear()
         try {
             notifyDataSetChanged()
-        } catch(e: Exception) {
+        } catch (e: Exception) {
             ownerRecyclerView?.post { notifyDataSetChanged() }
         }
     }
@@ -121,27 +121,27 @@ class MainListAdapter : ToggleAdapter<MainListAdapter.ZumpaThreadViewHolder> {
             val li = LayoutInflater.from(it.context)
             val zumpaThreadViewHolder = ZumpaThreadViewHolder(li.inflate(R.layout.item_main_list, parent, false))
             zumpaThreadViewHolder.apply {
-                content.setOnClickListener(DelayClickListener {_ ->
+                content.setOnClickListener(DelayClickListener { _ ->
                     if (isValidPosition()) {
                         dispatchItemClick(items[adapterPosition], adapterPosition, tThread)
                     }
                 })
-                favorite.setOnClickListener(DelayClickListener {_ ->
+                favorite.setOnClickListener(DelayClickListener { _ ->
                     if (isValidPosition()) {
                         dispatchItemClick(items[adapterPosition], adapterPosition, tFavorite)
                     }
                 })
-                ignore.setOnClickListener(DelayClickListener {_ ->
+                ignore.setOnClickListener(DelayClickListener { _ ->
                     if (isValidPosition()) {
                         dispatchItemClick(items[adapterPosition], adapterPosition, tIgnore)
                     }
                 })
-                share.setOnClickListener(DelayClickListener {_ ->
+                share.setOnClickListener(DelayClickListener { _ ->
                     if (isValidPosition()) {
                         dispatchItemClick(items[adapterPosition], adapterPosition, tShare)
                     }
                 })
-                content.setOnLongClickListener {_ ->
+                content.setOnLongClickListener { _ ->
                     if (isValidPosition()) {
                         dispatchItemLongClick(zumpaThreadViewHolder, items[adapterPosition], adapterPosition)
                     }
@@ -152,7 +152,7 @@ class MainListAdapter : ToggleAdapter<MainListAdapter.ZumpaThreadViewHolder> {
     }
 
     private fun ZumpaThreadViewHolder.isValidPosition() =
-            adapterPosition < items.size && adapterPosition >= 0
+        adapterPosition < items.size && adapterPosition >= 0
 
     private fun dispatchItemLongClick(vh: ZumpaThreadViewHolder, thread: ZumpaThread, position: Int) {
         onItemClickListener?.onItemClick(thread, position, tThreadLongClick)
@@ -169,14 +169,14 @@ class MainListAdapter : ToggleAdapter<MainListAdapter.ZumpaThreadViewHolder> {
 
 
     class ZumpaThreadViewHolder(view: View) : ZumpaItemViewHolder(view), ToggleViewHolder {
-        val stateBar by lazy { itemView.find<View>(R.id.item_state) }
-        val lastAuthor by lazy { itemView.find<TextView>(R.id.last_author) }
-        val isFavorite by lazy { itemView.find<ImageView>(R.id.is_favorite) }
-        val favorite by lazy { itemView.find<View>(R.id.favorite) }
-        val ignore by lazy { itemView.find<View>(R.id.ignore) }
-        val share by lazy { itemView.find<View>(R.id.share) }
-        override val content by lazy { itemView.find<View>(R.id.item_thread_content) }
-        override val menu by lazy { itemView.find<View>(R.id.item_thread_menu) }
+        val stateBar by lazy { itemView.findViewById<View>(R.id.item_state) }
+        val lastAuthor by lazy { itemView.findViewById<TextView>(R.id.last_author) }
+        val isFavorite by lazy { itemView.findViewById<ImageView>(R.id.is_favorite) }
+        val favorite by lazy { itemView.findViewById<View>(R.id.favorite) }
+        val ignore by lazy { itemView.findViewById<View>(R.id.ignore) }
+        val share by lazy { itemView.findViewById<View>(R.id.share) }
+        override val content by lazy { itemView.findViewById<View>(R.id.item_thread_content) }
+        override val menu by lazy { itemView.findViewById<View>(R.id.item_thread_menu) }
     }
 
     fun removeItem(item: ZumpaThread) {

@@ -4,15 +4,14 @@ import com.scurab.android.zumpareader.model.ZumpaBody
 import com.scurab.android.zumpareader.model.ZumpaMainPageResult
 import com.scurab.android.zumpareader.model.ZumpaThreadResult
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
-import okhttp3.MediaType
+import java.io.InputStream
+import java.lang.reflect.Type
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody
 import retrofit2.Converter
 import retrofit2.Retrofit
-import java.io.InputStream
-import java.lang.reflect.Type
 
 /**
  * Created by JBruchanov on 24/11/2015.

@@ -12,14 +12,13 @@ import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZR
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.content.SendingFragment
+import com.scurab.android.zumpareader.ext.toast
 import com.scurab.android.zumpareader.model.ZumpaLoginBody
 import com.scurab.android.zumpareader.preferences.ButtonPreference
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.util.ParseUtils
 import com.scurab.android.zumpareader.util.ZumpaPrefs
 import com.scurab.android.zumpareader.util.saveToClipboard
-import com.scurab.android.zumpareader.util.toast
-import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.SingleObserver
@@ -69,7 +68,7 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
                 override fun onClick() {
                     val msg = "DevUrl:'${Bugfender.getDeviceUrl()}'\nSessUrl:'${Bugfender.getSessionUrl()}'"
                     context.saveToClipboard(msg)
-                    context.toast(R.string.saved_into_clipboard)
+                    toast(R.string.saved_into_clipboard)
                 }
             }
             bugFender.title = "BugFender"

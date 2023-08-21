@@ -15,21 +15,20 @@ import com.scurab.android.zumpareader.content.SendingFragment
 import com.scurab.android.zumpareader.content.post.tasks.CopyFromResourcesTask
 import com.scurab.android.zumpareader.content.post.tasks.ProcessImageTask
 import com.scurab.android.zumpareader.drawable.SimpleProgressDrawable
+import com.scurab.android.zumpareader.ext.toast
 import com.scurab.android.zumpareader.extension.app
 import com.scurab.android.zumpareader.util.asVisibility
 import com.scurab.android.zumpareader.util.saveToClipboard
-import com.scurab.android.zumpareader.util.toast
 import com.scurab.android.zumpareader.widget.PostImagePanelView
 import com.squareup.picasso.Picasso
 import com.trello.rxlifecycle2.components.support.RxFragment
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import java.io.File
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
-import org.jetbrains.anko.find
-import java.io.File
 
 
 /**
@@ -54,11 +53,11 @@ class PostImageFragment : RxFragment(), SendingFragment {
     override var sendingDialog: ProgressDialog? = null
 
     private val image: ImageView get() {
-        return requireView().find(R.id.image)
+        return requireView().findViewById(R.id.image)
     }
 
     private val imagePanel: PostImagePanelView get() {
-        return requireView().find(R.id.post_image_panel_view)
+        return requireView().findViewById(R.id.post_image_panel_view)
     }
 
     private val imageUri by lazy { arguments?.getParcelable<Uri>(Intent.EXTRA_STREAM) ?: throw NullPointerException("Arguments") }
@@ -110,7 +109,7 @@ class PostImageFragment : RxFragment(), SendingFragment {
                 imagePanel.copy.visibility = (imageUploadedLink != null).asVisibility()
             }
         } catch (e: Throwable) {
-            context.toast(e.message)
+            toast(e.message)
         }
         imagePanel.upload.setOnClickListener { dispatchUpload() }
         imagePanel.resize.setOnClickListener { onImageResize() }
@@ -122,7 +121,7 @@ class PostImageFragment : RxFragment(), SendingFragment {
         val context = requireContext()
         imageUploadedLink.let {
             context.saveToClipboard(Uri.parse(it))
-            context.toast(R.string.saved_into_clipboard)
+            toast(R.string.saved_into_clipboard)
         }
     }
 
@@ -183,18 +182,18 @@ class PostImageFragment : RxFragment(), SendingFragment {
                         imageUploadedLink = url
                         dispatchImageUploaded(url)
                     } else {
-                        context.toast(R.string.err_fail)
+                        toast(R.string.err_fail)
                     }
                 }, { err ->
                     err.printStackTrace()
-                    context.toast(R.string.err_fail)
+                    toast(R.string.err_fail)
                 })
     }
 
     protected fun dispatchImageUploaded(result: String) {
         (parentFragment as? PostFragment)?.apply {
             onSharedImage(result)
-            requireContext().toast(R.string.done)
+            toast(R.string.done)
         }
     }
 

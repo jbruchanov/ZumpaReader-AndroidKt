@@ -4,11 +4,11 @@ import android.app.Activity
 import android.content.Context
 import android.os.Build
 import android.os.Looper
+import android.view.View
+import android.view.inputmethod.InputMethodManager
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
-import android.view.View
-import android.view.inputmethod.InputMethodManager
 import com.scurab.android.zumpareader.BuildConfig
 import com.scurab.android.zumpareader.ZumpaReaderApp
 

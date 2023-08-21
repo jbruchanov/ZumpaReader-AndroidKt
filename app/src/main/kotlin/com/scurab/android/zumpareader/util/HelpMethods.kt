@@ -1,12 +1,12 @@
 package com.scurab.android.zumpareader.util
 
+import android.app.ActivityManager
 import android.content.Context
+import android.content.Context.ACTIVITY_SERVICE
 import android.net.Uri
 import com.facebook.imagepipeline.common.ResizeOptions
 import com.facebook.imagepipeline.request.ImageRequest
 import com.facebook.imagepipeline.request.ImageRequestBuilder
-import android.content.Context.ACTIVITY_SERVICE
-import android.app.ActivityManager
 
 
 /**

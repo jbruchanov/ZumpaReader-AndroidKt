@@ -2,14 +2,14 @@ package com.scurab.android.zumpareader.content
 
 import android.app.Activity
 import android.graphics.drawable.Animatable
-import androidx.annotation.ColorInt
-import androidx.annotation.Nullable
-import androidx.recyclerview.widget.RecyclerView
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import androidx.annotation.ColorInt
+import androidx.annotation.Nullable
+import androidx.recyclerview.widget.RecyclerView
 import com.facebook.drawee.backends.pipeline.Fresco
 import com.facebook.drawee.controller.BaseControllerListener
 import com.facebook.drawee.view.SimpleDraweeView
@@ -17,13 +17,12 @@ import com.facebook.imagepipeline.image.ImageInfo
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.model.SurveyItem
 import com.scurab.android.zumpareader.model.ZumpaThreadItem
-import com.scurab.android.zumpareader.util.find
+import com.scurab.android.zumpareader.util.findViewById
 import com.scurab.android.zumpareader.util.isImageUri
 import com.scurab.android.zumpareader.util.scaledImageRequest
 import com.scurab.android.zumpareader.widget.SurveyView
 import com.scurab.android.zumpareader.widget.ToggleAdapter
 import com.scurab.android.zumpareader.widget.ToggleViewHolder
-import org.jetbrains.anko.find
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -213,19 +212,19 @@ class SubListAdapter : ToggleAdapter<ZumpaSubItemViewHolder> {
 private data class SubListItem(val item: ZumpaThreadItem, val itemPosition: Int, var type: Int, val data: String?)
 
 class ZumpaSubItemViewHolder(val adapter: SubListAdapter, val view: View) : ZumpaItemViewHolder(view), ToggleViewHolder {
-    override val content by lazy { itemView.find<View>(R.id.item_content) }
-    override val menu by lazy { itemView.find<View>(R.id.item_menu) }
-    internal val button by lazy { find<Button>(R.id.button) }
-    internal val imageView by lazy { find<SimpleDraweeView>(R.id.image) }
-    internal val imageViewOverlay by lazy { find<View>(R.id.overlay) }
+    override val content by lazy { itemView.findViewById<View>(R.id.item_content) }
+    override val menu by lazy { itemView.findViewById<View>(R.id.item_menu) }
+    internal val button by lazy { findViewById<Button>(R.id.button) }
+    internal val imageView by lazy { findViewById<SimpleDraweeView>(R.id.image) }
+    internal val imageViewOverlay by lazy { findViewById<View>(R.id.overlay) }
     internal var url: String? = null
     internal var loadedUrl: String? = null
     internal var hasFailed: Boolean = false
     internal val surveyView by lazy { view as SurveyView }
 
-    internal val menuReply by lazy {itemView.find<View>(R.id.reply)}
-    internal val menuCopy by lazy {itemView.find<View>(R.id.copy)}
-    internal val menuSpeak by lazy {itemView.find<View>(R.id.speak)}
+    internal val menuReply by lazy {itemView.findViewById<View>(R.id.reply)}
+    internal val menuCopy by lazy {itemView.findViewById<View>(R.id.copy)}
+    internal val menuSpeak by lazy {itemView.findViewById<View>(R.id.speak)}
 
     fun loadImage(url: String) {
         if (url == loadedUrl) {

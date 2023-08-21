@@ -2,9 +2,9 @@ package com.scurab.android.zumpareader.app
 
 import android.content.Context
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.MenuItem
 import android.view.View
+import androidx.fragment.app.Fragment
 import com.scurab.android.zumpareader.BusProvider
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp

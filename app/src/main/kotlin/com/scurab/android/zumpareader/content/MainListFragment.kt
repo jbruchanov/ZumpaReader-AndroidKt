@@ -2,9 +2,14 @@ package com.scurab.android.zumpareader.content
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import android.view.*
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection
 import com.scurab.android.zumpareader.BusProvider
@@ -15,19 +20,20 @@ import com.scurab.android.zumpareader.app.SettingsActivity
 import com.scurab.android.zumpareader.content.post.PostFragment
 import com.scurab.android.zumpareader.event.DialogEvent
 import com.scurab.android.zumpareader.event.LoadThreadEvent
+import com.scurab.android.zumpareader.ext.toast
 import com.scurab.android.zumpareader.model.ZumpaGenericResponse
 import com.scurab.android.zumpareader.model.ZumpaMainPageResult
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.model.ZumpaToggleBody
 import com.scurab.android.zumpareader.ui.hideAnimated
 import com.scurab.android.zumpareader.ui.showAnimated
-import com.scurab.android.zumpareader.util.*
+import com.scurab.android.zumpareader.util.asListOfValues
+import com.scurab.android.zumpareader.util.getColorFromTheme
+import com.scurab.android.zumpareader.util.ifNull
 import com.scurab.android.zumpareader.widget.ToggleAdapter
 import com.squareup.otto.Subscribe
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import org.jetbrains.anko.find
-import org.jetbrains.anko.support.v4.toast
 
 /**
  * Created by JBruchanov on 24/11/2015.
@@ -35,8 +41,8 @@ import org.jetbrains.anko.support.v4.toast
 open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener, IsReloadable {
 
     private var content: View? = null
-    private val recyclerView: RecyclerView get() = content!!.find(R.id.recycler_view)
-    private val swipeToRefresh: SwipyRefreshLayout get() = content!!.find(R.id.swipe_refresh_layout)
+    private val recyclerView: RecyclerView get() = content!!.findViewById(R.id.recycler_view)
+    private val swipeToRefresh: SwipyRefreshLayout get() = content!!.findViewById(R.id.swipe_refresh_layout)
     private var lastFilter: String = ""
     private var lastOffline: Boolean? = null
     private var invalidateOptionsMenu = false

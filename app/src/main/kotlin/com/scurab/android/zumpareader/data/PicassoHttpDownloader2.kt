@@ -10,10 +10,10 @@ import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.util.ParseUtils
 import com.scurab.android.zumpareader.util.ZumpaPrefs
 import com.squareup.picasso.Downloader
-import okhttp3.OkHttpClient
-import okhttp3.Request
 import java.io.File
 import java.io.FileOutputStream
+import okhttp3.OkHttpClient
+import okhttp3.Request
 
 /**
  * Created by JBruchanov on 24/11/2016.

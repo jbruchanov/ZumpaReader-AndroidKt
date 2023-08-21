@@ -3,28 +3,31 @@ package com.scurab.android.zumpareader.app
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import androidx.coordinatorlayout.widget.CoordinatorLayout
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentTransaction
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
 import android.view.View
 import android.widget.ProgressBar
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
+import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentTransaction
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
-import com.scurab.android.zumpareader.content.MainListFragment
 import com.scurab.android.zumpareader.content.IsReloadable
+import com.scurab.android.zumpareader.content.MainListFragment
 import com.scurab.android.zumpareader.content.SubListFragment
 import com.scurab.android.zumpareader.content.TabletFragment
 import com.scurab.android.zumpareader.content.post.PostFragment
+import com.scurab.android.zumpareader.ext.toast
 import com.scurab.android.zumpareader.ui.DelayClickListener
 import com.scurab.android.zumpareader.ui.QuickHideBehavior
 import com.scurab.android.zumpareader.ui.hideAnimated
 import com.scurab.android.zumpareader.ui.showAnimated
-import com.scurab.android.zumpareader.util.*
-import org.jetbrains.anko.find
-import org.jetbrains.anko.findOptional
+import com.scurab.android.zumpareader.util.hideKeyboard
+import com.scurab.android.zumpareader.util.ifNull
+import com.scurab.android.zumpareader.util.lastNonNullFragment
+import com.scurab.android.zumpareader.util.obtainStyledColor
+import com.scurab.android.zumpareader.util.wrapWithTint
 
 /**
  * Created by JBruchanov on 24/11/2015.
@@ -37,10 +40,10 @@ class MainActivity : AppCompatActivity() {
         val EXTRA_THREAD_ID = "ThreadID"
     }
 
-    private val toolbar by lazy { find<Toolbar>(R.id.toolbar) }
-    private val progressBar by lazy { find<ProgressBar>(R.id.progress_bar) }
-    private val coordinatorLayout by lazy { find<CoordinatorLayout>(R.id.coordinator_layout) }
-    private val _floatingButton by lazy { findOptional<FloatingActionButton>(R.id.fab) }
+    private val toolbar by lazy { findViewById<Toolbar>(R.id.toolbar) }
+    private val progressBar by lazy { findViewById<ProgressBar>(R.id.progress_bar) }
+    private val coordinatorLayout by lazy { findViewById<CoordinatorLayout>(R.id.coordinator_layout) }
+    private val _floatingButton by lazy { findViewById<FloatingActionButton?>(R.id.fab) }
     private val isTablet by lazy { resources.getBoolean(R.bool.is_tablet) }
 
     val floatingButton: FloatingActionButton get() = _floatingButton!!

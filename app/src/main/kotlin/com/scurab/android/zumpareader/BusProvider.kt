@@ -1,7 +1,6 @@
 package com.scurab.android.zumpareader
 
 import com.squareup.otto.Bus
-import java.util.*
 
 /**
  * Created by JBruchanov on 19/01/2016.

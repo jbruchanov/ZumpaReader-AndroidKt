@@ -1,8 +1,8 @@
 package com.scurab.android.zumpareader.widget
 
-import androidx.recyclerview.widget.RecyclerView
 import android.view.View
 import android.view.animation.DecelerateInterpolator
+import androidx.recyclerview.widget.RecyclerView
 
 abstract class ToggleAdapter<VH : RecyclerView.ViewHolder> : RecyclerView.Adapter<VH>() {
 

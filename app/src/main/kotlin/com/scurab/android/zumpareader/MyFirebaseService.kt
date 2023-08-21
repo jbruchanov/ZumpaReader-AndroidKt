@@ -9,19 +9,19 @@ import android.content.Context
 import android.content.Intent
 import android.media.RingtoneManager
 import android.os.Build
-import androidx.core.app.NotificationCompat
 import android.text.Html
 import android.util.Log
 import android.view.ContextThemeWrapper
+import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.scurab.android.zumpareader.app.MainActivity
+import com.scurab.android.zumpareader.ext.notificationManager
 import com.scurab.android.zumpareader.extension.app
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.util.obtainStyledColor
 import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
-import org.jetbrains.anko.notificationManager
 
 private const val ZUMPA_CHANNEL = "Zumpa"
 

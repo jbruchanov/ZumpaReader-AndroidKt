@@ -5,11 +5,10 @@ import android.graphics.BitmapFactory
 import android.graphics.Point
 import android.text.Html
 import com.scurab.android.zumpareader.model.ZumpaGenericResponse
+import java.security.MessageDigest
+import java.util.regex.Pattern
 import okhttp3.Headers
 import retrofit2.Response
-import java.security.MessageDigest
-import java.util.*
-import java.util.regex.Pattern
 
 /**
  * Created by JBruchanov on 25/11/2015.

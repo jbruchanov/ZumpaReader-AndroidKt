@@ -11,7 +11,7 @@ import android.widget.TextView
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.model.Survey
 import com.scurab.android.zumpareader.model.SurveyItem
-import org.jetbrains.anko.find
+
 
 /**
  * Created by JBruchanov on 13/01/2016.
@@ -22,8 +22,8 @@ class SurveyView : FrameLayout {
         fun onItemClick(item: SurveyItem)
     }
 
-    private val content by lazy { find<ViewGroup>(R.id.content) }
-    private val surveyText by lazy { find<TextView>(R.id.survey_text) }
+    private val content by lazy { findViewById<ViewGroup>(R.id.content) }
+    private val surveyText by lazy { findViewById<TextView>(R.id.survey_text) }
     private val buttonCount: Int get() {
         return content.childCount - 1
     }

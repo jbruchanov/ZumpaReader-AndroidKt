@@ -1,10 +1,10 @@
 package com.scurab.android.zumpareader.data
 
 import com.scurab.android.zumpareader.model.ZumpaGenericResponse
-import okhttp3.ResponseBody
-import retrofit2.Converter
 import java.io.ByteArrayOutputStream
 import java.io.IOException
+import okhttp3.ResponseBody
+import retrofit2.Converter
 
 /**
  * Created by JBruchanov on 24/11/2015.

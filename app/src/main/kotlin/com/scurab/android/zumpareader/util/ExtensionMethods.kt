@@ -10,19 +10,19 @@ import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import androidx.annotation.*
-import androidx.fragment.app.Fragment
-import androidx.core.graphics.drawable.DrawableCompat
-import androidx.recyclerview.widget.RecyclerView
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewTreeObserver
 import android.view.inputmethod.InputMethodManager
 import android.widget.ImageButton
 import android.widget.ImageView
-import android.widget.Toast
+import androidx.annotation.*
+import androidx.core.graphics.drawable.DrawableCompat
+import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.RecyclerView
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZR
+import com.scurab.android.zumpareader.ext.toast
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.InputStream
@@ -34,7 +34,7 @@ import java.util.*
  */
 
 @Suppress("UNCHECKED_CAST")
-fun <T : View> RecyclerView.ViewHolder.find(@IdRes resId: Int): T {
+fun <T : View> RecyclerView.ViewHolder.findViewById(@IdRes resId: Int): T {
     return itemView.findViewById<View>(resId) as T? ?: throw NullPointerException("Unable to find view with id:'%s'".format(resId))
 }
 
@@ -56,16 +56,6 @@ private val typedValue = TypedValue()
 fun Context.obtainStyledColor(attr: Int): Int {
     theme.resolveAttribute(attr, typedValue, true)
     return typedValue.data
-}
-
-fun Context.toast(@StringRes msgRes: Int) {
-    toast(resources.getString(msgRes))
-}
-
-fun Context.toast(msg: String?) {
-    if (msg != null) {
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
-    }
 }
 
 fun Drawable.wrapWithTint(color: Int): Drawable {

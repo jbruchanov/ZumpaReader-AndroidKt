@@ -70,11 +70,6 @@ dependencies {
     }
     implementation(libs.bundles.android.base)
 
-
-    implementation 'org.jetbrains.anko:anko-sdk15:0.8.3'
-    implementation 'org.jetbrains.anko:anko-support-v4:0.8.3'
-    implementation 'org.jetbrains.anko:anko-appcompat-v7:0.8.3'
-
     implementation 'org.jsoup:jsoup:1.10.3'
 
     def square = "4.4.0"

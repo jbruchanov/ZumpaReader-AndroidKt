@@ -3,8 +3,7 @@ package com.scurab.android.zumpareader.util
 import android.content.Context
 import android.content.SharedPreferences
 import com.scurab.android.zumpareader.ZR
-import org.jetbrains.anko.defaultSharedPreferences
-import java.util.*
+import com.scurab.android.zumpareader.ext.defaultSharedPreferences
 
 /**
  * Created by JBruchanov on 29/12/2015.

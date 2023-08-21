@@ -1,6 +1,9 @@
 package com.scurab.android.zumpareader.data
 
 import android.os.AsyncTask
+import com.facebook.datasource.DataSources
+import com.facebook.drawee.backends.pipeline.Fresco
+import com.facebook.imagepipeline.request.ImageRequest
 import com.github.salomonbrys.kotson.bool
 import com.github.salomonbrys.kotson.long
 import com.github.salomonbrys.kotson.string
@@ -17,10 +20,6 @@ import com.scurab.android.zumpareader.util.isImageUri
 import java.io.ByteArrayInputStream
 import java.io.FileOutputStream
 import java.io.InputStreamReader
-import java.util.*
-import com.facebook.datasource.DataSources
-import com.facebook.drawee.backends.pipeline.Fresco
-import com.facebook.imagepipeline.request.ImageRequest
 
 
 /**

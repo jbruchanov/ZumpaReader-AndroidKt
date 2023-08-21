@@ -1,14 +1,13 @@
 package com.scurab.android.zumpareader.data
 
 import com.scurab.android.zumpareader.model.ZumpaWSBody
-import okhttp3.MediaType
+import java.lang.reflect.Type
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody
 import retrofit2.Converter
 import retrofit2.Retrofit
-import java.lang.reflect.Type
 
 /**
  * Created by JBruchanov on 24/11/2015.

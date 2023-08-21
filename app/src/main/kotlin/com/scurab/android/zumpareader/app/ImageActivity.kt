@@ -4,8 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import android.widget.ImageView
+import androidx.appcompat.app.AppCompatActivity
 import com.bogdwellers.pinchtozoom.ImageMatrixTouchHandler
 import com.facebook.common.executors.CallerThreadExecutor
 import com.facebook.common.memory.PooledByteBuffer
@@ -20,7 +20,6 @@ import com.facebook.imagepipeline.image.CloseableStaticBitmap
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.util.scaledImageRequest
 import com.scurab.android.zumpareader.util.startLinkActivity
-import org.jetbrains.anko.imageBitmap
 
 /**
  * Created by Scurab on 08/09/2017.
@@ -59,7 +58,7 @@ class ImageActivity : AppCompatActivity() {
                 if (dataSource.isFinished) {
                     val bitmap = (dataSource.result?.get() as? CloseableStaticBitmap)?.underlyingBitmap
                     if (bitmap != null) {
-                        imageView.imageBitmap = bitmap
+                        imageView.setImageBitmap(bitmap)
                     } else {
                         loadImage(url)
                     }
@@ -90,7 +89,7 @@ class ImageActivity : AppCompatActivity() {
                                 if (bitmap == null) {
                                     onOpenLinkOnError(url)
                                 } else {
-                                    imageView.imageBitmap = bitmap
+                                    imageView.setImageBitmap(bitmap)
                                 }
                             } catch (t: Throwable) {
                                 onOpenLinkOnError(url)
