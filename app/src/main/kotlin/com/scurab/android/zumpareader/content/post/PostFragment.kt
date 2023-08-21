@@ -168,7 +168,6 @@ class PostFragment : BaseDialogFragment() {
                 when (argFlag) {
                     R.id.photo -> onPhotoClick()
                     R.id.camera -> onCameraClick()
-                    R.id.giphy -> onGiphyClick()
                 }
             })
         }
@@ -202,14 +201,6 @@ class PostFragment : BaseDialogFragment() {
             app().zumpaPrefs.lastCameraUri = photoURI.toString()
             intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
             startActivityForResult(intent, REQ_CODE_CAMERA)
-        } catch(e: Exception) {
-            requireContext().toast(R.string.err_fail)
-        }
-    }
-
-    fun onGiphyClick() {
-        try {
-            startActivityForResult(Intent(context, GiphyActivity::class.java), REQ_CODE_GIPHY)
         } catch(e: Exception) {
             requireContext().toast(R.string.err_fail)
         }
