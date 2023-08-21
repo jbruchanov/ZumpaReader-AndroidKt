@@ -5,7 +5,6 @@ import android.content.Context
 import android.os.Bundle
 import android.preference.CheckBoxPreference
 import android.preference.PreferenceActivity
-import com.bugfender.sdk.Bugfender
 import com.google.firebase.messaging.FirebaseMessaging
 import com.scurab.android.zumpareader.BuildConfig
 import com.scurab.android.zumpareader.R
@@ -62,20 +61,6 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
         buttonPref.title = resources.getString(if (zumpaApp.zumpaPrefs.isLoggedIn) R.string.logout else R.string.login)
         filterPref.isEnabled = zumpaApp.zumpaPrefs.isLoggedIn
         showLastAuthorPref.isEnabled = zumpaApp.zumpaPrefs.isLoggedIn
-
-        if (BuildConfig.DEBUG) {
-            val bugFender: ButtonPreference = object : ButtonPreference(this, null) {
-                override fun onClick() {
-                    val msg = "DevUrl:'${Bugfender.getDeviceUrl()}'\nSessUrl:'${Bugfender.getSessionUrl()}'"
-                    context.saveToClipboard(msg)
-                    toast(R.string.saved_into_clipboard)
-                }
-            }
-            bugFender.title = "BugFender"
-            bugFender.summary = "DevUrl:'${Bugfender.getDeviceUrl()}'\nSessUrl:'${Bugfender.getSessionUrl()}'"
-            preferenceScreen.addPreference(bugFender)
-        }
-
     }
 
     protected fun dispatchLogoutClicked() {
