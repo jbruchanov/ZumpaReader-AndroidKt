@@ -11,6 +11,7 @@ android-room = ["androidx-room-base", "androidx-room-runtime"]
 android-test = ["androidx-test-runner", "androidx-test-rules", "androidx-test-junit", "androidx-test-espresso", "androidx-test-compose"]
 android-navigation = ["androidx-navigation-fragment", "androidx-navigation-runtime", "androidx-navigation-ui"]
 groupie = ["groupie-base", "groupie-viewbinding"]
+okhttp = ["okhttp-base", "okhttp-logging", "okhttp-urlconnection"]
 unittests-jvm = ["sleepwave-test-util", "jetbrains-coroutines-test", "junit-jupiter-api", "junit-jupiter-engine", "junit-jupiter-params", "mockk", "truth", "turbine"]
 sleepwave-audiodsp = ["sleepwave-audio", "sleepwave-dsp", "sleepwave-iosapi"]
 
@@ -82,6 +83,7 @@ google-ksp = "1.9.0-1.0.13"
 groupie = "2.9.0"
 gson = "2.10.1"
 jsonorg = "20230618"
+jsoup = "1.10.3"
 junit = "5.10.0"
 ktlint = "0.50.0"
 ktlintplugin = "11.5.1"
@@ -91,6 +93,7 @@ kotlinx-json = "1.5.1"
 leakcanary = "2.7"
 lottie = "6.1.0"
 mockk = "1.13.5"
+okhttp = "4.4.0"
 threetenbp = "1.4.6"
 sqlitejdbc = "3.42.0.0"
 stickylayoutmanager = "1.0.1"
@@ -149,12 +152,16 @@ groupie-base = { module = "com.xwray:groupie", version.ref = "groupie" }
 groupie-viewbinding = { module = "com.xwray:groupie-viewbinding", version.ref = "groupie" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 jsonorg = { module = "org.json:json", version.ref = "jsonorg" }
+jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 koin = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-json" }
 leakcanary = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanary" }
 lottie = { module = "com.airbnb.android:lottie-compose", version.ref = "lottie" }
+okhttp-base = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+okhttp-urlconnection = { module = "com.squareup.okhttp3:okhttp-urlconnection", version.ref = "okhttp" }
+okhttp-logging = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "okhttp" }
 sleepwave-audio = { module = "com.sleepwave:audio", version.ref = "sleepwave-audio" }
 sleepwave-iosapi = { module = "com.sleepwave:android-ios-api", version.ref = "sleepwave-iosapi" }
 sleepwave-dsp = { module = "com.sleepwave:dsp", version.ref = "sleepwave-dsp" }

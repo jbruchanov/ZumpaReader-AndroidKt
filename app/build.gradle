@@ -69,13 +69,8 @@ dependencies {
         implementation("com.google.firebase:firebase-$it-ktx")
     }
     implementation(libs.bundles.android.base)
-
-    implementation 'org.jsoup:jsoup:1.10.3'
-
-    def square = "4.4.0"
-    implementation "com.squareup.okhttp3:okhttp:${square}"
-    implementation "com.squareup.okhttp3:okhttp-urlconnection:${square}"
-    implementation "com.squareup.okhttp3:logging-interceptor:${square}"
+    implementation(libs.jsoup)
+    implementation(libs.bundles.okhttp)
 
     def retrofit = "2.4.0"
     implementation "com.squareup.retrofit2:retrofit:$retrofit"
