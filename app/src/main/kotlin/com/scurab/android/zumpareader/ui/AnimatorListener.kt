@@ -8,29 +8,29 @@ import android.view.View
  * Created by JBruchanov on 25/11/2015.
  */
 open class AnimatorListener : Animator.AnimatorListener, ViewPropertyAnimatorListener {
-    override fun onAnimationEnd(view: View?) {
+    override fun onAnimationEnd(view: View) {
         onAnimationEnd(view, null)
     }
 
-    override fun onAnimationStart(view: View?) {
+    override fun onAnimationStart(view: View) {
         onAnimationStart(view, null)
     }
 
-    override fun onAnimationCancel(view: View?) {
+    override fun onAnimationCancel(view: View) {
     }
 
-    override fun onAnimationEnd(animation: Animator?) {
+    override fun onAnimationEnd(animation: Animator) {
         onAnimationEnd(null, animation)
     }
 
-    override fun onAnimationStart(animation: Animator?) {
+    override fun onAnimationStart(animation: Animator) {
         onAnimationStart(null, animation)
     }
 
-    override fun onAnimationRepeat(animation: Animator?) {
+    override fun onAnimationRepeat(animation: Animator) {
     }
 
-    override fun onAnimationCancel(animation: Animator?) {
+    override fun onAnimationCancel(animation: Animator) {
 
     }
 

@@ -37,8 +37,8 @@ class ImageActivity : AppCompatActivity() {
         }
     }
 
-    private val url: String by lazy { intent.getStringExtra(kUrl) }
-    private lateinit var imageView : ImageView
+    private val url: String by lazy { requireNotNull(intent.getStringExtra(kUrl)) { "Null intent.getStringExtra(kUrl)" } }
+    private lateinit var imageView: ImageView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

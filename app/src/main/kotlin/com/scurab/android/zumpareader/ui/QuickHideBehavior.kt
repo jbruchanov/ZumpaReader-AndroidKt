@@ -41,7 +41,7 @@ class QuickHideBehavior : CoordinatorLayout.Behavior<FloatingActionButton> {
 
     //Required to attach behavior via XML
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
-        val a = context.theme.obtainStyledAttributes(intArrayOf(R.attr.actionBarSize))
+        val a = context.theme.obtainStyledAttributes(intArrayOf(android.R.attr.actionBarSize))
         zumpaPrefs = (context.applicationContext as ZumpaReaderApp?)?.zumpaPrefs ?: ZumpaPrefs(context)
         //Use half the standard action bar height
         scrollThreshold = a.getDimensionPixelSize(0, 0) / 2
@@ -120,13 +120,13 @@ class QuickHideBehavior : CoordinatorLayout.Behavior<FloatingActionButton> {
             animator = ViewAnimationUtils.createCircularReveal(target, target.width / 2, target.height / 2, if (show) init else max, if (show) max else init)
                     .apply {
                         addListener(object : AnimatorListener() {
-                            override fun onAnimationStart(animation: Animator?) {
+                            override fun onAnimationStart(animation: Animator) {
                                 if (show) {
                                     target.visibility = View.VISIBLE
                                 }
                             }
 
-                            override fun onAnimationEnd(animation: Animator?) {
+                            override fun onAnimationEnd(animation: Animator) {
                                 if (!show) {
                                     target.visibility = View.INVISIBLE
                                 }

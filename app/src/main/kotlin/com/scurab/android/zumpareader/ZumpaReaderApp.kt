@@ -4,11 +4,9 @@ import android.app.Activity
 import android.app.Application
 import android.os.Bundle
 import android.os.Environment
-import androidx.multidex.MultiDexApplication
 import android.util.Log
 import com.bugfender.sdk.Bugfender
 import com.facebook.drawee.backends.pipeline.Fresco
-import com.giphy.sdk.core.network.api.GPHApiClient
 import com.github.salomonbrys.kotson.DeserializerArg
 import com.github.salomonbrys.kotson.registerTypeAdapter
 import com.google.firebase.FirebaseApp
@@ -42,7 +40,7 @@ import java.util.concurrent.TimeUnit
 /**
  * Created by JBruchanov on 24/11/2015.
  */
-class ZumpaReaderApp : MultiDexApplication() {
+class ZumpaReaderApp : Application() {
 
     companion object {
         val OFFLINE_FILE_NAME = "offline.json"
@@ -90,7 +88,7 @@ class ZumpaReaderApp : MultiDexApplication() {
                 val rb = req
                         .newBuilder()
                         .addHeader("Cache-Control", "max-age=0")
-                        .url(req.url().newBuilder().addQueryParameter("_ts", System.currentTimeMillis().toString()).build())
+                        .url(req.url.newBuilder().addQueryParameter("_ts", System.currentTimeMillis().toString()).build())
 
                 chain.proceed(rb.build())
             }
@@ -104,8 +102,9 @@ class ZumpaReaderApp : MultiDexApplication() {
         super.onCreate()
         if (true) {
             Bugfender.init(this, "kzaufEwHl2xPh3nwfAZNSP8aRNdJwGJ1", BuildConfig.DEBUG)
-            Bugfender.enableLogcatLogging()
+            Bugfender.enableCrashReporting()
             Bugfender.enableUIEventLogging(this)
+            Bugfender.enableLogcatLogging() // optional, if you want logs automatically collected from logcat
         }
         loadReadStates()
 
@@ -114,26 +113,26 @@ class ZumpaReaderApp : MultiDexApplication() {
 
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             private var activities = 0
-            override fun onActivityStarted(activity: Activity?) {
+            override fun onActivityStarted(activity: Activity) {
                 activities++
             }
 
-            override fun onActivityResumed(activity: Activity?) {
+            override fun onActivityResumed(activity: Activity) {
             }
 
-            override fun onActivitySaveInstanceState(activity: Activity?, outState: Bundle?) {
+            override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
             }
 
-            override fun onActivityDestroyed(activity: Activity?) {
+            override fun onActivityDestroyed(activity: Activity) {
             }
 
-            override fun onActivityCreated(activity: Activity?, savedInstanceState: Bundle?) {
+            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
             }
 
-            override fun onActivityPaused(activity: Activity?) {
+            override fun onActivityPaused(activity: Activity) {
             }
 
-            override fun onActivityStopped(activity: Activity?) {
+            override fun onActivityStopped(activity: Activity) {
                 activities--
                 if (activities == 0) {
                     storeReadStates()
@@ -240,9 +239,9 @@ class ZumpaReaderApp : MultiDexApplication() {
         retrofit.create(ZumpaPHPAPI::class.java)
     }
 
-    val giphyAPI: GPHApiClient by lazy {
-        GPHApiClient("BKCus6OcOlVnsZQwQQ4WllKPEIzKAeEO")
-    }
+//    val giphyAPI: GPHApiClient by lazy {
+//        GPHApiClient("BKCus6OcOlVnsZQwQQ4WllKPEIzKAeEO")
+//    }
 
     fun resetCookies() {
         cookieManager.cookieStore.removeAll()

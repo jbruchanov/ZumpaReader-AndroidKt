@@ -36,7 +36,7 @@ class PicassoHttpDownloader2(private val imageStorage: File,
             if (externalFilesDir == null) {
                 externalFilesDir = context.getDir(Environment.DIRECTORY_PICTURES, Context.MODE_PRIVATE)
             }
-            return externalFilesDir
+            return externalFilesDir!!
         }
     }
 
@@ -78,12 +78,13 @@ class PicassoHttpDownloader2(private val imageStorage: File,
             var byteArray = download(uri.toString())
             if (byteArray.isNotEmpty()) {
                 if (byteArray[0] == htmlStart) {
-                    if (!uri.path.endsWith(".gif")) {
+                    val endsWithGif = uri.path?.endsWith(".gif") == true
+                    if (!endsWithGif) {
                         //ignore gifs for now
                         //we have here potentially HTML
                         if (byteArray.size <= maxHtmlCheck) {
-                            var content = String(byteArray)
-                            var innerUrl = ZumpaSimpleParser.tryParseImage(content)
+                            val content = String(byteArray)
+                            val innerUrl = ZumpaSimpleParser.tryParseImage(content)
                             if (innerUrl != null) {
                                 byteArray = download(innerUrl)
                                 resultBitmap = ParseUtils.resizeImageIfNecessary(byteArray, displaySize)
@@ -145,6 +146,6 @@ class PicassoHttpDownloader2(private val imageStorage: File,
     private fun download(uri: String): ByteArray {
         val request = Request.Builder().url(uri).build()
         var response = httpClient.newCall(request).execute()
-        return response.body()!!.bytes()
+        return response.body!!.bytes()
     }
 }

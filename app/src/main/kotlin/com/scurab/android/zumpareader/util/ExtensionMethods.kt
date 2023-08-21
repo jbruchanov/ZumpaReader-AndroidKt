@@ -155,13 +155,13 @@ fun Boolean.asVisibility(falseValue: Int = View.GONE): Int {
 }
 
 fun Context.saveToClipboard(text: String?) {
-    var clip = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    clip.primaryClip = ClipData.newPlainText(text, text)
+    val clip = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    clip.setPrimaryClip(ClipData.newPlainText(text, text))
 }
 
 fun Context.saveToClipboard(uri: Uri) {
     var clip = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    clip.primaryClip = ClipData.newRawUri(uri.toString(), uri)
+    clip.setPrimaryClip(ClipData.newRawUri(uri.toString(), uri))
 }
 
 fun View.setPadding(px: Int) {
@@ -174,7 +174,7 @@ fun View.setPaddingRes(@DimenRes dimenRes: Int) {
 }
 
 fun Uri.isImage(): Boolean {
-    val path = path.toLowerCase()
+    val path = path?.lowercase() ?: ""
     return path.endsWith(".jpg") || path.endsWith(".jpeg") || path.endsWith(".png") || path.endsWith(".bmp") || path.endsWith(".gif")
 }
 

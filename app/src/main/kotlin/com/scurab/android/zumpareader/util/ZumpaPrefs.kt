@@ -38,7 +38,6 @@ class ZumpaPrefs(context: Context) {
         get() {
             return sharedPrefs.getStringSet(KEY_COOKIES, null)
         }
-
         set(value) {
             sharedPrefs.edit().putStringSet(KEY_COOKIES, value).apply()
         }
@@ -66,7 +65,6 @@ class ZumpaPrefs(context: Context) {
         get() {
             return sharedPrefs.getBoolean(KEY_IS_LOGGED_IN, false)
         }
-
         set(value) {
             sharedPrefs.edit().putBoolean(KEY_IS_LOGGED_IN, value).apply()
         }
@@ -80,25 +78,23 @@ class ZumpaPrefs(context: Context) {
 
     val nickName: String
         get() {
-            val uname = sharedPrefs.getString(KEY_USER_NAME, "")
-            val nick = sharedPrefs.getString(KEY_NICK_NAME, uname)
-            return if (nick.isEmpty()) uname else nick
+            val uname = sharedPrefs.getString(KEY_USER_NAME, "") ?: ""
+            val nick = sharedPrefs.getString(KEY_NICK_NAME, uname) ?: uname
+            return nick.ifEmpty { uname }
         }
 
     var readStates: String?
         get() {
             return sharedPrefs.getString(KEY_READ_STATES, null)
         }
-
         set(value) {
             sharedPrefs.edit().putString(KEY_READ_STATES, value).apply()
         }
 
     var filter: String
         get() {
-            return if (isLoggedIn) sharedPrefs.getString(KEY_FILTER, "0") else "0"
+            return if (isLoggedIn) sharedPrefs.getString(KEY_FILTER, "0") ?: "0" else "0"
         }
-
         set(value) {
             sharedPrefs.edit().putString(KEY_FILTER, value).apply()
         }
@@ -110,9 +106,8 @@ class ZumpaPrefs(context: Context) {
 
     var lastCameraUri: String
         get() {
-            return sharedPrefs.getString(KEY_LAST_CAMERA_URI, "")
+            return sharedPrefs.getString(KEY_LAST_CAMERA_URI, "") ?: ""
         }
-
         set(value) {
             sharedPrefs.edit().putString(KEY_LAST_CAMERA_URI, value).apply()
         }
@@ -121,7 +116,6 @@ class ZumpaPrefs(context: Context) {
         get() {
             return sharedPrefs.getString(KEY_PUSH_REG_ID, null)
         }
-
         set(value) {
             sharedPrefs.edit().putString(KEY_PUSH_REG_ID, value).apply()
         }
@@ -130,7 +124,6 @@ class ZumpaPrefs(context: Context) {
         get() {
             return sharedPrefs.getBoolean(KEY_OFFLINE, false)
         }
-
         set(value) {
             sharedPrefs.edit().putBoolean(KEY_OFFLINE, value).apply()
         }

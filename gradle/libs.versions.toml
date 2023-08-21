@@ -3,7 +3,7 @@
 [bundles]
 
 adjust = ["adjust", "androidx-installreferrer", "google-adsidentifier"]
-android-base = ["androidx-core-ktx", "androidx-activity-compose", "androidx-annotation"]
+android-base = ["androidx-core-ktx", "androidx-activity-compose", "androidx-annotation", "google-material"]
 android-compose = ["androidx-activity-compose", "compose-foundation", "compose-material", "compose-runtime-livedata", "compose-ui-toolingpreview"]
 android-debug = ["androidx-custom-view-base", "androidx-custom-view-poolingcontainer", "compose-ui-tooling"]
 android-lifecycle = ["androidx-lifecycle-common", "androidx-lifecycle-process", "androidx-lifecycle-runtime", "androidx-lifecycle-viewmodel", "androidx-lifecycle-livedata"]
@@ -74,9 +74,10 @@ facebook = "13.0.0"
 firebase-bom = "32.2.2"
 firebase-plugin-crashlytics = "2.9.8"
 firebase-plugin-distribution = "4.0.0"
-google-review = "2.0.1"
 google-adsidentifier = "18.0.1"
 google-services = "4.3.15"
+google-material = "1.9.0"
+google-review = "2.0.1"
 google-ksp = "1.9.0-1.0.13"
 groupie = "2.9.0"
 gson = "2.10.1"
@@ -141,8 +142,9 @@ exoplayer = { module = "com.google.android.exoplayer:exoplayer", version.ref = "
 facebook = { module = "com.facebook.android:facebook-android-sdk", version.ref = "facebook" }
 fadingedgelayout = { module = "com.github.bosphere.android-fadingedgelayout:fadingedgelayout", version.ref = "fadingedgelayout" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
-google-review = { module = "com.google.android.play:review-ktx", version.ref = "google-review" }
 google-adsidentifier = { module = "com.google.android.gms:play-services-ads-identifier", version.ref = "google-adsidentifier" }
+google-material = { module = "com.google.android.material:material", version.ref = "google-material" }
+google-review = { module = "com.google.android.play:review-ktx", version.ref = "google-review" }
 groupie-base = { module = "com.xwray:groupie", version.ref = "groupie" }
 groupie-viewbinding = { module = "com.xwray:groupie-viewbinding", version.ref = "groupie" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }

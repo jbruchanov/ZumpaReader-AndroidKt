@@ -13,7 +13,7 @@ import java.lang.NullPointerException
  * Created by JBruchanov on 23/03/2017.
  */
 class MessageEditText @JvmOverloads
-constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = R.attr.editTextStyle) : AppCompatEditText(context, attrs, defStyleAttr) {
+constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = android.R.attr.editTextStyle) : AppCompatEditText(context, attrs, defStyleAttr) {
 
     override fun onTextContextMenuItem(id: Int): Boolean {
         if (android.R.id.paste == id) {

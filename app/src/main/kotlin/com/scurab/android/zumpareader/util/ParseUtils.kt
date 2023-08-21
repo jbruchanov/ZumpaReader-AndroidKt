@@ -44,7 +44,7 @@ class ParseUtils {
 
         fun extractPHPSessionId(headers: Headers?): String? {
             headers?.let {
-                for (i in 0..it.size()) {
+                for (i in 0..it.size) {
                     if ("Set-Cookie".equals(it.name(i), true)) {
                         val value = it.value(i)
                         if (hasPHPSessionId(value)) {

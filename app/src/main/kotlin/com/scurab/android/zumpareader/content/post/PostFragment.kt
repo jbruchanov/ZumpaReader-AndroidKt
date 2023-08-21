@@ -19,7 +19,6 @@ import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.app.BaseDialogFragment
 import com.scurab.android.zumpareader.app.MainActivity
 import com.scurab.android.zumpareader.extension.app
-import com.scurab.android.zumpareader.giphy.GiphyActivity
 import com.scurab.android.zumpareader.ui.showAnimated
 import com.scurab.android.zumpareader.util.*
 import org.jetbrains.anko.find
@@ -117,7 +116,7 @@ class PostFragment : BaseDialogFragment() {
                                     uri = app().zumpaPrefs.lastCameraUri
                                     icon = R.drawable.ic_camera
                                 } else {
-                                    uri = data!!.dataString
+                                    uri = data!!.dataString!!
                                     icon = R.drawable.ic_photo
                                 }
                                 tabHost?.apply {

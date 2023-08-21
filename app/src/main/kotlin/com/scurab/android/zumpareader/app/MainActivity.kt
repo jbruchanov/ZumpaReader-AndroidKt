@@ -11,7 +11,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import android.view.View
 import android.widget.ProgressBar
-import com.crashlytics.android.Crashlytics
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.content.MainListFragment
@@ -24,7 +23,6 @@ import com.scurab.android.zumpareader.ui.QuickHideBehavior
 import com.scurab.android.zumpareader.ui.hideAnimated
 import com.scurab.android.zumpareader.ui.showAnimated
 import com.scurab.android.zumpareader.util.*
-import io.fabric.sdk.android.Fabric
 import org.jetbrains.anko.find
 import org.jetbrains.anko.findOptional
 
@@ -62,7 +60,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Fabric.with(this, Crashlytics())
+        //Fabric.with(this, Crashlytics())
 
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
