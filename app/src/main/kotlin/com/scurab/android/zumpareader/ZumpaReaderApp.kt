@@ -21,6 +21,7 @@ import com.scurab.android.zumpareader.gson.GsonExcludeStrategy
 import com.scurab.android.zumpareader.model.ZumpaReadState
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
+import com.scurab.android.zumpareader.usecase.CreateNotificationChannelsUseCase
 import com.scurab.android.zumpareader.util.ZumpaPrefs
 import com.squareup.picasso.Picasso
 import java.io.File
@@ -99,6 +100,7 @@ class ZumpaReaderApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        CreateNotificationChannelsUseCase(this)()
         loadReadStates()
 
         initPicasso()
@@ -231,10 +233,6 @@ class ZumpaReaderApp : Application() {
 
         retrofit.create(ZumpaPHPAPI::class.java)
     }
-
-//    val giphyAPI: GPHApiClient by lazy {
-//        GPHApiClient("BKCus6OcOlVnsZQwQQ4WllKPEIzKAeEO")
-//    }
 
     fun resetCookies() {
         cookieManager.cookieStore.removeAll()

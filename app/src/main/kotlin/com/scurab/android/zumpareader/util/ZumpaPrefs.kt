@@ -17,6 +17,7 @@ class ZumpaPrefs(context: Context) {
         val KEY_SHOW_LAST_AUTHOR = "KEY_SHOW_LAST_AUTHOR"
         val KEY_OFFLINE = "KEY_OFFLINE"
         val KEY_FILTER = "KEY_FILTER"
+        val KEY_NOTIFICATIONS = "KEY_NOTIFICATIONS"
     }
 
     private val KEY_COOKIES = "KEY_COOKIES"

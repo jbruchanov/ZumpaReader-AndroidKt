@@ -1,15 +1,23 @@
 package com.scurab.android.zumpareader.app
 
+import android.Manifest
 import android.app.ProgressDialog
 import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.preference.CheckBoxPreference
 import android.preference.PreferenceActivity
+import android.provider.Settings
+import androidx.core.content.ContextCompat
 import com.google.firebase.messaging.FirebaseMessaging
-import com.scurab.android.zumpareader.BuildConfig
+import com.scurab.android.zumpareader.AppConfig
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZR
 import com.scurab.android.zumpareader.ZumpaReaderApp
+import com.scurab.android.zumpareader.component.NotificationStateProvider
 import com.scurab.android.zumpareader.content.SendingFragment
 import com.scurab.android.zumpareader.ext.toast
 import com.scurab.android.zumpareader.model.ZumpaLoginBody
@@ -17,7 +25,6 @@ import com.scurab.android.zumpareader.preferences.ButtonPreference
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.util.ParseUtils
 import com.scurab.android.zumpareader.util.ZumpaPrefs
-import com.scurab.android.zumpareader.util.saveToClipboard
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.SingleObserver
@@ -35,8 +42,10 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
 
     override fun requireContext(): Context = this
     private val buttonPref by lazy { findPreference(ZumpaPrefs.KEY_LOGIN) }
+    private val permissionsPref by lazy { findPreference(ZumpaPrefs.KEY_NOTIFICATIONS) as ButtonPreference }
     private val showLastAuthorPref by lazy { findPreference(ZumpaPrefs.KEY_SHOW_LAST_AUTHOR) as CheckBoxPreference }
     private val filterPref by lazy { findPreference(ZumpaPrefs.KEY_FILTER) }
+    private val notificationStateProvider by lazy { NotificationStateProvider(this) }
 
     val zumpaApp: ZumpaReaderApp
         get() {
@@ -61,6 +70,22 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
         buttonPref.title = resources.getString(if (zumpaApp.zumpaPrefs.isLoggedIn) R.string.logout else R.string.login)
         filterPref.isEnabled = zumpaApp.zumpaPrefs.isLoggedIn
         showLastAuthorPref.isEnabled = zumpaApp.zumpaPrefs.isLoggedIn
+
+        permissionsPref.setOnPreferenceClickListener {
+            val permsEnabled = notificationStateProvider.areNotificationsEnabled(AppConfig.NotificationChannel.Notifications)
+            if (permsEnabled || Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${packageName}")))
+            } else {
+                requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 123)
+            }
+            true
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val permsEnabled = notificationStateProvider.areNotificationsEnabled(AppConfig.NotificationChannel.Notifications)
+        permissionsPref.summary = getString(if (permsEnabled) R.string.enabled else R.string.disabled)
     }
 
     protected fun dispatchLogoutClicked() {

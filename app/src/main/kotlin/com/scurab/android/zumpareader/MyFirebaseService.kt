@@ -23,7 +23,7 @@ import com.scurab.android.zumpareader.util.obtainStyledColor
 import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
 
-private const val ZUMPA_CHANNEL = "Zumpa"
+private const val ZUMPA_CHANNEL = AppConfig.NotificationChannel.Notifications
 
 class MyFirebaseService : FirebaseMessagingService() {
 
@@ -107,7 +107,7 @@ class MyFirebaseService : FirebaseMessagingService() {
             putExtra(MainActivity.EXTRA_THREAD_ID, pushMsg.threadId)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
-        val pIntent = PendingIntent.getActivity(context, MainActivity.PUSH_REQ_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+        val pIntent = PendingIntent.getActivity(context, MainActivity.PUSH_REQ_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
         return NotificationCompat.Builder(context, ZUMPA_CHANNEL)
                 .setSmallIcon(icon)
                 .setChannelId(ZUMPA_CHANNEL)
