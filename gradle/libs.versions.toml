@@ -37,6 +37,7 @@ android-sdk-target = "33"
 kotlin = "1.9.0"
 jvmtarget = "17"
 android-gradle-plugin = "8.1.0"
+picasso = "2.5.2"
 sleepwave-audio = "20230725-1600"
 sleepwave-core = "20220301-1142"
 sleepwave-dsp = "20230726-1121"
@@ -162,6 +163,7 @@ lottie = { module = "com.airbnb.android:lottie-compose", version.ref = "lottie" 
 okhttp-base = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 okhttp-urlconnection = { module = "com.squareup.okhttp3:okhttp-urlconnection", version.ref = "okhttp" }
 okhttp-logging = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "okhttp" }
+picasso = { module = "com.squareup.picasso:picasso", version.ref = "picasso" }
 sleepwave-audio = { module = "com.sleepwave:audio", version.ref = "sleepwave-audio" }
 sleepwave-iosapi = { module = "com.sleepwave:android-ios-api", version.ref = "sleepwave-iosapi" }
 sleepwave-dsp = { module = "com.sleepwave:dsp", version.ref = "sleepwave-dsp" }
