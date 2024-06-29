@@ -18,10 +18,23 @@ android {
         buildConfigField "String", "Authority", "\"" + fileProviderAuthority + "\""
         minSdk = libs.versions.android.sdk.min.get().toInteger()
         targetSdk = libs.versions.android.sdk.target.get().toInteger()
-        versionCode 67
-        versionName "3.2.0"
+        versionCode 68
+        versionName "3.3.0"
         manifestPlaceholders = [authority: fileProviderAuthority]
         multiDexEnabled true
+    }
+
+    signingConfigs {
+        release {
+            keyAlias localProperties.get('releaseKeyAlias')
+            keyPassword localProperties.get('releaseKeyPassword')
+            storePassword localProperties.get('releaseStorePassword')
+            var keystorePath = localProperties.get("releaseKeyStore")
+            if (keystorePath != null) {
+                // without this check, builds fail for debug if 'releaseKeyStore' is missing
+                storeFile file(keystorePath)
+            }
+        }
     }
 
     buildTypes {
@@ -32,6 +45,7 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
 
