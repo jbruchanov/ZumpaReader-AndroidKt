@@ -7,36 +7,40 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.BaseAdapter
+import android.widget.FrameLayout
+import android.widget.ImageButton
+import android.widget.Spinner
+import android.widget.TextView
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.util.obtainStyledColor
 import com.scurab.android.zumpareader.util.setImageTint
-import org.jetbrains.anko.find
+
 
 /**
  * Created by JBruchanov on 09/01/2016.
  */
 class PostImagePanelView : FrameLayout {
 
-    val upload by lazy { find<ImageButton>(R.id.send) }
-    val copy by lazy { find<ImageButton>(R.id.copy) }
-    val resize by lazy { find<ImageButton>(R.id.resize) }
-    val rotateRight by lazy { find<ImageButton>(R.id.rotate_right) }
-    val sizeSpinner by lazy { find<Spinner>(R.id.size_spinner) }
-    private val resolutionOriginal by lazy { find<TextView>(R.id.resolution_original) }
-    private val resolutionResized by lazy { find<TextView>(R.id.resolution_resized) }
-    private val sizeOriginal by lazy { find<TextView>(R.id.size_original) }
-    private val sizeResized by lazy { find<TextView>(R.id.size_resized) }
+    val upload by lazy { findViewById<ImageButton>(R.id.send) }
+    val copy by lazy { findViewById<ImageButton>(R.id.copy) }
+    val resize by lazy { findViewById<ImageButton>(R.id.resize) }
+    val rotateRight by lazy { findViewById<ImageButton>(R.id.rotate_right) }
+    val sizeSpinner by lazy { findViewById<Spinner>(R.id.size_spinner) }
+    private val resolutionOriginal by lazy { findViewById<TextView>(R.id.resolution_original) }
+    private val resolutionResized by lazy { findViewById<TextView>(R.id.resolution_resized) }
+    private val sizeOriginal by lazy { findViewById<TextView>(R.id.size_original) }
+    private val sizeResized by lazy { findViewById<TextView>(R.id.size_resized) }
 
-    constructor(context: Context?) : this(context, null)
+    constructor(context: Context) : this(context, null)
 
-    constructor(context: Context?, attrs: AttributeSet?) : this(context, attrs, 0)
+    constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0)
 
-    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr) {
+    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr) {
         init(attrs)
     }
 
-    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int) : super(context, attrs, defStyleAttr, defStyleRes) {
+    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int) : super(context, attrs, defStyleAttr, defStyleRes) {
         init(attrs)
     }
 

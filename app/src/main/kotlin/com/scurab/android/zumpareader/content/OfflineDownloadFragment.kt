@@ -3,44 +3,46 @@ package com.scurab.android.zumpareader.content
 import android.app.Dialog
 import android.os.Bundle
 import android.os.Environment
-import androidx.fragment.app.DialogFragment
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.Button
+import android.widget.CheckBox
+import android.widget.EditText
+import android.widget.ProgressBar
+import android.widget.TextView
+import androidx.fragment.app.DialogFragment
 import com.scurab.android.zumpareader.BusProvider
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.data.LoaderTask
 import com.scurab.android.zumpareader.event.DIALOG_EVENT_STOP
 import com.scurab.android.zumpareader.event.DialogEvent
+import com.scurab.android.zumpareader.ext.toast
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.ui.isVisible
 import com.scurab.android.zumpareader.util.asVisibility
-import com.scurab.android.zumpareader.util.toast
-import org.jetbrains.anko.find
 import java.io.File
-import java.util.*
 
 /**
  * Created by JBruchanov on 15/01/2016.
  */
 
-class OfflineDownloadFragment : androidx.fragment.app.DialogFragment() {
+class OfflineDownloadFragment : DialogFragment() {
 
     val zumpaApp: ZumpaReaderApp
         get() {
             return requireContext().applicationContext as ZumpaReaderApp
         }
 
-    private val start: Button  get() = view!!.find(R.id.start)
-    private val stop: Button get() = view!!.find(R.id.stop)
-    private val threads: TextView get() = view!!.find(R.id.threads)
-    private val images: TextView get() = view!!.find(R.id.images)
-    private val pages: EditText get() = view!!.find(R.id.pages)
-    private val imagesDownload: CheckBox get() = view!!.find(R.id.images_download)
-    private val progressBar: ProgressBar get() = view!!.find(R.id.progress_bar)
+    private val start: Button get() = requireView().findViewById(R.id.start)
+    private val stop: Button get() = requireView().findViewById(R.id.stop)
+    private val threads: TextView get() = requireView().findViewById(R.id.threads)
+    private val images: TextView get() = requireView().findViewById(R.id.images)
+    private val pages: EditText get() = requireView().findViewById(R.id.pages)
+    private val imagesDownload: CheckBox get() = requireView().findViewById(R.id.images_download)
+    private val progressBar: ProgressBar get() = requireView().findViewById(R.id.progress_bar)
 
     private var isLoading: Boolean
         get() {
@@ -105,7 +107,7 @@ class OfflineDownloadFragment : androidx.fragment.app.DialogFragment() {
                         zumpaApp.zumpaOfflineApi?.offlineData = result
                     }
                     if (exception != null) {
-                        context.toast(exception!!.message)
+                        toast(exception!!.message)
                     }
                 }
             }

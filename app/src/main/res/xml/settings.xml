@@ -3,36 +3,46 @@
     <PreferenceCategory android:title="@string/credentials">
         <EditTextPreference
             android:key="KEY_USER_NAME"
-            android:title="@string/user"/>
+            android:title="@string/user" />
         <EditTextPreference
             android:inputType="textPassword"
             android:key="KEY_PASSWORD"
-            android:title="@string/password"/>
+            android:title="@string/password" />
     </PreferenceCategory>
     <com.scurab.android.zumpareader.preferences.ButtonPreference
         android:key="KEY_LOGIN"
-        android:title="@string/login"/>
+        android:title="@string/login" />
     <PreferenceCategory android:title="@string/settings">
         <ListPreference
-            android:key="KEY_FILTER"
             android:defaultValue="0"
-            android:title="@string/filter"
+            android:entries="@array/filter_labels"
             android:entryValues="@array/filter_values"
-            android:entries="@array/filter_labels" />
+            android:key="KEY_FILTER"
+            android:title="@string/filter" />
         <CheckBoxPreference
             android:defaultValue="true"
             android:key="KEY_LOAD_IMAGES"
-            android:title="@string/load_images"/>
+            android:title="@string/load_images" />
         <EditTextPreference
             android:key="KEY_NICK_NAME"
-            android:title="@string/nick_name"/>
+            android:title="@string/nick_name" />
         <CheckBoxPreference
             android:defaultValue="false"
             android:key="KEY_OFFLINE"
-            android:title="@string/offline"/>
+            android:title="@string/offline" />
         <CheckBoxPreference
             android:defaultValue="false"
             android:key="KEY_SHOW_LAST_AUTHOR"
-            android:title="@string/show_last_author"/>
+            android:title="@string/show_last_author" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/permissions">
+        <com.scurab.android.zumpareader.preferences.ButtonPreference
+            android:key="KEY_NOTIFICATIONS"
+            android:title="@string/notifications" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/crashlytics">
+        <com.scurab.android.zumpareader.preferences.ButtonPreference
+            android:key="KEY_CRASHYLYTICS"
+            android:title="..." />
     </PreferenceCategory>
 </PreferenceScreen>

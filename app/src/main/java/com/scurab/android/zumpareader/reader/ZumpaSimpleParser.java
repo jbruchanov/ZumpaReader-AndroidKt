@@ -3,9 +3,6 @@ package com.scurab.android.zumpareader.reader;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.util.Pair;
 import android.text.Html;
 import android.text.SpannableString;
 import android.text.Spanned;
@@ -14,6 +11,10 @@ import android.text.style.ForegroundColorSpan;
 import android.text.style.ImageSpan;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.TypefaceSpan;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.util.Pair;
 
 import com.scurab.android.zumpareader.R;
 import com.scurab.android.zumpareader.ZR;
@@ -525,7 +526,8 @@ public class ZumpaSimpleParser {
         for (Integer drawable : SmileRes.DATA.keySet()) {
             Pattern pattern = SmileRes.DATA.get(drawable);
             matcher = pattern.matcher(body);
-            while (matcher.find()) {
+            while (matcher.find()
+) {
                 int start = matcher.start();
                 int end = matcher.end();
                 if (!ignore(links, start)) {

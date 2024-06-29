@@ -2,9 +2,9 @@ package com.scurab.android.zumpareader.ui
 
 import android.animation.Animator
 import android.os.Build
-import androidx.core.view.ViewCompat
 import android.view.View
 import android.view.ViewAnimationUtils
+import androidx.core.view.ViewCompat
 
 /**
  * Created by jiribruchanov on 12/8/15.

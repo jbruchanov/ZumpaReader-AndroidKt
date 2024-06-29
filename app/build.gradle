@@ -1,42 +1,40 @@
-buildscript {
-    ext.kotlin_version = '1.3.50'
-    ext.playServices = "16.0.1"
-    ext.supportLibraryVersion = "28.0.0"
-    ext.fileProviderAuthority = "com.scurab.android.zumpareader.fileprovider"
-
-    repositories {
-        maven { url 'https://maven.fabric.io/public' }
-        jcenter()
-        mavenCentral()
-        google()
-    }
-
-    dependencies {
-        classpath 'com.android.tools.build:gradle:3.5.0'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'io.fabric.tools:gradle:1.+'
-    }
-}
-
 apply from: 'tools.gradle'
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'io.fabric'
 apply plugin: 'com.google.gms.google-services'
+apply plugin: 'com.google.firebase.crashlytics'
 
 android {
-    compileSdkVersion 28
+    compileSdk = libs.versions.android.sdk.compile.get().toInteger()
 
+    buildFeatures {
+        buildConfig = true
+    }
+    def fileProviderAuthority = "com.scurab.android.zumpareader.fileprovider"
     defaultConfig {
+        namespace "com.scurab.android.zumpareader"
         applicationId "com.scurab.zumpareader"
         buildConfigField "String", "BUILD_DETAIL", "\"build-" + getDate() + ",git-" + gitSha() + "\""
         buildConfigField "String", "Authority", "\"" + fileProviderAuthority + "\""
-        minSdkVersion 16
-        targetSdkVersion 28
-        versionCode 66
-        versionName "3.1.0"
+        minSdk = libs.versions.android.sdk.min.get().toInteger()
+        targetSdk = libs.versions.android.sdk.target.get().toInteger()
+        versionCode 68
+        versionName "3.3.0"
         manifestPlaceholders = [authority: fileProviderAuthority]
         multiDexEnabled true
+    }
+
+    signingConfigs {
+        release {
+            keyAlias localProperties.get('releaseKeyAlias')
+            keyPassword localProperties.get('releaseKeyPassword')
+            storePassword localProperties.get('releaseStorePassword')
+            var keystorePath = localProperties.get("releaseKeyStore")
+            if (keystorePath != null) {
+                // without this check, builds fail for debug if 'releaseKeyStore' is missing
+                storeFile file(keystorePath)
+            }
+        }
     }
 
     buildTypes {
@@ -47,24 +45,21 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
 
-    sourceSets {
-        main.java.srcDirs += 'src/main/java'
-        main.java.srcDirs += 'src/main/kotlin'
+    compileOptions {
+        sourceCompatibility = libs.versions.jvmtarget.get()
+        targetCompatibility = libs.versions.jvmtarget.get()
     }
 
-    dexOptions {
-        jumboMode = true
+    kotlinOptions {
+        jvmTarget = libs.versions.jvmtarget.get().toInteger()
+        freeCompilerArgs = freeCompilerArgs + ["-Xcontext-receivers"]
     }
 }
 
-repositories {
-    maven { url 'https://maven.fabric.io/public' }
-    jcenter()
-    mavenCentral()
-}
 
 task(depsize) {
     doLast {
@@ -81,41 +76,29 @@ task(depsize) {
 
 dependencies {
     //compile fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.google.firebase:firebase-messaging:20.0.1'
+    implementation(libs.kotlin.stdlib)
+    implementation(libs.kotlinx.coroutines)
+    implementation(platform(libs.firebase.bom))
+    ["crashlytics", "messaging"].forEach {
+        implementation("com.google.firebase:firebase-$it-ktx")
+    }
+    implementation(libs.bundles.android.base)
+    implementation(libs.jsoup)
+    implementation(libs.bundles.okhttp)
 
-    def androidx = "1.1.0"
-    def material = "1.0.0"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    implementation "androidx.appcompat:appcompat:$androidx"
-    implementation "com.google.android.material:material:$material"
+    implementation libs.retrofit
+    implementation libs.retrofit.converter.gson
+    implementation libs.retrofit.adapter.rxjava2
 
-    implementation 'org.jetbrains.anko:anko-sdk15:0.8.3' // sdk19, sdk21, sdk23 are also available
-    implementation 'org.jetbrains.anko:anko-support-v4:0.8.3'
-    // In case you need support-v4 bindings
-    implementation 'org.jetbrains.anko:anko-appcompat-v7:0.8.3' // For appcompat-v7 bindings
+    implementation libs.swipy
 
-    implementation 'org.jsoup:jsoup:1.10.3'
-    implementation 'com.pawegio.kandroid:kandroid:0.8.2@aar'
+    implementation libs.picasso
 
-    def square = "3.11.0"
-    implementation "com.squareup.okhttp3:okhttp:${square}"
-    implementation "com.squareup.okhttp3:okhttp-urlconnection:${square}"
-    implementation "com.squareup.okhttp3:logging-interceptor:${square}"
+    implementation libs.kotson
+    implementation libs.otto
 
-    def retrofit = "2.4.0"
-    implementation "com.squareup.retrofit2:retrofit:$retrofit"
-    implementation "com.squareup.retrofit2:converter-gson:$retrofit"
-    implementation "com.squareup.retrofit2:adapter-rxjava2:$retrofit"
-
-    implementation 'com.github.orangegangsters:swipy:1.2.3@aar'
-
-    implementation 'com.squareup.picasso:picasso:2.5.2'
-
-    implementation 'com.github.salomonbrys.kotson:kotson:2.5.0'
-    implementation 'com.squareup:otto:1.3.8'
-
-    implementation "io.reactivex.rxjava2:rxjava:2.2.2"
-    implementation 'io.reactivex.rxjava2:rxandroid:2.0.2'
+    implementation "io.reactivex.rxjava2:rxjava:2.2.21"
+    implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
     implementation 'com.jakewharton.rxbinding2:rxbinding:2.0.0'
     def trelo = "2.2.2"
     implementation "com.trello.rxlifecycle2:rxlifecycle:${trelo}"
@@ -123,21 +106,11 @@ dependencies {
     implementation "com.trello.rxlifecycle2:rxlifecycle-components:${trelo}"
     implementation "com.trello.rxlifecycle2:rxlifecycle-navi:${trelo}"
 
-    implementation('com.crashlytics.sdk.android:crashlytics:2.9.3@aar') {
-        transitive = true
-    }
-
-    def fresco = "1.14.2"
-    implementation "com.facebook.fresco:fresco:${fresco}"
-    implementation "com.facebook.fresco:animated-gif:${fresco}"
+    implementation libs.fresco
+    implementation "com.facebook.fresco:middleware:3.2.0"
+    implementation libs.fresco.animated.gif
 
     implementation 'com.bogdwellers:pinchtozoom:0.1'
-
-    implementation 'com.bugfender.sdk:android:1.+'
-
-    implementation('com.giphy.sdk:core:1.0.0@aar') {
-        transitive = true
-    }
 
     testImplementation 'junit:junit:4.12'
     def robo = "3.3.1"
@@ -146,5 +119,5 @@ dependencies {
     testImplementation('com.squareup:fest-android:1.0.8') {
         exclude module: 'support-v4'//some weird incompatibility issue
     }
-    testImplementation 'org.mockito:mockito-core:2.23.0'
+    testImplementation 'org.mockito:mockito-core:2.25.0'
 }

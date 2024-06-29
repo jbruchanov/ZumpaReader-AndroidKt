@@ -1,7 +1,12 @@
 package com.scurab.android.zumpareader.drawable
 
 import android.content.Context
-import android.graphics.*
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.ColorFilter
+import android.graphics.Paint
+import android.graphics.RectF
+import android.graphics.SweepGradient
 import android.graphics.drawable.Drawable
 import android.util.TypedValue
 import com.scurab.android.zumpareader.R

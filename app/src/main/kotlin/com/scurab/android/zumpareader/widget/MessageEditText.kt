@@ -1,19 +1,21 @@
 package com.scurab.android.zumpareader.widget
 
-import android.content.Context
 import android.content.ClipboardManager
-import androidx.appcompat.widget.AppCompatEditText
-import android.text.*
+import android.content.Context
+import android.text.Editable
+import android.text.Selection
+import android.text.Spannable
+import android.text.SpannableStringBuilder
+import android.text.Spanned
 import android.util.AttributeSet
-import com.scurab.android.zumpareader.R
+import androidx.appcompat.widget.AppCompatEditText
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
-import java.lang.NullPointerException
 
 /**
  * Created by JBruchanov on 23/03/2017.
  */
 class MessageEditText @JvmOverloads
-constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = R.attr.editTextStyle) : AppCompatEditText(context, attrs, defStyleAttr) {
+constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = android.R.attr.editTextStyle) : AppCompatEditText(context, attrs, defStyleAttr) {
 
     override fun onTextContextMenuItem(id: Int): Boolean {
         if (android.R.id.paste == id) {

@@ -30,7 +30,7 @@ class CopyFromResourcesTask(private val context: Context, val uri: Uri) : Single
         result.imageFile = output
         if (!(output.exists() && output.length() > 0L)) {
             if (!(output.exists() && output.length() > 0L)) {
-                var stream = context.contentResolver.openInputStream(uri)
+                val stream = requireNotNull(context.contentResolver.openInputStream(uri))
                 stream.copyTo(FileOutputStream(output))
                 loadImageData(output, result)
                 createThumbnail(output, result.thumbnail!!, result)

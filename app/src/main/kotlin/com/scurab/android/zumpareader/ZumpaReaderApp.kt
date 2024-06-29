@@ -4,11 +4,8 @@ import android.app.Activity
 import android.app.Application
 import android.os.Bundle
 import android.os.Environment
-import androidx.multidex.MultiDexApplication
 import android.util.Log
-import com.bugfender.sdk.Bugfender
 import com.facebook.drawee.backends.pipeline.Fresco
-import com.giphy.sdk.core.network.api.GPHApiClient
 import com.github.salomonbrys.kotson.DeserializerArg
 import com.github.salomonbrys.kotson.registerTypeAdapter
 import com.google.firebase.FirebaseApp
@@ -24,13 +21,9 @@ import com.scurab.android.zumpareader.gson.GsonExcludeStrategy
 import com.scurab.android.zumpareader.model.ZumpaReadState
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
+import com.scurab.android.zumpareader.usecase.CreateNotificationChannelsUseCase
 import com.scurab.android.zumpareader.util.ZumpaPrefs
 import com.squareup.picasso.Picasso
-import okhttp3.JavaNetCookieJar
-import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.Retrofit
-import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
@@ -38,11 +31,16 @@ import java.net.CookieManager
 import java.net.URI
 import java.util.*
 import java.util.concurrent.TimeUnit
+import okhttp3.JavaNetCookieJar
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Retrofit
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 
 /**
  * Created by JBruchanov on 24/11/2015.
  */
-class ZumpaReaderApp : MultiDexApplication() {
+class ZumpaReaderApp : Application() {
 
     companion object {
         val OFFLINE_FILE_NAME = "offline.json"
@@ -67,10 +65,10 @@ class ZumpaReaderApp : MultiDexApplication() {
     private val TIMEOUT = 5000L
 
 
-    val zumpaHttpClient : OkHttpClient by lazy { buildHttpClient(false) }
-    val zumpaSettingsHttpClient : OkHttpClient by lazy { zumpaHttpClient.newBuilder().followRedirects(false).build() }
+    val zumpaHttpClient: OkHttpClient by lazy { buildHttpClient(false) }
+    val zumpaSettingsHttpClient: OkHttpClient by lazy { zumpaHttpClient.newBuilder().followRedirects(false).build() }
 
-    private fun buildHttpClient(redirect: Boolean) : OkHttpClient {
+    private fun buildHttpClient(redirect: Boolean): OkHttpClient {
         cookieManager.setCookiePolicy(java.net.CookiePolicy.ACCEPT_ALL)
         cookieManager.put(URI.create(ZR.Constants.ZUMPA_MAIN_URL), zumpaPrefs.cookiesMap)
 
@@ -88,9 +86,9 @@ class ZumpaReaderApp : MultiDexApplication() {
             addNetworkInterceptor { chain ->
                 val req = chain.request()
                 val rb = req
-                        .newBuilder()
-                        .addHeader("Cache-Control", "max-age=0")
-                        .url(req.url().newBuilder().addQueryParameter("_ts", System.currentTimeMillis().toString()).build())
+                    .newBuilder()
+                    .addHeader("Cache-Control", "max-age=0")
+                    .url(req.url.newBuilder().addQueryParameter("_ts", System.currentTimeMillis().toString()).build())
 
                 chain.proceed(rb.build())
             }
@@ -102,11 +100,7 @@ class ZumpaReaderApp : MultiDexApplication() {
 
     override fun onCreate() {
         super.onCreate()
-        if (true) {
-            Bugfender.init(this, "kzaufEwHl2xPh3nwfAZNSP8aRNdJwGJ1", BuildConfig.DEBUG)
-            Bugfender.enableLogcatLogging()
-            Bugfender.enableUIEventLogging(this)
-        }
+        CreateNotificationChannelsUseCase(this)()
         loadReadStates()
 
         initPicasso()
@@ -114,26 +108,26 @@ class ZumpaReaderApp : MultiDexApplication() {
 
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             private var activities = 0
-            override fun onActivityStarted(activity: Activity?) {
+            override fun onActivityStarted(activity: Activity) {
                 activities++
             }
 
-            override fun onActivityResumed(activity: Activity?) {
+            override fun onActivityResumed(activity: Activity) {
             }
 
-            override fun onActivitySaveInstanceState(activity: Activity?, outState: Bundle?) {
+            override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
             }
 
-            override fun onActivityDestroyed(activity: Activity?) {
+            override fun onActivityDestroyed(activity: Activity) {
             }
 
-            override fun onActivityCreated(activity: Activity?, savedInstanceState: Bundle?) {
+            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
             }
 
-            override fun onActivityPaused(activity: Activity?) {
+            override fun onActivityPaused(activity: Activity) {
             }
 
-            override fun onActivityStopped(activity: Activity?) {
+            override fun onActivityStopped(activity: Activity) {
                 activities--
                 if (activities == 0) {
                     storeReadStates()
@@ -142,6 +136,9 @@ class ZumpaReaderApp : MultiDexApplication() {
         })
         loadOfflineData()
         FirebaseApp.initializeApp(this)
+        if (zumpaPrefs.userId == null) {
+            zumpaPrefs.userId = UUID.randomUUID().toString()
+        }
     }
 
     fun loadOfflineData() {
@@ -149,8 +146,7 @@ class ZumpaReaderApp : MultiDexApplication() {
         if (offline.exists() && zumpaPrefs.isOffline) {
             val gsonBuilder = GsonBuilder().setExclusionStrategies(GsonExcludeStrategy())
             gsonBuilder.registerTypeAdapter<ZumpaThread> {
-                deserialize {
-                    elem ->
+                deserialize { elem ->
                     if (elem is DeserializerArg) {
                         ZumpaThread.thread(elem.json as JsonObject)
                     } else {
@@ -190,11 +186,11 @@ class ZumpaReaderApp : MultiDexApplication() {
 
     private fun initPicasso() {
         val picasso = Picasso.Builder(this)
-                .downloader(PicassoHttpDownloader2.createDefault(this, zumpaHttpClient, zumpaPrefs))
-                .listener({ picasso, uri, exception ->
-                    Log.d("PicassoLoader", "URL:%s Exception:%s".format(uri, exception))
-                    exception.printStackTrace()
-                }).build()
+            .downloader(PicassoHttpDownloader2.createDefault(this, zumpaHttpClient, zumpaPrefs))
+            .listener({ picasso, uri, exception ->
+                Log.d("PicassoLoader", "URL:%s Exception:%s".format(uri, exception))
+                exception.printStackTrace()
+            }).build()
         Picasso.setSingletonInstance(picasso)
     }
 
@@ -205,11 +201,11 @@ class ZumpaReaderApp : MultiDexApplication() {
 
     val zumpaOnlineAPI: ZumpaAPI by lazy {
         val retrofit = Retrofit.Builder()
-                .baseUrl(ZR.Constants.ZUMPA_MAIN_URL)
-                .addConverterFactory(ZumpaConverterFactory(zumpaParser))
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .client(zumpaHttpClient)
-                .build()
+            .baseUrl(ZR.Constants.ZUMPA_MAIN_URL)
+            .addConverterFactory(ZumpaConverterFactory(zumpaParser))
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .client(zumpaHttpClient)
+            .build()
 
         retrofit.create(ZumpaAPI::class.java)
     }
@@ -220,28 +216,24 @@ class ZumpaReaderApp : MultiDexApplication() {
 
     val zumpaWebServiceAPI: ZumpaWSAPI by lazy {
         val retrofit = Retrofit.Builder()
-                .baseUrl(ZR.Constants.ZUMPA_WS_MAIN_URL)
-                .addConverterFactory(ZumpaGenericConverterFactory())
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .client(zumpaHttpClient)
-                .build()
+            .baseUrl(ZR.Constants.ZUMPA_WS_MAIN_URL)
+            .addConverterFactory(ZumpaGenericConverterFactory())
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .client(zumpaHttpClient)
+            .build()
 
         retrofit.create(ZumpaWSAPI::class.java)
     }
 
     val zumpaPHPAPI: ZumpaPHPAPI by lazy {
         val retrofit = Retrofit.Builder()
-                .baseUrl(ZR.Constants.ZUMPA_PHP_MAIN_URL)
-                .addConverterFactory(ZumpaGenericConverterFactory())
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .client(zumpaHttpClient)
-                .build()
+            .baseUrl(ZR.Constants.ZUMPA_PHP_MAIN_URL)
+            .addConverterFactory(ZumpaGenericConverterFactory())
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .client(zumpaHttpClient)
+            .build()
 
         retrofit.create(ZumpaPHPAPI::class.java)
-    }
-
-    val giphyAPI: GPHApiClient by lazy {
-        GPHApiClient("BKCus6OcOlVnsZQwQQ4WllKPEIzKAeEO")
     }
 
     fun resetCookies() {

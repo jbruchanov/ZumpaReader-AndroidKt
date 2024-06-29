@@ -5,25 +5,28 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import androidx.annotation.ColorInt
-import androidx.annotation.DrawableRes
-import androidx.fragment.app.FragmentTabHost
-import androidx.core.content.FileProvider
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TabWidget
+import androidx.annotation.ColorInt
+import androidx.annotation.DrawableRes
+import androidx.core.content.FileProvider
+import androidx.fragment.app.FragmentTabHost
 import com.scurab.android.zumpareader.BuildConfig
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.app.BaseDialogFragment
 import com.scurab.android.zumpareader.app.MainActivity
+import com.scurab.android.zumpareader.ext.layoutInflater
+import com.scurab.android.zumpareader.ext.toast
 import com.scurab.android.zumpareader.extension.app
-import com.scurab.android.zumpareader.giphy.GiphyActivity
 import com.scurab.android.zumpareader.ui.showAnimated
-import com.scurab.android.zumpareader.util.*
-import org.jetbrains.anko.find
-import org.jetbrains.anko.layoutInflater
+import com.scurab.android.zumpareader.util.getRandomCameraFileUri
+import com.scurab.android.zumpareader.util.hideKeyboard
+import com.scurab.android.zumpareader.util.obtainStyledColor
+import com.scurab.android.zumpareader.util.post
+import com.scurab.android.zumpareader.util.wrapWithTint
 import java.io.File
 
 /**
@@ -65,7 +68,7 @@ class PostFragment : BaseDialogFragment() {
     }
 
     val tabHost: FragmentTabHost? get() {
-        return view!!.find(android.R.id.tabhost)
+        return requireView().findViewById(android.R.id.tabhost)
     }
     val contextColor by lazy { requireContext().obtainStyledColor(R.attr.contextColor) }
 
@@ -79,8 +82,8 @@ class PostFragment : BaseDialogFragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         argFlagUsed = savedInstanceState?.getBoolean(ARG_FLAG_USED, false) ?: false
         val view = inflater.inflate(R.layout.fragment_post, container, false)
-        val tabHost = view.find<FragmentTabHost>(android.R.id.tabhost)
-        val tabWidget = view.find<TabWidget>(android.R.id.tabs)
+        val tabHost = view.findViewById<FragmentTabHost>(android.R.id.tabhost)
+        val tabWidget = view.findViewById<TabWidget>(android.R.id.tabs)
         tabHost.apply {
             setup(context, childFragmentManager, android.R.id.tabcontent)
             addTab(newTabSpec(POST_MESSAGE_TAG).setIndicator(createIndicator(R.drawable.ic_pen, contextColor, tabWidget)), PostMessageFragment::class.java, PostMessageFragment.arguments(argSubject, argMessage, argUris == null, argThreadId))
@@ -117,7 +120,7 @@ class PostFragment : BaseDialogFragment() {
                                     uri = app().zumpaPrefs.lastCameraUri
                                     icon = R.drawable.ic_camera
                                 } else {
-                                    uri = data!!.dataString
+                                    uri = data!!.dataString!!
                                     icon = R.drawable.ic_photo
                                 }
                                 tabHost?.apply {
@@ -127,7 +130,7 @@ class PostFragment : BaseDialogFragment() {
                                     post { setCurrentTabByTag(newIndex) }
                                 }
                             } catch (e: Throwable) {
-                                requireContext().toast(e.message)
+                                toast(e.message)
                             }
                         }
                         REQ_CODE_GIPHY -> {
@@ -168,7 +171,6 @@ class PostFragment : BaseDialogFragment() {
                 when (argFlag) {
                     R.id.photo -> onPhotoClick()
                     R.id.camera -> onCameraClick()
-                    R.id.giphy -> onGiphyClick()
                 }
             })
         }
@@ -190,7 +192,7 @@ class PostFragment : BaseDialogFragment() {
             intent.addCategory(Intent.CATEGORY_OPENABLE)
             startActivityForResult(intent, REQ_CODE_IMAGE)
         } catch(e: Exception) {
-            requireContext().toast(R.string.err_fail)
+            toast(R.string.err_fail)
         }
     }
 
@@ -203,15 +205,7 @@ class PostFragment : BaseDialogFragment() {
             intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
             startActivityForResult(intent, REQ_CODE_CAMERA)
         } catch(e: Exception) {
-            requireContext().toast(R.string.err_fail)
-        }
-    }
-
-    fun onGiphyClick() {
-        try {
-            startActivityForResult(Intent(context, GiphyActivity::class.java), REQ_CODE_GIPHY)
-        } catch(e: Exception) {
-            requireContext().toast(R.string.err_fail)
+            toast(R.string.err_fail)
         }
     }
 

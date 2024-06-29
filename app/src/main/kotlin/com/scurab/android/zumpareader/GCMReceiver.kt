@@ -9,14 +9,13 @@ import android.content.Context
 import android.content.Intent
 import android.media.RingtoneManager
 import android.os.Build
-import androidx.core.app.NotificationCompat
 import android.text.Html
 import android.view.ContextThemeWrapper
+import androidx.core.app.NotificationCompat
 import com.scurab.android.zumpareader.app.MainActivity
+import com.scurab.android.zumpareader.ext.notificationManager
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.util.obtainStyledColor
-import org.jetbrains.anko.notificationManager
-import java.net.URLDecoder
 
 /**
  * Created by JBruchanov on 14/01/2016.

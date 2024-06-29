@@ -1,9 +1,9 @@
 package com.scurab.android.zumpareader.extension
 
 import android.os.Looper
-import androidx.recyclerview.widget.RecyclerView
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
 
 /**
  * Created by jbruchanov on 07/11/2017.

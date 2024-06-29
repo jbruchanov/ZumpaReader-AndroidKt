@@ -6,34 +6,36 @@ import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.EditText
+import android.widget.FrameLayout
+import android.widget.ImageButton
+import android.widget.LinearLayout
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.util.obtainStyledColor
 import com.scurab.android.zumpareader.util.setImageTint
-import org.jetbrains.anko.find
+
 
 /**
  * Created by JBruchanov on 31/12/2015.
  */
 class PostMessageView : FrameLayout {
 
-    val subject by lazy(LazyThreadSafetyMode.NONE) { find<EditText>(R.id.subject) }
-    val message by lazy { find<EditText>(R.id.message) }
-    val photo by lazy { find<ImageButton>(R.id.photo) }
-    val camera by lazy { find<ImageButton>(R.id.camera) }
-    val giphy by lazy { find<Button>(R.id.giphy) }
-    val sendButton by lazy { find<ImageButton>(R.id.send) }
-    val addButton by lazy { find<ImageButton>(R.id.add) }
+    val subject by lazy(LazyThreadSafetyMode.NONE) { findViewById<EditText>(R.id.subject) }
+    val message by lazy { findViewById<EditText>(R.id.message) }
+    val photo by lazy { findViewById<ImageButton>(R.id.photo) }
+    val camera by lazy { findViewById<ImageButton>(R.id.camera) }
+    val sendButton by lazy { findViewById<ImageButton>(R.id.send) }
+    val addButton by lazy { findViewById<ImageButton>(R.id.add) }
 
-    constructor(context: Context?) : this(context, null)
+    constructor(context: Context) : this(context, null)
 
-    constructor(context: Context?, attrs: AttributeSet?) : this(context, attrs, 0)
+    constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0)
 
-    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr) {
+    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr) {
         init(attrs)
     }
 
-    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int) : super(context, attrs, defStyleAttr, defStyleRes) {
+    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int) : super(context, attrs, defStyleAttr, defStyleRes) {
         init(attrs)
     }
 

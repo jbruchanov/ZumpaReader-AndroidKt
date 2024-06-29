@@ -2,8 +2,8 @@ package com.scurab.android.zumpareader.util
 
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
-import retrofit2.HttpException
 import java.net.HttpURLConnection
+import retrofit2.HttpException
 
 /**
  * Created by JBruchanov on 27/12/2017.

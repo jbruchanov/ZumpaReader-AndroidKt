@@ -6,20 +6,25 @@ import android.content.Context
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import android.text.ClipboardManager
 import android.text.style.ImageSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
+import androidx.core.app.ActivityOptionsCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.app.BaseFragment
 import com.scurab.android.zumpareader.app.ImageActivity
+import com.scurab.android.zumpareader.content.SubListAdapter.Companion.tReply
 import com.scurab.android.zumpareader.content.post.PostFragment
 import com.scurab.android.zumpareader.event.LoadThreadEvent
+import com.scurab.android.zumpareader.ext.toast
+import com.scurab.android.zumpareader.extension.app
 import com.scurab.android.zumpareader.model.*
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.text.appendReply
@@ -30,18 +35,10 @@ import com.scurab.android.zumpareader.ui.showAnimated
 import com.scurab.android.zumpareader.util.*
 import com.scurab.android.zumpareader.widget.PostMessageView
 import com.scurab.android.zumpareader.widget.SurveyView
+import com.scurab.android.zumpareader.widget.ToggleAdapter
 import com.squareup.otto.Subscribe
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import org.jetbrains.anko.find
-import org.jetbrains.anko.support.v4.toast
-import androidx.core.app.ActivityOptionsCompat
-import androidx.core.text.TextUtilsCompat
-import android.text.ClipboardManager
-import android.text.TextUtils
-import com.scurab.android.zumpareader.content.SubListAdapter.Companion.tReply
-import com.scurab.android.zumpareader.extension.app
-import com.scurab.android.zumpareader.widget.ToggleAdapter
 
 
 /**
@@ -66,18 +63,19 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
         }
     }
 
-    override val title: CharSequence get() {
-        val subject = zumpaData[argThreadId]?.subject
-        return if (subject != null) ZumpaSimpleParser.parseBody(subject, context, ImageSpan.ALIGN_BASELINE) else getString(R.string.app_name)
-    }
+    override val title: CharSequence
+        get() {
+            val subject = zumpaData[argThreadId]?.subject
+            return if (subject != null) ZumpaSimpleParser.parseBody(subject, context, ImageSpan.ALIGN_BASELINE) else getString(R.string.app_name)
+        }
 
     protected val argThreadId: String get() = arguments?.getString(ARG_THREAD_ID) ?: ""
     protected val argScrollDown: Boolean get() = arguments?.getBoolean(ARG_SCROLL_DOWN) ?: false
     private var firstLoad: Boolean = true
 
-    private val recyclerView: RecyclerView? get() = view?.find(R.id.recycler_view)
-    private val swipyRefreshLayout: SwipyRefreshLayout? get() = view?.find(R.id.swipe_refresh_layout)
-    private val postMessageView: PostMessageView? get() = view?.find(R.id.response_panel)
+    private val recyclerView: RecyclerView? get() = view?.findViewById(R.id.recycler_view)
+    private val swipyRefreshLayout: SwipyRefreshLayout? get() = view?.findViewById(R.id.swipe_refresh_layout)
+    private val postMessageView: PostMessageView? get() = view?.findViewById(R.id.response_panel)
     private val contextColorText: Int by lazy { requireContext().obtainStyledColor(R.attr.contextColorText2) }
     private val treeViewObserver: ViewTreeObserver.OnGlobalLayoutListener = ViewTreeObserver.OnGlobalLayoutListener { updateRecycleViewPadding() }
     private lateinit var delegate: BehaviourDelegate
@@ -121,7 +119,6 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
             sendButton.setOnClickListener { dispatchSend() }
             camera.setOnClickListener { dispatchOpenPostMessage(R.id.camera) }
             photo.setOnClickListener { dispatchOpenPostMessage(R.id.photo) }
-            giphy.setOnClickListener { dispatchOpenPostMessage(R.id.giphy) }
         }
         delegate.onViewCreated()
         loadData()
@@ -138,12 +135,12 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
             it.setScrollStrategyEnabled(false)
             delegate.onResume()
         }
-        view!!.viewTreeObserver.addOnGlobalLayoutListener(treeViewObserver)
+        requireView().viewTreeObserver.addOnGlobalLayoutListener(treeViewObserver)
     }
 
     private fun updateRecycleViewPadding() {
         if (zumpaApp.zumpaPrefs.isLoggedInNotOffline ?: false) {
-            view!!.post {
+            requireView().post {
                 //set padding for response panel
                 recyclerView?.apply {
                     setPadding(paddingLeft, paddingTop, paddingRight, postMessageView?.height ?: 0)
@@ -156,7 +153,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
         mainActivity?.setScrollStrategyEnabled(true)
         isLoading = false
         isSending = false
-        view!!.viewTreeObserver.removeGlobalLayoutListenerSafe(treeViewObserver)
+        requireView().viewTreeObserver.removeGlobalLayoutListenerSafe(treeViewObserver)
         super.onPause()
     }
 
@@ -164,7 +161,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
         var msg = postMessageView?.message?.text?.toString() ?: ""
         val context = requireContext()
         if (msg.isEmpty()) {
-            context.toast(R.string.err_empty_msg)
+            toast(R.string.err_empty_msg)
             return
         }
 
@@ -175,22 +172,22 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
             isSending = true
             context.hideKeyboard(view)
             observable
-                    .subscribeOn(Schedulers.io())
-                    .compose(bindToLifecycle<ZumpaThreadResult>())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .compose(RxTransformers.zumpaRedirectHandler())
-                    .subscribe(
-                            { result ->
-                                //this should be never called
-                                hideMessagePanel(true)
-                                loadData(SCROLL_DOWN)
-                                isSending = false
-                            },
-                            { err ->
-                                err.message?.let { toast(it) }
-                                isSending = false
-                            }
-                    )
+                .subscribeOn(Schedulers.io())
+                .compose(bindToLifecycle<ZumpaThreadResult>())
+                .observeOn(AndroidSchedulers.mainThread())
+                .compose(RxTransformers.zumpaRedirectHandler())
+                .subscribe(
+                    { result ->
+                        //this should be never called
+                        hideMessagePanel(true)
+                        loadData(SCROLL_DOWN)
+                        isSending = false
+                    },
+                    { err ->
+                        err.message?.let { toast(it) }
+                        isSending = false
+                    }
+                )
         }
     }
 
@@ -227,38 +224,38 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
         isLoading = true
         zumpaApp.zumpaAPI.getThreadPage(tid, tid).let {
             it.subscribeOn(Schedulers.io())
-                    .compose(bindToLifecycle<ZumpaThreadResult>())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .map {
-                        it.items.forEach { item ->
-                            item.styledAuthor(context)
-                            item.styledBody(context)
-                        }
-                        it
+                .compose(bindToLifecycle<ZumpaThreadResult>())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map {
+                    it.items.forEach { item ->
+                        item.styledAuthor(context)
+                        item.styledBody(context)
                     }
-                    .retry(3)
-                    .subscribe(
-                            { result ->
-                                val rv = recyclerView!!
-                                val offsetY = -2 * rv.computeVerticalScrollOffset()
-                                onResultLoaded(result, force)
-                                val scrollWayValue = if (argScrollDown && firstLoad) SCROLL_DOWN else scrollWay
-                                if (scrollWayValue != 0) {
-                                    firstLoad = false
-                                    when (scrollWayValue) {
-                                        SCROLL_UP -> rv.smoothScrollBy(0, offsetY)
-                                        SCROLL_DOWN -> rv.smoothScrollToPosition(rv.adapter?.itemCount ?: 0)
-                                    }
-                                }
-                                isSending = false
-                                isLoading = false
-                            },
-                            { err ->
-                                err?.message?.let { toast(it) }
-                                isSending = false
-                                isLoading = false
+                    it
+                }
+                .retry(3)
+                .subscribe(
+                    { result ->
+                        val rv = recyclerView ?: return@subscribe
+                        val offsetY = -2 * rv.computeVerticalScrollOffset()
+                        onResultLoaded(result, force)
+                        val scrollWayValue = if (argScrollDown && firstLoad) SCROLL_DOWN else scrollWay
+                        if (scrollWayValue != 0) {
+                            firstLoad = false
+                            when (scrollWayValue) {
+                                SCROLL_UP -> rv.smoothScrollBy(0, offsetY)
+                                SCROLL_DOWN -> rv.smoothScrollToPosition(rv.adapter?.itemCount ?: 0)
                             }
-                    )
+                        }
+                        isSending = false
+                        isLoading = false
+                    },
+                    { err ->
+                        err?.message?.let { toast(it) }
+                        isSending = false
+                        isLoading = false
+                    }
+                )
         }
     }
 
@@ -328,43 +325,45 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
     }
 
     override fun onMenuItemClick(position: Int, item: ZumpaThreadItem, type: Int) {
-        when(type) {
+        when (type) {
             tReply -> {
                 postMessageView
-                        ?.takeIf { zumpaApp.zumpaPrefs.isLoggedInNotOffline }
-                        ?.let {
-                            showMessagePanel()
-                            it.message.text.apply {
-                                val text = "@${item.authorReal}: \n"
-                                val outRange = OutRef<IntRange>()
-                                if (containsAuthor(text, outRange)) {
-                                    val range = outRange.data!!
-                                    replace(range.first, range.last, "")
-                                } else {
-                                    appendReply(text, contextColorText)
-                                }
+                    ?.takeIf { zumpaApp.zumpaPrefs.isLoggedInNotOffline }
+                    ?.let {
+                        showMessagePanel()
+                        it.message.text.apply {
+                            val text = "@${item.authorReal}: \n"
+                            val outRange = OutRef<IntRange>()
+                            if (containsAuthor(text, outRange)) {
+                                val range = outRange.data!!
+                                replace(range.first, range.last, "")
+                            } else {
+                                appendReply(text, contextColorText)
                             }
                         }
-                }
+                    }
+            }
+
             SubListAdapter.tCopy -> {
                 (requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).apply {
                     text = item.body
                     toast(R.string.saved_into_clipboard)
                 }
             }
+
             SubListAdapter.tSpeak -> {
                 postMessageView
-                        ?.takeIf { zumpaApp.zumpaPrefs.isLoggedInNotOffline }
-                        ?.let {
-                            showMessagePanel()
-                            val result = it.message.text
-                            if (result.isNotEmpty()) {
-                                result.append("\n")
-                            }
-                            result.append("${item.author}: ${item.body}\n----\n")
-                            it.message.text = result
-                            it.message.setSelection(it.message.length())
+                    ?.takeIf { zumpaApp.zumpaPrefs.isLoggedInNotOffline }
+                    ?.let {
+                        showMessagePanel()
+                        val result = it.message.text
+                        if (result.isNotEmpty()) {
+                            result.append("\n")
                         }
+                        result.append("${item.author}: ${item.body}\n----\n")
+                        it.message.text = result
+                        it.message.setSelection(it.message.length())
+                    }
             }
         }
         (recyclerView?.adapter as? ToggleAdapter)?.closeMenu(position)
@@ -381,15 +380,15 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
             zumpaApp.zumpaAPI.voteSurvey(ZumpaVoteSurveyBody(item.surveyId, item.id)).let {
                 isSending = true
                 it.subscribeOn(Schedulers.io())
-                        .compose(bindToLifecycle<ZumpaGenericResponse>())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(
-                                { result -> loadData() },
-                                { err ->
-                                    err?.message?.let { toast(it) }
-                                    isSending = false
-                                }
-                        )
+                    .compose(bindToLifecycle<ZumpaGenericResponse>())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                        { result -> loadData() },
+                        { err ->
+                            err?.message?.let { toast(it) }
+                            isSending = false
+                        }
+                    )
             }
         }
     }
@@ -398,7 +397,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
         val context = requireContext()
         if (longClick) {
             context.saveToClipboard(Uri.parse(url))
-            context.toast(R.string.saved_into_clipboard)
+            toast(R.string.saved_into_clipboard)
         } else {
             val id = ZumpaSimpleParser.getZumpaThreadId(url)
             if (id != 0) {
@@ -425,7 +424,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
         open fun onResume() {}
         open fun onViewCreated() {}
         open fun onLoadThreadEvent(event: LoadThreadEvent) {}
-        open fun openPostFragment(flag : Int?) {}
+        open fun openPostFragment(flag: Int?) {}
     }
 
     private class PhoneBehaviour(fragment: SubListFragment) : BehaviourDelegate(fragment) {
@@ -467,13 +466,11 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
             fragment.openFragment(newInstance(threadId.toString()), true, true)
         }
 
-        override fun openPostFragment(flag : Int?) {
+        override fun openPostFragment(flag: Int?) {
             val f = if (flag == null) {
                 PostFragment()
             } else {
-                PostFragment
-                        .newInstance(fragment.title.toString(), fragment.postMessageView!!.message.text.toString(), null, fragment.argThreadId, flag)
-
+                PostFragment.newInstance(fragment.title.toString(), fragment.postMessageView?.message?.text.toString(), null, fragment.argThreadId, flag)
             }
             fragment.openFragment(f, true, false)
         }
@@ -499,7 +496,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
                 PostFragment()
             } else {
                 PostFragment
-                        .newInstance(fragment.title.toString(), fragment.postMessageView!!.message.text.toString(), null, fragment.argThreadId, flag)
+                    .newInstance(fragment.title.toString(), fragment.postMessageView?.message?.text?.toString(), null, fragment.argThreadId, flag)
 
             }
             f.show(fragment.childFragmentManager, "PostFragment")

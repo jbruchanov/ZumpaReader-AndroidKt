@@ -2,9 +2,9 @@ package com.scurab.android.zumpareader.data
 
 import com.scurab.android.zumpareader.model.ZumpaMainPageResult
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
+import java.io.IOException
 import okhttp3.ResponseBody
 import retrofit2.Converter
-import java.io.IOException
 
 /**
  * Created by JBruchanov on 24/11/2015.

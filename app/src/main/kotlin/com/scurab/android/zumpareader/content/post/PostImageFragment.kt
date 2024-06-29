@@ -9,28 +9,26 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.Toast
 import com.scurab.android.zumpareader.R
-import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.content.SendingFragment
 import com.scurab.android.zumpareader.content.post.tasks.CopyFromResourcesTask
 import com.scurab.android.zumpareader.content.post.tasks.ProcessImageTask
 import com.scurab.android.zumpareader.drawable.SimpleProgressDrawable
+import com.scurab.android.zumpareader.ext.toast
 import com.scurab.android.zumpareader.extension.app
 import com.scurab.android.zumpareader.util.asVisibility
 import com.scurab.android.zumpareader.util.saveToClipboard
-import com.scurab.android.zumpareader.util.toast
 import com.scurab.android.zumpareader.widget.PostImagePanelView
 import com.squareup.picasso.Picasso
 import com.trello.rxlifecycle2.components.support.RxFragment
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import okhttp3.MediaType
-import okhttp3.MultipartBody
-import okhttp3.RequestBody
-import org.jetbrains.anko.find
-import org.jetbrains.anko.support.v4.toast
 import java.io.File
-import java.lang.NullPointerException
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 
 
 /**
@@ -55,11 +53,11 @@ class PostImageFragment : RxFragment(), SendingFragment {
     override var sendingDialog: ProgressDialog? = null
 
     private val image: ImageView get() {
-        return view!!.find(R.id.image)
+        return requireView().findViewById(R.id.image)
     }
 
     private val imagePanel: PostImagePanelView get() {
-        return view!!.find(R.id.post_image_panel_view)
+        return requireView().findViewById(R.id.post_image_panel_view)
     }
 
     private val imageUri by lazy { arguments?.getParcelable<Uri>(Intent.EXTRA_STREAM) ?: throw NullPointerException("Arguments") }
@@ -97,9 +95,9 @@ class PostImageFragment : RxFragment(), SendingFragment {
                                 this@PostImageFragment.imageResolution = result.imageResolution
                                 imagePanel.setImageSize(this.imageResolution, imageSize)
                             }
-                            Picasso.with(context).load(result.thumbnail).placeholder(SimpleProgressDrawable(context)).into(image)
+                            Picasso.get().load(result.thumbnail!!).placeholder(SimpleProgressDrawable(context)).into(image)
                         } else {
-                            toast(err.message.toString())
+                            Toast.makeText(requireContext(), err.message ?: "Null message", Toast.LENGTH_LONG).show()
                         }
                     }
             if (restoreState) {
@@ -111,7 +109,7 @@ class PostImageFragment : RxFragment(), SendingFragment {
                 imagePanel.copy.visibility = (imageUploadedLink != null).asVisibility()
             }
         } catch (e: Throwable) {
-            context.toast(e.message)
+            toast(e.message)
         }
         imagePanel.upload.setOnClickListener { dispatchUpload() }
         imagePanel.resize.setOnClickListener { onImageResize() }
@@ -123,7 +121,7 @@ class PostImageFragment : RxFragment(), SendingFragment {
         val context = requireContext()
         imageUploadedLink.let {
             context.saveToClipboard(Uri.parse(it))
-            context.toast(R.string.saved_into_clipboard)
+            toast(R.string.saved_into_clipboard)
         }
     }
 
@@ -155,7 +153,7 @@ class PostImageFragment : RxFragment(), SendingFragment {
                             imagePanel.setResizedImageSize(result.imageResolution!!, result.imageSize)
                         }
                         if (err != null) {
-                            toast(err.message.toString())
+                            Toast.makeText(requireContext(), err.message ?: "Null message", Toast.LENGTH_LONG).show()
                         }
                     }
         }
@@ -168,9 +166,9 @@ class PostImageFragment : RxFragment(), SendingFragment {
         }
 
         isSending = true
-        val reqFile = RequestBody.create(MediaType.parse("image/*"), out)
+        val reqFile = out.asRequestBody("image/*".toMediaType())
         val body = MultipartBody.Part.createFormData("image", out.name, reqFile)
-        val name = RequestBody.create(MediaType.parse("text/plain"), "Submit")
+        val name = "Submit".toByteArray().toRequestBody("text/plain".toMediaType())
 
         val context = requireContext()
         app().zumpaPHPAPI.postImage(body, name)
@@ -184,18 +182,18 @@ class PostImageFragment : RxFragment(), SendingFragment {
                         imageUploadedLink = url
                         dispatchImageUploaded(url)
                     } else {
-                        context.toast(R.string.err_fail)
+                        toast(R.string.err_fail)
                     }
                 }, { err ->
                     err.printStackTrace()
-                    context.toast(R.string.err_fail)
+                    toast(R.string.err_fail)
                 })
     }
 
     protected fun dispatchImageUploaded(result: String) {
         (parentFragment as? PostFragment)?.apply {
             onSharedImage(result)
-            requireContext().toast(R.string.done)
+            toast(R.string.done)
         }
     }
 

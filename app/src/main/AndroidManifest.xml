@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.scurab.android.zumpareader">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.STORAGE" />
@@ -9,6 +8,7 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <permission
         android:name="com.scurab.android.zumpareader.permission.C2D_MESSAGE"
@@ -60,11 +60,6 @@
             android:configChanges="orientation|screenSize"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.Image" />
-
-        <activity
-            android:name=".giphy.GiphyActivity"
-            android:configChanges="orientation|screenSize"
-            android:label="@string/app_name" />
 
         <meta-data
             android:name="io.fabric.ApiKey"
