@@ -65,7 +65,7 @@ class ImageActivity : AppCompatActivity() {
                 }
             }
 
-            override fun onFailureImpl(dataSource: DataSource<CloseableReference<CloseableImage>>?) {
+            override fun onFailureImpl(dataSource: DataSource<CloseableReference<CloseableImage>>) {
                 loadImage(url)
             }
 
@@ -99,13 +99,12 @@ class ImageActivity : AppCompatActivity() {
                         }
                     }
 
-                    override fun onFailure(dataSource: DataSource<CloseableReference<PooledByteBuffer>>?) {
+                    override fun onFailure(dataSource: DataSource<CloseableReference<PooledByteBuffer>>) {
                         onOpenLinkOnError(url)
                         dataSource?.close()
                     }
-
-                    override fun onCancellation(dataSource: DataSource<CloseableReference<PooledByteBuffer>>?) {}
-                    override fun onProgressUpdate(dataSource: DataSource<CloseableReference<PooledByteBuffer>>?) {}
+                    override fun onCancellation(dataSource: DataSource<CloseableReference<PooledByteBuffer>>) {}
+                    override fun onProgressUpdate(dataSource: DataSource<CloseableReference<PooledByteBuffer>>) {}
                 }, CallerThreadExecutor.getInstance())
             }
         } finally {

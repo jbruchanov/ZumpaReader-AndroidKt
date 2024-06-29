@@ -12,6 +12,7 @@ import android.preference.CheckBoxPreference
 import android.preference.PreferenceActivity
 import android.provider.Settings
 import androidx.core.content.ContextCompat
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.messaging.FirebaseMessaging
 import com.scurab.android.zumpareader.AppConfig
 import com.scurab.android.zumpareader.R
@@ -25,6 +26,7 @@ import com.scurab.android.zumpareader.preferences.ButtonPreference
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.util.ParseUtils
 import com.scurab.android.zumpareader.util.ZumpaPrefs
+import com.scurab.android.zumpareader.util.saveToClipboard
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.SingleObserver
@@ -45,6 +47,7 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
     private val permissionsPref by lazy { findPreference(ZumpaPrefs.KEY_NOTIFICATIONS) as ButtonPreference }
     private val showLastAuthorPref by lazy { findPreference(ZumpaPrefs.KEY_SHOW_LAST_AUTHOR) as CheckBoxPreference }
     private val filterPref by lazy { findPreference(ZumpaPrefs.KEY_FILTER) }
+    private val crashlyticsPref by lazy { findPreference(ZumpaPrefs.KEY_CRASHYLYTICS) }
     private val notificationStateProvider by lazy { NotificationStateProvider(this) }
 
     val zumpaApp: ZumpaReaderApp
@@ -80,6 +83,14 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
             }
             true
         }
+
+        crashlyticsPref.title = zumpaApp.zumpaPrefs.userId
+        crashlyticsPref.setOnPreferenceClickListener {
+            val userId = zumpaApp.zumpaPrefs.userId
+            saveToClipboard(userId)
+            toast("'${userId}' saved to clipboard")
+            true
+        }
     }
 
     override fun onResume() {
@@ -110,6 +121,7 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
                     } else {
                         toast(err.message)
                     }
+                    crashlyticsPref.title = zumpaApp.zumpaPrefs.userId
                 }
         } else {
             toast(R.string.done)
@@ -151,6 +163,7 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
                         showLastAuthorPref.isEnabled = true
                         buttonPref.title = resources.getString(R.string.logout)
                     }
+                    crashlyticsPref.title = zumpaApp.zumpaPrefs.userId
                 },
                 { err ->
                     isSending = false

@@ -16,6 +16,7 @@
     <string name="load_images">Load Images</string>
     <string name="settings">Settings</string>
     <string name="permissions">Permissions</string>
+    <string name="crashlytics">Crashlytics</string>
     <string name="wheeeee">Wheeeeeeee!</string>
     <string name="ok">OK</string>
     <string name="done">Done</string>

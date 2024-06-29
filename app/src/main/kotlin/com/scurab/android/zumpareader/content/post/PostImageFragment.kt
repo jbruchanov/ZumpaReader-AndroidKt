@@ -95,7 +95,7 @@ class PostImageFragment : RxFragment(), SendingFragment {
                                 this@PostImageFragment.imageResolution = result.imageResolution
                                 imagePanel.setImageSize(this.imageResolution, imageSize)
                             }
-                            Picasso.with(context).load(result.thumbnail).placeholder(SimpleProgressDrawable(context)).into(image)
+                            Picasso.get().load(result.thumbnail!!).placeholder(SimpleProgressDrawable(context)).into(image)
                         } else {
                             Toast.makeText(requireContext(), err.message ?: "Null message", Toast.LENGTH_LONG).show()
                         }

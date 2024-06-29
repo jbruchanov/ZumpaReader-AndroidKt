@@ -65,10 +65,10 @@ class ZumpaReaderApp : Application() {
     private val TIMEOUT = 5000L
 
 
-    val zumpaHttpClient : OkHttpClient by lazy { buildHttpClient(false) }
-    val zumpaSettingsHttpClient : OkHttpClient by lazy { zumpaHttpClient.newBuilder().followRedirects(false).build() }
+    val zumpaHttpClient: OkHttpClient by lazy { buildHttpClient(false) }
+    val zumpaSettingsHttpClient: OkHttpClient by lazy { zumpaHttpClient.newBuilder().followRedirects(false).build() }
 
-    private fun buildHttpClient(redirect: Boolean) : OkHttpClient {
+    private fun buildHttpClient(redirect: Boolean): OkHttpClient {
         cookieManager.setCookiePolicy(java.net.CookiePolicy.ACCEPT_ALL)
         cookieManager.put(URI.create(ZR.Constants.ZUMPA_MAIN_URL), zumpaPrefs.cookiesMap)
 
@@ -86,9 +86,9 @@ class ZumpaReaderApp : Application() {
             addNetworkInterceptor { chain ->
                 val req = chain.request()
                 val rb = req
-                        .newBuilder()
-                        .addHeader("Cache-Control", "max-age=0")
-                        .url(req.url.newBuilder().addQueryParameter("_ts", System.currentTimeMillis().toString()).build())
+                    .newBuilder()
+                    .addHeader("Cache-Control", "max-age=0")
+                    .url(req.url.newBuilder().addQueryParameter("_ts", System.currentTimeMillis().toString()).build())
 
                 chain.proceed(rb.build())
             }
@@ -136,6 +136,9 @@ class ZumpaReaderApp : Application() {
         })
         loadOfflineData()
         FirebaseApp.initializeApp(this)
+        if (zumpaPrefs.userId == null) {
+            zumpaPrefs.userId = UUID.randomUUID().toString()
+        }
     }
 
     fun loadOfflineData() {
@@ -143,8 +146,7 @@ class ZumpaReaderApp : Application() {
         if (offline.exists() && zumpaPrefs.isOffline) {
             val gsonBuilder = GsonBuilder().setExclusionStrategies(GsonExcludeStrategy())
             gsonBuilder.registerTypeAdapter<ZumpaThread> {
-                deserialize {
-                    elem ->
+                deserialize { elem ->
                     if (elem is DeserializerArg) {
                         ZumpaThread.thread(elem.json as JsonObject)
                     } else {
@@ -184,11 +186,11 @@ class ZumpaReaderApp : Application() {
 
     private fun initPicasso() {
         val picasso = Picasso.Builder(this)
-                .downloader(PicassoHttpDownloader2.createDefault(this, zumpaHttpClient, zumpaPrefs))
-                .listener({ picasso, uri, exception ->
-                    Log.d("PicassoLoader", "URL:%s Exception:%s".format(uri, exception))
-                    exception.printStackTrace()
-                }).build()
+            .downloader(PicassoHttpDownloader2.createDefault(this, zumpaHttpClient, zumpaPrefs))
+            .listener({ picasso, uri, exception ->
+                Log.d("PicassoLoader", "URL:%s Exception:%s".format(uri, exception))
+                exception.printStackTrace()
+            }).build()
         Picasso.setSingletonInstance(picasso)
     }
 
@@ -199,11 +201,11 @@ class ZumpaReaderApp : Application() {
 
     val zumpaOnlineAPI: ZumpaAPI by lazy {
         val retrofit = Retrofit.Builder()
-                .baseUrl(ZR.Constants.ZUMPA_MAIN_URL)
-                .addConverterFactory(ZumpaConverterFactory(zumpaParser))
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .client(zumpaHttpClient)
-                .build()
+            .baseUrl(ZR.Constants.ZUMPA_MAIN_URL)
+            .addConverterFactory(ZumpaConverterFactory(zumpaParser))
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .client(zumpaHttpClient)
+            .build()
 
         retrofit.create(ZumpaAPI::class.java)
     }
@@ -214,22 +216,22 @@ class ZumpaReaderApp : Application() {
 
     val zumpaWebServiceAPI: ZumpaWSAPI by lazy {
         val retrofit = Retrofit.Builder()
-                .baseUrl(ZR.Constants.ZUMPA_WS_MAIN_URL)
-                .addConverterFactory(ZumpaGenericConverterFactory())
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .client(zumpaHttpClient)
-                .build()
+            .baseUrl(ZR.Constants.ZUMPA_WS_MAIN_URL)
+            .addConverterFactory(ZumpaGenericConverterFactory())
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .client(zumpaHttpClient)
+            .build()
 
         retrofit.create(ZumpaWSAPI::class.java)
     }
 
     val zumpaPHPAPI: ZumpaPHPAPI by lazy {
         val retrofit = Retrofit.Builder()
-                .baseUrl(ZR.Constants.ZUMPA_PHP_MAIN_URL)
-                .addConverterFactory(ZumpaGenericConverterFactory())
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .client(zumpaHttpClient)
-                .build()
+            .baseUrl(ZR.Constants.ZUMPA_PHP_MAIN_URL)
+            .addConverterFactory(ZumpaGenericConverterFactory())
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .client(zumpaHttpClient)
+            .build()
 
         retrofit.create(ZumpaPHPAPI::class.java)
     }

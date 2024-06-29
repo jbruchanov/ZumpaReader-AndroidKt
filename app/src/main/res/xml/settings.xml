@@ -40,4 +40,9 @@
             android:key="KEY_NOTIFICATIONS"
             android:title="@string/notifications" />
     </PreferenceCategory>
+    <PreferenceCategory android:title="@string/crashlytics">
+        <com.scurab.android.zumpareader.preferences.ButtonPreference
+            android:key="KEY_CRASHYLYTICS"
+            android:title="..." />
+    </PreferenceCategory>
 </PreferenceScreen>

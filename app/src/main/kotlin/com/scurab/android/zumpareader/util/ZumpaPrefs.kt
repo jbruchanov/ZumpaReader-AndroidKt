@@ -18,6 +18,7 @@ class ZumpaPrefs(context: Context) {
         val KEY_OFFLINE = "KEY_OFFLINE"
         val KEY_FILTER = "KEY_FILTER"
         val KEY_NOTIFICATIONS = "KEY_NOTIFICATIONS"
+        val KEY_CRASHYLYTICS = "KEY_CRASHYLYTICS"
     }
 
     private val KEY_COOKIES = "KEY_COOKIES"
@@ -27,6 +28,7 @@ class ZumpaPrefs(context: Context) {
     private val KEY_READ_STATES = "KEY_READ_STATES"
     private val KEY_LAST_CAMERA_URI = "KEY_LAST_CAMERA_URI"
     private val KEY_PUSH_REG_ID = "KEY_PUSH_REG_ID"
+    private val KEY_USER_ID = "KEY_USER_ID"
 
     private val sharedPrefs: SharedPreferences
 
@@ -126,5 +128,11 @@ class ZumpaPrefs(context: Context) {
         }
         set(value) {
             sharedPrefs.edit().putBoolean(KEY_OFFLINE, value).apply()
+        }
+
+    var userId: String?
+        get() = loggedUserName?.takeIf { it.isNotEmpty() } ?: sharedPrefs.getString(KEY_USER_ID, null)
+        set(value) {
+            sharedPrefs.edit().putString(KEY_USER_ID, value).apply()
         }
 }

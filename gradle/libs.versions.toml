@@ -12,8 +12,7 @@ android-test = ["androidx-test-runner", "androidx-test-rules", "androidx-test-ju
 android-navigation = ["androidx-navigation-fragment", "androidx-navigation-runtime", "androidx-navigation-ui"]
 groupie = ["groupie-base", "groupie-viewbinding"]
 okhttp = ["okhttp-base", "okhttp-logging", "okhttp-urlconnection"]
-unittests-jvm = ["sleepwave-test-util", "jetbrains-coroutines-test", "junit-jupiter-api", "junit-jupiter-engine", "junit-jupiter-params", "mockk", "truth", "turbine"]
-sleepwave-audiodsp = ["sleepwave-audio", "sleepwave-dsp", "sleepwave-iosapi"]
+unittests-jvm = ["jetbrains-coroutines-test", "junit-jupiter-api", "junit-jupiter-engine", "junit-jupiter-params", "mockk", "truth", "turbine"]
 
 [plugins]
 
@@ -30,78 +29,92 @@ ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlintplugin" }
 
 [versions]
 
-android-sdk-compile = "33"
+android-sdk-compile = "34"
 android-sdk-min = "26"
-android-sdk-target = "33"
+android-sdk-target = "34"
 
-kotlin = "1.9.0"
+fresco = "3.2.0"
+kotlin = "1.9.24"
 jvmtarget = "17"
-android-gradle-plugin = "8.1.0"
-picasso = "2.5.2"
-sleepwave-audio = "20230725-1600"
-sleepwave-core = "20220301-1142"
-sleepwave-dsp = "20230726-1121"
-sleepwave-iosapi = "20220330-1454"
-sleepwave-kissfft = "1.1.2-float"
-sleepwave-vmath = "20220822-0830"
-sleepwave-wavescape = "20230731-1000"
-sleepwave-util = "20230727-1420"
+android-gradle-plugin = "8.5.0"
+kotson = "2.5.0"
+otto = "1.3.8"
+picasso = "2.8"
 
 adjust = "4.33.5"
-androidx-activity-compose = "1.7.2"
-androidx-annotation = "1.6.0"
-androidx-billing = "4.0.0"
-androidx-browser = "1.5.0"
-androidx-core-ktx = "1.10.1"
+androidx-activity-compose = "1.9.0"
+androidx-annotation = "1.8.0"
+androidx-billing = "7.0.0"
+androidx-browser = "1.8.0"
+androidx-core-ktx = "1.13.1"
 androidx-custom-view-base = "1.2.0-alpha02"
 androidx-custom-view-poolingcontainer = "1.0.0"
 androidx-constraintlayout = "2.1.4"
 androidx-dynamicanimation = "1.0.0"
 androidx-installreferrer = "2.2"
-androidx-navigation = "2.6.0"
-androidx-room = "2.5.2"
+androidx-navigation = "2.7.7"
+androidx-room = "2.6.1"
 androidx-roomcoroutines = "2.1.0-alpha04"
-androidx-lifecycle = "2.6.1"
-androidx-test-base = "1.5.0"
-androidx-test-ext = "1.1.5"
-androidx-test-espresso = "3.5.1"
+androidx-lifecycle = "2.8.2"
+androidx-test-base = "1.6.1"
+androidx-test-ext = "1.2.1"
+androidx-test-espresso = "3.6.1"
 bouncycastle = "1.70"
-compose-ui = "1.4.3"
+compose-ui = "1.6.8"
 compose-compiler = "1.5.1"
-compose-constraintlayout = "1.1.0-alpha07"
-exoplayer = "2.19.0"
+compose-constraintlayout = "1.1.0-alpha13"
+exoplayer = "2.19.1"
 excuseme = "0.9.5"
 fadingedgelayout = "1.0.0"
 facebook = "13.0.0"
-firebase-bom = "32.2.2"
-firebase-plugin-crashlytics = "2.9.8"
-firebase-plugin-distribution = "4.0.0"
-google-adsidentifier = "18.0.1"
-google-services = "4.3.15"
-google-material = "1.9.0"
+firebase-bom = "33.1.1"
+firebase-plugin-crashlytics = "3.0.2"
+firebase-plugin-distribution = "5.0.0"
+google-adsidentifier = "18.1.0"
+google-services = "4.4.2"
+google-material = "1.12.0"
 google-review = "2.0.1"
-google-ksp = "1.9.0-1.0.13"
+google-ksp = "1.9.24-1.0.20"
 groupie = "2.9.0"
-gson = "2.10.1"
-jsonorg = "20230618"
+gson = "2.11.0"
+jsonorg = "20231013"
 jsoup = "1.10.3"
-junit = "5.10.0"
+## ⬆ = "1.11.1"
+## ⬆ = "1.11.2"
+## ⬆ = "1.11.3"
+## ⬆ = "1.12.1"
+## ⬆ = "1.12.2"
+## ⬆ = "1.13.1"
+## ⬆ = "1.14.1"
+## ⬆ = "1.14.2"
+## ⬆ = "1.14.3"
+## ⬆ = "1.15.1"
+## ⬆ = "1.15.2"
+## ⬆ = "1.15.3"
+## ⬆ = "1.15.4"
+## ⬆ = "1.16.1"
+## ⬆ = "1.16.2"
+## ⬆ = "1.17.1"
+## ⬆ = "1.17.2"
+junit = "5.10.2"
 ktlint = "0.50.0"
-ktlintplugin = "11.5.1"
-koin = "3.4.3"
-kotlinx-coroutines = "1.7.3"
-kotlinx-json = "1.5.1"
-leakcanary = "2.7"
-lottie = "6.1.0"
-mockk = "1.13.5"
-okhttp = "4.4.0"
+ktlintplugin = "12.1.1"
+koin = "3.5.6"
+kotlinx-coroutines = "1.8.1"
+kotlinx-json = "1.7.0"
+leakcanary = "2.13"
+lottie = "6.3.0"
+mockk = "1.13.11"
+okhttp = "4.12.0"
+retrofit = "2.10.0"
+swipy = "1.2.3"
 threetenbp = "1.4.6"
-sqlitejdbc = "3.42.0.0"
+sqlitejdbc = "3.45.2.0"
 stickylayoutmanager = "1.0.1"
 timber = "5.0.1"
-truth = "1.1.5"
-turbine = "1.0.0"
-zip = "1.16"
+truth = "1.4.2"
+turbine = "1.1.0"
+zip = "1.17"
 
 [libraries]
 
@@ -146,6 +159,8 @@ exoplayer = { module = "com.google.android.exoplayer:exoplayer", version.ref = "
 facebook = { module = "com.facebook.android:facebook-android-sdk", version.ref = "facebook" }
 fadingedgelayout = { module = "com.github.bosphere.android-fadingedgelayout:fadingedgelayout", version.ref = "fadingedgelayout" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
+fresco = { module = "com.facebook.fresco:fresco", version.ref = "fresco" }
+fresco-animated-gif = { module = "com.facebook.fresco:animated-gif", version.ref = "fresco" }
 google-adsidentifier = { module = "com.google.android.gms:play-services-ads-identifier", version.ref = "google-adsidentifier" }
 google-material = { module = "com.google.android.material:material", version.ref = "google-material" }
 google-review = { module = "com.google.android.play:review-ktx", version.ref = "google-review" }
@@ -158,21 +173,20 @@ koin = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-json" }
+kotson = { module = "com.github.salomonbrys.kotson:kotson", version.ref = "kotson" }
 leakcanary = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanary" }
 lottie = { module = "com.airbnb.android:lottie-compose", version.ref = "lottie" }
 okhttp-base = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 okhttp-urlconnection = { module = "com.squareup.okhttp3:okhttp-urlconnection", version.ref = "okhttp" }
 okhttp-logging = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "okhttp" }
+otto = { module = "com.squareup:otto", version.ref = "otto" }
 picasso = { module = "com.squareup.picasso:picasso", version.ref = "picasso" }
-sleepwave-audio = { module = "com.sleepwave:audio", version.ref = "sleepwave-audio" }
-sleepwave-iosapi = { module = "com.sleepwave:android-ios-api", version.ref = "sleepwave-iosapi" }
-sleepwave-dsp = { module = "com.sleepwave:dsp", version.ref = "sleepwave-dsp" }
-sleepwave-kissfft = { module = "com.sleepwave:kissfft-android", version.ref = "sleepwave-kissfft" }
-sleepwave-util = { module = "com.sleepwave:util", version.ref = "sleepwave-util" }
-sleepwave-vmath = { module = "com.sleepwave:vmath-android", version.ref = "sleepwave-vmath" }
-sleepwave-test-util = { module = "com.sleepwave:test-util", version.ref = "sleepwave-util" }
+retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
+retrofit-converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
+retrofit-adapter-rxjava2 = { module = "com.squareup.retrofit2:adapter-rxjava2", version.ref = "retrofit" }
 stickylayoutmanager = { module = "com.github.qiujayen:sticky-layoutmanager", version.ref = "stickylayoutmanager" }
 sqlitejdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlitejdbc" }
+swipy = { module = "com.github.orangegangsters:swipy", version.ref = "swipy" }
 threetenbp = { module = "com.jakewharton.threetenabp:threetenabp", version.ref = "threetenbp" }
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 zip = { module = "org.zeroturnaround:zt-zip", version.ref = "zip" }
