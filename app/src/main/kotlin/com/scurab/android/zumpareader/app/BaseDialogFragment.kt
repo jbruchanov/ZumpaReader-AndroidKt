@@ -1,14 +1,14 @@
 package com.scurab.android.zumpareader.app
 
 import android.os.Bundle
+import androidx.fragment.app.DialogFragment
 import com.scurab.android.zumpareader.BusProvider
 import com.scurab.android.zumpareader.R
-import com.trello.rxlifecycle2.components.support.RxDialogFragment
 
 /**
  * Created by JBruchanov on 25/11/2015.
  */
-abstract class BaseDialogFragment : RxDialogFragment() {
+abstract class BaseDialogFragment : DialogFragment() {
 
     val mainActivity: MainActivity?
         get() {

@@ -29,14 +29,18 @@ import com.scurab.android.zumpareader.ui.applySystemBarsAsPadding
 import com.scurab.android.zumpareader.util.ParseUtils
 import com.scurab.android.zumpareader.util.ZumpaPrefs
 import com.scurab.android.zumpareader.util.saveToClipboard
-import io.reactivex.Observable
-import io.reactivex.Single
-import io.reactivex.SingleObserver
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.Disposable
-import io.reactivex.schedulers.Schedulers
+import com.google.android.gms.tasks.Task
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import java.net.HttpURLConnection
 import java.net.URI
+import kotlin.coroutines.resume
 
 
 /**
@@ -112,27 +116,27 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
         filterPref.isEnabled = false
         if (user != null) {
             isSending = true
-            logoutCall = LogoutCall(zumpaApp, user)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe { result, err ->
+            logoutCall = scope.launch {
+                try {
+                    logout(zumpaApp, user)
                     isSending = false
-                    if (err == null) {
-                        showLastAuthorPref.isChecked = false
-                        showLastAuthorPref.isEnabled = false
-                        toast(R.string.done)
-                    } else {
-                        toast(err.message)
-                    }
-                    crashlyticsPref.title = zumpaApp.zumpaPrefs.userId
+                    showLastAuthorPref.isChecked = false
+                    showLastAuthorPref.isEnabled = false
+                    toast(R.string.done)
+                } catch (err: Throwable) {
+                    isSending = false
+                    toast(err.message)
                 }
+                crashlyticsPref.title = zumpaApp.zumpaPrefs.userId
+            }
         } else {
             toast(R.string.done)
         }
     }
 
-    private var loginCall: Disposable? = null
-    private var logoutCall: Disposable? = null
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private var loginCall: Job? = null
+    private var logoutCall: Job? = null
 
     protected fun dispatchLoginClicked() {
         var user = preferenceManager.sharedPreferences.getString(ZumpaPrefs.KEY_USER_NAME, "")
@@ -149,38 +153,33 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
         }
 
         isSending = true
-        loginCall = LoginCall(zumpaApp, ZumpaLoginBody(user, pwd))
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                { result ->
-                    isSending = false
-                    val loginResult = result.first
-                    val pushResult = result.second
-                    toast(if (loginResult) R.string.ok else R.string.err_fail)
-                    if (!pushResult) {
-                        toast(R.string.err_no_push_reg)
-                    }
-                    filterPref.isEnabled = loginResult
-                    if (loginResult) {
-                        showLastAuthorPref.isEnabled = true
-                        buttonPref.title = resources.getString(R.string.logout)
-                    }
-                    crashlyticsPref.title = zumpaApp.zumpaPrefs.userId
-                },
-                { err ->
-                    isSending = false
-                    toast(err.message)
+        loginCall = scope.launch {
+            try {
+                val (loginResult, pushResult) = login(zumpaApp, ZumpaLoginBody(user, pwd))
+                isSending = false
+                toast(if (loginResult) R.string.ok else R.string.err_fail)
+                if (!pushResult) {
+                    toast(R.string.err_no_push_reg)
                 }
-            )
+                filterPref.isEnabled = loginResult
+                if (loginResult) {
+                    showLastAuthorPref.isEnabled = true
+                    buttonPref.title = resources.getString(R.string.logout)
+                }
+                crashlyticsPref.title = zumpaApp.zumpaPrefs.userId
+            } catch (err: Throwable) {
+                isSending = false
+                toast(err.message)
+            }
+        }
     }
 
     override fun onPause() {
         super.onPause()
         isSending = false
 
-        loginCall?.dispose()
-        logoutCall?.dispose()
+        loginCall?.cancel()
+        logoutCall?.cancel()
 
         zumpaApp.zumpaParser.apply {
             userName = zumpaApp.zumpaPrefs.loggedUserName
@@ -190,71 +189,62 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
         zumpaApp.cookieManager.put(URI.create(ZR.Constants.ZUMPA_MAIN_URL), zumpaApp.zumpaPrefs.cookiesMap)
         zumpaApp.zumpaParser.isShowLastUser = zumpaApp.zumpaPrefs.showLastAuthor
     }
-}
 
-private class LoginCall(private val zumpaApp: ZumpaReaderApp, private val zumpaLoginBody: ZumpaLoginBody) : Single<Pair<Boolean, Boolean>>() {
-    private var loginResult: Boolean = false
-
-    override fun subscribeActual(observer: SingleObserver<in Pair<Boolean, Boolean>>) {
-        val api = zumpaApp.zumpaOnlineAPI
-        val loginResponse = api.login(zumpaLoginBody).execute()
-        loginResult = loginResponse.code() == HttpURLConnection.HTTP_MOVED_TEMP
-
-        zumpaApp.zumpaPrefs.isLoggedIn = loginResult
-        zumpaApp.zumpaPrefs.cookies = if (loginResult) ParseUtils.extractCookies(loginResponse) else null
-
-        if (!loginResult) {
-            observer.onSuccess(Pair(loginResult, false))
-            return
-        }
-
-        try {
-            FirebaseMessaging.getInstance()
-                .token
-                .addOnCompleteListener { task ->
-                    Observable
-                        .fromCallable {
-                            var pushResult = false
-                            if (task.isSuccessful) {
-                                // Get new Instance ID token
-                                val token = task.result
-                                zumpaApp.zumpaPrefs.pushRegId = token
-                                if (token != null && loginResult) {
-                                    val body = api.getMainPageHtml().execute().body()!!.asString()
-                                    val uid = ZumpaSimpleParser.parseUID(body)
-                                    if (uid != null) {
-                                        val response = zumpaApp.zumpaPHPAPI.register(zumpaLoginBody.nick, uid, token).execute().body()!!.asUTFString()
-                                        pushResult = "[OK]" == response
-                                    }
-                                }
-                            }
-                            Pair(loginResult, pushResult)
-                        }
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(
-                            { result -> observer.onSuccess(result) },
-                            { err -> observer.onError(err) }
-                        )
-                }
-        } catch (e: Throwable) {
-            e.printStackTrace()
-            observer.onSuccess(Pair(loginResult, false))
-        }
+    override fun onDestroy() {
+        scope.cancel()
+        super.onDestroy()
     }
 }
 
+/**
+ * Logs the user in and registers the push token, [Pair.first] is the login result,
+ * [Pair.second] the push registration result.
+ */
+private suspend fun login(zumpaApp: ZumpaReaderApp, zumpaLoginBody: ZumpaLoginBody): Pair<Boolean, Boolean> = withContext(Dispatchers.IO) {
+    val api = zumpaApp.zumpaOnlineAPI
+    val loginResponse = api.login(zumpaLoginBody).execute()
+    val loginResult = loginResponse.code() == HttpURLConnection.HTTP_MOVED_TEMP
 
-private class LogoutCall(private val zumpaApp: ZumpaReaderApp, private val zumpaUser: String) : Single<Pair<Boolean, Boolean>>() {
-    private var logoutResult: Boolean = false
-    private var pushResult: Boolean = false
+    zumpaApp.zumpaPrefs.isLoggedIn = loginResult
+    zumpaApp.zumpaPrefs.cookies = if (loginResult) ParseUtils.extractCookies(loginResponse) else null
 
-    override fun subscribeActual(observer: SingleObserver<in Pair<Boolean, Boolean>>) {
-        try {
-            val response = zumpaApp.zumpaPHPAPI.unregister(zumpaUser).execute().body()!!.asUTFString()
-            pushResult = "[OK]" == response
-        } catch (e: Throwable) {
-            e.printStackTrace()
+    if (!loginResult) {
+        return@withContext Pair(false, false)
+    }
+
+    var pushResult = false
+    try {
+        val token = FirebaseMessaging.getInstance().token.awaitResultOrNull()
+        zumpaApp.zumpaPrefs.pushRegId = token
+        if (token != null) {
+            val body = api.getMainPageHtml().execute().body()!!.asString()
+            val uid = ZumpaSimpleParser.parseUID(body)
+            if (uid != null) {
+                val response = zumpaApp.zumpaPHPAPI.register(zumpaLoginBody.nick, uid, token).execute().body()!!.asUTFString()
+                pushResult = "[OK]" == response
+            }
         }
-        observer.onSuccess(Pair(true, pushResult))
+    } catch (e: Throwable) {
+        e.printStackTrace()
+    }
+    Pair(loginResult, pushResult)
+}
+
+private suspend fun logout(zumpaApp: ZumpaReaderApp, zumpaUser: String): Boolean = withContext(Dispatchers.IO) {
+    try {
+        val response = zumpaApp.zumpaPHPAPI.unregister(zumpaUser).execute().body()!!.asUTFString()
+        "[OK]" == response
+    } catch (e: Throwable) {
+        e.printStackTrace()
+        false
+    }
+}
+
+/**
+ * A failed task is not an error here, it only means there is no push token.
+ */
+private suspend fun <T> Task<T>.awaitResultOrNull(): T? = suspendCancellableCoroutine { continuation ->
+    addOnCompleteListener { task ->
+        continuation.resume(if (task.isSuccessful) task.result else null)
     }
 }

@@ -35,7 +35,6 @@ import okhttp3.JavaNetCookieJar
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
-import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 
 /**
  * Created by JBruchanov on 24/11/2015.
@@ -203,7 +202,6 @@ class ZumpaReaderApp : Application() {
         val retrofit = Retrofit.Builder()
             .baseUrl(ZR.Constants.ZUMPA_MAIN_URL)
             .addConverterFactory(ZumpaConverterFactory(zumpaParser))
-            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
             .client(zumpaHttpClient)
             .build()
 
@@ -218,7 +216,6 @@ class ZumpaReaderApp : Application() {
         val retrofit = Retrofit.Builder()
             .baseUrl(ZR.Constants.ZUMPA_WS_MAIN_URL)
             .addConverterFactory(ZumpaGenericConverterFactory())
-            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
             .client(zumpaHttpClient)
             .build()
 
@@ -229,7 +226,6 @@ class ZumpaReaderApp : Application() {
         val retrofit = Retrofit.Builder()
             .baseUrl(ZR.Constants.ZUMPA_PHP_MAIN_URL)
             .addConverterFactory(ZumpaGenericConverterFactory())
-            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
             .client(zumpaHttpClient)
             .build()
 

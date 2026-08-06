@@ -37,8 +37,6 @@ import com.scurab.android.zumpareader.widget.PostMessageView
 import com.scurab.android.zumpareader.widget.SurveyView
 import com.scurab.android.zumpareader.widget.ToggleAdapter
 import com.squareup.otto.Subscribe
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
 
 
 /**
@@ -165,29 +163,22 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
             return
         }
 
-        app().zumpaAPI.let {
+        app().zumpaAPI.let { api ->
             val app = zumpaApp
             val body = ZumpaThreadBody(app.zumpaPrefs.nickName, app.zumpaData[argThreadId]?.subject ?: "", msg, argThreadId)
-            val observable = it.sendResponse(argThreadId, argThreadId, body)
             isSending = true
             context.hideKeyboard(view)
-            observable
-                .subscribeOn(Schedulers.io())
-                .compose(bindToLifecycle<ZumpaThreadResult>())
-                .observeOn(AndroidSchedulers.mainThread())
-                .compose(RxTransformers.zumpaRedirectHandler())
-                .subscribe(
-                    { result ->
-                        //this should be never called
-                        hideMessagePanel(true)
-                        loadData(SCROLL_DOWN)
-                        isSending = false
-                    },
-                    { err ->
-                        err.message?.let { toast(it) }
-                        isSending = false
-                    }
-                )
+            launchWithView {
+                try {
+                    ignoringZumpaRedirect { api.sendResponse(argThreadId, argThreadId, body) }
+                    hideMessagePanel(true)
+                    loadData(SCROLL_DOWN)
+                    isSending = false
+                } catch (err: Throwable) {
+                    err.message?.let { toast(it) }
+                    isSending = false
+                }
+            }
         }
     }
 
@@ -221,41 +212,37 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
             return
         }
         val context = requireActivity()
+        val api = zumpaApp.zumpaAPI
         isLoading = true
-        zumpaApp.zumpaAPI.getThreadPage(tid, tid).let {
-            it.subscribeOn(Schedulers.io())
-                .compose(bindToLifecycle<ZumpaThreadResult>())
-                .observeOn(AndroidSchedulers.mainThread())
-                .map {
-                    it.items.forEach { item ->
-                        item.styledAuthor(context)
-                        item.styledBody(context)
-                    }
-                    it
-                }
-                .retry(3)
-                .subscribe(
-                    { result ->
-                        val rv = recyclerView ?: return@subscribe
-                        val offsetY = -2 * rv.computeVerticalScrollOffset()
-                        onResultLoaded(result, force)
-                        val scrollWayValue = if (argScrollDown && firstLoad) SCROLL_DOWN else scrollWay
-                        if (scrollWayValue != 0) {
-                            firstLoad = false
-                            when (scrollWayValue) {
-                                SCROLL_UP -> rv.smoothScrollBy(0, offsetY)
-                                SCROLL_DOWN -> rv.smoothScrollToPosition(rv.adapter?.itemCount ?: 0)
-                            }
+        launchWithView {
+            try {
+                val result = retrying {
+                    api.getThreadPage(tid, tid).also { page ->
+                        //the spans used to be built on the main thread with rx, keeping it that way
+                        page.items.forEach { item ->
+                            item.styledAuthor(context)
+                            item.styledBody(context)
                         }
-                        isSending = false
-                        isLoading = false
-                    },
-                    { err ->
-                        err?.message?.let { toast(it) }
-                        isSending = false
-                        isLoading = false
                     }
-                )
+                }
+                val rv = recyclerView ?: return@launchWithView
+                val offsetY = -2 * rv.computeVerticalScrollOffset()
+                onResultLoaded(result, force)
+                val scrollWayValue = if (argScrollDown && firstLoad) SCROLL_DOWN else scrollWay
+                if (scrollWayValue != 0) {
+                    firstLoad = false
+                    when (scrollWayValue) {
+                        SCROLL_UP -> rv.smoothScrollBy(0, offsetY)
+                        SCROLL_DOWN -> rv.smoothScrollToPosition(rv.adapter?.itemCount ?: 0)
+                    }
+                }
+                isSending = false
+                isLoading = false
+            } catch (err: Throwable) {
+                err.message?.let { toast(it) }
+                isSending = false
+                isLoading = false
+            }
         }
     }
 
@@ -377,18 +364,17 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
 
     override fun onItemClick(item: SurveyItem) {
         if (zumpaApp.zumpaPrefs.isLoggedInNotOffline) {
-            zumpaApp.zumpaAPI.voteSurvey(ZumpaVoteSurveyBody(item.surveyId, item.id)).let {
+            zumpaApp.zumpaAPI.let { api ->
                 isSending = true
-                it.subscribeOn(Schedulers.io())
-                    .compose(bindToLifecycle<ZumpaGenericResponse>())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(
-                        { result -> loadData() },
-                        { err ->
-                            err?.message?.let { toast(it) }
-                            isSending = false
-                        }
-                    )
+                launchWithView {
+                    try {
+                        api.voteSurvey(ZumpaVoteSurveyBody(item.surveyId, item.id))
+                        loadData()
+                    } catch (err: Throwable) {
+                        err.message?.let { toast(it) }
+                        isSending = false
+                    }
+                }
             }
         }
     }

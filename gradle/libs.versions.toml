@@ -2,12 +2,12 @@
 
 [bundles]
 
-android-base = ["androidx-core-ktx", "androidx-annotation", "google-material"]
+android-base = ["androidx-core-ktx", "androidx-annotation", "androidx-lifecycle-runtime", "google-material"]
+coroutines = ["kotlinx-coroutines-core", "kotlinx-coroutines-android"]
 firebase = ["firebase-crashlytics", "firebase-messaging"]
 fresco = ["fresco-base", "fresco-animated-gif", "fresco-middleware"]
 okhttp = ["okhttp-base", "okhttp-logging", "okhttp-urlconnection"]
-retrofit = ["retrofit-base", "retrofit-converter-gson", "retrofit-adapter-rxjava2"]
-rxlifecycle = ["rxlifecycle-base", "rxlifecycle-android", "rxlifecycle-components", "rxlifecycle-navi"]
+retrofit = ["retrofit-base", "retrofit-converter-gson"]
 
 [plugins]
 
@@ -32,6 +32,7 @@ picasso = "2.8"
 
 androidx-annotation = "1.10.0"
 androidx-core-ktx = "1.18.0"
+androidx-lifecycle = "2.9.4"
 firebase-bom = "34.17.0"
 firebase-plugin-crashlytics = "3.0.7"
 google-services = "4.5.0"
@@ -42,16 +43,13 @@ kotlinx-coroutines = "1.11.0"
 okhttp = "5.4.0"
 pinchtozoom = "0.1"
 retrofit = "3.0.0"
-rxandroid = "2.1.1"
-rxbinding = "2.0.0"
-rxjava = "2.2.21"
-rxlifecycle = "2.2.2"
 swipy = "1.2.3"
 
 [libraries]
 
 androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidx-annotation" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidx-core-ktx" }
+androidx-lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidx-lifecycle" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 #versions of firebase libraries are managed by the bom
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
@@ -63,7 +61,8 @@ google-material = { module = "com.google.android.material:material", version.ref
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
-kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
 kotson = { module = "com.github.salomonbrys.kotson:kotson", version.ref = "kotson" }
 okhttp-base = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 okhttp-urlconnection = { module = "com.squareup.okhttp3:okhttp-urlconnection", version.ref = "okhttp" }
@@ -73,12 +72,4 @@ picasso = { module = "com.squareup.picasso:picasso", version.ref = "picasso" }
 pinchtozoom = { module = "com.bogdwellers:pinchtozoom", version.ref = "pinchtozoom" }
 retrofit-base = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 retrofit-converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
-retrofit-adapter-rxjava2 = { module = "com.squareup.retrofit2:adapter-rxjava2", version.ref = "retrofit" }
-rxandroid = { module = "io.reactivex.rxjava2:rxandroid", version.ref = "rxandroid" }
-rxbinding = { module = "com.jakewharton.rxbinding2:rxbinding", version.ref = "rxbinding" }
-rxjava = { module = "io.reactivex.rxjava2:rxjava", version.ref = "rxjava" }
-rxlifecycle-base = { module = "com.trello.rxlifecycle2:rxlifecycle", version.ref = "rxlifecycle" }
-rxlifecycle-android = { module = "com.trello.rxlifecycle2:rxlifecycle-android", version.ref = "rxlifecycle" }
-rxlifecycle-components = { module = "com.trello.rxlifecycle2:rxlifecycle-components", version.ref = "rxlifecycle" }
-rxlifecycle-navi = { module = "com.trello.rxlifecycle2:rxlifecycle-navi", version.ref = "rxlifecycle" }
 swipy = { module = "com.github.orangegangsters:swipy", version.ref = "swipy" }

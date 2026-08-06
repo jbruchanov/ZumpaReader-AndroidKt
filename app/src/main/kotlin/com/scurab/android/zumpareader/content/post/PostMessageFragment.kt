@@ -14,19 +14,18 @@ import com.scurab.android.zumpareader.content.SendingFragment
 import com.scurab.android.zumpareader.ext.toast
 import com.scurab.android.zumpareader.extension.app
 import com.scurab.android.zumpareader.model.ZumpaThreadBody
-import com.scurab.android.zumpareader.model.ZumpaThreadResult
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
-import com.scurab.android.zumpareader.util.RxTransformers
 import com.scurab.android.zumpareader.util.hideKeyboard
+import com.scurab.android.zumpareader.util.ignoringZumpaRedirect
 import com.scurab.android.zumpareader.widget.PostMessageView
-import com.trello.rxlifecycle2.components.support.RxDialogFragment
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
+import androidx.fragment.app.DialogFragment
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 /**
  * Created by JBruchanov on 31/12/2015.
  */
-class PostMessageFragment : RxDialogFragment(), SendingFragment {
+class PostMessageFragment : DialogFragment(), SendingFragment {
 
     companion object {
         private val SHOW_KEYBOARD = "SHOW_KEYBOARD"
@@ -120,36 +119,26 @@ class PostMessageFragment : RxDialogFragment(), SendingFragment {
             if (threadId == null) {
                 val body = ZumpaThreadBody(zumpaApp.zumpaPrefs.nickName, subject, message)
                 context.hideKeyboard(view)
-                api.sendThread(body)
-                    .subscribeOn(Schedulers.io())
-                    .compose(bindToLifecycle<ZumpaThreadResult>())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .compose(RxTransformers.zumpaRedirectHandler())
-                    .subscribe(
-                        { result ->
-                            dismiss()
-                        },
-                        { err ->
-                            err.message?.let { toast(it) }
-                            isSending = false
-                        }
-                    )
+                viewLifecycleOwner.lifecycleScope.launch {
+                    try {
+                        ignoringZumpaRedirect { api.sendThread(body) }
+                        dismiss()
+                    } catch (err: Throwable) {
+                        err.message?.let { toast(it) }
+                        isSending = false
+                    }
+                }
             } else {
                 val body = ZumpaThreadBody(zumpaApp.zumpaPrefs.nickName, zumpaApp.zumpaData[threadId]?.subject ?: argSubject!!, message, threadId)
-                api.sendResponse(threadId, threadId, body)
-                    .subscribeOn(Schedulers.io())
-                    .compose(bindToLifecycle<ZumpaThreadResult>())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .compose(RxTransformers.zumpaRedirectHandler())
-                    .subscribe(
-                        { result ->
-                            dismiss()
-                        },
-                        { err ->
-                            err.message?.let { toast(it) }
-                            isSending = false
-                        }
-                    )
+                viewLifecycleOwner.lifecycleScope.launch {
+                    try {
+                        ignoringZumpaRedirect { api.sendResponse(threadId, threadId, body) }
+                        dismiss()
+                    } catch (err: Throwable) {
+                        err.message?.let { toast(it) }
+                        isSending = false
+                    }
+                }
             }
         }
     }

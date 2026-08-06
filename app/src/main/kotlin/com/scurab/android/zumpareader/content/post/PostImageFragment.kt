@@ -21,9 +21,9 @@ import com.scurab.android.zumpareader.util.asVisibility
 import com.scurab.android.zumpareader.util.saveToClipboard
 import com.scurab.android.zumpareader.widget.PostImagePanelView
 import com.squareup.picasso.Picasso
-import com.trello.rxlifecycle2.components.support.RxFragment
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import java.io.File
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
@@ -34,7 +34,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 /**
  * Created by JBruchanov on 08/01/2016.
  */
-class PostImageFragment : RxFragment(), SendingFragment {
+class PostImageFragment : Fragment(), SendingFragment {
 
     companion object {
         fun newInstance(uri: Uri): PostImageFragment {
@@ -83,23 +83,20 @@ class PostImageFragment : RxFragment(), SendingFragment {
         super.onViewCreated(view, savedInstanceState)
         val context = requireContext()
         try {
-            CopyFromResourcesTask(view.context, imageUri)
-                    .compose(bindToLifecycle())
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe { result, err ->
-                        if (result != null) {
-                            imageFile = result.imageFile!!.absolutePath
-                            if (!restoreState) {
-                                this@PostImageFragment.imageSize = result.imageSize
-                                this@PostImageFragment.imageResolution = result.imageResolution
-                                imagePanel.setImageSize(this.imageResolution, imageSize)
-                            }
-                            Picasso.get().load(result.thumbnail!!).placeholder(SimpleProgressDrawable(context)).into(image)
-                        } else {
-                            Toast.makeText(requireContext(), err.message ?: "Null message", Toast.LENGTH_LONG).show()
-                        }
+            viewLifecycleOwner.lifecycleScope.launch {
+                try {
+                    val result = CopyFromResourcesTask(view.context, imageUri).execute()
+                    imageFile = result.imageFile!!.absolutePath
+                    if (!restoreState) {
+                        this@PostImageFragment.imageSize = result.imageSize
+                        this@PostImageFragment.imageResolution = result.imageResolution
+                        imagePanel.setImageSize(this@PostImageFragment.imageResolution, imageSize)
                     }
+                    Picasso.get().load(result.thumbnail!!).placeholder(SimpleProgressDrawable(context)).into(image)
+                } catch (err: Throwable) {
+                    Toast.makeText(requireContext(), err.message ?: "Null message", Toast.LENGTH_LONG).show()
+                }
+            }
             if (restoreState) {
                 imagePanel.setImageSize(imageResolution, imageSize)
                 if (imageResizedResolution != null) {
@@ -140,22 +137,20 @@ class PostImageFragment : RxFragment(), SendingFragment {
     private fun onImageProcess(inSample: Int, imageRotation: Int) {
         isSending = true
         imageFile?.let {
-            ProcessImageTask(it, imageFileToUpload!!, inSample, imageRotation)
-                    .compose(bindToLifecycle())
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe { result, err ->
-                        isSending = false
-                        if (result != null) {
-                            image.animate().rotation(imageRotation.toFloat())
-                            imageResizedResolution = result.imageResolution!!
-                            imageResizedSize = result.imageSize
-                            imagePanel.setResizedImageSize(result.imageResolution!!, result.imageSize)
-                        }
-                        if (err != null) {
-                            Toast.makeText(requireContext(), err.message ?: "Null message", Toast.LENGTH_LONG).show()
-                        }
-                    }
+            val task = ProcessImageTask(it, imageFileToUpload!!, inSample, imageRotation)
+            viewLifecycleOwner.lifecycleScope.launch {
+                try {
+                    val result = task.execute()
+                    isSending = false
+                    image.animate().rotation(imageRotation.toFloat())
+                    imageResizedResolution = result.imageResolution!!
+                    imageResizedSize = result.imageSize
+                    imagePanel.setResizedImageSize(result.imageResolution!!, result.imageSize)
+                } catch (err: Throwable) {
+                    isSending = false
+                    Toast.makeText(requireContext(), err.message ?: "Null message", Toast.LENGTH_LONG).show()
+                }
+            }
         }
     }
 
@@ -171,23 +166,23 @@ class PostImageFragment : RxFragment(), SendingFragment {
         val name = "Submit".toByteArray().toRequestBody("text/plain".toMediaType())
 
         val context = requireContext()
-        app().zumpaPHPAPI.postImage(body, name)
-                .compose(bindToLifecycle())
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    isSending = false
-                    val url = it.asUTFString()
-                    if (url.isNotEmpty()) {
-                        imageUploadedLink = url
-                        dispatchImageUploaded(url)
-                    } else {
-                        toast(R.string.err_fail)
-                    }
-                }, { err ->
-                    err.printStackTrace()
+        val api = app().zumpaPHPAPI
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val url = api.postImage(body, name).asUTFString()
+                isSending = false
+                if (url.isNotEmpty()) {
+                    imageUploadedLink = url
+                    dispatchImageUploaded(url)
+                } else {
                     toast(R.string.err_fail)
-                })
+                }
+            } catch (err: Throwable) {
+                isSending = false
+                err.printStackTrace()
+                toast(R.string.err_fail)
+            }
+        }
     }
 
     protected fun dispatchImageUploaded(result: String) {

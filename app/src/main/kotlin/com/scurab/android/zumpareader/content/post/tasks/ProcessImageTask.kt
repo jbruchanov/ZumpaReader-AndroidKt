@@ -4,17 +4,17 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.graphics.Point
-import io.reactivex.Single
-import io.reactivex.SingleObserver
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 
 /**
  * Created by JBruchanov on 12/01/2016.
  */
-class ProcessImageTask(private val src: String, private val output: String, private val inSampleSize: Int, private val rotation: Int) : Single<ProcessImageTaskResult>() {
+class ProcessImageTask(private val src: String, private val output: String, private val inSampleSize: Int, private val rotation: Int) {
 
-    override fun subscribeActual(observer: SingleObserver<in ProcessImageTaskResult>) {
+    suspend fun execute(): ProcessImageTaskResult = withContext(Dispatchers.IO) {
         val result = ProcessImageTaskResult()
 
         val opts = BitmapFactory.Options().apply {
@@ -33,7 +33,7 @@ class ProcessImageTask(private val src: String, private val output: String, priv
         result.imageResolution = Point(bitmap.width, bitmap.height)
         result.imageSize = File(output).length()
 
-        observer.onSuccess(result)
+        result
     }
 }
 
