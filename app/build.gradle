@@ -5,6 +5,7 @@ apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.google.firebase.crashlytics'
 
 android {
+    namespace = "com.scurab.android.zumpareader"
     compileSdk = libs.versions.android.sdk.compile.get().toInteger()
 
     buildFeatures {
@@ -12,40 +13,39 @@ android {
     }
     def fileProviderAuthority = "com.scurab.android.zumpareader.fileprovider"
     defaultConfig {
-        namespace "com.scurab.android.zumpareader"
-        applicationId "com.scurab.zumpareader"
+        applicationId = "com.scurab.zumpareader"
         buildConfigField "String", "BUILD_DETAIL", "\"build-" + getDate() + ",git-" + gitSha() + "\""
         buildConfigField "String", "Authority", "\"" + fileProviderAuthority + "\""
         minSdk = libs.versions.android.sdk.min.get().toInteger()
         targetSdk = libs.versions.android.sdk.target.get().toInteger()
-        versionCode 68
-        versionName "3.3.0"
+        versionCode = 68
+        versionName = "3.3.0"
         manifestPlaceholders = [authority: fileProviderAuthority]
-        multiDexEnabled true
+        multiDexEnabled = true
     }
 
     signingConfigs {
         release {
-            keyAlias localProperties.get('releaseKeyAlias')
-            keyPassword localProperties.get('releaseKeyPassword')
-            storePassword localProperties.get('releaseStorePassword')
+            keyAlias = localProperties.get('releaseKeyAlias')
+            keyPassword = localProperties.get('releaseKeyPassword')
+            storePassword = localProperties.get('releaseStorePassword')
             var keystorePath = localProperties.get("releaseKeyStore")
             if (keystorePath != null) {
                 // without this check, builds fail for debug if 'releaseKeyStore' is missing
-                storeFile file(keystorePath)
+                storeFile = file(keystorePath)
             }
         }
     }
 
     buildTypes {
         debug {
-            versionNameSuffix "-" + getDate()
-            minifyEnabled false
+            versionNameSuffix = "-" + getDate()
+            minifyEnabled = false
         }
         release {
-            minifyEnabled false
+            minifyEnabled = false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
+            signingConfig = signingConfigs.release
         }
     }
 
@@ -53,23 +53,11 @@ android {
         sourceCompatibility = libs.versions.jvmtarget.get()
         targetCompatibility = libs.versions.jvmtarget.get()
     }
-
-    kotlinOptions {
-        jvmTarget = libs.versions.jvmtarget.get().toInteger()
-    }
 }
 
-
-task(depsize) {
-    doLast {
-        def size = 0;
-        configurations._debugApk.collect { it.length() / (1024 * 1024) }.each { size += it }
-        println "Total dependencies size: ${Math.round(size * 100) / 100} Mb"
-
-        configurations
-                ._debugApk
-                .sort { -it.length() }
-                .each { println "${it.name} : ${Math.round(it.length() / (1024) * 100) / 100} kb" }
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget(libs.versions.jvmtarget.get())
     }
 }
 
