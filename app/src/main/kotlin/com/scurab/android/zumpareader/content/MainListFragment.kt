@@ -61,7 +61,7 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
     override val title: CharSequence get() {
         val appName = getString(R.string.app_name)
         return if (zumpaApp.zumpaPrefs.isOffline) {
-            "%s (%s)".format(appName, getString(R.string.offline))
+            "$appName (${getString(R.string.offline)})"
         } else {
             appName
         }

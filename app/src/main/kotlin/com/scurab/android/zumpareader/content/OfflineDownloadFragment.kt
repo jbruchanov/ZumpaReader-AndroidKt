@@ -56,7 +56,7 @@ class OfflineDownloadFragment : DialogFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setStyle(0, R.style.AppTheme_Dialog_Offline)
+        setStyle(STYLE_NORMAL, R.style.AppTheme_Dialog_Offline)
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/item_thread_content"
     android:background="?threadItemBackground"
@@ -43,7 +44,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="@dimen/gap_tiny"
                 android:src="@drawable/ic_grade_black"
-                android:tint="?attr/contextColor"/>
+                app:tint="?attr/contextColor"/>
         </LinearLayout>
 
         <LinearLayout

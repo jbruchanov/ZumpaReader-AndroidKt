@@ -2,6 +2,7 @@
 <LinearLayout
     android:id="@+id/item_thread_menu"
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="match_parent"
@@ -19,7 +20,7 @@
         android:background="?attr/buttonBackground"
         android:padding="@dimen/gap_small"
         android:src="@drawable/ic_grade_black_36dp"
-        android:tint="?attr/contextColor"
+        app:tint="?attr/contextColor"
         />
 
     <ImageButton
@@ -29,7 +30,7 @@
         android:background="?attr/buttonBackground"
         android:padding="@dimen/gap_small"
         android:src="@drawable/ic_block_black_36dp"
-        android:tint="?attr/contextColor"
+        app:tint="?attr/contextColor"
         />
 
     <ImageButton
@@ -39,7 +40,7 @@
         android:background="?attr/buttonBackground"
         android:padding="@dimen/gap_small"
         android:src="@drawable/ic_share"
-        android:tint="?attr/contextColor"
+        app:tint="?attr/contextColor"
         />
 
 </LinearLayout>
