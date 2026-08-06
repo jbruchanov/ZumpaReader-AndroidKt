@@ -83,8 +83,8 @@ Not Jetifier-related, also kept and still dead upstream: `otto` (deprecated 2015
 
 1. `android.enableJetifier=true` → **blocked** by swipy + pinchtozoom above. AGP 9 drops Jetifier
    entirely, so AGP 9 requires resolving B first.
-2. `android.nonTransitiveRClass=false` → `true` (mandatory in AGP 9; may need explicit `R` imports).
-   Not blocked by B, can be done any time.
+2. ~~`android.nonTransitiveRClass`~~ → done, it is `true` since `4e31fa3`. Nothing had to be
+   re-imported, the app never reached for library resources through its own R class.
 3. AGP 8.13.2 → 9.x (latest 9.3.1) + Gradle 8.14.3 → 9.x — blocked by 1.
 4. Then core-ktx 1.19.0 and compileSdk 37 become available — the dev device already runs Android 17.
 5. Optional while in there: `.gradle` → `.gradle.kts`, `org.gradle.configuration-cache=true`,
@@ -92,14 +92,11 @@ Not Jetifier-related, also kept and still dead upstream: `otto` (deprecated 2015
 
 ### D. Smaller leftovers
 
-* `./gradlew :app:lintDebug` reports **9 errors, 150 warnings**. None are from this upgrade — they
-  are `android:tint` instead of `app:tint` in `item_main_list_*.xml` / `item_sub_list_menu.xml`
-  (6×), an invalid `String.format` on `app_name` in `MainListFragment.kt:66`, a wrong
-  `DialogFragment` style constant in `OfflineDownloadFragment.kt:59`. Note that lint could not run
-  at all before this upgrade: Jetifier failed to transform `shadows-support-v4-3.3.1.jar`.
-* `GCMReceiver` is dead code — not registered in the manifest, not referenced, and its
-  `PendingIntent.getActivity(…, FLAG_UPDATE_CURRENT)` without a mutability flag would throw on
-  Android 12+ if it ever ran. The live path is `MyFirebaseService`, which passes `FLAG_MUTABLE`.
+* ~~9 lint errors~~ → fixed in `8f92ede`, `./gradlew :app:lintDebug` is clean (warnings remain).
+  Note that lint could not run at all before this upgrade: Jetifier failed to transform
+  `shadows-support-v4-3.3.1.jar`.
+* ~~`GCMReceiver`~~ → deleted in `4984020`, it was dead code with a `PendingIntent` that would have
+  thrown on Android 12+.
 * No test source set exists. The catalog no longer carries test dependencies; adding
   `app/src/test` with junit5 + mockk for `ZumpaSimpleParser` would pay for itself the next time
   the forum HTML changes.
