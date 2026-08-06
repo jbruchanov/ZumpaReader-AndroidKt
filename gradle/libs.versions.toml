@@ -2,34 +2,19 @@
 
 [bundles]
 
-adjust = ["adjust", "androidx-installreferrer", "google-adsidentifier"]
-android-base = ["androidx-core-ktx", "androidx-activity-compose", "androidx-annotation", "google-material"]
-android-compose = ["androidx-activity-compose", "compose-foundation", "compose-material", "compose-runtime-livedata", "compose-ui-toolingpreview"]
-android-debug = ["androidx-custom-view-base", "androidx-custom-view-poolingcontainer", "compose-ui-tooling"]
-android-lifecycle = ["androidx-lifecycle-common", "androidx-lifecycle-process", "androidx-lifecycle-runtime", "androidx-lifecycle-viewmodel", "androidx-lifecycle-livedata"]
-android-room = ["androidx-room-base", "androidx-room-runtime"]
-android-test = ["androidx-test-runner", "androidx-test-rules", "androidx-test-junit", "androidx-test-espresso", "androidx-test-compose"]
-android-navigation = ["androidx-navigation-fragment", "androidx-navigation-runtime", "androidx-navigation-ui"]
+android-base = ["androidx-core-ktx", "androidx-annotation", "google-material"]
 firebase = ["firebase-crashlytics", "firebase-messaging"]
 fresco = ["fresco-base", "fresco-animated-gif", "fresco-middleware"]
-groupie = ["groupie-base", "groupie-viewbinding"]
 okhttp = ["okhttp-base", "okhttp-logging", "okhttp-urlconnection"]
 retrofit = ["retrofit-base", "retrofit-converter-gson", "retrofit-adapter-rxjava2"]
 rxlifecycle = ["rxlifecycle-base", "rxlifecycle-android", "rxlifecycle-components", "rxlifecycle-navi"]
-unittests-jvm = ["jetbrains-coroutines-test", "junit-jupiter-api", "junit-jupiter-engine", "junit-jupiter-params", "mockk", "truth", "turbine"]
 
 [plugins]
 
 android-application = { id = "com.android.application", version.ref = "android-gradle-plugin" }
-android-library = { id = "com.android.library", version.ref = "android-gradle-plugin" }
-android-navigation = { id = "androidx.navigation.safeargs", version.ref = "androidx-navigation" }
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebase-plugin-crashlytics" }
-firebase-distribution = { id = "com.google.firebase.appdistribution", version.ref = "firebase-plugin-distribution" }
-google-ksp = { id = "com.google.devtools.ksp", version.ref = "google-ksp" }
 jetbrains-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-jetbrains-serialisation = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 google-services = { id = "com.google.gms.google-services", version.ref = "google-services" }
-ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlintplugin" }
 
 [versions]
 
@@ -45,115 +30,28 @@ kotson = "2.5.0"
 otto = "1.3.8"
 picasso = "2.8"
 
-adjust = "4.33.5"
-androidx-activity-compose = "1.9.0"
 androidx-annotation = "1.10.0"
-androidx-billing = "7.0.0"
-androidx-browser = "1.8.0"
 androidx-core-ktx = "1.18.0"
-androidx-custom-view-base = "1.2.0-alpha02"
-androidx-custom-view-poolingcontainer = "1.0.0"
-androidx-constraintlayout = "2.1.4"
-androidx-dynamicanimation = "1.0.0"
-androidx-installreferrer = "2.2"
-androidx-navigation = "2.7.7"
-androidx-room = "2.6.1"
-androidx-roomcoroutines = "2.1.0-alpha04"
-androidx-lifecycle = "2.8.2"
-androidx-test-base = "1.6.1"
-androidx-test-ext = "1.2.1"
-androidx-test-espresso = "3.6.1"
-bouncycastle = "1.70"
-compose-ui = "1.6.8"
-compose-compiler = "1.5.1"
-compose-constraintlayout = "1.1.0-alpha13"
-exoplayer = "2.19.1"
-excuseme = "0.9.5"
-fadingedgelayout = "1.0.0"
-facebook = "13.0.0"
-festandroid = "1.0.8"
 firebase-bom = "34.17.0"
 firebase-plugin-crashlytics = "3.0.7"
-firebase-plugin-distribution = "5.0.0"
-google-adsidentifier = "18.1.0"
 google-services = "4.5.0"
 google-material = "1.14.0"
-google-review = "2.0.1"
-google-ksp = "1.9.24-1.0.20"
-groupie = "2.9.0"
 gson = "2.14.0"
-jsonorg = "20231013"
 jsoup = "1.23.1"
-junit = "5.10.2"
-junit4 = "4.12"
-ktlint = "0.50.0"
-ktlintplugin = "12.1.1"
-koin = "3.5.6"
 kotlinx-coroutines = "1.11.0"
-kotlinx-json = "1.7.0"
-leakcanary = "2.13"
-lottie = "6.3.0"
-mockito = "2.25.0"
-mockk = "1.13.11"
 okhttp = "5.4.0"
 pinchtozoom = "0.1"
 retrofit = "3.0.0"
-robolectric = "3.3.1"
 rxandroid = "2.1.1"
 rxbinding = "2.0.0"
 rxjava = "2.2.21"
 rxlifecycle = "2.2.2"
 swipy = "1.2.3"
-threetenbp = "1.4.6"
-sqlitejdbc = "3.45.2.0"
-stickylayoutmanager = "1.0.1"
-timber = "5.0.1"
-truth = "1.4.2"
-turbine = "1.1.0"
-zip = "1.17"
 
 [libraries]
 
-adjust = { module = "com.adjust.sdk:adjust-android", version.ref = "adjust" }
 androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidx-annotation" }
-androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity-compose" }
-androidx-billing = { module = "com.android.billingclient:billing-ktx", version.ref = "androidx-billing" }
-androidx-browser = { module = "androidx.browser:browser", version.ref = "androidx-browser" }
-androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "androidx-constraintlayout" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidx-core-ktx" }
-androidx-custom-view-base = { module = "androidx.customview:customview", version.ref = "androidx-custom-view-base" }
-androidx-custom-view-poolingcontainer = { module = "androidx.customview:customview-poolingcontainer", version.ref = "androidx-custom-view-poolingcontainer" }
-androidx-dynamicanimation = { module = "androidx.dynamicanimation:dynamicanimation", version.ref = "androidx-dynamicanimation" }
-androidx-installreferrer = { module = "com.android.installreferrer:installreferrer", version.ref = "androidx-installreferrer" }
-androidx-lifecycle-common = { module = "androidx.lifecycle:lifecycle-common", version.ref = "androidx-lifecycle" }
-androidx-lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", version.ref = "androidx-lifecycle" }
-androidx-lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidx-lifecycle" }
-androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "androidx-lifecycle" }
-androidx-lifecycle-livedata = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "androidx-lifecycle" }
-androidx-navigation-fragment = { module = "androidx.navigation:navigation-fragment-ktx", version.ref = "androidx-navigation" }
-androidx-navigation-runtime = { module = "androidx.navigation:navigation-runtime-ktx", version.ref = "androidx-navigation" }
-androidx-navigation-ui = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "androidx-navigation" }
-androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "androidx-navigation" }
-androidx-room-base = { module = "androidx.room:room-ktx", version.ref = "androidx-room" }
-androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "androidx-room" }
-androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "androidx-room" }
-androidx-room-coroutines = { module = "androidx.room:room-coroutines", version.ref = "androidx-roomcoroutines" }
-androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidx-test-base" }
-androidx-test-rules = { module = "androidx.test:rules", version.ref = "androidx-test-base" }
-androidx-test-junit = { module = "androidx.test.ext:junit", version.ref = "androidx-test-ext" }
-androidx-test-espresso = { module = "androidx.test.espresso:espresso-core", version.ref = "androidx-test-espresso" }
-androidx-test-compose = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "compose-ui" }
-bouncycastle = { module = "org.bouncycastle:bcprov-jdk15on", version.ref = "bouncycastle" }
-compose-constraintlayout = { module = "androidx.constraintlayout:constraintlayout-compose", version.ref = "compose-constraintlayout" }
-compose-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "compose-ui" }
-compose-material = { module = "androidx.compose.material:material", version.ref = "compose-ui" }
-compose-runtime-livedata = { module = "androidx.compose.runtime:runtime-livedata", version.ref = "compose-ui" }
-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose-ui" }
-compose-ui-toolingpreview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "compose-ui" }
-excuseme = { module = "com.github.AraujoJordan:ExcuseMe", version.ref = "excuseme" }
-exoplayer = { module = "com.google.android.exoplayer:exoplayer", version.ref = "exoplayer" }
-facebook = { module = "com.facebook.android:facebook-android-sdk", version.ref = "facebook" }
-fadingedgelayout = { module = "com.github.bosphere.android-fadingedgelayout:fadingedgelayout", version.ref = "fadingedgelayout" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 #versions of firebase libraries are managed by the bom
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
@@ -161,21 +59,12 @@ firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
 fresco-base = { module = "com.facebook.fresco:fresco", version.ref = "fresco" }
 fresco-animated-gif = { module = "com.facebook.fresco:animated-gif", version.ref = "fresco" }
 fresco-middleware = { module = "com.facebook.fresco:middleware", version.ref = "fresco" }
-google-adsidentifier = { module = "com.google.android.gms:play-services-ads-identifier", version.ref = "google-adsidentifier" }
 google-material = { module = "com.google.android.material:material", version.ref = "google-material" }
-google-review = { module = "com.google.android.play:review-ktx", version.ref = "google-review" }
-groupie-base = { module = "com.xwray:groupie", version.ref = "groupie" }
-groupie-viewbinding = { module = "com.xwray:groupie-viewbinding", version.ref = "groupie" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
-jsonorg = { module = "org.json:json", version.ref = "jsonorg" }
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
-koin = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
-kotlinx-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-json" }
 kotson = { module = "com.github.salomonbrys.kotson:kotson", version.ref = "kotson" }
-leakcanary = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanary" }
-lottie = { module = "com.airbnb.android:lottie-compose", version.ref = "lottie" }
 okhttp-base = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 okhttp-urlconnection = { module = "com.squareup.okhttp3:okhttp-urlconnection", version.ref = "okhttp" }
 okhttp-logging = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "okhttp" }
@@ -192,24 +81,4 @@ rxlifecycle-base = { module = "com.trello.rxlifecycle2:rxlifecycle", version.ref
 rxlifecycle-android = { module = "com.trello.rxlifecycle2:rxlifecycle-android", version.ref = "rxlifecycle" }
 rxlifecycle-components = { module = "com.trello.rxlifecycle2:rxlifecycle-components", version.ref = "rxlifecycle" }
 rxlifecycle-navi = { module = "com.trello.rxlifecycle2:rxlifecycle-navi", version.ref = "rxlifecycle" }
-stickylayoutmanager = { module = "com.github.qiujayen:sticky-layoutmanager", version.ref = "stickylayoutmanager" }
-sqlitejdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlitejdbc" }
 swipy = { module = "com.github.orangegangsters:swipy", version.ref = "swipy" }
-threetenbp = { module = "com.jakewharton.threetenabp:threetenabp", version.ref = "threetenbp" }
-timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
-zip = { module = "org.zeroturnaround:zt-zip", version.ref = "zip" }
-
-#test
-festandroid = { module = "com.squareup:fest-android", version.ref = "festandroid" }
-jetbrains-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
-junit-jupiter-base = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
-junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
-junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
-junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
-junit4 = { module = "junit:junit", version.ref = "junit4" }
-mockito = { module = "org.mockito:mockito-core", version.ref = "mockito" }
-mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
-robolectric-base = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
-robolectric-shadows-support-v4 = { module = "org.robolectric:shadows-support-v4", version.ref = "robolectric" }
-truth = { module = "com.google.truth:truth", version.ref = "truth" }
-turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
