@@ -5,6 +5,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.ProgressBar
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -68,6 +69,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_main)
+        onBackPressedDispatcher.addCallback(this, backButtonCallback)
         coordinatorLayout.applySystemBarsAsPadding(topInsetView = appBar)
         setSupportActionBar(toolbar)
         floatingButton.setOnClickListener(DelayClickListener { onFloatingButtonClick() })
@@ -145,14 +147,22 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onBackPressed() {
-        (supportFragmentManager.fragments.lastNonNullFragment() as? BaseFragment)?.let {
-            if (!it.onBackButtonClick()) {
-                super.onBackPressed()
+    /**
+     * targetSdk 36 enables predictive back, onBackPressed() is not called for back gestures anymore.
+     * Registered after super.onCreate() on purpose, callbacks are invoked in reverse order of
+     * registration, so this one runs before the FragmentManager's back stack callback, the same
+     * way the onBackPressed() override used to.
+     */
+    private val backButtonCallback = object : OnBackPressedCallback(true) {
+        override fun handleOnBackPressed() {
+            val handled = (supportFragmentManager.fragments.lastNonNullFragment() as? BaseFragment)
+                    ?.onBackButtonClick() ?: false
+            if (!handled) {
+                isEnabled = false
+                onBackPressedDispatcher.onBackPressed()
+                isEnabled = true
             }
-            return
         }
-        super.onBackPressed()
     }
 
     fun hideFloatingButton() {
