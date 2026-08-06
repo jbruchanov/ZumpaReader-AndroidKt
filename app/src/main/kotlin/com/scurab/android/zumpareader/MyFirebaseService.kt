@@ -27,8 +27,8 @@ import kotlinx.coroutines.launch
 private const val ZUMPA_CHANNEL = AppConfig.NotificationChannel.Notifications
 
 /**
- * Registering the push token is fire and forget, exactly like the rx version was:
- * it must not be cancelled when the short-lived service instance goes away.
+ * Registering the push token is fire and forget, it must not be cancelled when the short-lived
+ * service instance goes away.
  */
 private val pushRegistrationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 

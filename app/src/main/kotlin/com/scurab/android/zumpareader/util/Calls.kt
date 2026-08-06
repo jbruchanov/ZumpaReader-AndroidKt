@@ -24,7 +24,7 @@ suspend fun <T> ignoringZumpaRedirect(block: suspend () -> T): Boolean {
 }
 
 /**
- * Replacement of the rx `retry(n)`, [retries] attempts on top of the first one.
+ * Retries a failing call, [retries] attempts on top of the first one.
  */
 suspend fun <T> retrying(retries: Int = 3, block: suspend () -> T): T {
     var lastError: Throwable? = null

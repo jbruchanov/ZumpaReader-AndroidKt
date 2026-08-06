@@ -218,7 +218,7 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
             try {
                 val result = retrying {
                     api.getThreadPage(tid, tid).also { page ->
-                        //the spans used to be built on the main thread with rx, keeping it that way
+                        //the spans are built on the main thread on purpose
                         page.items.forEach { item ->
                             item.styledAuthor(context)
                             item.styledBody(context)
