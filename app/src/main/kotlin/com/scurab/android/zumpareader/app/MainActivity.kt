@@ -10,6 +10,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
+import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
@@ -20,6 +21,7 @@ import com.scurab.android.zumpareader.content.TabletFragment
 import com.scurab.android.zumpareader.content.post.PostFragment
 import com.scurab.android.zumpareader.ext.toast
 import com.scurab.android.zumpareader.ui.DelayClickListener
+import com.scurab.android.zumpareader.ui.applySystemBarsAsPadding
 import com.scurab.android.zumpareader.ui.QuickHideBehavior
 import com.scurab.android.zumpareader.ui.hideAnimated
 import com.scurab.android.zumpareader.ui.showAnimated
@@ -43,6 +45,7 @@ class MainActivity : AppCompatActivity() {
     private val toolbar by lazy { findViewById<Toolbar>(R.id.toolbar) }
     private val progressBar by lazy { findViewById<ProgressBar>(R.id.progress_bar) }
     private val coordinatorLayout by lazy { findViewById<CoordinatorLayout>(R.id.coordinator_layout) }
+    private val appBar by lazy { findViewById<AppBarLayout>(R.id.app_bar) }
     private val _floatingButton by lazy { findViewById<FloatingActionButton?>(R.id.fab) }
     private val isTablet by lazy { resources.getBoolean(R.bool.is_tablet) }
 
@@ -65,6 +68,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_main)
+        coordinatorLayout.applySystemBarsAsPadding(topInsetView = appBar)
         setSupportActionBar(toolbar)
         floatingButton.setOnClickListener(DelayClickListener { onFloatingButtonClick() })
         supportFragmentManager.findFragmentById(R.id.fragment_container).ifNull {

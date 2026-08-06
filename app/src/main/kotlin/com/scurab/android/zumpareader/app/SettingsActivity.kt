@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.preference.CheckBoxPreference
 import android.preference.PreferenceActivity
 import android.provider.Settings
+import android.view.View
 import androidx.core.content.ContextCompat
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.messaging.FirebaseMessaging
@@ -24,6 +25,7 @@ import com.scurab.android.zumpareader.ext.toast
 import com.scurab.android.zumpareader.model.ZumpaLoginBody
 import com.scurab.android.zumpareader.preferences.ButtonPreference
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
+import com.scurab.android.zumpareader.ui.applySystemBarsAsPadding
 import com.scurab.android.zumpareader.util.ParseUtils
 import com.scurab.android.zumpareader.util.ZumpaPrefs
 import com.scurab.android.zumpareader.util.saveToClipboard
@@ -61,6 +63,7 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         addPreferencesFromResource(R.xml.settings)
+        findViewById<View>(android.R.id.content).applySystemBarsAsPadding()
 
         buttonPref.setOnPreferenceClickListener {
             if (zumpaApp.zumpaPrefs.isLoggedIn) {
