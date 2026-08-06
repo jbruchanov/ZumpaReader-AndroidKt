@@ -47,10 +47,10 @@ picasso = "2.8"
 
 adjust = "4.33.5"
 androidx-activity-compose = "1.9.0"
-androidx-annotation = "1.8.0"
+androidx-annotation = "1.10.0"
 androidx-billing = "7.0.0"
 androidx-browser = "1.8.0"
-androidx-core-ktx = "1.13.1"
+androidx-core-ktx = "1.18.0"
 androidx-custom-view-base = "1.2.0-alpha02"
 androidx-custom-view-poolingcontainer = "1.0.0"
 androidx-constraintlayout = "2.1.4"
@@ -72,12 +72,12 @@ excuseme = "0.9.5"
 fadingedgelayout = "1.0.0"
 facebook = "13.0.0"
 festandroid = "1.0.8"
-firebase-bom = "33.1.1"
-firebase-plugin-crashlytics = "3.0.2"
+firebase-bom = "34.17.0"
+firebase-plugin-crashlytics = "3.0.7"
 firebase-plugin-distribution = "5.0.0"
 google-adsidentifier = "18.1.0"
-google-services = "4.4.2"
-google-material = "1.12.0"
+google-services = "4.5.0"
+google-material = "1.14.0"
 google-review = "2.0.1"
 google-ksp = "1.9.24-1.0.20"
 groupie = "2.9.0"
@@ -173,8 +173,8 @@ facebook = { module = "com.facebook.android:facebook-android-sdk", version.ref =
 fadingedgelayout = { module = "com.github.bosphere.android-fadingedgelayout:fadingedgelayout", version.ref = "fadingedgelayout" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 #versions of firebase libraries are managed by the bom
-firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics-ktx" }
-firebase-messaging = { module = "com.google.firebase:firebase-messaging-ktx" }
+firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
 fresco-base = { module = "com.facebook.fresco:fresco", version.ref = "fresco" }
 fresco-animated-gif = { module = "com.facebook.fresco:animated-gif", version.ref = "fresco" }
 fresco-middleware = { module = "com.facebook.fresco:middleware", version.ref = "fresco" }
