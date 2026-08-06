@@ -22,9 +22,9 @@ import java.util.*
 abstract class BaseFragment : Fragment() {
 
     /**
-     * Replacement of the rxlifecycle `bindToLifecycle()`, the work is cancelled when the view goes away.
-     * Fragments in the back stack have no view but still react to bus events, in that case the work is
-     * bound to the fragment itself, the same way the rx subscription used to be.
+     * Binds the work to the view, it is cancelled when the view goes away.
+     * Fragments in the back stack have no view but still react to bus events, in that case the work
+     * is bound to the fragment itself.
      */
     protected fun launchWithView(block: suspend CoroutineScope.() -> Unit): Job {
         val owner = if (view != null) viewLifecycleOwner else this
