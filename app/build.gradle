@@ -81,6 +81,7 @@ dependencies {
     implementation(libs.bundles.firebase)
     implementation(libs.bundles.android.base)
     implementation(libs.jsoup)
+    implementation(libs.gson)
     implementation(libs.bundles.okhttp)
 
     implementation libs.bundles.retrofit
