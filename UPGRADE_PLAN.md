@@ -92,7 +92,7 @@ Not Jetifier-related, also kept and still dead upstream: `otto` (deprecated 2015
 
 ### D. Smaller leftovers
 
-* `./gradlew :app:lintDebug` reports **9 errors, 154 warnings**. None are from this upgrade — they
+* `./gradlew :app:lintDebug` reports **9 errors, 150 warnings**. None are from this upgrade — they
   are `android:tint` instead of `app:tint` in `item_main_list_*.xml` / `item_sub_list_menu.xml`
   (6×), an invalid `String.format` on `app_name` in `MainListFragment.kt:66`, a wrong
   `DialogFragment` style constant in `OfflineDownloadFragment.kt:59`. Note that lint could not run
