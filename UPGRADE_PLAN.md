@@ -1,157 +1,92 @@
 # ZumpaReader – upgrade plan
 
-State captured on 2026-08-06, branch `deps_update`. Every version listed as "latest" was resolved
-from Maven Central / `dl.google.com` on that date.
+Branch `deps_update`. Versions resolved from Maven Central / `dl.google.com` on 2026-08-06.
 
-## 0. Done in this change (verified with `./gradlew :app:assembleDebug` → BUILD SUCCESSFUL)
+## Done
 
-* All hard-coded coordinates moved from `app/build.gradle` into `gradle/libs.versions.toml`
-  (rx*, rxlifecycle, fresco-middleware, pinchtozoom, firebase `-ktx` artifacts, junit4, robolectric,
-  fest-android, mockito). New bundles: `firebase`, `fresco`, `retrofit`, `rxlifecycle`.
-  `fresco` → `fresco-base` and `retrofit` → `retrofit-base` were renamed so the bundle names stay
-  free, matching the existing `okhttp-base` / `groupie-base` convention.
-* `android-sdk-compile` / `android-sdk-target` 34 → **36** (Android 16; Play Console requires
-  target 36 from 2026-08-31).
-* Required side-effects of compileSdk 36: AGP 8.5.0 → **8.13.2** (36 needs ≥ 8.9.1),
-  Gradle wrapper 8.8 → **8.14.3**.
+One commit per step, each one verified with `./gradlew :app:assembleDebug`; the final state also
+builds `clean :app:assembleDebug :app:assembleRelease` and passes `lintVitalRelease`.
 
-The resolved `debugRuntimeClasspath` was diffed against a clean worktree of `HEAD`: the module set
-(`group:artifact`, 163 entries) is identical, so the catalog migration changed no coordinates.
-Resolved *versions* were not compared — the AGP bump can shift transitive AndroidX versions.
-
----
-
-## 1. Validate targetSdk 36 at runtime — highest risk, do this first
-
-`targetSdk ≥ 35` turns on **edge-to-edge enforcement**; the `windowOptOutEdgeToEdgeEnforcement`
-escape hatch is ignored on Android 16 for apps targeting 36. The app themes are plain
-`Theme.AppCompat` (`res/values/styles.xml`), i.e. nothing handles insets except
-`android:fitsSystemWindows="true"` on the `CoordinatorLayout` in `activity_main.xml`.
-
-Steps:
-1. Run on an Android 15 and an Android 16 device/emulator, check every screen:
-   `MainActivity` (toolbar + FAB + bottom post panel), `ImageActivity` (`AppTheme.Image`,
-   fullscreen-ish), `SettingsActivity`, dialogs (`AppTheme.Dialog*`), `activity_giphy.xml`.
-2. Expect breakage at the **bottom** (nav bar over `PostMessageView` / edit text) and in
-   `ImageActivity`. Fix with `ViewCompat.setOnApplyWindowInsetsListener` +
-   `WindowInsetsCompat.Type.systemBars() or ime()` padding, not with `fitsSystemWindows` alone.
-3. Other 35/36 behaviour changes worth checking for this app:
-   * foreground-service / notification behaviour of `MyFirebaseService` (POST_NOTIFICATIONS is
-     already declared and handled),
-   * `WRITE_EXTERNAL_STORAGE` / `READ_EXTERNAL_STORAGE` in the manifest are dead — all file IO
-     goes through `getExternalFilesDir(...)` (`ZumpaReaderApp.kt`, `CopyFromResourcesTask.kt`,
-     `PicassoHttpDownloader2.kt`, `OfflineDownloadFragment.kt`). Delete both permissions plus the
-     unused `android.permission.STORAGE` line.
-   * the legacy C2DM `permission.C2D_MESSAGE` block in the manifest is obsolete since FCM — remove.
-4. Bump `versionCode`/`versionName` in `app/build.gradle` before any release build.
-
-## 2. Kotlin / coroutines (do before further library bumps)
-
-Current: Kotlin 1.9.24, coroutines 1.8.1. Latest: Kotlin 2.4.10, coroutines 1.11.0.
-Recent OkHttp/Retrofit/AndroidX releases are compiled against Kotlin 2.x metadata, so this gates
-step 3.
-
-1. Kotlin 1.9.24 → **2.2.21** (K2). No kapt/KSP and no Compose in the project, so the migration
-   surface is only the compiler. Expect the K2 nullability errors that are already warnings today:
-   `ZumpaGenericConverterFactory.kt:26/30` ("incorrect nullability … will become an error soon"),
-   `ParseUtils.kt:63` (String? vs CharSequence).
-2. Then coroutines 1.8.1 → 1.11.0.
-3. Optionally Kotlin → 2.4.x afterwards, as a separate commit.
-4. `freeCompilerArgs += "-Xcontext-receivers"` in `app/build.gradle` — context receivers were
-   replaced by context parameters in Kotlin 2.2; the flag is deprecated/removed. Check whether any
-   source actually uses them (grep for `context(`); if not, drop the flag.
-
-## 3. Library updates (after step 2), in waves
-
-Each wave = one commit + one `assembleDebug` + a smoke run.
-
-**Wave A – Google/AndroidX, low risk**
-
-| catalog key | current | latest |
+| # | commit | content |
 |---|---|---|
-| `firebase-bom` | 33.1.1 | 34.17.0 |
-| `google-services` (plugin) | 4.4.2 | 4.5.0 |
-| `firebase-plugin-crashlytics` | 3.0.2 | 3.0.7 |
-| `androidx-core-ktx` | 1.13.1 | 1.19.0 |
-| `androidx-annotation` | 1.8.0 | 1.10.0 |
-| `google-material` | 1.12.0 | 1.14.0 |
+| 1 | `5ceb0df` | all hard-coded coordinates moved into `libs.versions.toml`; compile/targetSdk 34 → **36**; AGP 8.5.0 → 8.13.2 and Gradle 8.8 → 8.14.3 (compileSdk 36 needs AGP ≥ 8.9.1) |
+| 2 | `59a25a6` | Kotlin 1.9.24 → **2.2.21**, coroutines 1.8.1 → **1.11.0**, `-Xcontext-receivers` dropped (unused) |
+| 3 | `651dca4` | firebase-bom 33.1.1 → **34.17.0**, google-services 4.4.2 → 4.5.0, crashlytics plugin 3.0.2 → 3.0.7, firebase `-ktx` artifacts dropped, core-ktx 1.13.1 → **1.18.0**, annotation 1.8.0 → 1.10.0, material 1.12.0 → **1.14.0** |
+| 4 | `e6dee60` | jsoup 1.10.3 → **1.23.1**, okhttp 4.12.0 → **5.4.0**, retrofit 2.10.0 → **3.0.0**, gson → 2.14.0 and now declared explicitly |
+| 5 | `0654d99` | Gradle DSL hygiene: space-assignment → `=`, `namespace` into the `android` block, `kotlinOptions` → `kotlin { compilerOptions }`, dead `depsize`/`clean` tasks removed, refreshVersions 0.60.6 |
+| 6 | `97ed634` | catalog stripped to what the app resolves (~60 unused entries, the dead test deps, unused plugin aliases) |
+| 7 | `213f2a0` | window insets for the enforced edge-to-edge of targetSdk 36; dead storage + C2DM permissions removed from the manifest |
+| 8 | `0e6de26` | `onBackPressed` → `OnBackPressedDispatcher` (predictive back is on by default at targetSdk 36) |
 
-Also in this wave: the `-ktx` Firebase artifacts are deprecated and being removed — switch
-`firebase-crashlytics-ktx` → `firebase-crashlytics` and `firebase-messaging-ktx` →
-`firebase-messaging` in the catalog (the KTX APIs are in the main artifacts since BoM 32.5).
+Notes on the two risky ones:
 
-**Wave B – networking / parsing, needs functional testing against zumpa.nickde.com**
+* **jsoup 1.10.3 → 1.23.1.** Verified by dumping the DOM of the live main page and a thread page
+  the way `ZumpaSimpleParser` walks it (`getElementsByTag` / `child(n)` / `text()` / `html()`)
+  under both versions and diffing: identical table/row/column structure, identical `html()` entity
+  output, identical `Datum:&nbsp;` and `reply2('@…:` matches. The only behavioural difference is
+  that `text()` now normalizes `&nbsp;` to a space and trims — which the parser already neutralizes
+  (`safeInt` strips it, `time.replace(NBSP_CHAR, ' ')`, `getAuthorName` reads
+  `textNodes().getWholeText()`).
+* **core-ktx stops at 1.18.0.** 1.19.0 requires AGP 9.1 + compileSdk 37; see step C below.
 
-| catalog key | current | latest | note |
-|---|---|---|---|
-| `jsoup` | 1.10.3 | 1.23.1 | 13 years of parser changes; `ZumpaSimpleParser.java` + `reader/*` must be re-verified against live HTML. Has CVE fixes — worth doing. |
-| `okhttp` | 4.12.0 | 5.4.0 | major; mostly source-compatible, check `PicassoHttpDownloader2.kt` and the cookie/interceptor setup |
-| `retrofit` | 2.10.0 | 2.12.0 → 3.0.0 | Retrofit 3 needs OkHttp 5; `adapter-rxjava2` 3.0.0 exists, so the Rx path survives |
-| `gson` | 2.11.0 | 2.14.0 | |
+## Remaining
 
-**Wave C – abandoned dependencies (decide: keep pinned, or replace)**
+### A. Runtime check on a device — nothing else can substitute for it
 
-These are the reason `android.enableJetifier=true` is still needed — they drag in
-`com.android.support:appcompat-v7` (verified via `dependencyInsight`):
+Not done here: the connected device (Android 17) has the **Play Store** build of
+`com.scurab.zumpareader` installed, so a debug-signed APK cannot be installed over it without
+uninstalling first and losing the app data. Install from Android Studio with the release keystore,
+or uninstall the Play build first.
 
-* `swipy` 1.2.3 (support 23.1.1) — last release 2016. Replace with
-  `androidx.swiperefreshlayout:swiperefreshlayout` (the app only uses top/bottom refresh).
-* `pinchtozoom` 0.1 (support 25.3.1) — 2017, ~200 lines. Vendor it or swap for a maintained
-  zoomable image view.
-* `rxlifecycle2` 2.2.2 (support 27.1.1) — archived 2019.
+What to look at, in order of risk:
 
-Plus, no Jetifier involvement but equally dead: RxJava2 2.2.21 (EOL), `rxbinding2` 2.0.0 (2016),
-`otto` 1.3.8 (deprecated 2015), `kotson` 2.5.0 (2019), `picasso` (last release 2.8, 2022 — and the
-app already ships **Fresco** as a second image loader; consolidating on one saves ~1 MB and a whole
-dependency tree).
+1. **Edge-to-edge.** `MainActivity` (toolbar behind the status bar, FAB and the post panel above
+   the nav bar, keyboard open in the post message screen), `SettingsActivity` (preference list),
+   dialogs (`AppTheme.Dialog*`). `ImageActivity` was deliberately left drawing behind the bars.
+2. **Back navigation.** Back gesture inside a thread, inside the post screen and on the main list —
+   `SubListFragment.onBackButtonClick()` is the only overriding implementation.
+3. **The parser against live HTML**: thread list dates, answer counts, author names, survey
+   percentages, and the "show last author" setting (that path splits the last column on spaces and
+   is the only place where the jsoup `text()` change could still bite).
+4. Push notification tap-through (`MyFirebaseService`), image upload, offline download.
 
-Realistic target: replace the Rx stack (RxJava + RxAndroid + RxBinding + RxLifecycle, used in 12
-files: `BaseFragment`, `MainListFragment`, `SubListFragment`, `Post*Fragment`, `ZumpaAPI`,
-`Transformers.kt`, …) with coroutines/Flow, which also removes `adapter-rxjava2` and unblocks
-dropping Jetifier. This is the single largest item in the plan — schedule it on its own branch.
+### B. Wave C — the abandoned dependencies (deliberately not started)
 
-**Wave D – after Wave C: turn the legacy switches off in `gradle.properties`**
+Still pinned, still the reason `android.enableJetifier=true` is required — they drag in
+`com.android.support:appcompat-v7`:
 
-* `android.enableJetifier=true` → remove (only possible once the three support-lib users above are
-  gone; AGP 9 drops Jetifier entirely).
-* `android.nonTransitiveRClass=false` → `true` (mandatory in AGP 9; may require adding explicit
-  `R` imports for `androidx.appcompat`/`material` resources).
+* `swipy` 1.2.3 (support 23.1.1, 2016) → `androidx.swiperefreshlayout`
+* `pinchtozoom` 0.1 (support 25.3.1, 2017) → vendor it or replace
+* `rxlifecycle2` 2.2.2 (support 27.1.1, archived 2019)
 
-## 4. Build-logic modernisation (AGP 9 / Gradle 9-10)
+and, without Jetifier involvement: RxJava2 (EOL), `rxbinding2` (2016), `otto` (deprecated 2015),
+`kotson` (2019), `picasso` (last release 2022, while **Fresco** is also shipped — two image loaders).
 
-Blockers already reported by `--warning-mode all`:
+The real target is replacing the Rx stack with coroutines/Flow across the 12 files that use it
+(`BaseFragment`, `MainListFragment`, `SubListFragment`, `Post*Fragment`, `ZumpaAPI`,
+`Transformers.kt`, …); that also removes `adapter-rxjava2` and unblocks dropping Jetifier. Own
+branch, own review.
 
-* Groovy space-assignment is deprecated (removed in Gradle 10): `namespace "…"`,
-  `multiDexEnabled true`, `signingConfig signingConfigs.release`, `versionCode 68`,
-  `versionName "3.3.0"`, `manifestPlaceholders = […]` → use `=` everywhere in `app/build.gradle`.
-* `build.gradle`: `task clean(type: Delete) { delete rootProject.buildDir }` — `buildDir` is
-  deprecated and the `clean` task is provided by AGP anyway; delete the block.
-* `app/build.gradle`: `task(depsize)` reads `configurations._debugApk`, which no longer exists in
-  AGP 8 — the task fails if invoked. Delete it or rewrite against `debugRuntimeClasspath`.
-* `StartParameter.isConfigurationCacheRequested` deprecation comes from a third-party plugin
-  (refreshVersions / crashlytics) — resolves itself with the plugin bumps below.
-* `settings.gradle` still applies `de.fayard.refreshVersions` 0.60.5 writing to
-  `build/versions.properties`. Now that everything lives in the catalog, either update the plugin
-  or drop it and use `./gradlew dependencyUpdates` / IDE catalog inspections instead. The
-  `## ⬆ = "1.x"` comment noise under `jsoup` in the catalog is refreshVersions output — it
-  disappears with the jsoup bump in Wave B.
-* Then: AGP 8.13.2 → 9.x (latest 9.3.1) and Gradle 8.14.3 → 9.x, as the final step, since AGP 9
-  requires KGP 2.x, non-transitive R classes and no Jetifier (steps 2 and 3 must land first).
-* Consider converting `build.gradle`/`app/build.gradle` to `.gradle.kts` while doing this, and
-  enabling `org.gradle.configuration-cache=true`.
+### C. Wave D — toolchain, blocked by B
 
-## 5. Catalog hygiene (cheap, do any time)
+1. `android.enableJetifier=true` → remove (needs B; AGP 9 drops Jetifier entirely).
+2. `android.nonTransitiveRClass=false` → `true` (mandatory in AGP 9; may need explicit `R` imports).
+3. AGP 8.13.2 → 9.x (latest 9.3.1) + Gradle 8.14.3 → 9.x.
+4. Then core-ktx 1.19.0 and compileSdk 37 become available — the dev device already runs Android 17.
+5. Optional while in there: `.gradle` → `.gradle.kts`, `org.gradle.configuration-cache=true`,
+   a `jvmToolchain(17)` declaration so the build stops depending on the launching JDK.
 
-* The catalog carries ~60 entries this project never uses (adjust, room, koin, navigation, compose,
-  exoplayer, lottie, leakcanary, groupie, timber, truth, turbine, mockk, junit-jupiter, ktlint,
-  …) — it was clearly copied from another project. Either delete the unused half or keep it as a
-  shared template deliberately; right now `./gradlew` cannot tell you which is which.
-* `androidx-activity-compose` is in the `android-base` bundle but nothing imports
-  `androidx.activity` or Compose — drop it from the bundle.
-* No `app/src/test` or `app/src/androidTest` source set exists, so `junit4`, `robolectric` 3.3.1
-  (2017), `fest-android` (2013) and `mockito` 2.25 are dead `testImplementation` entries. Either
-  delete the five lines from `app/build.gradle`, or start a test source set on junit5 + mockk +
-  truth (already in the catalog as the `unittests-jvm` bundle) and use it for the HTML parser,
-  which is the part that breaks most often.
-* `jvmtarget = "17"` while the local toolchain is JDK 21 — consider a `kotlin { jvmToolchain(17) }`
-  / `java.toolchain` declaration so the build is not dependent on the JDK that launches Gradle.
+### D. Smaller leftovers
+
+* `./gradlew :app:lintDebug` reports **9 errors, 154 warnings**. None are from this upgrade — they
+  are `android:tint` instead of `app:tint` in `item_main_list_*.xml` / `item_sub_list_menu.xml`
+  (6×), an invalid `String.format` on `app_name` in `MainListFragment.kt:66`, a wrong
+  `DialogFragment` style constant in `OfflineDownloadFragment.kt:59`. Note that lint could not run
+  at all before this upgrade: Jetifier failed to transform `shadows-support-v4-3.3.1.jar`.
+* `GCMReceiver` is dead code — not registered in the manifest, not referenced, and its
+  `PendingIntent.getActivity(…, FLAG_UPDATE_CURRENT)` without a mutability flag would throw on
+  Android 12+ if it ever ran. The live path is `MyFirebaseService`, which passes `FLAG_MUTABLE`.
+* No test source set exists. The catalog no longer carries test dependencies; adding
+  `app/src/test` with junit5 + mockk for `ZumpaSimpleParser` would pay for itself the next time
+  the forum HTML changes.
+* Bump `versionCode` / `versionName` in `app/build.gradle` before releasing.
