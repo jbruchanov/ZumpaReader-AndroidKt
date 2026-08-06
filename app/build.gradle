@@ -89,12 +89,4 @@ dependencies {
     implementation libs.bundles.fresco
 
     implementation libs.pinchtozoom
-
-    testImplementation libs.junit4
-    testImplementation libs.robolectric.base
-    testImplementation libs.robolectric.shadows.support.v4
-    testImplementation(libs.festandroid) {
-        exclude module: 'support-v4'//some weird incompatibility issue
-    }
-    testImplementation libs.mockito
 }
