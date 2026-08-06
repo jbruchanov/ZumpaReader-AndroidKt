@@ -1,7 +1,6 @@
 package com.scurab.android.zumpareader
 
 import com.scurab.android.zumpareader.model.*
-import io.reactivex.Observable
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Call
@@ -14,31 +13,31 @@ import retrofit2.http.*
 interface ZumpaAPI {
 
     @GET("/phorum/list.php?f=2&a=2&af=2")
-    fun getMainPage(@Query(value = "af") filter: String): Observable<ZumpaMainPageResult>
+    suspend fun getMainPage(@Query(value = "af") filter: String): ZumpaMainPageResult
 
     @GET("/phorum/list.php?f=2")
     fun getMainPageHtml(): Call<ZumpaGenericResponse>
 
     @GET("/phorum/list.php?f=2&a=2&af=2")
-    fun getMainPage(@Query(value = "t") fromThread: String, @Query(value = "af") filter: String): Observable<ZumpaMainPageResult>
+    suspend fun getMainPage(@Query(value = "t") fromThread: String, @Query(value = "af") filter: String): ZumpaMainPageResult
 
     @GET("/phorum/read.php?f=2")
-    fun getThreadPage(@Query(value = "i") id: String, @Query(value = "t") id2: String): Observable<ZumpaThreadResult>
+    suspend fun getThreadPage(@Query(value = "i") id: String, @Query(value = "t") id2: String): ZumpaThreadResult
 
     @POST("/phorum/post.php")
-    fun sendResponse(@Query(value = "i") id: String, @Query(value = "t") id2: String, @Body body: ZumpaThreadBody): Observable<ZumpaThreadResult>
+    suspend fun sendResponse(@Query(value = "i") id: String, @Query(value = "t") id2: String, @Body body: ZumpaThreadBody): ZumpaThreadResult
 
     @POST("/phorum/post.php")
-    fun sendThread(@Body body: ZumpaThreadBody): Observable<ZumpaThreadResult>
+    suspend fun sendThread(@Body body: ZumpaThreadBody): ZumpaThreadResult
 
     @POST("/login.php")
     fun login(@Body body: ZumpaLoginBody): Call<ZumpaGenericResponse>
 
     @POST("/phorum/rate.php")
-    fun voteSurvey(@Body body: ZumpaVoteSurveyBody): Observable<ZumpaGenericResponse>
+    suspend fun voteSurvey(@Body body: ZumpaVoteSurveyBody): ZumpaGenericResponse
 
     @POST("/phorum/rate.php")
-    fun toggleRate(@Body body: ZumpaToggleBody): Observable<ZumpaGenericResponse>
+    suspend fun toggleRate(@Body body: ZumpaToggleBody): ZumpaGenericResponse
 }
 
 interface ZumpaWSAPI {
@@ -55,33 +54,33 @@ interface ZumpaPHPAPI {
 
     @Multipart()
     @POST("/fotodisk.php")
-    fun postImage(@Part image: MultipartBody.Part, @Part("name") name: RequestBody) : Observable<ZumpaGenericResponse>
+    suspend fun postImage(@Part image: MultipartBody.Part, @Part("name") name: RequestBody): ZumpaGenericResponse
 }
 
 class ZumpaOfflineApi(var offlineData: LinkedHashMap<String, ZumpaThread>) : ZumpaAPI {
 
-    override fun getMainPage(filter: String): Observable<ZumpaMainPageResult> {
-        return Observable.just(ZumpaMainPageResult(null, "", offlineData))
+    override suspend fun getMainPage(filter: String): ZumpaMainPageResult {
+        return ZumpaMainPageResult(null, "", offlineData)
     }
 
     override fun getMainPageHtml(): Call<ZumpaGenericResponse> {
         throw UnsupportedOperationException()
     }
 
-    override fun getMainPage(fromThread: String, filter: String): Observable<ZumpaMainPageResult> {
+    override suspend fun getMainPage(fromThread: String, filter: String): ZumpaMainPageResult {
         return getMainPage(filter)
     }
 
-    override fun getThreadPage(id: String, id2: String): Observable<ZumpaThreadResult> {
-        var data = offlineData[id]?.offlineItems ?: listOf()
-        return Observable.just(ZumpaThreadResult(data))
+    override suspend fun getThreadPage(id: String, id2: String): ZumpaThreadResult {
+        val data = offlineData[id]?.offlineItems ?: listOf()
+        return ZumpaThreadResult(data)
     }
 
-    override fun sendResponse(id: String, id2: String, body: ZumpaThreadBody): Observable<ZumpaThreadResult> {
+    override suspend fun sendResponse(id: String, id2: String, body: ZumpaThreadBody): ZumpaThreadResult {
         throw UnsupportedOperationException()
     }
 
-    override fun sendThread(body: ZumpaThreadBody): Observable<ZumpaThreadResult> {
+    override suspend fun sendThread(body: ZumpaThreadBody): ZumpaThreadResult {
         throw UnsupportedOperationException()
     }
 
@@ -89,11 +88,11 @@ class ZumpaOfflineApi(var offlineData: LinkedHashMap<String, ZumpaThread>) : Zum
         throw UnsupportedOperationException()
     }
 
-    override fun voteSurvey(body: ZumpaVoteSurveyBody): Observable<ZumpaGenericResponse> {
+    override suspend fun voteSurvey(body: ZumpaVoteSurveyBody): ZumpaGenericResponse {
         throw UnsupportedOperationException()
     }
 
-    override fun toggleRate(body: ZumpaToggleBody): Observable<ZumpaGenericResponse> {
+    override suspend fun toggleRate(body: ZumpaToggleBody): ZumpaGenericResponse {
         throw UnsupportedOperationException()
     }
 }

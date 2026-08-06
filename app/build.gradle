@@ -64,7 +64,7 @@ kotlin {
 dependencies {
     //compile fileTree(dir: 'libs', include: ['*.jar'])
     implementation(libs.kotlin.stdlib)
-    implementation(libs.kotlinx.coroutines)
+    implementation(libs.bundles.coroutines)
     implementation(platform(libs.firebase.bom))
     implementation(libs.bundles.firebase)
     implementation(libs.bundles.android.base)
@@ -80,11 +80,6 @@ dependencies {
 
     implementation libs.kotson
     implementation libs.otto
-
-    implementation libs.rxjava
-    implementation libs.rxandroid
-    implementation libs.rxbinding
-    implementation libs.bundles.rxlifecycle
 
     implementation libs.bundles.fresco
 

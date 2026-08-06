@@ -21,7 +21,6 @@ import com.scurab.android.zumpareader.content.post.PostFragment
 import com.scurab.android.zumpareader.event.DialogEvent
 import com.scurab.android.zumpareader.event.LoadThreadEvent
 import com.scurab.android.zumpareader.ext.toast
-import com.scurab.android.zumpareader.model.ZumpaGenericResponse
 import com.scurab.android.zumpareader.model.ZumpaMainPageResult
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.model.ZumpaToggleBody
@@ -30,10 +29,9 @@ import com.scurab.android.zumpareader.ui.showAnimated
 import com.scurab.android.zumpareader.util.asListOfValues
 import com.scurab.android.zumpareader.util.getColorFromTheme
 import com.scurab.android.zumpareader.util.ifNull
+import com.scurab.android.zumpareader.util.retrying
 import com.scurab.android.zumpareader.widget.ToggleAdapter
 import com.squareup.otto.Subscribe
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
 
 /**
  * Created by JBruchanov on 24/11/2015.
@@ -171,21 +169,19 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
         lastFilter = filter
         isLoading = true
 
-        val mainPage = if (fromThread != null) zumpaApp.zumpaAPI.getMainPage(fromThread, filter) else zumpaApp.zumpaAPI.getMainPage(filter)
-        mainPage.subscribeOn(Schedulers.io())
-                .compose(bindToLifecycle<ZumpaMainPageResult>())
-                .observeOn(AndroidSchedulers.mainThread())
-                .retry(3)
-                .subscribe(
-                        { result ->
-                            onResultLoaded(result, firstLoad)
-                            isLoading = false
-                        },
-                        { err ->
-                            isLoading = false
-                            err?.message?.let { toast(it) }
-                        }
-                )
+        val api = zumpaApp.zumpaAPI
+        launchWithView {
+            try {
+                val result = retrying {
+                    if (fromThread != null) api.getMainPage(fromThread, filter) else api.getMainPage(filter)
+                }
+                onResultLoaded(result, firstLoad)
+                isLoading = false
+            } catch (err: Throwable) {
+                isLoading = false
+                err.message?.let { toast(it) }
+            }
+        }
     }
 
     override fun onStart() {
@@ -293,23 +289,19 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
     private fun onThreadIgnoreClick(item: ZumpaThread, position: Int) {
         mainListAdapter()?.let { adapter ->
             adapter.toggleOpenState(position)
-            zumpaApp.zumpaAPI.let {
+            zumpaApp.zumpaAPI.let { api ->
                 isLoading = true
-                it.toggleRate(ZumpaToggleBody(item.id, ZumpaToggleBody.tIgnore))
-                        .compose(bindToLifecycle<ZumpaGenericResponse>())
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(
-                                { result ->
-                                    isLoading = false
-                                    zumpaData.remove(item.id)
-                                    mainListAdapter()?.removeItem(item)
-                                },
-                                { err ->
-                                    isLoading = false
-                                    err?.message?.let { toast(it) }
-                                }
-                        )
+                launchWithView {
+                    try {
+                        api.toggleRate(ZumpaToggleBody(item.id, ZumpaToggleBody.tIgnore))
+                        isLoading = false
+                        zumpaData.remove(item.id)
+                        mainListAdapter()?.removeItem(item)
+                    } catch (err: Throwable) {
+                        isLoading = false
+                        err.message?.let { toast(it) }
+                    }
+                }
             }
         }
     }
@@ -317,23 +309,19 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
     private fun onThreadFavoriteClick(item: ZumpaThread, position: Int) {
         mainListAdapter()?.let {adapter ->
             adapter.toggleOpenState(position)
-            zumpaApp.zumpaAPI.let {
+            zumpaApp.zumpaAPI.let { api ->
                 isLoading = true
-                it.toggleRate(ZumpaToggleBody(item.id, ZumpaToggleBody.tFavorite))
-                        .compose(bindToLifecycle<ZumpaGenericResponse>())
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(
-                                { result ->
-                                    isLoading = false
-                                    item.isFavorite = !item.isFavorite
-                                    mainListAdapter()?.notifyItemChanged(position)
-                                },
-                                { err ->
-                                    isLoading = false
-                                    err?.message?.let { toast(it) }
-                                }
-                        )
+                launchWithView {
+                    try {
+                        api.toggleRate(ZumpaToggleBody(item.id, ZumpaToggleBody.tFavorite))
+                        isLoading = false
+                        item.isFavorite = !item.isFavorite
+                        mainListAdapter()?.notifyItemChanged(position)
+                    } catch (err: Throwable) {
+                        isLoading = false
+                        err.message?.let { toast(it) }
+                    }
+                }
             }
         }
     }

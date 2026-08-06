@@ -7,20 +7,20 @@ import android.graphics.Point
 import android.net.Uri
 import android.os.Environment
 import com.scurab.android.zumpareader.util.ParseUtils
-import io.reactivex.Single
-import io.reactivex.SingleObserver
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 
 /**
  * Created by JBruchanov on 12/01/2016.
  */
-class CopyFromResourcesTask(private val context: Context, val uri: Uri) : Single<CopyFromResourcesTaskResult>() {
+class CopyFromResourcesTask(private val context: Context, val uri: Uri) {
 
     private var imageStorage: File? = null
     private var hash: String? = null
 
-    override fun subscribeActual(observer: SingleObserver<in CopyFromResourcesTaskResult>) {
+    suspend fun execute(): CopyFromResourcesTaskResult = withContext(Dispatchers.IO) {
         val result = CopyFromResourcesTaskResult()
         imageStorage = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
         hash = ParseUtils.MD5(uri.toString())
@@ -41,7 +41,7 @@ class CopyFromResourcesTask(private val context: Context, val uri: Uri) : Single
                 createThumbnail(output, result.thumbnail!!, result)
             }
         }
-        observer.onSuccess(result)
+        result
     }
 
     private fun loadImageData(file: File, result: CopyFromResourcesTaskResult) {

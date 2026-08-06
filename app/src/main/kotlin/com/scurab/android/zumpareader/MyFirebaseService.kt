@@ -1,6 +1,5 @@
 package com.scurab.android.zumpareader
 
-import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -20,10 +19,18 @@ import com.scurab.android.zumpareader.ext.notificationManager
 import com.scurab.android.zumpareader.extension.app
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.util.obtainStyledColor
-import io.reactivex.Observable
-import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 private const val ZUMPA_CHANNEL = AppConfig.NotificationChannel.Notifications
+
+/**
+ * Registering the push token is fire and forget, exactly like the rx version was:
+ * it must not be cancelled when the short-lived service instance goes away.
+ */
+private val pushRegistrationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
 class MyFirebaseService : FirebaseMessagingService() {
 
@@ -41,29 +48,26 @@ class MyFirebaseService : FirebaseMessagingService() {
         }
     }
 
-    @SuppressLint("CheckResult")
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         //we need to
         val app = baseContext.app()
         val userName = app.zumpaPrefs.loggedUserName
         if (userName != null) {
-            Observable.fromCallable {
-                val body = app.zumpaAPI.getMainPageHtml().execute().body()!!.asString()
-                app.zumpaPrefs.loggedUserName
-                val uid = ZumpaSimpleParser.parseUID(body)
-                if (uid != null) {
-                    val response = app.zumpaPHPAPI.register(userName, uid, token).execute().body()!!.asUTFString()
-                    Log.i("MyFirebaseService", "Result:" + ("[OK]" == response))
+            pushRegistrationScope.launch {
+                try {
+                    val body = app.zumpaAPI.getMainPageHtml().execute().body()!!.asString()
+                    val uid = ZumpaSimpleParser.parseUID(body)
+                    if (uid != null) {
+                        val response = app.zumpaPHPAPI.register(userName, uid, token).execute().body()!!.asUTFString()
+                        Log.i("MyFirebaseService", "Result:" + ("[OK]" == response))
+                    }
+                } catch (e: Throwable) {
+                    //just ignore it
+                    Log.i("MyFirebaseService", "Unable to send newToken to server")
+                    e.printStackTrace()
                 }
-            }.subscribeOn(Schedulers.io())
-                    .subscribe({
-                        //ok we are done, nothing to do here
-                    }, {
-                        //just ignore it
-                        Log.i("MyFirebaseService", "Unable to send newToken to server")
-                        it.printStackTrace()
-                    })
+            }
         }
     }
 

@@ -5,18 +5,31 @@ import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.scurab.android.zumpareader.BusProvider
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.extension.app
 import com.scurab.android.zumpareader.model.ZumpaThread
-import com.trello.rxlifecycle2.components.support.RxFragment
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import java.util.*
 
 /**
  * Created by JBruchanov on 25/11/2015.
  */
-abstract class BaseFragment : RxFragment() {
+abstract class BaseFragment : Fragment() {
+
+    /**
+     * Replacement of the rxlifecycle `bindToLifecycle()`, the work is cancelled when the view goes away.
+     * Fragments in the back stack have no view but still react to bus events, in that case the work is
+     * bound to the fragment itself, the same way the rx subscription used to be.
+     */
+    protected fun launchWithView(block: suspend CoroutineScope.() -> Unit): Job {
+        val owner = if (view != null) viewLifecycleOwner else this
+        return owner.lifecycleScope.launch(block = block)
+    }
 
     val mainActivity: MainActivity?
         get() {
