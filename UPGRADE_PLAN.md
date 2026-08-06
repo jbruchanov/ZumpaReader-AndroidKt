@@ -17,6 +17,7 @@ builds `clean :app:assembleDebug :app:assembleRelease` and passes `lintVitalRele
 | 6 | `97ed634` | catalog stripped to what the app resolves (~60 unused entries, the dead test deps, unused plugin aliases) |
 | 7 | `213f2a0` | window insets for the enforced edge-to-edge of targetSdk 36; dead storage + C2DM permissions removed from the manifest |
 | 8 | `0e6de26` | `onBackPressed` → `OnBackPressedDispatcher` (predictive back is on by default at targetSdk 36) |
+| 9 | `a976c88` | **Wave C**: the whole RxJava2 stack replaced with coroutines |
 
 Notes on the two risky ones:
 
@@ -28,6 +29,12 @@ Notes on the two risky ones:
   (`safeInt` strips it, `time.replace(NBSP_CHAR, ' ')`, `getAuthorName` reads
   `textNodes().getWholeText()`).
 * **core-ktx stops at 1.18.0.** 1.19.0 requires AGP 9.1 + compileSdk 37; see step C below.
+* **Wave C.** `rxjava`, `rxandroid`, `rxbinding` (which had no call site at all), `rxlifecycle` and
+  `adapter-rxjava2` are gone; `lifecycle-runtime-ktx` 2.9.4 and `kotlinx-coroutines-android` are in.
+  The retrofit interfaces use `suspend` functions, which retrofit 3 supports without a call adapter.
+  `bindToLifecycle()` became `BaseFragment.launchWithView()` — view lifecycle scope, falling back to
+  the fragment scope for a back-stacked fragment that reacts to a bus event without a view.
+  Thread affinity was kept as it was, including building the message spans on the main thread.
 
 ## Remaining
 
@@ -49,29 +56,36 @@ What to look at, in order of risk:
    percentages, and the "show last author" setting (that path splits the last column on spaces and
    is the only place where the jsoup `text()` change could still bite).
 4. Push notification tap-through (`MyFirebaseService`), image upload, offline download.
+5. **Everything the Rx stack used to drive**, since it is all new plumbing and the first call is the
+   first test: list load and pull-to-refresh, opening a thread, posting a message and a reply
+   (the 302-as-success path in `ignoringZumpaRedirect`), ignore/favourite toggles, survey voting,
+   image copy/resize/rotate/upload, login and logout in the settings.
+   Note that retrofit resolves the converter for a `suspend` function from the unwrapped
+   continuation type, so `ZumpaConverterFactory`'s `when (type)` still matches — that is the one
+   thing in the migration that fails at first call rather than at compile time.
 
-### B. Wave C — the abandoned dependencies (deliberately not started)
+### B. The dependencies that are kept on purpose
 
-Still pinned, still the reason `android.enableJetifier=true` is required — they drag in
-`com.android.support:appcompat-v7`:
+`rxlifecycle2` is gone with Wave C, but two support-library users remain, so
+**`android.enableJetifier=true` has to stay**:
 
-* `swipy` 1.2.3 (support 23.1.1, 2016) → `androidx.swiperefreshlayout`
-* `pinchtozoom` 0.1 (support 25.3.1, 2017) → vendor it or replace
-* `rxlifecycle2` 2.2.2 (support 27.1.1, archived 2019)
+* `swipy` 1.2.3 (support 23.1.1, 2016) — kept deliberately: its pull-to-refresh side is
+  configurable and `SubListFragment` uses the bottom direction, which
+  `androidx.swiperefreshlayout` cannot do. Replacing it means either changing the thread screen's
+  UX or writing a custom pull-up widget.
+* `pinchtozoom` 0.1 (support 25.3.1, 2017) — kept: with swipy staying, dropping it would not remove
+  Jetifier anyway, and vendoring it means untested gesture code.
 
-and, without Jetifier involvement: RxJava2 (EOL), `rxbinding2` (2016), `otto` (deprecated 2015),
-`kotson` (2019), `picasso` (last release 2022, while **Fresco** is also shipped — two image loaders).
+Not Jetifier-related, also kept and still dead upstream: `otto` (deprecated 2015), `kotson` (2019),
+`picasso` (last release 2022, while **Fresco** is also shipped — two image loaders).
 
-The real target is replacing the Rx stack with coroutines/Flow across the 12 files that use it
-(`BaseFragment`, `MainListFragment`, `SubListFragment`, `Post*Fragment`, `ZumpaAPI`,
-`Transformers.kt`, …); that also removes `adapter-rxjava2` and unblocks dropping Jetifier. Own
-branch, own review.
+### C. Wave D — toolchain, partly blocked by B
 
-### C. Wave D — toolchain, blocked by B
-
-1. `android.enableJetifier=true` → remove (needs B; AGP 9 drops Jetifier entirely).
+1. `android.enableJetifier=true` → **blocked** by swipy + pinchtozoom above. AGP 9 drops Jetifier
+   entirely, so AGP 9 requires resolving B first.
 2. `android.nonTransitiveRClass=false` → `true` (mandatory in AGP 9; may need explicit `R` imports).
-3. AGP 8.13.2 → 9.x (latest 9.3.1) + Gradle 8.14.3 → 9.x.
+   Not blocked by B, can be done any time.
+3. AGP 8.13.2 → 9.x (latest 9.3.1) + Gradle 8.14.3 → 9.x — blocked by 1.
 4. Then core-ktx 1.19.0 and compileSdk 37 become available — the dev device already runs Android 17.
 5. Optional while in there: `.gradle` → `.gradle.kts`, `org.gradle.configuration-cache=true`,
    a `jvmToolchain(17)` declaration so the build stops depending on the launching JDK.
