@@ -79,16 +79,12 @@ dependencies {
     implementation(libs.kotlin.stdlib)
     implementation(libs.kotlinx.coroutines)
     implementation(platform(libs.firebase.bom))
-    ["crashlytics", "messaging"].forEach {
-        implementation("com.google.firebase:firebase-$it-ktx")
-    }
+    implementation(libs.bundles.firebase)
     implementation(libs.bundles.android.base)
     implementation(libs.jsoup)
     implementation(libs.bundles.okhttp)
 
-    implementation libs.retrofit
-    implementation libs.retrofit.converter.gson
-    implementation libs.retrofit.adapter.rxjava2
+    implementation libs.bundles.retrofit
 
     implementation libs.swipy
 
@@ -97,27 +93,20 @@ dependencies {
     implementation libs.kotson
     implementation libs.otto
 
-    implementation "io.reactivex.rxjava2:rxjava:2.2.21"
-    implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
-    implementation 'com.jakewharton.rxbinding2:rxbinding:2.0.0'
-    def trelo = "2.2.2"
-    implementation "com.trello.rxlifecycle2:rxlifecycle:${trelo}"
-    implementation "com.trello.rxlifecycle2:rxlifecycle-android:${trelo}"
-    implementation "com.trello.rxlifecycle2:rxlifecycle-components:${trelo}"
-    implementation "com.trello.rxlifecycle2:rxlifecycle-navi:${trelo}"
+    implementation libs.rxjava
+    implementation libs.rxandroid
+    implementation libs.rxbinding
+    implementation libs.bundles.rxlifecycle
 
-    implementation libs.fresco
-    implementation "com.facebook.fresco:middleware:3.2.0"
-    implementation libs.fresco.animated.gif
+    implementation libs.bundles.fresco
 
-    implementation 'com.bogdwellers:pinchtozoom:0.1'
+    implementation libs.pinchtozoom
 
-    testImplementation 'junit:junit:4.12'
-    def robo = "3.3.1"
-    testImplementation "org.robolectric:robolectric:$robo"
-    testImplementation "org.robolectric:shadows-support-v4:$robo"
-    testImplementation('com.squareup:fest-android:1.0.8') {
+    testImplementation libs.junit4
+    testImplementation libs.robolectric.base
+    testImplementation libs.robolectric.shadows.support.v4
+    testImplementation(libs.festandroid) {
         exclude module: 'support-v4'//some weird incompatibility issue
     }
-    testImplementation 'org.mockito:mockito-core:2.25.0'
+    testImplementation libs.mockito
 }

@@ -10,8 +10,12 @@ android-lifecycle = ["androidx-lifecycle-common", "androidx-lifecycle-process", 
 android-room = ["androidx-room-base", "androidx-room-runtime"]
 android-test = ["androidx-test-runner", "androidx-test-rules", "androidx-test-junit", "androidx-test-espresso", "androidx-test-compose"]
 android-navigation = ["androidx-navigation-fragment", "androidx-navigation-runtime", "androidx-navigation-ui"]
+firebase = ["firebase-crashlytics", "firebase-messaging"]
+fresco = ["fresco-base", "fresco-animated-gif", "fresco-middleware"]
 groupie = ["groupie-base", "groupie-viewbinding"]
 okhttp = ["okhttp-base", "okhttp-logging", "okhttp-urlconnection"]
+retrofit = ["retrofit-base", "retrofit-converter-gson", "retrofit-adapter-rxjava2"]
+rxlifecycle = ["rxlifecycle-base", "rxlifecycle-android", "rxlifecycle-components", "rxlifecycle-navi"]
 unittests-jvm = ["jetbrains-coroutines-test", "junit-jupiter-api", "junit-jupiter-engine", "junit-jupiter-params", "mockk", "truth", "turbine"]
 
 [plugins]
@@ -29,14 +33,14 @@ ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlintplugin" }
 
 [versions]
 
-android-sdk-compile = "34"
+android-sdk-compile = "36"
 android-sdk-min = "26"
-android-sdk-target = "34"
+android-sdk-target = "36"
 
 fresco = "3.2.0"
 kotlin = "1.9.24"
 jvmtarget = "17"
-android-gradle-plugin = "8.5.0"
+android-gradle-plugin = "8.13.2"
 kotson = "2.5.0"
 otto = "1.3.8"
 picasso = "2.8"
@@ -67,6 +71,7 @@ exoplayer = "2.19.1"
 excuseme = "0.9.5"
 fadingedgelayout = "1.0.0"
 facebook = "13.0.0"
+festandroid = "1.0.8"
 firebase-bom = "33.1.1"
 firebase-plugin-crashlytics = "3.0.2"
 firebase-plugin-distribution = "5.0.0"
@@ -97,6 +102,7 @@ jsoup = "1.10.3"
 ## ⬆ = "1.17.1"
 ## ⬆ = "1.17.2"
 junit = "5.10.2"
+junit4 = "4.12"
 ktlint = "0.50.0"
 ktlintplugin = "12.1.1"
 koin = "3.5.6"
@@ -104,9 +110,16 @@ kotlinx-coroutines = "1.8.1"
 kotlinx-json = "1.7.0"
 leakcanary = "2.13"
 lottie = "6.3.0"
+mockito = "2.25.0"
 mockk = "1.13.11"
 okhttp = "4.12.0"
+pinchtozoom = "0.1"
 retrofit = "2.10.0"
+robolectric = "3.3.1"
+rxandroid = "2.1.1"
+rxbinding = "2.0.0"
+rxjava = "2.2.21"
+rxlifecycle = "2.2.2"
 swipy = "1.2.3"
 threetenbp = "1.4.6"
 sqlitejdbc = "3.45.2.0"
@@ -159,8 +172,12 @@ exoplayer = { module = "com.google.android.exoplayer:exoplayer", version.ref = "
 facebook = { module = "com.facebook.android:facebook-android-sdk", version.ref = "facebook" }
 fadingedgelayout = { module = "com.github.bosphere.android-fadingedgelayout:fadingedgelayout", version.ref = "fadingedgelayout" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
-fresco = { module = "com.facebook.fresco:fresco", version.ref = "fresco" }
+#versions of firebase libraries are managed by the bom
+firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics-ktx" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging-ktx" }
+fresco-base = { module = "com.facebook.fresco:fresco", version.ref = "fresco" }
 fresco-animated-gif = { module = "com.facebook.fresco:animated-gif", version.ref = "fresco" }
+fresco-middleware = { module = "com.facebook.fresco:middleware", version.ref = "fresco" }
 google-adsidentifier = { module = "com.google.android.gms:play-services-ads-identifier", version.ref = "google-adsidentifier" }
 google-material = { module = "com.google.android.material:material", version.ref = "google-material" }
 google-review = { module = "com.google.android.play:review-ktx", version.ref = "google-review" }
@@ -181,9 +198,17 @@ okhttp-urlconnection = { module = "com.squareup.okhttp3:okhttp-urlconnection", v
 okhttp-logging = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "okhttp" }
 otto = { module = "com.squareup:otto", version.ref = "otto" }
 picasso = { module = "com.squareup.picasso:picasso", version.ref = "picasso" }
-retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
+pinchtozoom = { module = "com.bogdwellers:pinchtozoom", version.ref = "pinchtozoom" }
+retrofit-base = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 retrofit-converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
 retrofit-adapter-rxjava2 = { module = "com.squareup.retrofit2:adapter-rxjava2", version.ref = "retrofit" }
+rxandroid = { module = "io.reactivex.rxjava2:rxandroid", version.ref = "rxandroid" }
+rxbinding = { module = "com.jakewharton.rxbinding2:rxbinding", version.ref = "rxbinding" }
+rxjava = { module = "io.reactivex.rxjava2:rxjava", version.ref = "rxjava" }
+rxlifecycle-base = { module = "com.trello.rxlifecycle2:rxlifecycle", version.ref = "rxlifecycle" }
+rxlifecycle-android = { module = "com.trello.rxlifecycle2:rxlifecycle-android", version.ref = "rxlifecycle" }
+rxlifecycle-components = { module = "com.trello.rxlifecycle2:rxlifecycle-components", version.ref = "rxlifecycle" }
+rxlifecycle-navi = { module = "com.trello.rxlifecycle2:rxlifecycle-navi", version.ref = "rxlifecycle" }
 stickylayoutmanager = { module = "com.github.qiujayen:sticky-layoutmanager", version.ref = "stickylayoutmanager" }
 sqlitejdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlitejdbc" }
 swipy = { module = "com.github.orangegangsters:swipy", version.ref = "swipy" }
@@ -192,11 +217,16 @@ timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 zip = { module = "org.zeroturnaround:zt-zip", version.ref = "zip" }
 
 #test
+festandroid = { module = "com.squareup:fest-android", version.ref = "festandroid" }
 jetbrains-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 junit-jupiter-base = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
+junit4 = { module = "junit:junit", version.ref = "junit4" }
+mockito = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+robolectric-base = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+robolectric-shadows-support-v4 = { module = "org.robolectric:shadows-support-v4", version.ref = "robolectric" }
 truth = { module = "com.google.truth:truth", version.ref = "truth" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
