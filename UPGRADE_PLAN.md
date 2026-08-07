@@ -97,24 +97,25 @@ In order of risk:
    percentages, and the "show last author" setting.
 7. Push notification tap-through (`MyFirebaseService`).
 
-### B. The dependencies kept on purpose
+### B. ~~The dependencies kept on purpose~~ → resolved
 
-**`swipy` is now the only thing keeping `android.enableJetifier=true`.**
+**`android.enableJetifier` is off**, since Compose phase C6. Both support-library users are gone:
 
-* `swipy` 1.2.3 (support 23.1.1, 2016) — its pull-to-refresh side is configurable and the thread
-  screen uses the bottom direction, which `androidx.swiperefreshlayout` cannot do. Goes in Compose
-  phase C6, which hand-writes the bottom pull.
-* ~~`pinchtozoom` 0.1~~ → removed in Compose phase C1; the zoomable viewer is now
-  `graphicsLayer` + `detectTransformGestures`.
+* ~~`swipy` 1.2.3~~ → removed in C6; the thread screen's bottom pull is hand written
+  (`ui/sublist/BottomPullToRefresh.kt`).
+* ~~`pinchtozoom` 0.1~~ → removed in C1; the zoomable viewer is `graphicsLayer` +
+  `detectTransformGestures`.
 
-Also kept and still dead upstream: `kotson` (2019), `picasso` (2022, while **Fresco** is also
-shipped — two image loaders). `otto` is gone as of MVVM phase 6.
+Still shipped and still dead upstream: `kotson` (2019), `picasso` (2022) and **Fresco** — both image
+loaders are replaced by Coil as each screen converts, and get deleted in C9. `otto` went in MVVM
+phase 6.
 
-### C. Toolchain — blocked by B
+### C. Toolchain — **unblocked**
 
-1. `android.enableJetifier=true` → **blocked by `swipy` alone** now. AGP 9 drops Jetifier entirely,
-   so AGP 9 requires resolving B first.
-2. AGP 8.13.2 → 9.x + Gradle 9.x — blocked by 1.
+1. ~~`android.enableJetifier=true`~~ → off as of C6, verified with a clean
+   `assembleDebug assembleRelease`.
+2. AGP 8.13.2 → 9.x + Gradle 9.x — **now possible**. Worth doing before C7: it is also what lifts
+   the `resolutionStrategy.force` holding `lifecycle-*-compose` at 2.10.0 (COMPOSE_PLAN risk 0).
 3. Then core-ktx 1.19.0 and compileSdk 37 become available — the dev device already runs Android 17.
 4. Optional while in there: `.gradle` → `.gradle.kts`, `org.gradle.configuration-cache=true`, a
    `jvmToolchain(17)` declaration so the build stops depending on the launching JDK.

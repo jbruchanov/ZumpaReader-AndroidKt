@@ -15,6 +15,7 @@ import com.scurab.android.zumpareader.repository.SelectedThreadStore
 import com.scurab.android.zumpareader.repository.ZumpaReadStateRepository
 import com.scurab.android.zumpareader.repository.ZumpaSettingsRepository
 import com.scurab.android.zumpareader.repository.ZumpaThreadRepository
+import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.util.looksLikeImageUrl
 import kotlinx.coroutines.launch
 
@@ -35,6 +36,8 @@ sealed interface SubListRowUiState {
         /** Raw markup - rendered by [com.scurab.android.zumpareader.text.ZumpaTextRenderer]. */
         val body: String,
         val time: Long,
+        /** The swipe-to-reveal reply/copy/quote menu. */
+        val isMenuOpen: Boolean = false,
     ) : SubListRowUiState
 
     data class Link(override val itemIndex: Int, val url: String) : SubListRowUiState
@@ -90,12 +93,31 @@ data class SubListUiState(
     val canPost: Boolean = false,
 )
 
+interface SubListEventHandler {
+    fun onRefreshRequested()
+    fun onMessageClicked(row: SubListRowUiState.Message)
+    fun onMessageLongPressed(row: SubListRowUiState.Message)
+    fun onReplyClicked(authorReal: String?)
+    fun onQuoteClicked(author: String, body: String)
+    fun onCopyClicked(body: String)
+    fun onDraftChanged(text: String)
+    fun onSendClicked()
+    fun onSurveyItemClicked(item: SurveyItemUiState)
+    fun onLinkClicked(url: String)
+    fun onImageClicked(url: String)
+    fun onPostPanelRequested()
+    fun onPostPanelDismissed()
+    fun onMenuToggled(itemIndex: Int)
+}
+
 sealed interface SubListEffect : UiEffect {
     data object ScrollToBottom : SubListEffect
     data object ScrollToTop : SubListEffect
     /** Phone only - on a tablet a thread link swaps the pane through [SelectedThreadStore]. */
     data class OpenThread(val threadId: String) : SubListEffect
     data class OpenPostFragment(val flag: Int?) : SubListEffect
+    data class OpenImage(val url: String) : SubListEffect
+    data class OpenLink(val url: String) : SubListEffect
 }
 
 class SubListViewModel(
@@ -105,10 +127,11 @@ class SubListViewModel(
     private val selectedThread: SelectedThreadStore,
     private val eventBus: AppEventBus,
     private val device: DeviceConfig,
-) : BaseViewModel<SubListUiState>(SubListUiState()) {
+) : BaseViewModel<SubListUiState>(SubListUiState()), SubListEventHandler {
 
     private var items: List<ZumpaThreadItem> = emptyList()
     private var isStarted = false
+    private var openMenuIndex: Int? = null
 
     init {
         viewModelScope.launch {
@@ -160,7 +183,7 @@ class SubListViewModel(
         load(scrollToTop = isSwitch)
     }
 
-    fun onRefresh() = load()
+    override fun onRefreshRequested() = load()
 
     fun reload() = load(scrollToBottom = true)
 
@@ -190,14 +213,15 @@ class SubListViewModel(
     }
 
     //region the reply box
-    fun onDraftChanged(text: String) {
+    override fun onDraftChanged(text: String) {
         if (text == state.draft.text) return
         setState { copy(draft = draft.reparse(text)) }
     }
 
     /** Tapping a message inserts its author, tapping it again takes the header back out. */
-    fun onReplyClick(authorReal: String?) {
+    override fun onReplyClicked(authorReal: String?) {
         if (!state.canPost) return
+        closeMenu()
         val header = REPLY_HEADER.format(authorReal ?: return)
         showPostPanel()
         setState {
@@ -212,8 +236,9 @@ class SubListViewModel(
     }
 
     /** The "speak" menu item - quote the whole message at the end of the draft. */
-    fun onQuoteClick(author: String, body: String) {
+    override fun onQuoteClicked(author: String, body: String) {
         if (!state.canPost) return
+        closeMenu()
         showPostPanel()
         setState {
             val separator = if (draft.body.isNotEmpty()) "\n" else ""
@@ -221,7 +246,54 @@ class SubListViewModel(
         }
     }
 
-    fun onCopyClick(body: String) = effect(CopyToClipboard(body))
+    override fun onCopyClicked(body: String) {
+        closeMenu()
+        effect(CopyToClipboard(body))
+    }
+
+    /** Tapping a message with the reply box open inserts its author, as it did on a phone. */
+    override fun onMessageClicked(row: SubListRowUiState.Message) {
+        if (state.canPost && state.isPostPanelVisible) {
+            onReplyClicked(row.authorReal)
+        }
+    }
+
+    override fun onMessageLongPressed(row: SubListRowUiState.Message) = onMenuToggled(row.itemIndex)
+
+    override fun onMenuToggled(itemIndex: Int) {
+        if (!state.canPost) return
+        openMenuIndex = if (openMenuIndex == itemIndex) null else itemIndex
+        publishRows()
+    }
+
+    private fun closeMenu() {
+        if (openMenuIndex != null) {
+            openMenuIndex = null
+            publishRows()
+        }
+    }
+
+    /**
+     * Link routing. It lived in the fragment while the image viewer needed the tapped view for a
+     * shared element transition; that transition is gone (UPGRADE_PLAN E1), so the decision is just
+     * logic now.
+     */
+    override fun onLinkClicked(url: String) {
+        val threadId = ZumpaSimpleParser.getZumpaThreadId(url)
+        when {
+            threadId != 0 -> onThreadLinkClicked(threadId.toString())
+            url.looksLikeImageUrl() -> effect(SubListEffect.OpenImage(url))
+            else -> effect(SubListEffect.OpenLink(url))
+        }
+    }
+
+    override fun onImageClicked(url: String) = effect(SubListEffect.OpenImage(url))
+
+    override fun onPostPanelRequested() = showPostPanel()
+
+    override fun onPostPanelDismissed() {
+        onBackPressed()
+    }
 
     fun showPostPanel() {
         if (!state.isPostPanelVisible) {
@@ -238,7 +310,7 @@ class SubListViewModel(
         return false
     }
 
-    fun onSend() {
+    override fun onSendClicked() {
         val draft = state.draft
         if (draft.isBlank || state.isSending) {
             return
@@ -262,7 +334,7 @@ class SubListViewModel(
     }
     //endregion
 
-    fun onSurveyVote(item: SurveyItemUiState) {
+    override fun onSurveyItemClicked(item: SurveyItemUiState) {
         if (!state.canPost) return
         setState { copy(isSending = true) }
         viewModelScope.launch {
@@ -277,7 +349,7 @@ class SubListViewModel(
         }
     }
 
-    fun onThreadLinkClick(threadId: String) {
+    fun onThreadLinkClicked(threadId: String) {
         if (device.isTablet) {
             selectedThread.select(threadId)
         } else {
@@ -298,6 +370,7 @@ class SubListViewModel(
                 rating = item.rating,
                 body = item.body,
                 time = item.time,
+                isMenuOpen = index == openMenuIndex,
             )
             item.urls?.let { urls ->
                 //images before plain links, which is what the old sortBy(type) did

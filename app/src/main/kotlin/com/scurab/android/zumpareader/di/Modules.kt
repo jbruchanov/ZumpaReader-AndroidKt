@@ -14,6 +14,7 @@ import com.scurab.android.zumpareader.data.ZumpaGenericConverterFactory
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.repository.AppEventBus
 import com.scurab.android.zumpareader.repository.ImageCacheRepository
+import com.scurab.android.zumpareader.ui.compose.buildImageLoader
 import com.scurab.android.zumpareader.repository.ImageUploadRepository
 import com.scurab.android.zumpareader.repository.OfflineDataRepository
 import com.scurab.android.zumpareader.repository.SelectedThreadStore
@@ -72,6 +73,7 @@ val coreModule = module {
     single { OfflineDataRepository(androidContext(), get(), get()) }
     single { OfflineDownloadUseCase(get()) }
     single { ImageCacheRepository(androidContext()) }
+    single { buildImageLoader(androidContext(), get()) }
 
     /**
      * `api = { get() }` and not `api = get()`: the unqualified [ZumpaAPI] below is a factory, so
