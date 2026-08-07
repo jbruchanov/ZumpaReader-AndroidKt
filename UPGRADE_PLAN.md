@@ -92,6 +92,9 @@ Not Jetifier-related, also kept and still dead upstream: `otto` (deprecated 2015
 
 ### D. MVVM — what the Koin step prepared, and what each screen still needs
 
+**The full screen-by-screen plan is in [`MVVM_PLAN.md`](MVVM_PLAN.md).** What follows is the summary
+of the starting conditions it was written against.
+
 DI is in place (`di/Modules.kt`, started in `ZumpaReaderApp.onCreate`), `viewModelModule` is the
 empty slot each screen adds a line to. What the screens will run into:
 

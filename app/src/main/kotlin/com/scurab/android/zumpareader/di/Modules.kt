@@ -2,8 +2,10 @@ package com.scurab.android.zumpareader.di
 
 import com.google.gson.Gson
 import com.scurab.android.zumpareader.BuildConfig
+import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZR
 import com.scurab.android.zumpareader.ZumpaAPI
+import com.scurab.android.zumpareader.arch.DeviceConfig
 import com.scurab.android.zumpareader.ZumpaOfflineApi
 import com.scurab.android.zumpareader.ZumpaPHPAPI
 import com.scurab.android.zumpareader.ZumpaWSAPI
@@ -35,6 +37,7 @@ val coreModule = module {
     single { ZumpaPrefs(androidContext()) }
     single { CookieManager() }
     single { Gson() }
+    single { DeviceConfig(isTablet = androidContext().resources.getBoolean(R.bool.is_tablet)) }
     single {
         val prefs = get<ZumpaPrefs>()
         ZumpaSimpleParser().apply {
