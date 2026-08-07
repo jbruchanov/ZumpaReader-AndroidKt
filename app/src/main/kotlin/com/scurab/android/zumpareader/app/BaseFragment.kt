@@ -10,9 +10,11 @@ import com.scurab.android.zumpareader.BusProvider
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.extension.app
+import com.scurab.android.zumpareader.arch.collectWhileStarted
 import com.scurab.android.zumpareader.model.ZumpaThread
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -25,11 +27,18 @@ abstract class BaseFragment : Fragment() {
      * Binds the work to the view, it is cancelled when the view goes away.
      * Fragments in the back stack have no view but still react to bus events, in that case the work
      * is bound to the fragment itself.
+     *
+     * Legacy - the screens that own a ViewModel launch in `viewModelScope` and use
+     * [collectWhileStarted] instead. Removed with the last caller in phase 8.
      */
     protected fun launchWithView(block: suspend CoroutineScope.() -> Unit): Job {
         val owner = if (view != null) viewLifecycleOwner else this
         return owner.lifecycleScope.launch(block = block)
     }
+
+    /** Collects against the *view* lifecycle - only valid between onViewCreated and onDestroyView. */
+    protected fun <T> Flow<T>.collectWhileStarted(block: suspend (T) -> Unit): Job =
+        collectWhileStarted(viewLifecycleOwner, block)
 
     val mainActivity: MainActivity?
         get() {
