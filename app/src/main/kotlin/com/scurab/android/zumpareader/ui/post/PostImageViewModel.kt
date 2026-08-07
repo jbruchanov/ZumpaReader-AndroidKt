@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.lifecycle.viewModelScope
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.arch.BaseViewModel
+import com.scurab.android.zumpareader.arch.CopyToClipboard
 import com.scurab.android.zumpareader.arch.ShowToast
 import com.scurab.android.zumpareader.arch.UiEffect
 import com.scurab.android.zumpareader.repository.ImageUploadRepository
@@ -32,10 +33,18 @@ sealed interface PostImageEffect : UiEffect {
     data class ImageUploaded(val link: String) : PostImageEffect
 }
 
+interface PostImageEventHandler {
+    fun onSampleSizeSelected(index: Int)
+    fun onResizeClicked()
+    fun onRotateClicked()
+    fun onUploadClicked()
+    fun onCopyLinkClicked()
+}
+
 class PostImageViewModel(
     private val context: Context,
     private val uploads: ImageUploadRepository,
-) : BaseViewModel<PostImageUiState>(PostImageUiState()) {
+) : BaseViewModel<PostImageUiState>(PostImageUiState()), PostImageEventHandler {
 
     private var sourceFile: String? = null
     private var isStarted = false
@@ -63,15 +72,15 @@ class PostImageViewModel(
         }
     }
 
-    fun onSampleSizeSelected(index: Int) {
+    override fun onSampleSizeSelected(index: Int) {
         if (index != state.sampleSizeIndex) {
             setState { copy(sampleSizeIndex = index) }
         }
     }
 
-    fun onResizeClick() = process(state.rotationDegrees)
+    override fun onResizeClicked() = process(state.rotationDegrees)
 
-    fun onRotateClick() {
+    override fun onRotateClicked() {
         val rotation = (state.rotationDegrees + ROTATION_STEP) % FULL_TURN
         setState { copy(rotationDegrees = rotation) }
         process(rotation)
@@ -100,7 +109,7 @@ class PostImageViewModel(
         }
     }
 
-    fun onUploadClick() {
+    override fun onUploadClicked() {
         val source = sourceFile ?: return
         setState { copy(isBusy = true) }
         viewModelScope.launch {
@@ -120,6 +129,11 @@ class PostImageViewModel(
                 setState { copy(isBusy = false) }
             }
         }
+    }
+
+    /** The clipboard write is a platform effect, so it goes out as one. */
+    override fun onCopyLinkClicked() {
+        state.uploadedLink?.let { effect(CopyToClipboard(it)) }
     }
 
     private companion object {

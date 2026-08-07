@@ -50,6 +50,15 @@ data class PostUiState(
         get() = message.isNotBlank() && (!isSubjectEditable || subject.isNotBlank())
 }
 
+/** The message tab's interactions. The image tabs have their own, see [PostImageEventHandler]. */
+interface PostMessageEventHandler {
+    fun onSubjectChanged(subject: String)
+    fun onMessageChanged(message: String)
+    fun onSendClicked()
+    fun onCameraClicked()
+    fun onPhotoClicked()
+}
+
 sealed interface PostEffect : UiEffect {
     data object RequestCameraImage : PostEffect
     data object RequestGalleryImage : PostEffect
@@ -60,7 +69,7 @@ class PostViewModel(
     private val threads: ZumpaThreadRepository,
     private val settings: ZumpaSettingsRepository,
     private val eventBus: AppEventBus,
-) : BaseViewModel<PostUiState>(PostUiState()) {
+) : BaseViewModel<PostUiState>(PostUiState()), PostMessageEventHandler {
 
     private var threadId: String? = null
 
@@ -105,9 +114,9 @@ class PostViewModel(
         }
     }
 
-    fun onCameraClick() = effect(PostEffect.RequestCameraImage)
+    override fun onCameraClicked() = effect(PostEffect.RequestCameraImage)
 
-    fun onPhotoClick() = effect(PostEffect.RequestGalleryImage)
+    override fun onPhotoClicked() = effect(PostEffect.RequestGalleryImage)
 
     fun onImagePicked(uri: Uri, fromCamera: Boolean) {
         val tag = "${state.tabs.size + 1} - $uri"
@@ -144,15 +153,15 @@ class PostViewModel(
         }
     }
 
-    fun onSubjectChanged(subject: String) {
+    override fun onSubjectChanged(subject: String) {
         if (subject != state.subject) setState { copy(subject = subject) }
     }
 
-    fun onMessageChanged(message: String) {
+    override fun onMessageChanged(message: String) {
         if (message != state.message) setState { copy(message = message) }
     }
 
-    fun onSend() {
+    override fun onSendClicked() {
         val current = state
         if (current.isSending) return
         if (current.isSubjectEditable && current.subject.isBlank()) {

@@ -82,7 +82,7 @@ class PostViewModelTest {
         viewModel.onMessageChanged("body")
 
         viewModel.effects.test {
-            viewModel.onSend()
+            viewModel.onSendClicked()
             assertEquals(ShowToast(resId = R.string.err_empty_subject), awaitItem())
         }
         coVerify(exactly = 0) { threads.sendThread(any()) }
@@ -94,7 +94,7 @@ class PostViewModelTest {
         viewModel.onSubjectChanged("subj")
 
         viewModel.effects.test {
-            viewModel.onSend()
+            viewModel.onSendClicked()
             assertEquals(ShowToast(resId = R.string.err_empty_msg), awaitItem())
         }
     }
@@ -106,7 +106,7 @@ class PostViewModelTest {
         viewModel.onMessageChanged("body")
         val body = slot<ZumpaThreadBody>()
 
-        viewModel.onSend()
+        viewModel.onSendClicked()
 
         coVerify { threads.sendThread(capture(body)) }
         assertEquals("subj", body.captured.subject)
@@ -120,7 +120,7 @@ class PostViewModelTest {
         viewModel.onMessageChanged("body")
         val body = slot<ZumpaThreadBody>()
 
-        viewModel.onSend()
+        viewModel.onSendClicked()
 
         coVerify { threads.sendResponse("42", capture(body)) }
         assertEquals("the original subject", body.captured.subject)
