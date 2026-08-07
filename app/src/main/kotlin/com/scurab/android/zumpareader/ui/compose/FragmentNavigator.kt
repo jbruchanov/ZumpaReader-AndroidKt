@@ -2,6 +2,7 @@ package com.scurab.android.zumpareader.ui.compose
 
 import android.content.Intent
 import androidx.activity.ComponentActivity
+import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ui.image.ImageActivity
@@ -58,8 +59,13 @@ class FragmentNavigator(private val fragment: Fragment) : Navigator {
         }
     }
 
+    /** A dialog-hosted screen closes itself; anything else pops the back stack. */
     override fun back() {
-        mainActivity?.onBackPressedDispatcher?.onBackPressed()
+        if (fragment is DialogFragment) {
+            fragment.dismissAllowingStateLoss()
+        } else {
+            mainActivity?.onBackPressedDispatcher?.onBackPressed()
+        }
     }
 
     private companion object {
