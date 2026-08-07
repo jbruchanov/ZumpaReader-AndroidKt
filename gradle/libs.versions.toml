@@ -10,6 +10,7 @@ fresco = ["fresco-base", "fresco-animated-gif", "fresco-middleware"]
 koin = ["koin-core", "koin-android"]
 okhttp = ["okhttp-base", "okhttp-logging", "okhttp-urlconnection"]
 retrofit = ["retrofit-base", "retrofit-converter-gson"]
+test = ["junit-jupiter", "mockk", "turbine", "kotlinx-coroutines-test", "koin-test", "koin-test-junit5"]
 
 [plugins]
 
@@ -48,6 +49,10 @@ pinchtozoom = "0.1"
 retrofit = "3.0.0"
 swipy = "1.2.3"
 
+junit-jupiter = "5.11.4"
+mockk = "1.13.13"
+turbine = "1.2.0"
+
 [libraries]
 
 androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidx-annotation" }
@@ -68,9 +73,18 @@ koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin" }
 #koin versions are managed by the bom
 koin-android = { module = "io.insert-koin:koin-android" }
 koin-core = { module = "io.insert-koin:koin-core" }
+koin-test = { module = "io.insert-koin:koin-test" }
+koin-test-junit5 = { module = "io.insert-koin:koin-test-junit5" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit-jupiter" }
+#junit platform/jupiter versions are managed by the bom
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 kotson = { module = "com.github.salomonbrys.kotson:kotson", version.ref = "kotson" }
 okhttp-base = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 okhttp-urlconnection = { module = "com.squareup.okhttp3:okhttp-urlconnection", version.ref = "okhttp" }
