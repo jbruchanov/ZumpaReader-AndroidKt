@@ -28,6 +28,7 @@ import com.scurab.android.zumpareader.test.newThread
 import com.scurab.android.zumpareader.test.reply
 import com.scurab.android.zumpareader.test.sending
 import com.scurab.android.zumpareader.ui.compose.theme.AppTheme
+import org.koin.androidx.compose.koinViewModel
 
 /**
  * The message tab of [PostScreen]. Binds to the shared [PostViewModel] rather than owning one - the
@@ -35,7 +36,7 @@ import com.scurab.android.zumpareader.ui.compose.theme.AppTheme
  * the same draft.
  */
 @Composable
-fun PostMessageScreen(vm: PostViewModel) {
+fun PostMessageScreen(vm: PostViewModel = koinViewModel()) {
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val eventHandler = vm
     PostMessageScreen(uiState, eventHandler)

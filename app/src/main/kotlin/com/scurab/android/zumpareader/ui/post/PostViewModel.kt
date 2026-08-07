@@ -50,6 +50,17 @@ data class PostUiState(
         get() = message.isNotBlank() && (!isSubjectEditable || subject.isNotBlank())
 }
 
+/**
+ * The dialog's own interactions. Extends the message tab's, so the single event handler [PostScreen]
+ * is given also satisfies the message page it renders.
+ */
+interface PostEventHandler : PostMessageEventHandler {
+    fun onTabSelected(tag: String)
+
+    /** An image tab finished uploading; the link belongs in the message draft. */
+    fun onImageLinkUploaded(link: String)
+}
+
 /** The message tab's interactions. The image tabs have their own, see [PostImageEventHandler]. */
 interface PostMessageEventHandler {
     fun onSubjectChanged(subject: String)
@@ -69,7 +80,7 @@ class PostViewModel(
     private val threads: ZumpaThreadRepository,
     private val settings: ZumpaSettingsRepository,
     private val eventBus: AppEventBus,
-) : BaseViewModel<PostUiState>(PostUiState()), PostMessageEventHandler {
+) : BaseViewModel<PostUiState>(PostUiState()), PostEventHandler {
 
     private var threadId: String? = null
 
@@ -137,6 +148,8 @@ class PostViewModel(
      * line. The old code held the giphy result in a field applied in onResume, and lost it if the
      * process died.
      */
+    override fun onImageLinkUploaded(link: String) = onLinkShared(link)
+
     fun onLinkShared(link: String) {
         setState {
             val separator = if (message.isEmpty() || message.endsWith("\n")) "" else "\n"
@@ -147,7 +160,7 @@ class PostViewModel(
         }
     }
 
-    fun onTabSelected(tag: String) {
+    override fun onTabSelected(tag: String) {
         if (state.selectedTabTag != tag) {
             setState { copy(selectedTabTag = tag) }
         }
