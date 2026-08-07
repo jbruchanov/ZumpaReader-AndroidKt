@@ -90,7 +90,32 @@ Not Jetifier-related, also kept and still dead upstream: `otto` (deprecated 2015
 5. Optional while in there: `.gradle` → `.gradle.kts`, `org.gradle.configuration-cache=true`,
    a `jvmToolchain(17)` declaration so the build stops depending on the launching JDK.
 
-### D. Smaller leftovers
+### D. MVVM — what the Koin step prepared, and what each screen still needs
+
+DI is in place (`di/Modules.kt`, started in `ZumpaReaderApp.onCreate`), `viewModelModule` is the
+empty slot each screen adds a line to. What the screens will run into:
+
+* **`SettingsActivity` cannot host a ViewModel.** It extends the framework
+  `android.preference.PreferenceActivity`, not a `ComponentActivity`, so there is no
+  `ViewModelStore`. It has to move to `AppCompatActivity` + `androidx.preference` first — the
+  biggest single piece of the MVVM work, and it is the screen with the most logic (login, logout,
+  push registration).
+* **`MainActivity` and `ImageActivity` are `AppCompatActivity`**, and the fragments are plain
+  androidx fragments since the rx removal, so `by viewModel()` works there today.
+* **The shared mutable state is `ZumpaReaderApp.zumpaData`** (a `TreeMap<String, ZumpaThread>`
+  eight call sites reach into) plus `zumpaReadStates`. That is the repository that should end up
+  behind an interface in `coreModule`, not a field on the Application.
+* **`otto` is the fragment-to-fragment channel** — 2 `@Subscribe` handlers, 2 `post()` calls
+  (`LoadThreadEvent`, `DialogEvent`). A `SharedFlow` on a shared ViewModel replaces it, and that
+  removes otto (deprecated 2015) as a side effect.
+* **Text styling happens on the UI thread** (`styledAuthor` / `styledBody` per item in
+  `SubListFragment.loadData`). Once a ViewModel owns the load, that work belongs in it, off the
+  main thread — the one place where the current behaviour is deliberately preserved but wrong.
+* The Koin graph is **not verified**: like any Koin setup without a `koin-test` `verify()` test, a
+  missing binding shows up at first injection. The definitions were audited by hand; a test source
+  set with `koin-test` would make it a build-time failure instead.
+
+### E. Smaller leftovers
 
 * ~~9 lint errors~~ → fixed in `8f92ede`, `./gradlew :app:lintDebug` is clean (warnings remain).
   Note that lint could not run at all before this upgrade: Jetifier failed to transform
