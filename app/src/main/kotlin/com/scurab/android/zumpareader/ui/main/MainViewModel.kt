@@ -1,32 +1,17 @@
 package com.scurab.android.zumpareader.ui.main
 
 import android.net.Uri
-import androidx.lifecycle.viewModelScope
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.arch.BaseViewModel
 import com.scurab.android.zumpareader.arch.ShowToast
 import com.scurab.android.zumpareader.arch.UiEffect
 import com.scurab.android.zumpareader.repository.ZumpaSettingsRepository
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.launch
 
 /**
- * The app chrome that is derived from app-wide state rather than owned by one screen.
- *
- * The toolbar title stays an imperative host call - it is per-screen text and every screen renders
- * its own with its own [com.scurab.android.zumpareader.text.ZumpaTextRenderer].
+ * The host has nothing to draw since compose C7 - every screen brings its own Scaffold - so there
+ * is no state, only the routing decision for whatever the app was launched with.
  */
-data class MainUiState(
-    val isProgressVisible: Boolean = false,
-    val fab: FabUiState = FabUiState(),
-)
-
-data class FabUiState(
-    val isVisible: Boolean = false,
-    /** The QuickHideBehavior that slides the fab away while the list scrolls. */
-    val isScrollHideEnabled: Boolean = true,
-)
+data object MainUiState
 
 sealed interface MainEffect : UiEffect {
     data class OpenThread(val threadId: String) : MainEffect
@@ -38,8 +23,8 @@ sealed interface MainEffect : UiEffect {
 }
 
 /**
- * What the activity was launched with, extracted from the Intent by the activity so the decision
- * of what to do with it is testable.
+ * What the activity was launched with, extracted from the Intent by the activity so the decision of
+ * what to do with it is testable.
  */
 data class LaunchPayload(
     val threadId: String? = null,
@@ -52,32 +37,7 @@ data class LaunchPayload(
 
 class MainViewModel(
     private val settings: ZumpaSettingsRepository,
-) : BaseViewModel<MainUiState>(MainUiState()) {
-
-    /** Whether the screen currently in front has anything for the fab to do. */
-    private val screenWantsFab = MutableStateFlow(true)
-
-    init {
-        viewModelScope.launch {
-            combine(settings.isLoggedInNotOffline, screenWantsFab) { canPost, wanted ->
-                canPost && wanted
-            }.collect { visible ->
-                setState { copy(fab = fab.copy(isVisible = visible)) }
-            }
-        }
-    }
-
-    fun setProgressVisible(visible: Boolean) {
-        setState { copy(isProgressVisible = visible) }
-    }
-
-    fun setFabWanted(wanted: Boolean) {
-        screenWantsFab.value = wanted
-    }
-
-    fun setFabScrollHideEnabled(enabled: Boolean) {
-        setState { copy(fab = fab.copy(isScrollHideEnabled = enabled)) }
-    }
+) : BaseViewModel<MainUiState>(MainUiState) {
 
     /**
      * A push notification tap carries a thread id, a share carries a subject/text/stream. Posting

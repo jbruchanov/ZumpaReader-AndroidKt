@@ -8,9 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import com.scurab.android.zumpareader.ui.BaseDialogFragment
 import com.scurab.android.zumpareader.ui.compose.zumpaContent
-import com.scurab.android.zumpareader.ui.main.MainActivity
-import com.scurab.android.zumpareader.ui.showAnimated
-import com.scurab.android.zumpareader.util.post
 
 /**
  * Created by JBruchanov on 08/01/2016.
@@ -49,21 +46,9 @@ class PostFragment : BaseDialogFragment() {
             threadId = arguments?.getString(THREAD_ID),
         )
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        mainActivity?.let { it.post { it.hideFloatingButton() } }
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View = zumpaContent { PostScreen(args, arguments?.getInt(FLAG) ?: 0) }
-
-    override fun onDestroyView() {
-        if (!isTablet && arguments?.getString(THREAD_ID) == null) {
-            (activity as? MainActivity)?.floatingButton?.showAnimated()
-        }
-        super.onDestroyView()
-    }
 }
