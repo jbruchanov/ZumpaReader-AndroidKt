@@ -9,8 +9,8 @@ import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.TextView
 import com.scurab.android.zumpareader.R
-import com.scurab.android.zumpareader.content.SurveyItemUiState
-import com.scurab.android.zumpareader.content.SurveyUiState
+import com.scurab.android.zumpareader.ui.sublist.SurveyItemUiState
+import com.scurab.android.zumpareader.ui.sublist.SurveyUiState
 
 
 /**

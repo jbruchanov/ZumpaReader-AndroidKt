@@ -5,21 +5,13 @@ import com.scurab.android.zumpareader.BuildConfig
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZR
 import com.scurab.android.zumpareader.ZumpaAPI
-import com.scurab.android.zumpareader.app.ImageViewModel
-import com.scurab.android.zumpareader.app.MainViewModel
-import com.scurab.android.zumpareader.arch.DeviceConfig
-import com.scurab.android.zumpareader.content.MainListViewModel
-import com.scurab.android.zumpareader.content.OfflineDownloadViewModel
-import com.scurab.android.zumpareader.content.SubListViewModel
-import com.scurab.android.zumpareader.content.post.PostImageViewModel
-import com.scurab.android.zumpareader.content.post.PostViewModel
 import com.scurab.android.zumpareader.ZumpaOfflineApi
 import com.scurab.android.zumpareader.ZumpaPHPAPI
 import com.scurab.android.zumpareader.ZumpaWSAPI
+import com.scurab.android.zumpareader.arch.DeviceConfig
 import com.scurab.android.zumpareader.data.ZumpaConverterFactory
 import com.scurab.android.zumpareader.data.ZumpaGenericConverterFactory
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
-import com.scurab.android.zumpareader.usecase.OfflineDownloadUseCase
 import com.scurab.android.zumpareader.repository.AppEventBus
 import com.scurab.android.zumpareader.repository.ImageCacheRepository
 import com.scurab.android.zumpareader.repository.ImageUploadRepository
@@ -29,7 +21,19 @@ import com.scurab.android.zumpareader.repository.ZumpaReadStateRepository
 import com.scurab.android.zumpareader.repository.ZumpaSettingsRepository
 import com.scurab.android.zumpareader.repository.ZumpaThreadRepository
 import com.scurab.android.zumpareader.repository.ZumpaThreadRepositoryImpl
+import com.scurab.android.zumpareader.ui.image.ImageViewModel
+import com.scurab.android.zumpareader.ui.main.MainViewModel
+import com.scurab.android.zumpareader.ui.mainlist.MainListViewModel
+import com.scurab.android.zumpareader.ui.offline.OfflineDownloadViewModel
+import com.scurab.android.zumpareader.ui.post.PostImageViewModel
+import com.scurab.android.zumpareader.ui.post.PostViewModel
+import com.scurab.android.zumpareader.ui.sublist.SubListViewModel
+import com.scurab.android.zumpareader.usecase.OfflineDownloadUseCase
 import com.scurab.android.zumpareader.util.ZumpaPrefs
+import java.net.CookieManager
+import java.net.CookiePolicy
+import java.net.URI
+import java.util.concurrent.TimeUnit
 import okhttp3.JavaNetCookieJar
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -38,10 +42,6 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import retrofit2.Retrofit
-import java.net.CookieManager
-import java.net.CookiePolicy
-import java.net.URI
-import java.util.concurrent.TimeUnit
 
 /**
  * The online API, kept behind a qualifier because the unqualified [ZumpaAPI] is the
