@@ -2,132 +2,165 @@
 
 Branch `deps_update`. Versions resolved from Maven Central / `dl.google.com` on 2026-08-06.
 
+**Where it stands.** Dependencies are current, RxJava is gone, DI is Koin, and every screen except
+`SettingsActivity` is MVVM. How it is built now: [`ARCHITECTURE.md`](ARCHITECTURE.md).
+
+Verified: `clean :app:assembleDebug :app:assembleRelease`, `lintVitalRelease` and `lintDebug` clean,
+56 unit tests. **Not verified on a device — see §A, which is still the biggest open item.**
+
+---
+
 ## Done
 
-One commit per step, each one verified with `./gradlew :app:assembleDebug`; the final state also
-builds `clean :app:assembleDebug :app:assembleRelease` and passes `lintVitalRelease`.
+One commit per step, each verified with `./gradlew :app:assembleDebug`.
+
+### Dependencies and toolchain
 
 | # | commit | content |
 |---|---|---|
-| 1 | `5ceb0df` | all hard-coded coordinates moved into `libs.versions.toml`; compile/targetSdk 34 → **36**; AGP 8.5.0 → 8.13.2 and Gradle 8.8 → 8.14.3 (compileSdk 36 needs AGP ≥ 8.9.1) |
-| 2 | `59a25a6` | Kotlin 1.9.24 → **2.2.21**, coroutines 1.8.1 → **1.11.0**, `-Xcontext-receivers` dropped (unused) |
-| 3 | `651dca4` | firebase-bom 33.1.1 → **34.17.0**, google-services 4.4.2 → 4.5.0, crashlytics plugin 3.0.2 → 3.0.7, firebase `-ktx` artifacts dropped, core-ktx 1.13.1 → **1.18.0**, annotation 1.8.0 → 1.10.0, material 1.12.0 → **1.14.0** |
-| 4 | `e6dee60` | jsoup 1.10.3 → **1.23.1**, okhttp 4.12.0 → **5.4.0**, retrofit 2.10.0 → **3.0.0**, gson → 2.14.0 and now declared explicitly |
-| 5 | `0654d99` | Gradle DSL hygiene: space-assignment → `=`, `namespace` into the `android` block, `kotlinOptions` → `kotlin { compilerOptions }`, dead `depsize`/`clean` tasks removed, refreshVersions 0.60.6 |
-| 6 | `97ed634` | catalog stripped to what the app resolves (~60 unused entries, the dead test deps, unused plugin aliases) |
-| 7 | `213f2a0` | window insets for the enforced edge-to-edge of targetSdk 36; dead storage + C2DM permissions removed from the manifest |
-| 8 | `0e6de26` | `onBackPressed` → `OnBackPressedDispatcher` (predictive back is on by default at targetSdk 36) |
+| 1 | `5ceb0df` | all hard-coded coordinates into `libs.versions.toml`; compile/targetSdk 34 → **36**; AGP 8.5.0 → 8.13.2, Gradle 8.8 → 8.14.3 |
+| 2 | `59a25a6` | Kotlin 1.9.24 → **2.2.21**, coroutines 1.8.1 → **1.11.0** |
+| 3 | `651dca4` | firebase-bom → **34.17.0**, core-ktx → **1.18.0**, material → **1.14.0**, firebase `-ktx` artifacts dropped |
+| 4 | `e6dee60` | jsoup → **1.23.1**, okhttp → **5.4.0**, retrofit → **3.0.0**, gson → 2.14.0 |
+| 5 | `0654d99` | Gradle DSL hygiene for Gradle 9/10 |
+| 6 | `97ed634` | catalog stripped to what the app resolves |
+| 7 | `213f2a0` | window insets for the enforced edge-to-edge of targetSdk 36 |
+| 8 | `0e6de26` | `onBackPressed` → `OnBackPressedDispatcher` (predictive back is on at targetSdk 36) |
 | 9 | `a976c88` | **Wave C**: the whole RxJava2 stack replaced with coroutines |
+| 10 | `4e31fa3`, `8f92ede`, `4984020` | non-transitive R classes, the 9 lint errors, the dead `GCMReceiver` |
+| 11 | `fd5d6c8` | **Koin**: the hand-rolled service locator on the Application becomes a module |
 
-Notes on the two risky ones:
+Two notes worth keeping:
 
-* **jsoup 1.10.3 → 1.23.1.** Verified by dumping the DOM of the live main page and a thread page
-  the way `ZumpaSimpleParser` walks it (`getElementsByTag` / `child(n)` / `text()` / `html()`)
-  under both versions and diffing: identical table/row/column structure, identical `html()` entity
-  output, identical `Datum:&nbsp;` and `reply2('@…:` matches. The only behavioural difference is
-  that `text()` now normalizes `&nbsp;` to a space and trims — which the parser already neutralizes
-  (`safeInt` strips it, `time.replace(NBSP_CHAR, ' ')`, `getAuthorName` reads
-  `textNodes().getWholeText()`).
-* **core-ktx stops at 1.18.0.** 1.19.0 requires AGP 9.1 + compileSdk 37; see step C below.
-* **Wave C.** `rxjava`, `rxandroid`, `rxbinding` (which had no call site at all), `rxlifecycle` and
-  `adapter-rxjava2` are gone; `lifecycle-runtime-ktx` 2.9.4 and `kotlinx-coroutines-android` are in.
-  The retrofit interfaces use `suspend` functions, which retrofit 3 supports without a call adapter.
-  `bindToLifecycle()` became `BaseFragment.launchWithView()` — view lifecycle scope, falling back to
-  the fragment scope for a back-stacked fragment that reacts to a bus event without a view.
-  Thread affinity was kept as it was, including building the message spans on the main thread.
+* **jsoup 1.10.3 → 1.23.1** was verified by dumping the DOM of the live main page and a thread page
+  the way `ZumpaSimpleParser` walks it under both versions and diffing: identical structure and
+  `html()` entity output. The only difference is `text()` normalizing `&nbsp;` and trimming, which
+  the parser already neutralizes.
+* **Retrofit resolves the converter for a `suspend` function from the unwrapped continuation type**,
+  so `ZumpaConverterFactory`'s `when (type)` still matches. That is the one thing in the Rx removal
+  that fails at first call rather than at compile time.
+
+### MVVM
+
+| phase | commit | content |
+|---|---|---|
+| 0 | `79fdb23` | `arch` (BaseViewModel, effects, `collectWhileStarted`, DeviceConfig), `ZumpaTextRenderer`, test source set |
+| 1 | `c96bac3` | repositories take over the shared mutable state; otto's two uses split into a store and a bus |
+| 2 | `44ebb93` | `MainActivity` chrome; intent parsing into the ViewModel |
+| 3 | `77bd4b0` | `MainListFragment` |
+| 4 | `91513d9` | `SubListFragment` — the big one |
+| 5 | `82e3c64` | the post dialog and its two tabs; `startActivityForResult` → ActivityResult API |
+| 6 | `e823288` | offline download (the last `AsyncTask`), otto deleted |
+| 7 | `abfb43f` | `ImageActivity` |
+| 8 | `17fbacd` | cleanup: `SendingFragment`, `IsReloadable`, model caches, transitional accessors |
+| — | `2237f55` | one package per screen under `ui.` |
+| — | `9090ded` | `extension` package merged into `ext` |
+
+Bugs fixed along the way rather than ported: a blocking fresco call on the main thread in
+`ImageActivity`, sharing a thread starting two activities, three hand-rolled lifecycle retentions
+(including the `//TODO: doesn't work with lifecycle!` in `PostFragment`), missing session checks on
+favourite/ignore/share, and an image-vs-link classification that silently misclassified everything
+in tests because it went through `android.net.Uri`.
+
+---
 
 ## Remaining
 
 ### A. Runtime check on a device — nothing else can substitute for it
 
-Not done here: the connected device (Android 17) has the **Play Store** build of
-`com.scurab.zumpareader` installed, so a debug-signed APK cannot be installed over it without
-uninstalling first and losing the app data. Install from Android Studio with the release keystore,
-or uninstall the Play build first.
+**Still not done, and it now covers the MVVM work too.** Every screen's load path is new code, so
+the first call is the first test.
 
-What to look at, in order of risk:
+Blocked the same way as before: the connected device (Android 17) has the **Play Store** build of
+`com.scurab.zumpareader` installed, so a debug-signed APK cannot install over it. Install from
+Android Studio with the release keystore, or uninstall the Play build first (losing app data).
 
-1. **Edge-to-edge.** `MainActivity` (toolbar behind the status bar, FAB and the post panel above
-   the nav bar, keyboard open in the post message screen), `SettingsActivity` (preference list),
-   dialogs (`AppTheme.Dialog*`). `ImageActivity` was deliberately left drawing behind the bars.
-2. **Back navigation.** Back gesture inside a thread, inside the post screen and on the main list —
-   `SubListFragment.onBackButtonClick()` is the only overriding implementation.
-3. **The parser against live HTML**: thread list dates, answer counts, author names, survey
-   percentages, and the "show last author" setting (that path splits the last column on spaces and
-   is the only place where the jsoup `text()` change could still bite).
-4. Push notification tap-through (`MyFirebaseService`), image upload, offline download.
-5. **Everything the Rx stack used to drive**, since it is all new plumbing and the first call is the
-   first test: list load and pull-to-refresh, opening a thread, posting a message and a reply
-   (the 302-as-success path in `ignoringZumpaRedirect`), ignore/favourite toggles, survey voting,
-   image copy/resize/rotate/upload, login and logout in the settings.
-   Note that retrofit resolves the converter for a `suspend` function from the unwrapped
-   continuation type, so `ZumpaConverterFactory`'s `when (type)` still matches — that is the one
-   thing in the migration that fails at first call rather than at compile time.
+In order of risk:
 
-### B. The dependencies that are kept on purpose
+1. **Everything that loads or posts**, since all of it is new plumbing: list load and pull-to-refresh,
+   paging, opening a thread, posting a thread and a reply (the 302-as-success path), ignore/favourite,
+   survey voting, image copy/resize/rotate/upload, offline download, login/logout.
+2. **`ImageSpan` construction off the main thread.** The renderer runs on `Dispatchers.Default` and
+   `parseBody` inflates drawables. Drawable *creation* is safe off-main; confirm no span
+   implementation touches a `View`. If one does, render in the binder and let the `LruCache` absorb
+   the cost.
+3. **`repeatOnLifecycle(STARTED)`.** Background mid-load and return: you should see the finished
+   list, not a stuck spinner. The old code cancelled the UI-side effect; the new code has to render
+   a result that arrived while stopped.
+4. **The reply box.** The old code kept the `@author: ` headers in the `Editable` and found them
+   again through `AuthorSpan` — spans used as data. `DraftUiState` models that as headers-ahead-of-
+   body with a re-parse on edit. Twelve tests cover it, but it is the piece where behaviour could
+   differ in a way tests will not catch.
+5. **Edge-to-edge** (`MainActivity`, `SettingsActivity`, dialogs; `ImageActivity` deliberately draws
+   behind the bars) and **back navigation** inside a thread, the post screen and the main list.
+6. **The parser against live HTML**: thread list dates, answer counts, author names, survey
+   percentages, and the "show last author" setting.
+7. Push notification tap-through (`MyFirebaseService`).
 
-`rxlifecycle2` is gone with Wave C, but two support-library users remain, so
-**`android.enableJetifier=true` has to stay**:
+### B. The dependencies kept on purpose
 
-* `swipy` 1.2.3 (support 23.1.1, 2016) — kept deliberately: its pull-to-refresh side is
-  configurable and `SubListFragment` uses the bottom direction, which
-  `androidx.swiperefreshlayout` cannot do. Replacing it means either changing the thread screen's
-  UX or writing a custom pull-up widget.
-* `pinchtozoom` 0.1 (support 25.3.1, 2017) — kept: with swipy staying, dropping it would not remove
+Two support-library users remain, so **`android.enableJetifier=true` has to stay**:
+
+* `swipy` 1.2.3 (support 23.1.1, 2016) — its pull-to-refresh side is configurable and the thread
+  screen uses the bottom direction, which `androidx.swiperefreshlayout` cannot do. Replaceable only
+  in §D step 5.
+* `pinchtozoom` 0.1 (support 25.3.1, 2017) — with swipy staying, dropping it would not remove
   Jetifier anyway, and vendoring it means untested gesture code.
 
-Not Jetifier-related, also kept and still dead upstream: `otto` (deprecated 2015), `kotson` (2019),
-`picasso` (last release 2022, while **Fresco** is also shipped — two image loaders).
+Also kept and still dead upstream: `kotson` (2019), `picasso` (2022, while **Fresco** is also
+shipped — two image loaders). `otto` is gone as of MVVM phase 6.
 
-### C. Wave D — toolchain, partly blocked by B
+### C. Toolchain — blocked by B
 
-1. `android.enableJetifier=true` → **blocked** by swipy + pinchtozoom above. AGP 9 drops Jetifier
+1. `android.enableJetifier=true` → **blocked** by swipy + pinchtozoom. AGP 9 drops Jetifier
    entirely, so AGP 9 requires resolving B first.
-2. ~~`android.nonTransitiveRClass`~~ → done, it is `true` since `4e31fa3`. Nothing had to be
-   re-imported, the app never reached for library resources through its own R class.
-3. AGP 8.13.2 → 9.x (latest 9.3.1) + Gradle 8.14.3 → 9.x — blocked by 1.
-4. Then core-ktx 1.19.0 and compileSdk 37 become available — the dev device already runs Android 17.
-5. Optional while in there: `.gradle` → `.gradle.kts`, `org.gradle.configuration-cache=true`,
-   a `jvmToolchain(17)` declaration so the build stops depending on the launching JDK.
+2. AGP 8.13.2 → 9.x + Gradle 9.x — blocked by 1.
+3. Then core-ktx 1.19.0 and compileSdk 37 become available — the dev device already runs Android 17.
+4. Optional while in there: `.gradle` → `.gradle.kts`, `org.gradle.configuration-cache=true`, a
+   `jvmToolchain(17)` declaration so the build stops depending on the launching JDK.
 
-### D. MVVM — what the Koin step prepared, and what each screen still needs
+### D. Compose
 
-**Done — phases 0–8, see [`MVVM_PLAN.md`](MVVM_PLAN.md)** for the plan, the decisions behind it and
-the remaining Compose phase. What follows is the summary of the starting conditions it was written
-against, kept for context.
+Ordered so the first screen carries the least risk:
 
-DI is in place (`di/Modules.kt`, started in `ZumpaReaderApp.onCreate`), `viewModelModule` is the
-empty slot each screen adds a line to. What the screens will run into:
+1. **`SettingsActivity` first** — it has no ViewModel today, so there is nothing to throw away.
+   `PreferenceActivity` → `ComponentActivity` + `setContent`, `res/xml/settings.xml` and
+   `ButtonPreference` replaced by composables, `SettingsUiState` + `SettingsViewModel`, and the
+   login/logout/push-registration logic (~90 lines in the activity) into an `AuthRepository`. Most
+   logic, least UI — the cheapest real test of the pattern.
+2. `AnnotatedTextRenderer : ZumpaTextRenderer<AnnotatedString>` — the second implementation of the
+   interface. `SpannedTextRenderer` stays until the last RecyclerView goes.
+3. `ImageActivity`, then `PostImageFragment` / `PostMessageFragment` — small and already
+   state-driven.
+4. `MainListFragment` and `SubListFragment` last: the row lists → `LazyColumn`. The adapters get
+   thrown away rather than migrated to `ListAdapter` twice, which is the point of having kept them.
+5. Only then is `swipy` replaceable, by Compose's `PullToRefreshBox`. That unblocks §B → §C.
 
-* **`SettingsActivity` cannot host a ViewModel.** It extends the framework
-  `android.preference.PreferenceActivity`, not a `ComponentActivity`, so there is no
-  `ViewModelStore`. It has to move to `AppCompatActivity` + `androidx.preference` first — the
-  biggest single piece of the MVVM work, and it is the screen with the most logic (login, logout,
-  push registration).
-* **`MainActivity` and `ImageActivity` are `AppCompatActivity`**, and the fragments are plain
-  androidx fragments since the rx removal, so `by viewModel()` works there today.
-* **The shared mutable state is `ZumpaReaderApp.zumpaData`** (a `TreeMap<String, ZumpaThread>`
-  eight call sites reach into) plus `zumpaReadStates`. That is the repository that should end up
-  behind an interface in `coreModule`, not a field on the Application.
-* **`otto` is the fragment-to-fragment channel** — 2 `@Subscribe` handlers, 2 `post()` calls
-  (`LoadThreadEvent`, `DialogEvent`). A `SharedFlow` on a shared ViewModel replaces it, and that
-  removes otto (deprecated 2015) as a side effect.
-* **Text styling happens on the UI thread** (`styledAuthor` / `styledBody` per item in
-  `SubListFragment.loadData`). Once a ViewModel owns the load, that work belongs in it, off the
-  main thread — the one place where the current behaviour is deliberately preserved but wrong.
-* The Koin graph is **not verified**: like any Koin setup without a `koin-test` `verify()` test, a
-  missing binding shows up at first injection. The definitions were audited by hand; a test source
-  set with `koin-test` would make it a build-time failure instead.
+While in there: `ProgressDialog` → an inline overlay, and `ToggleAdapter`'s open state into UiState
+(see the exceptions in `ARCHITECTURE.md`).
 
-### E. Smaller leftovers
+### E. Backend-facing bugs — after Compose
 
-* ~~9 lint errors~~ → fixed in `8f92ede`, `./gradlew :app:lintDebug` is clean (warnings remain).
-  Note that lint could not run at all before this upgrade: Jetifier failed to transform
-  `shadows-support-v4-3.3.1.jar`.
-* ~~`GCMReceiver`~~ → deleted in `4984020`, it was dead code with a `PendingIntent` that would have
-  thrown on Android 12+.
-* ~~No test source set exists~~ → added in MVVM phase 0 (`79fdb23`): `app/src/test` with junit5,
-  mockk, turbine and koin-test, 56 tests as of the end of phase 8. **`ZumpaSimpleParser` itself is
-  still uncovered** — that is the one that would pay for itself the next time the forum HTML
-  changes, and the source set is now there to put it in.
+Not caused by the MVVM work. Both are in the request path and are cheapest to fix once the post/send
+flow is already state-driven.
+
+1. **The cookie grows until the backend rejects the request.** `ZumpaPrefs.cookies` is a
+   `Set<String>` only ever replaced wholesale on login (`ParseUtils.extractCookies`), and
+   `cookiesMap` hands the whole set to `JavaNetCookieJar` on every request. It needs trimming
+   automatically — drop expired and duplicate-name cookies before building the header, rather than
+   leaving the user to log out and back in.
+2. **Message text is not encoded/escaped properly on send.** `ZumpaThreadBody.toHttpPostString`
+   hand-builds the form body with `String.encodeHttp()` (`URLEncoder.encode(this, ENCODING)`, the
+   forum's legacy charset). Characters outside that charset — emoji above all — are silently dropped
+   by the backend. Either encode so the forum accepts them, or reject them in the UI before sending
+   rather than having them disappear after.
+
+### F. Smaller leftovers
+
+* **`ZumpaSimpleParser` has no tests.** The source set exists now (MVVM phase 0), and this is the
+  component most likely to break when the forum's HTML changes. Cheapest remaining value.
+* **`SavedStateHandle` is not wired anywhere.** The ViewModels survive rotation but not process
+  death; `androidx-lifecycle-viewmodel-savedstate` is not in the catalog. It matters most for
+  `PostFragment` (a half-written post) and the main list's paging position.
 * Bump `versionCode` / `versionName` in `app/build.gradle` before releasing.
+* ~~9 lint errors~~, ~~`GCMReceiver`~~, ~~no test source set~~ → done, see the table above.
