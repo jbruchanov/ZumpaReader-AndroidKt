@@ -20,12 +20,6 @@ class ZumpaReadStateRepository(private val prefs: ZumpaPrefs, private val gson: 
     private val _readStates = MutableStateFlow<Map<String, ZumpaReadState>>(emptyMap())
     val readStates: StateFlow<Map<String, ZumpaReadState>> = _readStates.asStateFlow()
 
-    /**
-     * Transitional: the raw map for the call sites that have not moved to [readStates] yet.
-     * Deleted with the last of them in phase 8.
-     */
-    val raw: TreeMap<String, ZumpaReadState> get() = states
-
     init {
         load()
     }

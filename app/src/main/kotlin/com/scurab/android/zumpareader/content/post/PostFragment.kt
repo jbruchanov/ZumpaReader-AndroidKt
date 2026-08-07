@@ -159,10 +159,7 @@ class PostFragment : BaseDialogFragment() {
         when (effect) {
             is PostEffect.RequestCameraImage -> onCameraClick()
             is PostEffect.RequestGalleryImage -> onPhotoClick()
-            is PostEffect.Dismiss -> {
-                dismissAllowingStateLoss()
-                (activity as? MainActivity)?.reloadData()
-            }
+            is PostEffect.Dismiss -> dismissAllowingStateLoss()
 
             is HideKeyboard -> requireContext().hideKeyboard(view)
             is ShowToast -> effect.text?.let { toast(it) } ?: toast(effect.resId)

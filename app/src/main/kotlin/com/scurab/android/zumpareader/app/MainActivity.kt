@@ -18,7 +18,6 @@ import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.arch.ShowToast
 import com.scurab.android.zumpareader.arch.UiEffect
 import com.scurab.android.zumpareader.arch.collectWhileStarted
-import com.scurab.android.zumpareader.content.IsReloadable
 import com.scurab.android.zumpareader.content.MainListFragment
 import com.scurab.android.zumpareader.content.SubListFragment
 import com.scurab.android.zumpareader.content.TabletFragment
@@ -29,7 +28,6 @@ import com.scurab.android.zumpareader.ui.applySystemBarsAsPadding
 import com.scurab.android.zumpareader.ui.QuickHideBehavior
 import com.scurab.android.zumpareader.ui.hideAnimated
 import com.scurab.android.zumpareader.ui.showAnimated
-import com.scurab.android.zumpareader.util.hideKeyboard
 import com.scurab.android.zumpareader.util.ifNull
 import com.scurab.android.zumpareader.util.lastNonNullFragment
 import com.scurab.android.zumpareader.util.obtainStyledColor
@@ -207,8 +205,4 @@ class MainActivity : AppCompatActivity() {
         viewModel.setFabScrollHideEnabled(enabled)
     }
 
-    fun reloadData() {
-        hideKeyboard(window.decorView)
-        (supportFragmentManager.fragments.firstOrNull { it -> it is IsReloadable } as? IsReloadable)?.reloadData()
-    }
 }
