@@ -33,7 +33,7 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 /**
  * Created by JBruchanov on 24/11/2015.
  */
-open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener, IsReloadable {
+open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener {
 
     private val viewModel: MainListViewModel by viewModel()
 
@@ -191,8 +191,6 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
         inflater.inflate(R.menu.menu, menu)
         menu.findItem(R.id.offline).setTitle(if (isOffline) R.string.online else R.string.offline)
     }
-
-    override fun reloadData() = viewModel.onRefresh()
 
     override fun onStart() {
         super.onStart()

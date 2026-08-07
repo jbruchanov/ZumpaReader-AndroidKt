@@ -133,8 +133,8 @@ val networkModule = module {
 val viewModelModule = module {
     viewModel { MainViewModel(get()) }
     viewModel { MainListViewModel(get(), get(), get(), get(), get(), get()) }
-    viewModel { SubListViewModel(get(), get(), get(), get(), get()) }
-    viewModel { PostViewModel(get(), get()) }
+    viewModel { SubListViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModel { PostViewModel(get(), get(), get()) }
     viewModel { PostImageViewModel(androidContext(), get()) }
     viewModel { OfflineDownloadViewModel(get(), get(), get(), get()) }
     viewModel { ImageViewModel(get()) }

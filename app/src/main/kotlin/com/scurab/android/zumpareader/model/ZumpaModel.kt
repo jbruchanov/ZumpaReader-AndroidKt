@@ -1,9 +1,5 @@
 package com.scurab.android.zumpareader.model
 
-import android.content.Context
-import android.text.SpannableString
-import android.text.Spanned
-import android.text.style.ForegroundColorSpan
 import com.github.salomonbrys.kotson.long
 import com.github.salomonbrys.kotson.nullArray
 import com.github.salomonbrys.kotson.nullString
@@ -13,7 +9,6 @@ import com.google.gson.JsonObject
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZR
 import com.scurab.android.zumpareader.gson.GsonExclude
-import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.util.encodeHttp
 import java.nio.charset.Charset
 import java.util.*
@@ -99,14 +94,6 @@ constructor(val id: String,
 
     @GsonExclude val date by lazy { Date(time) }
 
-    private var _styledSubject: CharSequence? = null
-    fun styledSubject(context: Context): CharSequence {
-        if (_styledSubject == null) {
-            _styledSubject = ZumpaSimpleParser.parseBody(subject, context)
-        }
-        return _styledSubject!!
-    }
-
     var hasResponseForYou: Boolean = false
     var lastAuthor: String? = null
     var offlineItems: List<ZumpaThreadItem>? = null
@@ -124,29 +111,6 @@ data class ZumpaThreadItem(val author: String,
 
     val date by lazy { Date(time) }
 
-    private var _styledBody: CharSequence? = null
-    fun styledBody(context: Context): CharSequence {
-        if (_styledBody == null) {
-            _styledBody = ZumpaSimpleParser.parseBody(body, context)
-        }
-        return _styledBody!!
-    }
-
-    private var _styledAuthor: CharSequence? = null
-    fun styledAuthor(context: Context): CharSequence {
-        if (_styledAuthor == null) {
-            if (rating.isNullOrEmpty()) {
-                _styledAuthor = author
-            } else {
-                val r = rating!!
-                val ssb = SpannableString(author + " " + r)
-                val color = if (r[0] == '+') R.color.rating_good else R.color.rating_bad
-                ssb.setSpan(ForegroundColorSpan(context.resources.getColor(color)), ssb.length - r.length, ssb.length, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
-                _styledAuthor = ssb
-            }
-        }
-        return _styledAuthor!!
-    }
 }
 
 data class Survey(val id: String,

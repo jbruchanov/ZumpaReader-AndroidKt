@@ -5,6 +5,7 @@ import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.arch.ShowToast
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.model.ZumpaThreadBody
+import com.scurab.android.zumpareader.repository.AppEventBus
 import com.scurab.android.zumpareader.repository.ZumpaSettingsRepository
 import com.scurab.android.zumpareader.repository.ZumpaThreadRepository
 import io.mockk.coVerify
@@ -33,7 +34,7 @@ class PostViewModelTest {
     }
 
     private fun viewModel(args: PostArgs = PostArgs()) =
-        PostViewModel(threads, settings).also { it.start(args) }
+        PostViewModel(threads, settings, AppEventBus()).also { it.start(args) }
 
     @BeforeEach
     fun setUp() = Dispatchers.setMain(UnconfinedTestDispatcher())

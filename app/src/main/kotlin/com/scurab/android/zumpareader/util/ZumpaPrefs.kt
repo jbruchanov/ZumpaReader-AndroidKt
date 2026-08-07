@@ -28,7 +28,6 @@ class ZumpaPrefs(context: Context) {
     private val KEY_COOKIES = "KEY_COOKIES"
     private val KEY_NICK_NAME = "KEY_NICK_NAME"
     private val KEY_READ_STATES = "KEY_READ_STATES"
-    private val KEY_LAST_CAMERA_URI = "KEY_LAST_CAMERA_URI"
     private val KEY_PUSH_REG_ID = "KEY_PUSH_REG_ID"
     private val KEY_USER_ID = "KEY_USER_ID"
 
@@ -105,14 +104,6 @@ class ZumpaPrefs(context: Context) {
     val showLastAuthor: Boolean
         get() {
             return sharedPrefs.getBoolean(KEY_SHOW_LAST_AUTHOR, false)
-        }
-
-    var lastCameraUri: String
-        get() {
-            return sharedPrefs.getString(KEY_LAST_CAMERA_URI, "") ?: ""
-        }
-        set(value) {
-            sharedPrefs.edit().putString(KEY_LAST_CAMERA_URI, value).apply()
         }
 
     var pushRegId: String?

@@ -12,6 +12,9 @@ import kotlinx.coroutines.flow.asSharedFlow
 sealed interface AppEvent {
     /** The offline download finished or was cleared, whoever shows a list should reload. */
     data object OfflineDataChanged : AppEvent
+
+    /** A thread or an answer was posted, whatever list is up is now stale. */
+    data object ContentPosted : AppEvent
 }
 
 class AppEventBus {

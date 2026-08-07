@@ -7,6 +7,7 @@ import com.scurab.android.zumpareader.model.SurveyItem
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.model.ZumpaThreadBody
 import com.scurab.android.zumpareader.model.ZumpaThreadItem
+import com.scurab.android.zumpareader.repository.AppEventBus
 import com.scurab.android.zumpareader.repository.SelectedThreadStore
 import com.scurab.android.zumpareader.repository.ZumpaReadStateRepository
 import com.scurab.android.zumpareader.repository.ZumpaSettingsRepository
@@ -57,7 +58,7 @@ class SubListViewModelTest {
     }
 
     private fun viewModel(isTablet: Boolean = false) = SubListViewModel(
-        threads, settings, readStates, selectedThread, DeviceConfig(isTablet)
+        threads, settings, readStates, selectedThread, AppEventBus(), DeviceConfig(isTablet)
     ).also { it.start("1") }
 
     @BeforeEach

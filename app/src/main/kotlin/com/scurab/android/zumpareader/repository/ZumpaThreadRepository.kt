@@ -45,13 +45,6 @@ interface ZumpaThreadRepository {
     fun remove(id: String)
 
     fun replaceAll(data: Map<String, ZumpaThread>)
-
-    /**
-     * Transitional: the raw map for the screens that have not been migrated yet. It is the same
-     * instance the flow is built from, so a legacy write is visible to a legacy read. Deleted with
-     * the last of those call sites in phase 8.
-     */
-    val rawThreads: TreeMap<String, ZumpaThread>
 }
 
 /**
@@ -68,8 +61,6 @@ class ZumpaThreadRepositoryImpl(
 
     private val _threads = MutableStateFlow<Map<String, ZumpaThread>>(emptyMap())
     override val threads: StateFlow<Map<String, ZumpaThread>> = _threads.asStateFlow()
-
-    override val rawThreads: TreeMap<String, ZumpaThread> get() = store
 
     override fun thread(id: String): ZumpaThread? = store[id]
 

@@ -1,39 +1,20 @@
 package com.scurab.android.zumpareader.app
 
-import android.content.Context
-import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
 import com.scurab.android.zumpareader.R
-import com.scurab.android.zumpareader.ZumpaReaderApp
-import com.scurab.android.zumpareader.extension.app
 import com.scurab.android.zumpareader.arch.collectWhileStarted
-import com.scurab.android.zumpareader.model.ZumpaThread
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.launch
-import java.util.*
 
 /**
  * Created by JBruchanov on 25/11/2015.
+ *
+ * What is left after the mvvm migration: the handle on the host chrome and a collector bound to
+ * the view lifecycle. No shared data, no loading flag, no bus.
  */
 abstract class BaseFragment : Fragment() {
-
-    /**
-     * Binds the work to the view, it is cancelled when the view goes away.
-     * Fragments in the back stack have no view but still react to bus events, in that case the work
-     * is bound to the fragment itself.
-     *
-     * Legacy - the screens that own a ViewModel launch in `viewModelScope` and use
-     * [collectWhileStarted] instead. Removed with the last caller in phase 8.
-     */
-    protected fun launchWithView(block: suspend CoroutineScope.() -> Unit): Job {
-        val owner = if (view != null) viewLifecycleOwner else this
-        return owner.lifecycleScope.launch(block = block)
-    }
 
     /** Collects against the *view* lifecycle - only valid between onViewCreated and onDestroyView. */
     protected fun <T> Flow<T>.collectWhileStarted(block: suspend (T) -> Unit): Job =
@@ -44,8 +25,7 @@ abstract class BaseFragment : Fragment() {
             return activity as MainActivity?
         }
 
-    val zumpaApp: ZumpaReaderApp get() = app()
-
+    /** The toolbar spinner, owned by the host and driven by each screen's own loading state. */
     var progressBarVisible: Boolean
         get() {
             return mainActivity?.progressBarVisible ?: false
@@ -54,18 +34,6 @@ abstract class BaseFragment : Fragment() {
             mainActivity?.progressBarVisible = value
         }
 
-    private var _isLoading: Boolean = false
-    protected open var isLoading: Boolean
-        get() {
-            return _isLoading
-        }
-        set(value) {
-            progressBarVisible = value
-            _isLoading = value
-        }
-
-    private var _zumpaData: TreeMap<String, ZumpaThread>? = null
-    protected val zumpaData: TreeMap<String, ZumpaThread> by lazy { _zumpaData!! }
     protected abstract val title: CharSequence?
 
     private var _isTablet: Boolean? = null
@@ -76,7 +44,8 @@ abstract class BaseFragment : Fragment() {
             }
             return _isTablet!!
         }
-    protected val isTabletVisibility:Int
+
+    protected val isTabletVisibility: Int
         get() {
             return if (isTablet) View.VISIBLE else View.INVISIBLE
         }
@@ -87,12 +56,6 @@ abstract class BaseFragment : Fragment() {
 
     open fun openFragment(fragment: Fragment, addToBackStack: Boolean = true, replace: Boolean = true) {
         mainActivity?.openFragment(fragment, addToBackStack, replace)
-        isLoading = false
-    }
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        _zumpaData = zumpaApp.zumpaData
     }
 
     override fun onResume() {
@@ -107,15 +70,9 @@ abstract class BaseFragment : Fragment() {
     }
 
     open fun onFloatingButtonClick() {
-
     }
 
     open fun onBackButtonClick(): Boolean {
         return false
     }
-
-    protected val isLoggedIn: Boolean
-        get() {
-            return zumpaApp.zumpaPrefs.isLoggedInNotOffline ?: false
-        }
 }

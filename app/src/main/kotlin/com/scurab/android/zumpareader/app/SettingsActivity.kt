@@ -1,7 +1,6 @@
 package com.scurab.android.zumpareader.app
 
 import android.Manifest
-import android.app.ProgressDialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -20,11 +19,11 @@ import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZR
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.component.NotificationStateProvider
-import com.scurab.android.zumpareader.content.SendingFragment
 import com.scurab.android.zumpareader.ext.toast
 import com.scurab.android.zumpareader.model.ZumpaLoginBody
 import com.scurab.android.zumpareader.preferences.ButtonPreference
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
+import com.scurab.android.zumpareader.ui.SendingDialogController
 import com.scurab.android.zumpareader.ui.applySystemBarsAsPadding
 import com.scurab.android.zumpareader.util.ParseUtils
 import com.scurab.android.zumpareader.util.ZumpaPrefs
@@ -46,9 +45,9 @@ import kotlin.coroutines.resume
 /**
  * Created by JBruchanov on 29/12/2015.
  */
-class SettingsActivity : PreferenceActivity(), SendingFragment {
+class SettingsActivity : PreferenceActivity() {
 
-    override fun requireContext(): Context = this
+    private val sendingDialog by lazy { SendingDialogController(this) }
     private val buttonPref by lazy { findPreference(ZumpaPrefs.KEY_LOGIN) }
     private val permissionsPref by lazy { findPreference(ZumpaPrefs.KEY_NOTIFICATIONS) as ButtonPreference }
     private val showLastAuthorPref by lazy { findPreference(ZumpaPrefs.KEY_SHOW_LAST_AUTHOR) as CheckBoxPreference }
@@ -61,8 +60,6 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
             return application as ZumpaReaderApp
         }
 
-    private var progressDialog: ProgressDialog? = null
-    override var sendingDialog: ProgressDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -115,16 +112,16 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
         zumpaApp.resetCookies()
         filterPref.isEnabled = false
         if (user != null) {
-            isSending = true
+            sendingDialog.update(true)
             logoutCall = scope.launch {
                 try {
                     logout(zumpaApp, user)
-                    isSending = false
+                    sendingDialog.update(false)
                     showLastAuthorPref.isChecked = false
                     showLastAuthorPref.isEnabled = false
                     toast(R.string.done)
                 } catch (err: Throwable) {
-                    isSending = false
+                    sendingDialog.update(false)
                     toast(err.message)
                 }
                 crashlyticsPref.title = zumpaApp.zumpaPrefs.userId
@@ -152,11 +149,11 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
             return
         }
 
-        isSending = true
+        sendingDialog.update(true)
         loginCall = scope.launch {
             try {
                 val (loginResult, pushResult) = login(zumpaApp, ZumpaLoginBody(user, pwd))
-                isSending = false
+                sendingDialog.update(false)
                 toast(if (loginResult) R.string.ok else R.string.err_fail)
                 if (!pushResult) {
                     toast(R.string.err_no_push_reg)
@@ -168,7 +165,7 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
                 }
                 crashlyticsPref.title = zumpaApp.zumpaPrefs.userId
             } catch (err: Throwable) {
-                isSending = false
+                sendingDialog.update(false)
                 toast(err.message)
             }
         }
@@ -176,7 +173,7 @@ class SettingsActivity : PreferenceActivity(), SendingFragment {
 
     override fun onPause() {
         super.onPause()
-        isSending = false
+        sendingDialog.update(false)
 
         loginCall?.cancel()
         logoutCall?.cancel()

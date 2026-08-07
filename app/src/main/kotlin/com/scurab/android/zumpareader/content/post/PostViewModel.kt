@@ -10,6 +10,8 @@ import com.scurab.android.zumpareader.arch.ShowToast
 import com.scurab.android.zumpareader.arch.UiEffect
 import com.scurab.android.zumpareader.model.ZumpaThreadBody
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
+import com.scurab.android.zumpareader.repository.AppEvent
+import com.scurab.android.zumpareader.repository.AppEventBus
 import com.scurab.android.zumpareader.repository.ZumpaSettingsRepository
 import com.scurab.android.zumpareader.repository.ZumpaThreadRepository
 import kotlinx.coroutines.launch
@@ -57,6 +59,7 @@ sealed interface PostEffect : UiEffect {
 class PostViewModel(
     private val threads: ZumpaThreadRepository,
     private val settings: ZumpaSettingsRepository,
+    private val eventBus: AppEventBus,
 ) : BaseViewModel<PostUiState>(PostUiState()) {
 
     private var threadId: String? = null
@@ -177,6 +180,7 @@ class PostViewModel(
                         ZumpaThreadBody(settings.nickName, subject, current.message.trim(), id)
                     )
                 }
+                eventBus.emit(AppEvent.ContentPosted)
                 effect(PostEffect.Dismiss)
             } catch (err: Throwable) {
                 onError(err)

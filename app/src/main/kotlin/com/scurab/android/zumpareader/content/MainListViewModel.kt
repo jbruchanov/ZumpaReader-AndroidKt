@@ -103,9 +103,13 @@ class MainListViewModel(
         }
         viewModelScope.launch {
             eventBus.events.collect { event ->
-                if (event is AppEvent.OfflineDataChanged) {
-                    lastOffline = null
-                    load()
+                when (event) {
+                    is AppEvent.OfflineDataChanged -> {
+                        lastOffline = null
+                        load()
+                    }
+
+                    is AppEvent.ContentPosted -> load()
                 }
             }
         }

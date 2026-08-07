@@ -9,6 +9,8 @@ import com.scurab.android.zumpareader.arch.UiEffect
 import com.scurab.android.zumpareader.model.ZumpaThreadBody
 import com.scurab.android.zumpareader.model.ZumpaThreadItem
 import com.scurab.android.zumpareader.model.ZumpaVoteSurveyBody
+import com.scurab.android.zumpareader.repository.AppEvent
+import com.scurab.android.zumpareader.repository.AppEventBus
 import com.scurab.android.zumpareader.repository.SelectedThreadStore
 import com.scurab.android.zumpareader.repository.ZumpaReadStateRepository
 import com.scurab.android.zumpareader.repository.ZumpaSettingsRepository
@@ -101,6 +103,7 @@ class SubListViewModel(
     private val settings: ZumpaSettingsRepository,
     private val readStates: ZumpaReadStateRepository,
     private val selectedThread: SelectedThreadStore,
+    private val eventBus: AppEventBus,
     private val device: DeviceConfig,
 ) : BaseViewModel<SubListUiState>(SubListUiState()) {
 
@@ -115,6 +118,13 @@ class SubListViewModel(
         }
         viewModelScope.launch {
             settings.loadImages.collect { publishRows() }
+        }
+        viewModelScope.launch {
+            eventBus.events.collect { event ->
+                if (event is AppEvent.ContentPosted) {
+                    reload()
+                }
+            }
         }
         viewModelScope.launch {
             //on a tablet this is how the list pane hands a thread over

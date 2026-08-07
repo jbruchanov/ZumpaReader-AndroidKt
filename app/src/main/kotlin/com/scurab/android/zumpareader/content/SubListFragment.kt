@@ -51,7 +51,7 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
  * Created by JBruchanov on 27/11/2015.
  */
 class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
-    SurveyView.ItemClickListener, IsReloadable {
+    SurveyView.ItemClickListener {
 
     companion object {
         private const val ARG_THREAD_ID: String = "ARG_THREAD_ID"
@@ -285,8 +285,6 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
     override fun onFloatingButtonClick() = viewModel.showPostPanel()
 
     override fun onBackButtonClick(): Boolean = viewModel.onBackPressed() || super.onBackButtonClick()
-
-    override fun reloadData() = viewModel.reload()
 
     //region adapter callbacks
     override fun onMenuItemClick(position: Int, item: RenderedSubListRow.Message, type: Int) {

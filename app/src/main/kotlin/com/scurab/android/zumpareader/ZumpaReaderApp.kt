@@ -10,12 +10,9 @@ import com.google.gson.Gson
 import com.scurab.android.zumpareader.data.PicassoHttpDownloader2
 import com.scurab.android.zumpareader.di.ONLINE_API
 import com.scurab.android.zumpareader.di.appModules
-import com.scurab.android.zumpareader.model.ZumpaReadState
-import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.repository.OfflineDataRepository
 import com.scurab.android.zumpareader.repository.ZumpaReadStateRepository
-import com.scurab.android.zumpareader.repository.ZumpaThreadRepository
 import com.scurab.android.zumpareader.usecase.CreateNotificationChannelsUseCase
 import com.scurab.android.zumpareader.util.ZumpaPrefs
 import com.squareup.picasso.Picasso
@@ -42,16 +39,8 @@ class ZumpaReaderApp : Application() {
     private val gson: Gson by inject()
     val zumpaHttpClient: OkHttpClient by inject()
 
-    private val threadRepository: ZumpaThreadRepository by inject()
     private val readStateRepository: ZumpaReadStateRepository by inject()
     private val offlineData: OfflineDataRepository by inject()
-
-    //transitional accessors, the repositories own these now - see MVVM_PLAN.md phase 1.
-    //both delegate to the repository's backing map, so a not-yet-migrated screen writing here is
-    //visible to a not-yet-migrated screen reading here. Deleted in phase 8.
-    val zumpaData: TreeMap<String, ZumpaThread> get() = threadRepository.rawThreads
-
-    val zumpaReadStates: TreeMap<String, ZumpaReadState> get() = readStateRepository.raw
 
     override fun onCreate() {
         super.onCreate()
@@ -116,8 +105,6 @@ class ZumpaReaderApp : Application() {
     val zumpaAPI: ZumpaAPI get() = get()
 
     val zumpaOnlineAPI: ZumpaAPI by inject(ONLINE_API)
-    val zumpaOfflineApi: ZumpaOfflineApi by inject()
-    val zumpaWebServiceAPI: ZumpaWSAPI by inject()
     val zumpaPHPAPI: ZumpaPHPAPI by inject()
 
     fun resetCookies() {
