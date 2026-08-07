@@ -1,4 +1,4 @@
-package com.scurab.android.zumpareader.extension
+package com.scurab.android.zumpareader.ext
 
 import android.app.Activity
 import android.content.Context
