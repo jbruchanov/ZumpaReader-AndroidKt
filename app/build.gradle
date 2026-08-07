@@ -82,11 +82,9 @@ dependencies {
     implementation libs.bundles.retrofit
 
 
-    implementation libs.picasso
 
     implementation libs.kotson
 
-    implementation libs.bundles.fresco
 
 
     testImplementation platform(libs.koin.bom)

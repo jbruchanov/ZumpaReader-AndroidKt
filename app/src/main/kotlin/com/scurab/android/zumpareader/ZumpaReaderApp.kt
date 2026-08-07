@@ -3,11 +3,8 @@ package com.scurab.android.zumpareader
 import android.app.Activity
 import android.app.Application
 import android.os.Bundle
-import android.util.Log
-import com.facebook.drawee.backends.pipeline.Fresco
 import com.google.firebase.FirebaseApp
 import com.google.gson.Gson
-import com.scurab.android.zumpareader.data.PicassoHttpDownloader2
 import com.scurab.android.zumpareader.di.ONLINE_API
 import com.scurab.android.zumpareader.di.appModules
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
@@ -15,7 +12,6 @@ import com.scurab.android.zumpareader.repository.OfflineDataRepository
 import com.scurab.android.zumpareader.repository.ZumpaReadStateRepository
 import com.scurab.android.zumpareader.usecase.CreateNotificationChannelsUseCase
 import com.scurab.android.zumpareader.util.ZumpaPrefs
-import com.squareup.picasso.Picasso
 import java.net.CookieManager
 import java.util.*
 import okhttp3.OkHttpClient
@@ -51,8 +47,6 @@ class ZumpaReaderApp : Application() {
         }
         CreateNotificationChannelsUseCase(this)()
 
-        initPicasso()
-        Fresco.initialize(this)
 
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             private var activities = 0
@@ -87,16 +81,6 @@ class ZumpaReaderApp : Application() {
         if (zumpaPrefs.userId == null) {
             zumpaPrefs.userId = UUID.randomUUID().toString()
         }
-    }
-
-    private fun initPicasso() {
-        val picasso = Picasso.Builder(this)
-            .downloader(PicassoHttpDownloader2.createDefault(this, zumpaHttpClient, zumpaPrefs))
-            .listener({ picasso, uri, exception ->
-                Log.d("PicassoLoader", "URL:%s Exception:%s".format(uri, exception))
-                exception.printStackTrace()
-            }).build()
-        Picasso.setSingletonInstance(picasso)
     }
 
     /**

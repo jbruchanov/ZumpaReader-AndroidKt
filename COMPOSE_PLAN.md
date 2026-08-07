@@ -370,7 +370,7 @@ The only screen that is still MVC, converted straight to Compose + MVVM as you a
 
 ## Phase C9 — cleanup, and the toolchain it unblocks
 
-1. **Coil-only.** Delete Fresco and Picasso. Two things must move first:
+1. ~~**Coil-only.**~~ → done. Both moved:
    `OfflineDownloadUseCase`'s `prefetchToDiskCache` → Coil's `ImageLoader.enqueue` with
    `MemoryCachePolicy.DISABLED`, and `PicassoHttpDownloader2`'s cookie handling → the shared
    `OkHttpClient` in Coil's `ImageLoader` (which already has the cookie jar, so this mostly deletes
@@ -378,10 +378,12 @@ The only screen that is still MVC, converted straight to Compose + MVVM as you a
 2. **Delete `swipy`** — replaced in C6. (`pinchtozoom` already went in C1.)
 3. ~~Jetifier, AGP 9, core-ktx 1.19, compileSdk 37~~ → all done between C6 and C7, see
    `UPGRADE_PLAN.md` §C.
-4. **nav-compose**: fragments and `zumpaContent` are replaced by a `NavHost`; `LocalNavigator` gets
-   its second implementation and the `FragmentNavigator` is deleted. `BaseFragment`,
-   `BaseDialogFragment`, `MainActivity.openFragment` and the `OnBackPressedCallback` plumbing go
-   with them.
+4. **nav-compose** — *deliberately deferred until after the first device run.* Fragments and
+   `zumpaContent` become a `NavHost`, `LocalNavigator` gets its second implementation and
+   `FragmentNavigator` is deleted, along with `BaseFragment`, `BaseDialogFragment` and
+   `MainActivity.openFragment`. This rewrites every navigation path, and doing it before the app has
+   ever been on a device would make any failure ambiguous — the seven fragment hosts work today and
+   cost nothing to keep for one more round.
 5. Fold this document into `ARCHITECTURE.md` and delete it.
 
 ---

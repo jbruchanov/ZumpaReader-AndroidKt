@@ -75,8 +75,8 @@ val coreModule = module {
     single { AppEventBus() }
     single { ImageUploadRepository(get()) }
     single { OfflineDataRepository(androidContext(), get(), get()) }
-    single { OfflineDownloadUseCase(get()) }
-    single { ImageCacheRepository(androidContext()) }
+    single { OfflineDownloadUseCase(get(), androidContext(), get()) }
+    single { ImageCacheRepository(androidContext(), get()) }
     single { buildImageLoader(androidContext(), get()) }
     single { AuthRepository(get(ONLINE_API), get(), get(), get(), get()) }
     single<NotificationState> { AndroidNotificationState(androidContext()) }

@@ -2,11 +2,13 @@
 
 Branch `deps_update`. Versions resolved from Maven Central / `dl.google.com` on 2026-08-06.
 
-**Where it stands.** Dependencies are current, RxJava is gone, DI is Koin, and every screen except
-`SettingsActivity` is MVVM. How it is built now: [`ARCHITECTURE.md`](ARCHITECTURE.md).
+**Where it stands.** Dependencies are current, RxJava and Jetifier are gone, DI is Koin, **every
+screen is MVVM and Compose**, and Coil is the only image loader. How it is built now:
+[`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 Verified: `clean :app:assembleDebug :app:assembleRelease`, `lintVitalRelease` and `lintDebug` clean,
-56 unit tests. **Not verified on a device — see §A, which is still the biggest open item.**
+70 unit tests. **Nothing has ever run on a device — §A is now the only thing standing between this
+branch and knowing whether it works.**
 
 ---
 
@@ -106,9 +108,8 @@ In order of risk:
 * ~~`pinchtozoom` 0.1~~ → removed in C1; the zoomable viewer is `graphicsLayer` +
   `detectTransformGestures`.
 
-Still shipped and still dead upstream: `kotson` (2019), `picasso` (2022) and **Fresco** — both image
-loaders are replaced by Coil as each screen converts, and get deleted in C9. `otto` went in MVVM
-phase 6.
+~~`picasso` and **Fresco**~~ → both deleted in Compose C9; **Coil is the only image loader**. Still
+shipped and still dead upstream: `kotson` (2019). `otto` went in MVVM phase 6.
 
 ### C. ~~Toolchain~~ → done
 
