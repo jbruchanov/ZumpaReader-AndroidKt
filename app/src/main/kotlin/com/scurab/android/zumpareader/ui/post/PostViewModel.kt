@@ -106,7 +106,7 @@ class PostViewModel(
                 tabs = buildList {
                     add(PostTabUiState.Message)
                     args.uris.forEachIndexed { index, uri ->
-                        add(PostTabUiState.Image("${index + 2}", uri, R.drawable.ic_photo))
+                        add(PostTabUiState.Image("${index + 2}", uri, R.drawable.ic_photo_black))
                     }
                 },
                 //a single shared image goes straight to its tab
@@ -136,7 +136,7 @@ class PostViewModel(
                 tabs = tabs + PostTabUiState.Image(
                     tag = tag,
                     uri = uri,
-                    iconRes = if (fromCamera) R.drawable.ic_camera else R.drawable.ic_photo,
+                    iconRes = if (fromCamera) R.drawable.ic_photo_camera_black else R.drawable.ic_photo_black,
                 ),
                 selectedTabTag = tag,
             )

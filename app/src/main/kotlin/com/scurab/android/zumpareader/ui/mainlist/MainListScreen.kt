@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -37,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -113,7 +115,7 @@ private fun MainListScreen(uiState: MainListUiState, eventHandler: MainListEvent
                     containerColor = AppTheme.colorScheme.context,
                     contentColor = AppTheme.colorScheme.primaryBackground,
                 ) {
-                    Icon(painterResource(R.drawable.ic_add), contentDescription = null)
+                    Icon(painterResource(R.drawable.ic_add_black), contentDescription = null)
                 }
             }
         },
@@ -156,7 +158,7 @@ private fun MainListTopBar(uiState: MainListUiState, eventHandler: MainListEvent
             actions = {
                 IconButton(onClick = { menuExpanded = true }) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_more),
+                        painter = painterResource(R.drawable.ic_more_vert_black),
                         contentDescription = null,
                         tint = AppTheme.colorScheme.context,
                     )
@@ -203,6 +205,8 @@ private fun ThreadRow(row: ThreadRowUiState, eventHandler: MainListEventHandler)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                //so the state bar's fillMaxHeight has something to measure against
+                .height(IntrinsicSize.Min)
                 .background(
                     if (row.isSelected) {
                         AppTheme.colorScheme.selectedBackground
@@ -213,14 +217,15 @@ private fun ThreadRow(row: ThreadRowUiState, eventHandler: MainListEventHandler)
                 .combinedClickable(
                     onClick = { eventHandler.onThreadClicked(row.id) },
                     onLongClick = { eventHandler.onThreadLongPressed(row.id) },
-                )
-                .padding(AppTheme.spaces.listItemPadding),
+                ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            //outside the padding, hard against the edge, as the xml had it
             ThreadStateBar(row.state)
             Column(
                 modifier = Modifier
                     .weight(1f)
+                    .padding(AppTheme.spaces.listItemPadding)
                     .padding(start = AppTheme.spaces.normal),
             ) {
                 Text(
@@ -262,7 +267,7 @@ private fun ThreadRow(row: ThreadRowUiState, eventHandler: MainListEventHandler)
                 text = row.answerCount.toString(),
                 style = AppTheme.typography.threads,
                 color = AppTheme.colorScheme.threads,
-                modifier = Modifier.padding(horizontal = AppTheme.spaces.normal),
+                modifier = Modifier.padding(horizontal = AppTheme.spaces.large),
             )
         }
 
@@ -316,7 +321,7 @@ private fun ThreadRowMenu(row: ThreadRowUiState, eventHandler: MainListEventHand
         }
         IconButton(onClick = { eventHandler.onShareClicked(row.id) }) {
             Icon(
-                painterResource(R.drawable.ic_share),
+                painterResource(R.drawable.ic_share_black),
                 contentDescription = null,
                 tint = AppTheme.colorScheme.context,
             )

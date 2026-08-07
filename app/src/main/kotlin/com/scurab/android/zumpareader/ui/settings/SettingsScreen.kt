@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -80,7 +82,14 @@ fun SettingsScreen(
 
 @Composable
 private fun SettingsScreen(uiState: SettingsUiState, eventHandler: SettingsEventHandler) {
-    Box(Modifier.fillMaxSize().background(AppTheme.colorScheme.primaryBackground)) {
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(AppTheme.colorScheme.primaryBackground)
+            //no Scaffold on this screen, so the insets are applied here
+            .safeDrawingPadding()
+            .imePadding()
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()

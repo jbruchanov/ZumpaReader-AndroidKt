@@ -2,6 +2,7 @@ package com.scurab.android.zumpareader.ui.offline
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -65,7 +66,13 @@ private fun OfflineDownloadScreen(
     Column(
         modifier = Modifier
             .widthIn(min = AppTheme.sizes.dialogOfflineMinWidth)
-            .background(AppTheme.colorScheme.primaryBackground)
+            //a frame, so the dialog is not black on black - the xml used ?buttonBackground
+            .background(AppTheme.colorScheme.secondaryBackground, AppTheme.shapes.button)
+            .border(
+                AppTheme.sizes.urlButtonStrokeWidth,
+                AppTheme.colorScheme.context50p,
+                AppTheme.shapes.button,
+            )
             .padding(AppTheme.spaces.normal),
         verticalArrangement = Arrangement.spacedBy(AppTheme.spaces.small),
     ) {

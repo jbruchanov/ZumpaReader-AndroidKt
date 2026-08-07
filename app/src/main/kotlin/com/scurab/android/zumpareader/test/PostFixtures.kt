@@ -22,8 +22,8 @@ fun Fixtures.Post.sending() = newThread().copy(isSending = true)
 fun Fixtures.Post.tabs() = newThread().copy(
     tabs = listOf(
         PostTabUiState.Message,
-        PostTabUiState.Image("2", android.net.Uri.EMPTY, com.scurab.android.zumpareader.R.drawable.ic_photo),
-        PostTabUiState.Image("3", android.net.Uri.EMPTY, com.scurab.android.zumpareader.R.drawable.ic_camera),
+        PostTabUiState.Image("2", android.net.Uri.EMPTY, com.scurab.android.zumpareader.R.drawable.ic_photo_black),
+        PostTabUiState.Image("3", android.net.Uri.EMPTY, com.scurab.android.zumpareader.R.drawable.ic_photo_camera_black),
     ),
 )
 
