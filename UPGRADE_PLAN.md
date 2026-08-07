@@ -126,7 +126,8 @@ empty slot each screen adds a line to. What the screens will run into:
   `shadows-support-v4-3.3.1.jar`.
 * ~~`GCMReceiver`~~ → deleted in `4984020`, it was dead code with a `PendingIntent` that would have
   thrown on Android 12+.
-* No test source set exists. The catalog no longer carries test dependencies; adding
-  `app/src/test` with junit5 + mockk for `ZumpaSimpleParser` would pay for itself the next time
-  the forum HTML changes.
+* ~~No test source set exists~~ → added in MVVM phase 0 (`79fdb23`): `app/src/test` with junit5,
+  mockk, turbine and koin-test, 56 tests as of the end of phase 8. **`ZumpaSimpleParser` itself is
+  still uncovered** — that is the one that would pay for itself the next time the forum HTML
+  changes, and the source set is now there to put it in.
 * Bump `versionCode` / `versionName` in `app/build.gradle` before releasing.
