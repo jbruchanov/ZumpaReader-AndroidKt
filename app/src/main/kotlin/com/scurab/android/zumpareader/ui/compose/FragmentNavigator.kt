@@ -9,6 +9,7 @@ import com.scurab.android.zumpareader.ui.image.ImageActivity
 import com.scurab.android.zumpareader.ui.main.MainActivity
 import com.scurab.android.zumpareader.ui.offline.OfflineDownloadFragment
 import com.scurab.android.zumpareader.ui.post.PostFragment
+import com.scurab.android.zumpareader.ui.post.PostPicker
 import com.scurab.android.zumpareader.ui.settings.SettingsActivity
 import com.scurab.android.zumpareader.ui.sublist.SubListFragment
 import com.scurab.android.zumpareader.util.startLinkActivity
@@ -40,11 +41,11 @@ class FragmentNavigator(private val fragment: Fragment) : Navigator {
         fragment.context?.let { it.startActivity(Intent(it, SettingsActivity::class.java)) }
     }
 
-    override fun openPostDialog(threadId: String?, flag: Int?) {
-        val post = if (threadId == null && flag == null) {
+    override fun openPostDialog(threadId: String?, picker: PostPicker?) {
+        val post = if (threadId == null && picker == null) {
             PostFragment()
         } else {
-            PostFragment.newInstance(null, null, null, threadId, flag ?: 0)
+            PostFragment.newInstance(null, null, null, threadId, picker)
         }
         if (isTablet) {
             post.show(fragment.childFragmentManager, POST_TAG)
@@ -97,7 +98,7 @@ class ActivityNavigator(private val activity: ComponentActivity) : Navigator {
 
     override fun openSettings() = unsupported("openSettings")
 
-    override fun openPostDialog(threadId: String?, flag: Int?) = unsupported("openPostDialog")
+    override fun openPostDialog(threadId: String?, picker: PostPicker?) = unsupported("openPostDialog")
 
     override fun openOfflineDownload() = unsupported("openOfflineDownload")
 

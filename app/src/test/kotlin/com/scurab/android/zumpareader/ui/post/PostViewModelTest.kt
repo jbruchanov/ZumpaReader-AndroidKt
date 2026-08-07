@@ -147,24 +147,24 @@ class PostViewModelTest {
     }
 
     @Test
-    fun `the launch flag opens the picker exactly once`() = runTest {
+    fun `the launch picker opens exactly once`() = runTest {
         val viewModel = viewModel()
 
         viewModel.effects.test {
-            viewModel.onFlag(R.id.camera)
+            viewModel.onPicker(PostPicker.Camera)
             assertEquals(PostEffect.RequestCameraImage, awaitItem())
             //a rotation replays the argument, it must not reopen the camera
-            viewModel.onFlag(R.id.camera)
+            viewModel.onPicker(PostPicker.Camera)
             expectNoEvents()
         }
     }
 
     @Test
-    fun `no launch flag opens nothing`() = runTest {
+    fun `no launch picker opens nothing`() = runTest {
         val viewModel = viewModel()
 
         viewModel.effects.test {
-            viewModel.onFlag(0)
+            viewModel.onPicker(null)
             expectNoEvents()
         }
     }

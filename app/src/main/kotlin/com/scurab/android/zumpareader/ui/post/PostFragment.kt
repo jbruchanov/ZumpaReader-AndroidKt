@@ -19,21 +19,21 @@ class PostFragment : BaseDialogFragment() {
 
     companion object {
         const val THREAD_ID = "THREAD_UD"
-        const val FLAG = "FLAG"
+        const val PICKER = "PICKER"
 
-        fun newInstance(subject: String?, message: String?, uris: Array<Uri>? = null, threadId: String? = null, flag: Int = 0): PostFragment {
+        fun newInstance(subject: String?, message: String?, uris: Array<Uri>? = null, threadId: String? = null, picker: PostPicker? = null): PostFragment {
             return PostFragment().apply {
-                arguments = arguments(subject, message, uris, threadId, flag)
+                arguments = arguments(subject, message, uris, threadId, picker)
             }
         }
 
-        fun arguments(subject: String?, message: String?, uris: Array<Uri>? = null, threadId: String? = null, flag: Int = 0): Bundle {
+        fun arguments(subject: String?, message: String?, uris: Array<Uri>? = null, threadId: String? = null, picker: PostPicker? = null): Bundle {
             return Bundle().apply {
                 putString(Intent.EXTRA_SUBJECT, subject)
                 putString(Intent.EXTRA_TEXT, message)
                 putParcelableArray(Intent.EXTRA_STREAM, uris)
                 putString(THREAD_ID, threadId)
-                putInt(FLAG, flag)
+                putString(PICKER, picker?.name)
             }
         }
     }
@@ -46,9 +46,12 @@ class PostFragment : BaseDialogFragment() {
             threadId = arguments?.getString(THREAD_ID),
         )
 
+    private val picker: PostPicker?
+        get() = arguments?.getString(PICKER)?.let { PostPicker.valueOf(it) }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
-    ): View = zumpaContent { PostScreen(args, arguments?.getInt(FLAG) ?: 0) }
+    ): View = zumpaContent { PostScreen(args, picker) }
 }

@@ -46,7 +46,7 @@ import org.koin.androidx.compose.koinViewModel
 import java.io.File
 
 /**
- * The post dialog. [args] and [flag] are the screen's arguments, handed over by the host.
+ * The post dialog. [args] and [picker] are the screen's arguments, handed over by the host.
  *
  * Replaces `FragmentTabHost` and its two child fragments - the tabs are pager pages now, so the
  * "only ever grows" workaround (`addedTabTags` / `syncTabs`) is gone with them.
@@ -54,7 +54,7 @@ import java.io.File
 @Composable
 fun PostScreen(
     args: PostArgs,
-    flag: Int = 0,
+    picker: PostPicker? = null,
     vm: PostViewModel = koinViewModel(),
 ) {
     val navigator = LocalNavigator.current
@@ -96,7 +96,7 @@ fun PostScreen(
     }
     LaunchedEffect(args) {
         vm.start(args)
-        vm.onFlag(flag)
+        vm.onPicker(picker)
     }
 
     val uiState by vm.uiState.collectAsStateWithLifecycle()

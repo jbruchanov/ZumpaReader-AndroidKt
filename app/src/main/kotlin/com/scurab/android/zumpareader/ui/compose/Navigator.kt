@@ -1,6 +1,7 @@
 package com.scurab.android.zumpareader.ui.compose
 
 import androidx.compose.runtime.staticCompositionLocalOf
+import com.scurab.android.zumpareader.ui.post.PostPicker
 
 /**
  * Everything a screen can navigate to, so a `Screen(uiState, eventHandler)` stays at two arguments
@@ -23,7 +24,7 @@ interface Navigator {
 
     fun openSettings()
 
-    fun openPostDialog(threadId: String? = null, flag: Int? = null)
+    fun openPostDialog(threadId: String? = null, picker: PostPicker? = null)
 
     fun openOfflineDownload()
 
