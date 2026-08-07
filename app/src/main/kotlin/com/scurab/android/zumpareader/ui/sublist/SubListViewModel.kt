@@ -115,7 +115,7 @@ sealed interface SubListEffect : UiEffect {
     data object ScrollToTop : SubListEffect
     /** Phone only - on a tablet a thread link swaps the pane through [SelectedThreadStore]. */
     data class OpenThread(val threadId: String) : SubListEffect
-    data class OpenPostFragment(val flag: Int?) : SubListEffect
+    data object OpenPostFragment : SubListEffect
     data class OpenImage(val url: String) : SubListEffect
     data class OpenLink(val url: String) : SubListEffect
 }
@@ -357,7 +357,7 @@ class SubListViewModel(
         }
     }
 
-    fun onOpenPostFragment(flag: Int? = null) = effect(SubListEffect.OpenPostFragment(flag))
+    fun onOpenPostFragment() = effect(SubListEffect.OpenPostFragment)
 
     private fun publishRows() {
         val loadImages = settings.loadImages.value

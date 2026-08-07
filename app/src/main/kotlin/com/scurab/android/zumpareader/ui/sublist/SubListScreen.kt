@@ -85,7 +85,7 @@ fun SubListScreen(threadId: String, vm: SubListViewModel = koinViewModel()) {
                 is SubListEffect.OpenThread -> navigator.openThread(effect.threadId)
                 is SubListEffect.OpenImage -> navigator.openImage(effect.url)
                 is SubListEffect.OpenLink -> navigator.openLink(effect.url)
-                is SubListEffect.OpenPostFragment -> navigator.openPostDialog(flag = effect.flag)
+                is SubListEffect.OpenPostFragment -> navigator.openPostDialog()
                 is CopyToClipboard -> {
                     context.saveToClipboard(effect.text.toString())
                     context.toast(R.string.saved_into_clipboard)

@@ -116,12 +116,12 @@ class PostViewModel(
     }
 
     /** Consumed once, so rotating the dialog does not reopen the picker. */
-    fun onFlag(flag: Int) {
-        if (isFlagConsumed || flag == 0) return
+    fun onPicker(picker: PostPicker?) {
+        if (isFlagConsumed || picker == null) return
         isFlagConsumed = true
-        when (flag) {
-            R.id.photo -> effect(PostEffect.RequestGalleryImage)
-            R.id.camera -> effect(PostEffect.RequestCameraImage)
+        when (picker) {
+            PostPicker.Gallery -> effect(PostEffect.RequestGalleryImage)
+            PostPicker.Camera -> effect(PostEffect.RequestCameraImage)
         }
     }
 
@@ -212,6 +212,13 @@ class PostViewModel(
         }
     }
 }
+
+/**
+ * Opening the dialog straight into a picker. Used to be a `R.id.camera` / `R.id.photo` int, i.e. a
+ * View id used as an enum, which stopped compiling the moment the layout holding those ids was
+ * deleted.
+ */
+enum class PostPicker { Camera, Gallery }
 
 /** What [PostViewModel] needs out of the fragment arguments. */
 data class PostArgs(
