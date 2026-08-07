@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 
 data class OfflineDownloadUiState(
     val pages: String = "1",
-    val downloadImages: Boolean = false,
+    val downloadImages: Boolean = true,
     val threadsDownloaded: Int = 0,
     val imagesDownloaded: Int = 0,
     val imagesTotal: Int = 0,
@@ -22,10 +22,19 @@ data class OfflineDownloadUiState(
 ) {
     /** The dialog swallows the back key while it works, as it always did. */
     val isDismissable: Boolean get() = !isRunning
+
+    val canStart: Boolean get() = !isRunning && pages.toIntOrNull() != null
 }
 
 sealed interface OfflineDownloadEffect : UiEffect {
     data object Dismiss : OfflineDownloadEffect
+}
+
+interface OfflineDownloadEventHandler {
+    fun onPagesChanged(pages: String)
+    fun onDownloadImagesToggled(enabled: Boolean)
+    fun onStartClicked()
+    fun onStopClicked()
 }
 
 class OfflineDownloadViewModel(
@@ -33,19 +42,19 @@ class OfflineDownloadViewModel(
     private val offlineData: OfflineDataRepository,
     private val threads: ZumpaThreadRepository,
     private val eventBus: AppEventBus,
-) : BaseViewModel<OfflineDownloadUiState>(OfflineDownloadUiState()) {
+) : BaseViewModel<OfflineDownloadUiState>(OfflineDownloadUiState()), OfflineDownloadEventHandler {
 
     private var job: Job? = null
 
-    fun onPagesChanged(pages: String) {
+    override fun onPagesChanged(pages: String) {
         if (pages != state.pages) setState { copy(pages = pages) }
     }
 
-    fun onDownloadImagesChanged(enabled: Boolean) {
+    override fun onDownloadImagesToggled(enabled: Boolean) {
         if (enabled != state.downloadImages) setState { copy(downloadImages = enabled) }
     }
 
-    fun onStartClick() {
+    override fun onStartClicked() {
         if (state.isRunning) return
         val pages = state.pages.toIntOrNull() ?: return
         setState {
@@ -79,7 +88,7 @@ class OfflineDownloadViewModel(
     }
 
     /** Stop while it runs, dismiss when it does not - the same one button as before. */
-    fun onStopClick() {
+    override fun onStopClicked() {
         if (state.isRunning) {
             job?.cancel()
             job = null
