@@ -23,10 +23,10 @@ class ZumpaPrefs(context: Context) {
         //observed by ZumpaSettingsRepository, which needs the key a write lands on
         val KEY_IS_LOGGED_IN = "KEY_IS_LOGGED_IN"
         val KEY_LOAD_IMAGES = "KEY_LOAD_IMAGES"
+        val KEY_NICK_NAME = "KEY_NICK_NAME"
     }
 
     private val KEY_COOKIES = "KEY_COOKIES"
-    private val KEY_NICK_NAME = "KEY_NICK_NAME"
     private val KEY_READ_STATES = "KEY_READ_STATES"
     private val KEY_PUSH_REG_ID = "KEY_PUSH_REG_ID"
     private val KEY_USER_ID = "KEY_USER_ID"
@@ -72,6 +72,19 @@ class ZumpaPrefs(context: Context) {
         }
 
     val loggedUserName: String? get() = if (isLoggedIn) sharedPrefs.getString(KEY_USER_NAME, null) else null
+
+    val userName: String get() = sharedPrefs.getString(KEY_USER_NAME, "") ?: ""
+    fun setUserName(value: String) = sharedPrefs.edit().putString(KEY_USER_NAME, value).apply()
+
+    val password: String get() = sharedPrefs.getString(KEY_PASSWORD, "") ?: ""
+    fun setPassword(value: String) = sharedPrefs.edit().putString(KEY_PASSWORD, value).apply()
+
+    fun setNick(value: String) = sharedPrefs.edit().putString(KEY_NICK_NAME, value).apply()
+
+    fun setLoadImages(value: Boolean) = sharedPrefs.edit().putBoolean(KEY_LOAD_IMAGES, value).apply()
+
+    fun setShowLastAuthor(value: Boolean) =
+        sharedPrefs.edit().putBoolean(KEY_SHOW_LAST_AUTHOR, value).apply()
 
     val loadImages: Boolean
         get() {

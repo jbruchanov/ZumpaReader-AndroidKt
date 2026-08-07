@@ -6,6 +6,8 @@ import com.scurab.android.zumpareader.ZumpaPHPAPI
 import com.scurab.android.zumpareader.ZumpaWSAPI
 import com.scurab.android.zumpareader.arch.DeviceConfig
 import com.scurab.android.zumpareader.repository.AppEventBus
+import com.scurab.android.zumpareader.repository.AuthRepository
+import com.scurab.android.zumpareader.ui.settings.NotificationState
 import com.scurab.android.zumpareader.repository.ImageCacheRepository
 import com.scurab.android.zumpareader.repository.ImageUploadRepository
 import com.scurab.android.zumpareader.repository.OfflineDataRepository
@@ -47,6 +49,8 @@ class ModulesTest {
                 AppEventBus::class,
                 ImageUploadRepository::class,
                 ImageCacheRepository::class,
+                AuthRepository::class,
+                NotificationState::class,
                 OfflineDataRepository::class,
                 OfflineDownloadUseCase::class,
                 // provided by networkModule
