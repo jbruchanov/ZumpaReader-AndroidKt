@@ -15,7 +15,7 @@ import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.scurab.android.zumpareader.ext.notificationManager
-import com.scurab.android.zumpareader.extension.app
+import com.scurab.android.zumpareader.ext.app
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.ui.main.MainActivity
 import com.scurab.android.zumpareader.util.obtainStyledColor
