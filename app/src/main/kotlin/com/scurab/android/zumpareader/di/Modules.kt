@@ -13,6 +13,7 @@ import com.scurab.android.zumpareader.data.ZumpaConverterFactory
 import com.scurab.android.zumpareader.data.ZumpaGenericConverterFactory
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.repository.AppEventBus
+import com.scurab.android.zumpareader.repository.AuthRepository
 import com.scurab.android.zumpareader.repository.ImageCacheRepository
 import com.scurab.android.zumpareader.ui.compose.buildImageLoader
 import com.scurab.android.zumpareader.repository.ImageUploadRepository
@@ -28,6 +29,9 @@ import com.scurab.android.zumpareader.ui.mainlist.MainListViewModel
 import com.scurab.android.zumpareader.ui.offline.OfflineDownloadViewModel
 import com.scurab.android.zumpareader.ui.post.PostImageViewModel
 import com.scurab.android.zumpareader.ui.post.PostViewModel
+import com.scurab.android.zumpareader.ui.settings.AndroidNotificationState
+import com.scurab.android.zumpareader.ui.settings.NotificationState
+import com.scurab.android.zumpareader.ui.settings.SettingsViewModel
 import com.scurab.android.zumpareader.ui.sublist.SubListViewModel
 import com.scurab.android.zumpareader.usecase.OfflineDownloadUseCase
 import com.scurab.android.zumpareader.util.ZumpaPrefs
@@ -74,6 +78,8 @@ val coreModule = module {
     single { OfflineDownloadUseCase(get()) }
     single { ImageCacheRepository(androidContext()) }
     single { buildImageLoader(androidContext(), get()) }
+    single { AuthRepository(get(ONLINE_API), get(), get(), get(), get()) }
+    single<NotificationState> { AndroidNotificationState(androidContext()) }
 
     /**
      * `api = { get() }` and not `api = get()`: the unqualified [ZumpaAPI] below is a factory, so
@@ -140,6 +146,7 @@ val viewModelModule = module {
     viewModel { PostImageViewModel(androidContext(), get()) }
     viewModel { OfflineDownloadViewModel(get(), get(), get(), get()) }
     viewModel { ImageViewModel(get()) }
+    viewModel { SettingsViewModel(get(), get(), get()) }
 }
 
 val appModules = listOf(coreModule, networkModule, viewModelModule)

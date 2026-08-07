@@ -45,11 +45,31 @@ class ZumpaSettingsRepository(private val prefs: ZumpaPrefs) {
         combine(isLoggedIn, isOffline) { loggedIn, offline -> loggedIn && !offline }
             .stateIn(scope, SharingStarted.Eagerly, prefs.isLoggedInNotOffline)
 
+    val userName: StateFlow<String> = flowOf(ZumpaPrefs.KEY_USER_NAME) { prefs.userName }
+    val password: StateFlow<String> = flowOf(ZumpaPrefs.KEY_PASSWORD) { prefs.password }
+    val nick: StateFlow<String> = flowOf(ZumpaPrefs.KEY_NICK_NAME) { prefs.nickName }
+
     val nickName: String get() = prefs.nickName
+    val userId: String? get() = prefs.userId
 
     fun setOffline(value: Boolean) {
         prefs.isOffline = value
     }
+
+    //the settings screen is the only writer for these
+    fun setUserName(value: String) = prefs.setUserName(value)
+
+    fun setPassword(value: String) = prefs.setPassword(value)
+
+    fun setNick(value: String) = prefs.setNick(value)
+
+    fun setFilter(value: String) {
+        prefs.filter = value
+    }
+
+    fun setLoadImages(value: Boolean) = prefs.setLoadImages(value)
+
+    fun setShowLastAuthor(value: Boolean) = prefs.setShowLastAuthor(value)
 
     private fun <T> flowOf(vararg keys: String, read: () -> T): StateFlow<T> {
         return callbackFlow {
