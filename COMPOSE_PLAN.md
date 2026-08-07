@@ -22,21 +22,22 @@ deleted once the work lands.
 
 ## Conventions
 
-### Route / Screen split
+### The two Screen overloads
 
 `Screen(uiState, eventHandler)` takes exactly two arguments, so it cannot also receive the
-ViewModel, the effects flow or a navigation callback. Each screen is therefore two composables:
+ViewModel, the effects flow or a navigation callback. Each screen is therefore the **same name
+overloaded twice**, in one file:
 
 ```kotlin
-// XyzRoute.kt — stateful, never previewed, the only thing the host knows about
+// XyzScreen.kt
+
 @Composable
-fun XyzRoute(viewModel: XyzViewModel = koinViewModel()) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+fun XyzScreen(vm: XyzViewModel = koinViewModel()) {
+    //nav wiring
     val navigator = LocalNavigator.current
     val context = LocalContext.current
-
     LaunchedEffect(Unit) {
-        viewModel.effects.collect { effect ->
+        vm.effects.collect { effect ->
             when (effect) {
                 is XyzEffect.OpenThread -> navigator.openThread(effect.threadId)
                 is ShowToast -> context.toast(effect)
@@ -44,18 +45,32 @@ fun XyzRoute(viewModel: XyzViewModel = koinViewModel()) {
             }
         }
     }
-    XyzScreen(uiState, viewModel)
+
+    val uiState by vm.uiState.collectAsStateWithLifecycle()
+    val eventHandler = vm
+    XyzScreen(uiState, eventHandler)
 }
 
-// XyzScreen.kt — stateless, pure, previewable
 @Composable
-fun XyzScreen(uiState: XyzUiState, eventHandler: XyzEventHandler) { … }
+private fun XyzScreen(uiState: XyzUiState, eventHandler: XyzEventHandler) { … }
 ```
+
+Two notes on the shape:
+
+* **`collectAsStateWithLifecycle()`, not `collectAsState()`.** The plain one keeps collecting while
+  the screen is stopped; the lifecycle-aware one is what preserves the `repeatOnLifecycle(STARTED)`
+  behaviour the MVVM migration deliberately introduced (`ARCHITECTURE.md` → "The shape").
+* **The inner overload takes the unwrapped value**, via `by`, not `State<XyzUiState>`. Passing the
+  `State` would defer the read one level further but forces every preview and fixture to wrap itself
+  in `mutableStateOf`. Say the word if you want the deferred-read version instead.
+
+Because the inner overload is `private`, **the previews live in the same file** — which is what you
+want anyway: the screen, its parts and their previews next to each other.
 
 The fragment or activity contains one line of content and no wiring:
 
 ```kotlin
-override fun onCreateView(…) = zumpaContent { MainListRoute() }
+override fun onCreateView(…) = zumpaContent { MainListScreen() }
 ```
 
 `zumpaContent {}` is a shared helper (`ui/compose/Host.kt`) that installs a `ComposeView` with
@@ -87,28 +102,39 @@ is a mechanical step in each screen's phase.
 Every screen and every non-trivial component gets a `@Preview`. Trivial means a composable whose
 preview would be a single widget with a literal — those can skip it.
 
-When preview data is more than two lines it moves into `ui/compose/Fixtures.kt`:
+When preview data is more than two lines it moves into the **`test` package**, which holds nothing
+but preview support:
 
 ```kotlin
+// test/Fixtures.kt — the namespace, one nested marker object per screen
 object Fixtures {
-    object MainList {
-        fun uiState(rows: Int = 6) = MainListUiState(rows = List(rows) { row(it) }, …)
-        fun row(index: Int) = RenderedThreadRow(…)
-    }
-    object SubList { … }
+    object MainList
+    object SubList
+    object Post
+    …
 }
+
+// test/MainListFixtures.kt — the data, as extensions on the marker
+fun Fixtures.MainList.uiState(rows: Int = 6) = MainListUiState(rows = List(rows) { row(it) }, …)
+fun Fixtures.MainList.uiStateOffline() = uiState().copy(isOffline = true)
+fun Fixtures.MainList.row(index: Int) = RenderedThreadRow(…)
 ```
 
-One shared object with a nested object per screen, in `main` (previews cannot live in `test`, and
-release builds must compile them). If you would rather have a `Fixtures` per screen package, say so
-— it is a one-line change to the plan.
+One file per screen, so a screen's fixtures grow without touching anyone else's, and
+`Fixtures.MainList.` autocompletes to exactly that screen's set.
+
+**`com.scurab.android.zumpareader.test` is a package in `src/main`, not the `src/test` source set.**
+It has to be: previews live in `main` and release builds compile them, so they cannot reference test
+sources. The cost is that the fixtures ship in the APK — negligible here (`minifyEnabled = false`
+already), and it is the same trade every Compose codebase with previews makes.
 
 ### `mock()`
 
-Previews need an `EventHandler` that does nothing. No mockk, no test library in `main`:
+Previews need an `EventHandler` that does nothing. No mockk, no test library in `main` — lives in
+the same `test` package:
 
 ```kotlin
-// ui/compose/Mock.kt
+// test/Mock.kt
 inline fun <reified T : Any> mock(): T =
     Proxy.newProxyInstance(T::class.java.classLoader, arrayOf(T::class.java)) { _, method, _ ->
         defaultValue(method.returnType)   // 0 / false / null, and null for void
@@ -165,7 +191,10 @@ Dependencies (catalog): compose-bom, `ui`, `material3`, `ui-tooling-preview`, `a
   `Modifier` extensions or `Brush`es rather than colours; the alternating row background is a
   `background(if (index % 2 == 0) …)`.
 * `Host.kt` — `zumpaContent {}`, `FragmentNavigator`.
-* `Fixtures.kt`, `Mock.kt`, `Navigator.kt`.
+* `Navigator.kt` — the `Navigator` interface and `LocalNavigator`.
+
+`test/` (a package in `src/main`, see Conventions): `Fixtures.kt` with one marker object per screen,
+`Mock.kt`. Per-screen `XyzFixtures.kt` files arrive with their screen's phase.
 
 Deliverable: a throwaway preview proving the theme renders, nothing wired into the app yet.
 
@@ -198,7 +227,7 @@ shake out the theme and the form controls.
   `isRunning`, `isDismissable`).
 * `OfflineDownloadEventHandler`: `onPagesChanged(String)`, `onDownloadImagesToggled(Boolean)`,
   `onStartClicked()`, `onStopClicked()`.
-* Stays a `DialogFragment` hosting `zumpaContent { OfflineDownloadRoute() }`; the back-swallowing
+* Stays a `DialogFragment` hosting `zumpaContent { OfflineDownloadScreen() }`; the back-swallowing
   while running moves to `BackHandler(enabled = !uiState.isDismissable)` inside the screen.
 * Composables: `OfflineDownloadScreen`, `ProgressRow` (threads / images counters).
 * Previews: idle, running mid-download, finished.
@@ -244,7 +273,7 @@ tab host.
   keyed ViewModel**: it keeps the state machine per image and untouched.
 * `PostEventHandler`: `onTabSelected(String)`, `onSendClicked()`, plus the message/image handlers
   delegated to the page.
-* Camera/gallery pickers become `rememberLauncherForActivityResult` inside the Route.
+* Camera/gallery pickers become `rememberLauncherForActivityResult` in the ViewModel-taking `PostScreen` overload.
 * Composables: `PostScreen`, `PostTabRow`. Previews: message tab only, message + two images.
 
 ---
@@ -368,7 +397,8 @@ The only screen that is still MVC, converted straight to Compose + MVVM as you a
    through. Do it in C6 where it is exercised hardest, not as an afterthought.
 4. **Two ViewModel scoping models coexist.** Fragment-scoped `by viewModel()` and Compose
    `koinViewModel()` resolve to different stores if both are used for one screen. Each screen must
-   pick one at conversion time — the Route owns the ViewModel, the fragment must not also inject it.
+   pick one at conversion time — the `Screen(vm)` overload owns the ViewModel, the fragment must not
+   also inject it.
 5. **Previews need the app's fonts and drawables**, and `@Preview` renders without a real `Context`
    for some of them. Anything reading a `Drawable` resource in a preview path needs a
    `LocalInspectionMode` fallback.
@@ -380,7 +410,7 @@ The only screen that is still MVC, converted straight to Compose + MVVM as you a
 
 * One phase = one commit, each verified with `./gradlew :app:assembleDebug` plus the unit tests.
 * The app builds and runs after every phase; unconverted screens keep their Views.
-* No screen-specific code in a fragment or activity — only `zumpaContent { XyzRoute() }`.
+* No screen-specific code in a fragment or activity — only `zumpaContent { XyzScreen() }`.
 * Every `Screen` is `(uiState, eventHandler)` and previewable with `mock()`.
 * ViewModels keep their existing `UiState`/effects contracts; if a Compose conversion wants a
   different shape, change the state — never move logic back into the UI.
