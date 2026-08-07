@@ -2,7 +2,6 @@ package com.scurab.android.zumpareader.app
 
 import android.os.Bundle
 import androidx.fragment.app.DialogFragment
-import com.scurab.android.zumpareader.BusProvider
 import com.scurab.android.zumpareader.R
 
 /**
@@ -24,13 +23,4 @@ abstract class BaseDialogFragment : DialogFragment() {
             return _isTablet!!
         }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        BusProvider.register(this)
-    }
-
-    override fun onDestroy() {
-        BusProvider.unregister(this)
-        super.onDestroy()
-    }
 }

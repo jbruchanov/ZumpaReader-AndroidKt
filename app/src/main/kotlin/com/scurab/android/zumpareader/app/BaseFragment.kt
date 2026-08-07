@@ -6,7 +6,6 @@ import android.view.MenuItem
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import com.scurab.android.zumpareader.BusProvider
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
 import com.scurab.android.zumpareader.extension.app
@@ -84,16 +83,6 @@ abstract class BaseFragment : Fragment() {
 
     open fun onMenuItemClick(item: MenuItem): Boolean {
         return false
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        BusProvider.register(this)
-    }
-
-    override fun onDestroy() {
-        BusProvider.unregister(this)
-        super.onDestroy()
     }
 
     open fun openFragment(fragment: Fragment, addToBackStack: Boolean = true, replace: Boolean = true) {
