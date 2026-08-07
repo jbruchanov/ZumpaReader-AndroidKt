@@ -1,8 +1,9 @@
 package com.scurab.android.zumpareader.usecase
 
-import com.facebook.datasource.DataSources
-import com.facebook.drawee.backends.pipeline.Fresco
-import com.facebook.imagepipeline.request.ImageRequest
+import android.content.Context
+import coil3.ImageLoader
+import coil3.request.CachePolicy
+import coil3.request.ImageRequest
 import com.github.salomonbrys.kotson.bool
 import com.github.salomonbrys.kotson.long
 import com.github.salomonbrys.kotson.string
@@ -39,7 +40,11 @@ sealed interface OfflineProgress {
  * image prefetch loop at the next [ensureActive], where the old implementation kept downloading
  * every remaining image after the dialog was gone.
  */
-class OfflineDownloadUseCase(private val ws: ZumpaWSAPI) {
+class OfflineDownloadUseCase(
+    private val ws: ZumpaWSAPI,
+    private val context: Context,
+    private val imageLoader: ImageLoader,
+) {
 
     fun run(pages: Int, downloadImages: Boolean, outJsonFile: String?): Flow<OfflineProgress> = flow {
         val result = LinkedHashMap<String, ZumpaThread>()
@@ -80,13 +85,13 @@ class OfflineDownloadUseCase(private val ws: ZumpaWSAPI) {
         var downloaded = 0
         for (url in urls) {
             currentCoroutineContext().ensureActive()
-            val dataSource = Fresco.getImagePipeline()
-                .prefetchToDiskCache(ImageRequest.fromUri(url), null)
-            try {
-                DataSources.waitForFinalResult(dataSource)
-            } finally {
-                dataSource.close()
-            }
+            //disk only - filling the memory cache with an offline download would be pointless
+            val request = ImageRequest.Builder(context)
+                .data(url)
+                .memoryCachePolicy(CachePolicy.DISABLED)
+                .diskCachePolicy(CachePolicy.ENABLED)
+                .build()
+            imageLoader.execute(request)
             downloaded++
             emit(OfflineProgress.Images(done = downloaded, total = urls.size))
         }
