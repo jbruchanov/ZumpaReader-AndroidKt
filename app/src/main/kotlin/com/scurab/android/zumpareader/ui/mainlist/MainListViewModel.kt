@@ -33,6 +33,11 @@ data class ThreadRowUiState(
     val state: ThreadState,
     val isFavorite: Boolean,
     val isSelected: Boolean,
+    /**
+     * The swipe-to-reveal row menu. This used to be translationX on the view holder, reset on every
+     * rebind - which is why the menu snapped shut whenever the list refreshed. It is state now.
+     */
+    val isMenuOpen: Boolean,
 )
 
 data class MainListUiState(
@@ -43,6 +48,19 @@ data class MainListUiState(
     /** Everything that writes needs a session and a connection. */
     val canInteract: Boolean = false,
 )
+
+interface MainListEventHandler {
+    fun onRefreshRequested()
+    fun onEndReached()
+    fun onThreadClicked(threadId: String)
+    fun onThreadLongPressed(threadId: String)
+    fun onFavoriteClicked(threadId: String)
+    fun onIgnoreClicked(threadId: String)
+    fun onShareClicked(threadId: String)
+    fun onOfflineToggled()
+    fun onSettingsClicked()
+    fun onFabClicked()
+}
 
 sealed interface MainListEffect : UiEffect {
     /** Phone only - on a tablet the selection goes through [SelectedThreadStore] instead. */
@@ -60,7 +78,7 @@ class MainListViewModel(
     private val selectedThread: SelectedThreadStore,
     private val eventBus: AppEventBus,
     private val device: DeviceConfig,
-) : BaseViewModel<MainListUiState>(MainListUiState()) {
+) : BaseViewModel<MainListUiState>(MainListUiState()), MainListEventHandler {
 
     /**
      * What this screen currently shows, which is not the same as everything the repository has
@@ -79,6 +97,7 @@ class MainListViewModel(
     private var lastFilter: String? = null
     private var lastOffline: Boolean? = null
     private var isFirstLoad = true
+    private var openMenuId: String? = null
 
     init {
         viewModelScope.launch {
@@ -116,9 +135,9 @@ class MainListViewModel(
         load(isFirstLoad = true)
     }
 
-    fun onRefresh() = load()
+    override fun onRefreshRequested() = load()
 
-    fun onLoadMore() {
+    override fun onEndReached() {
         val next = nextThreadId
         //the offline api answers with an empty next id, which is the end of the list
         if (state.isLoading || next.isNullOrEmpty()) {
@@ -164,13 +183,14 @@ class MainListViewModel(
         }
     }
 
-    fun onThreadClick(threadId: String) {
+    override fun onThreadClicked(threadId: String) {
         val thread = loaded[threadId] ?: return
         //opening a thread marks everything in it as seen
         rowStates[threadId] = thread.stateFor(
             readCount = thread.items,
             userName = settings.loggedUserName.value,
         )
+        openMenuId = null
         publishRows()
         if (device.isTablet) {
             selectedThread.select(threadId)
@@ -179,8 +199,9 @@ class MainListViewModel(
         }
     }
 
-    fun onFavoriteClick(threadId: String) {
+    override fun onFavoriteClicked(threadId: String) {
         if (!state.canInteract) return
+        closeMenu()
         viewModelScope.launch {
             try {
                 threads.toggleFavorite(threadId)
@@ -191,8 +212,9 @@ class MainListViewModel(
         }
     }
 
-    fun onIgnoreClick(threadId: String) {
+    override fun onIgnoreClicked(threadId: String) {
         if (!state.canInteract) return
+        closeMenu()
         viewModelScope.launch {
             try {
                 threads.toggleIgnore(threadId)
@@ -205,12 +227,13 @@ class MainListViewModel(
         }
     }
 
-    fun onShareClick(threadId: String) {
+    override fun onShareClicked(threadId: String) {
         if (!state.canInteract) return
+        closeMenu()
         effect(MainListEffect.ShareThread(ZR.Constants.ZUMPA_THREAD_LINK.format(threadId)))
     }
 
-    fun onOfflineToggle() {
+    override fun onOfflineToggled() {
         val goingOffline = !settings.isOffline.value
         settings.setOffline(goingOffline)
         if (goingOffline) {
@@ -222,9 +245,23 @@ class MainListViewModel(
         }
     }
 
-    fun onSettingsClick() = effect(MainListEffect.OpenSettings)
+    override fun onSettingsClicked() = effect(MainListEffect.OpenSettings)
 
-    fun onFabClick() = effect(MainListEffect.OpenPostDialog)
+    override fun onFabClicked() = effect(MainListEffect.OpenPostDialog)
+
+    /** One row menu open at a time, and any action on it closes it. */
+    override fun onThreadLongPressed(threadId: String) {
+        if (!state.canInteract) return
+        openMenuId = if (openMenuId == threadId) null else threadId
+        publishRows()
+    }
+
+    private fun closeMenu() {
+        if (openMenuId != null) {
+            openMenuId = null
+            publishRows()
+        }
+    }
 
     private fun publishRows() {
         val selectedId = selectedThread.selected.value
@@ -242,6 +279,7 @@ class MainListViewModel(
                     state = rowStates[thread.id] ?: ThreadState.New,
                     isFavorite = thread.isFavorite,
                     isSelected = thread.id == selectedId,
+                    isMenuOpen = thread.id == openMenuId,
                 )
             }
         setState { copy(rows = rows) }

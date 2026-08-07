@@ -57,7 +57,7 @@ public class ZumpaSimpleParser {
     private static final SimpleDateFormat FULL_DATE_FORMAT = new SimpleDateFormat("dd. MM. yyyy HH:mm:ss");
     private static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm");
     public static final Pattern RESPONSE_PATTERN = Pattern.compile("(.+)\\s?»", Pattern.CASE_INSENSITIVE);
-    private static final Pattern URL_PATTERN2 = Pattern.compile(">?(http[s]?://[^<\"\\s]*)<?", Pattern.CASE_INSENSITIVE);
+    public static final Pattern URL_PATTERN2 = Pattern.compile(">?(http[s]?://[^<\"\\s]*)<?", Pattern.CASE_INSENSITIVE);
     private static final Pattern DATE_PATTERN = Pattern.compile("Datum:&nbsp;([^<]+)", Pattern.CASE_INSENSITIVE);
     private static Pattern SURVEY_RESPONSE_PATTERN = Pattern.compile("\\((\\d*) odp.\\)", Pattern.CASE_INSENSITIVE);
     private static Pattern ZUMPA_LINK = Pattern.compile("zunpa.cz/phorum/read.php.*t=(\\d+)", Pattern.CASE_INSENSITIVE);
@@ -650,7 +650,7 @@ public class ZumpaSimpleParser {
     }
 
     public static class SmileRes {
-        static HashMap<Integer, Pattern> DATA = new HashMap<>();
+        public static HashMap<Integer, Pattern> DATA = new HashMap<>();
 
         static {
             DATA.put(R.drawable.emoji_hm, Pattern.compile(":[-o]?[/\\\\]"));

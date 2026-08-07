@@ -91,7 +91,7 @@ class MainListViewModelTest {
         coEvery { threads.loadMainPage("9", "0") } returns page("7", thread("9"), thread("8"))
         val viewModel = viewModel()
 
-        viewModel.onLoadMore()
+        viewModel.onEndReached()
 
         assertEquals(listOf("11", "10", "9", "8"), viewModel.uiState.value.rows.map { it.id })
     }
@@ -102,7 +102,7 @@ class MainListViewModelTest {
         coEvery { threads.loadMainPage(any(), any()) } returns page("", thread("10"))
         val viewModel = viewModel()
 
-        viewModel.onLoadMore()
+        viewModel.onEndReached()
 
         coVerify(exactly = 1) { threads.loadMainPage(any(), any()) }
     }
@@ -115,7 +115,7 @@ class MainListViewModelTest {
         assertEquals(2, viewModel.uiState.value.rows.size)
 
         filter.value = "2"
-        viewModel.onRefresh()
+        viewModel.onRefreshRequested()
 
         assertEquals(listOf("6"), viewModel.uiState.value.rows.map { it.id })
     }
@@ -126,7 +126,7 @@ class MainListViewModelTest {
             page("9", thread("11"), thread("10"))
         val viewModel = viewModel()
 
-        viewModel.onIgnoreClick("10")
+        viewModel.onIgnoreClicked("10")
 
         assertEquals(listOf("11"), viewModel.uiState.value.rows.map { it.id })
         coVerify { threads.toggleIgnore("10") }
@@ -138,14 +138,14 @@ class MainListViewModelTest {
 
         viewModel(isTablet = false).run {
             effects.test {
-                onThreadClick("10")
+                onThreadClicked("10")
                 assertEquals(MainListEffect.OpenThread("10"), awaitItem())
             }
         }
 
         viewModel(isTablet = true).run {
             effects.test {
-                onThreadClick("10")
+                onThreadClicked("10")
                 expectNoEvents()
             }
         }
@@ -199,7 +199,7 @@ class MainListViewModelTest {
         val viewModel = viewModel()
         assertEquals(ThreadState.Updated, viewModel.uiState.value.rows.single().state)
 
-        viewModel.onThreadClick("10")
+        viewModel.onThreadClicked("10")
 
         assertEquals(ThreadState.None, viewModel.uiState.value.rows.single().state)
     }
