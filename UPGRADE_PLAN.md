@@ -121,7 +121,15 @@ shipped — two image loaders). `otto` is gone as of MVVM phase 6.
 
 ### D. Compose
 
-Ordered so the first screen carries the least risk:
+**The detailed per-screen plan is in [`COMPOSE_PLAN.md`](COMPOSE_PLAN.md)** — conventions, the
+Route/Screen split, previews and fixtures, and a phase per screen. Summary of the order:
+
+`SettingsActivity` is converted **last**, not first as this section originally said: every other
+screen is already MVVM, so converting them is a render-only change, while Settings is the one screen
+that needs a ViewModel invented for it. Doing it last means it is written against a Compose codebase
+that already works, and `androidx.preference` is never introduced at all.
+
+Superseded ordering, kept for the reasoning about what each step unblocks:
 
 1. **`SettingsActivity` first** — it has no ViewModel today, so there is nothing to throw away.
    `PreferenceActivity` → `ComponentActivity` + `setContent`, `res/xml/settings.xml` and
