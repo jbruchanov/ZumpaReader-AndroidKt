@@ -1,16 +1,8 @@
 package com.scurab.android.zumpareader.reader;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
-import android.graphics.drawable.Drawable;
 import android.text.Html;
-import android.text.SpannableString;
-import android.text.Spanned;
 import android.text.TextUtils;
-import android.text.style.ForegroundColorSpan;
-import android.text.style.ImageSpan;
-import android.text.style.RelativeSizeSpan;
-import android.text.style.TypefaceSpan;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -25,7 +17,6 @@ import com.scurab.android.zumpareader.model.ZumpaPushMessage;
 import com.scurab.android.zumpareader.model.ZumpaThread;
 import com.scurab.android.zumpareader.model.ZumpaThreadItem;
 import com.scurab.android.zumpareader.model.ZumpaThreadResult;
-import com.scurab.android.zumpareader.util.ExtensionMethodsKt;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -61,7 +52,6 @@ public class ZumpaSimpleParser {
     private static final Pattern DATE_PATTERN = Pattern.compile("Datum:&nbsp;([^<]+)", Pattern.CASE_INSENSITIVE);
     private static Pattern SURVEY_RESPONSE_PATTERN = Pattern.compile("\\((\\d*) odp.\\)", Pattern.CASE_INSENSITIVE);
     private static Pattern ZUMPA_LINK = Pattern.compile("zunpa.cz/phorum/read.php.*t=(\\d+)", Pattern.CASE_INSENSITIVE);
-    private static Pattern IMG_OBJECT = Pattern.compile("<img.*src=\"([^\"]*)\"", Pattern.CASE_INSENSITIVE);
     private static Pattern USER_ID_PATTERN = Pattern.compile("profile.php\\?uid=([a-z0-9]*)'", Pattern.CASE_INSENSITIVE);
     private String mUserName;
 
@@ -504,75 +494,6 @@ public class ZumpaSimpleParser {
             }
         }
         return 0;
-    }
-
-    public static CharSequence parseBody(String body, Context context) {
-        return parseBody(body, context, ImageSpan.ALIGN_BOTTOM);
-    }
-
-    public static CharSequence parseBody(String body, Context context, int iconAlign) {
-        SpannableString ssb = new SpannableString(body.replaceAll(HTMLTags.NBSP_CHAR_STR, " "));
-        Matcher matcher = URL_PATTERN2.matcher(body);
-        List<Pair<Integer, Integer>> links = new ArrayList<>();
-        while (matcher.find()) {
-            int start = matcher.start();
-            int end = matcher.end();
-            links.add(new Pair<>(start, end));
-            setSpans(ssb, start, end,
-                    new RelativeSizeSpan(0.5f),
-                    new TypefaceSpan("monospace"));
-        }
-        //smileys
-        for (Integer drawable : SmileRes.DATA.keySet()) {
-            Pattern pattern = SmileRes.DATA.get(drawable);
-            matcher = pattern.matcher(body);
-            while (matcher.find()
-) {
-                int start = matcher.start();
-                int end = matcher.end();
-                if (!ignore(links, start)) {
-                    Drawable draw = context.getResources().getDrawable(drawable);
-                    final float v = 1.85f;
-                    draw.setBounds(0, 0, (int) (draw.getIntrinsicWidth() / v), (int) (draw.getIntrinsicHeight() / v));
-                    setSpans(ssb, start, end,
-                            new ImageSpan(draw, iconAlign));
-                }
-            }
-        }
-
-        //some weird issue in http://portal2.dkm.cz/phorum/read.php?f=2&i=2013474&t=2013474, where the text has 65k of ?s and `responses.find()` blocks for long
-        if (body.length() > 20000) {
-            return ssb;
-        }
-
-        Matcher responses = RESPONSE_PATTERN.matcher(body);
-        int color = ExtensionMethodsKt.obtainStyledColor(context, R.attr.contextColorText2);
-        while (responses.find()) {
-            setSpans(ssb, responses.start(1), responses.end(1), new ForegroundColorSpan(color));
-        }
-        return ssb;
-    }
-
-    private static boolean ignore(List<Pair<Integer, Integer>> pairs, int value) {
-        for (Pair<Integer, Integer> p : pairs) {
-            if (p.first <= value && value <= p.second) {
-                return true;
-            } else if (p.first > value) {
-                break;
-            }
-        }
-        return false;
-    }
-
-    private static void setSpans(SpannableString ssb, int start, int end, Object... spannables) {
-        for (Object spannable : spannables) {
-            ssb.setSpan(spannable, start, end, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
-        }
-    }
-
-    @Nullable
-    public static String tryParseImage(String content) {
-        return (content != null) ? getGroup(IMG_OBJECT, content, 1, null) : null;
     }
 
     @Nullable

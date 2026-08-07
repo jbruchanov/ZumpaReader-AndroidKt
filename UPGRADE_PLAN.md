@@ -7,8 +7,7 @@ screen is MVVM and Compose**, Coil is the only image loader, and navigation is *
 single activity with no fragments**. How it is built now: [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 Verified: `clean :app:assembleDebug :app:assembleRelease`, `lintVitalRelease` and `lintDebug` clean,
-70 unit tests, and a smoke test on an emulator (§A). **§E's two backend bugs are now the head of the
-queue** — they were parked until Compose landed, and it has.
+82 unit tests, and a smoke test on an emulator (§A). §E is empty: both backend bugs are fixed.
 
 ---
 
@@ -225,21 +224,29 @@ Things to try, cheapest first:
 
 Needs a device (§A).
 
-#### Backend-facing — ⏭ **next up**
+#### ~~Backend-facing~~ → **both fixed**
 
-Not caused by the MVVM work. Both are in the request path and were parked until the post/send flow
-was state-driven, which it now is. Nothing else is blocking them.
+Neither was caused by the MVVM work; both were parked until the post/send flow was state-driven.
 
-1. **The cookie grows until the backend rejects the request.** `ZumpaPrefs.cookies` is a
-   `Set<String>` only ever replaced wholesale on login (`ParseUtils.extractCookies`), and
-   `cookiesMap` hands the whole set to `JavaNetCookieJar` on every request. It needs trimming
-   automatically — drop expired and duplicate-name cookies before building the header, rather than
-   leaving the user to log out and back in.
-2. **Message text is not encoded/escaped properly on send.** `ZumpaThreadBody.toHttpPostString`
-   hand-builds the form body with `String.encodeHttp()` (`URLEncoder.encode(this, ENCODING)`, the
-   forum's legacy charset). Characters outside that charset — emoji above all — are silently dropped
-   by the backend. Either encode so the forum accepts them, or reject them in the UI before sending
-   rather than having them disappear after.
+1. ~~**The cookie grows until the backend rejects the request.**~~ The growth is in the in-memory
+   `java.net.CookieManager`, not in `ZumpaPrefs` — it keeps every `Set-Cookie` the forum sends and
+   expires nothing, so the header eventually outgrows what the backend accepts and it answers
+   **502** to everything.
+
+   `repository/CookieRepository.reset()` drops the jar and rebuilds it from the login cookies in
+   `ZumpaPrefs`, which are the only ones that matter, and `data/OversizedCookieInterceptor` calls it
+   on a 502 and re-sends the request once. **The user stays logged in** — the workaround until now
+   was logging out and back in by hand. It has to be an *application* interceptor: okhttp's
+   `BridgeInterceptor` writes the `Cookie` header below those, so the retry picks up the reset jar.
+   The same `reset()` is the initial prime and what `AuthRepository.applyCredentials()` calls, so
+   there is one code path instead of three.
+
+2. ~~**Message text is not encoded/escaped properly on send.**~~ `URLEncoder` turns anything
+   ISO-8859-2 cannot represent into a literal `?`, which is why emoji arrived as question marks.
+   A browser does not do that: on a page whose charset cannot encode a character it substitutes an
+   **HTML numeric character reference** (`&#128512;`), which the forum stores and renders back as
+   the character. `util/HttpEncoding.kt` now does the same, iterating by code point so a surrogate
+   pair becomes one reference. Eight tests pin it.
 
 ### F. Smaller leftovers
 
@@ -250,8 +257,10 @@ was state-driven, which it now is. Nothing else is blocking them.
   It matters most for `PostScreen` (a half-written post), the sub list's title, and the main list's
   paging position. `rememberViewModelStoreNavEntryDecorator` already gives every entry a
   `SavedStateRegistry`, so wiring it is now just adding the dependency and the constructor argument.
-* **`SpannedTextRenderer` is dead code.** Nothing has used it since the last RecyclerView went.
-  Deleting it leaves `ZumpaTextRenderer<T>` with a single implementation, so the interface probably
-  goes with it.
+* ~~**`SpannedTextRenderer` is dead code.**~~ → deleted, along with the `ZumpaTextRenderer<T>`
+  interface it was the second half of, `ZumpaSimpleParser.parseBody` and the span machinery under
+  it. Part of the dead-code sweep, which also took `FotoDiskProvider`, `DelayClickListener`,
+  `SimpleProgressDrawable`, `collectWhileStarted`, most of `ext/` and `ExtensionMethods.kt`, and 68
+  unused resources including the whole `values-v21` folder.
 * Bump `versionCode` / `versionName` in `app/build.gradle` before releasing.
 * ~~9 lint errors~~, ~~`GCMReceiver`~~, ~~no test source set~~ → done, see the table above.

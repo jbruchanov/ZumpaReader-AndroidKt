@@ -35,18 +35,15 @@ collecting while the screen is stopped; the lifecycle-aware one preserves the
 and keeps running when the screen stops; only the *collection* pauses. That is why no screen needs
 the old `onPause { isLoading = false }` workaround.
 
-`arch/LifecycleExt.kt`'s `collectWhileStarted` is the same thing for a non-Compose owner. Nothing
-uses it since the fragments went; it is kept because it is the View-side half of the contract.
-
 ## Packages
 
 ```
 com.scurab.android.zumpareader
-├── arch/         BaseViewModel, UiEffect, collectWhileStarted, DeviceConfig
+├── arch/         BaseViewModel, UiEffect, DeviceConfig
 ├── repository/   the single owners of shared state, + AppEventBus, SelectedThreadStore
-├── text/         ZumpaTextRenderer<T> and its AnnotatedString implementation
+├── text/         AnnotatedTextRenderer - markup to AnnotatedString
 ├── usecase/      OfflineDownloadUseCase, CreateNotificationChannelsUseCase
-├── data/ model/ util/ ext/   retrofit converters, parser output, helpers
+├── data/ model/ util/ ext/   retrofit converters, interceptors, parser output, helpers
 ├── test/         preview fixtures and mock() — in src/main on purpose, see Previews
 └── ui/
     ├── compose/  Navigator, AppTheme, ImageLoader, TextRenderer, RowBackground
@@ -239,6 +236,7 @@ before the migration this was two `TreeMap`s on the `Application` that eight cal
 | `ZumpaReadStateRepository` | how much of each thread has been seen, plus its persistence |
 | `OfflineDataRepository` | the offline snapshot on disk and the api that serves it |
 | `AuthRepository` | login, logout, push registration, re-priming the parser and cookie jar |
+| `CookieRepository` | what is in the cookie jar, and throwing away what the forum accumulated in it |
 | `ImageCacheRepository` / `ImageUploadRepository` | Coil cache reads, fotodisk uploads |
 
 ### ⚠ The one rule that will bite you
@@ -264,18 +262,33 @@ otto's two uses were split by what they actually were:
 * **`AppEventBus`** — a `SharedFlow<AppEvent>` for genuine one-shots (`OfflineDataChanged`,
   `ContentPosted`). Anything a screen needs the *current value* of belongs on a repository instead.
 
+## Talking to the forum
+
+The forum is a legacy PHP site: **ISO-8859-2**, a 302 for a successful post, and a cookie jar it
+never prunes. Three pieces deal with that, and each is the only place that does.
+
+* **`util/HttpEncoding.kt`** — `String.encodeHttp()`. `URLEncoder` turns anything the charset cannot
+  represent into a literal `?`, which is how emoji used to disappear. A browser substitutes an HTML
+  numeric character reference (`&#128512;`) instead, and so does this, iterating by code point so a
+  surrogate pair becomes one reference rather than two broken halves.
+* **`CookieRepository` + `data/OversizedCookieInterceptor`** — `java.net.CookieManager` accumulates
+  every `Set-Cookie` and expires nothing, so the header eventually outgrows what the backend accepts
+  and it answers 502 to everything. On a 502 the jar is dropped, rebuilt from the login cookies in
+  `ZumpaPrefs` and the request re-sent once; the user stays logged in. It is an **application**
+  interceptor because okhttp's `BridgeInterceptor` writes the `Cookie` header below those.
+* **`util/Calls.kt`** — `ignoringZumpaRedirect {}` (a 302 is a successful post) and `retrying {}`.
+  Only `ZumpaThreadRepository` uses them, so they are written once.
+
 ## Text rendering
 
-`ZumpaSimpleParser.parseBody` resolves colours off the **theme**, so rendering cannot live in a
-ViewModel. `text/ZumpaTextRenderer<T>` is the seam: UiState carries **raw markup strings** and the
-screen renders them.
+UiState carries **raw markup strings**; the screen renders them with `AnnotatedTextRenderer`
+(→ `AnnotatedString` + `InlineTextContent` for the smileys), built from theme colours by
+`rememberAnnotatedTextRenderer()`. It owns the `LruCache`, which is why the model classes carry no
+`styledBody`/`styledAuthor` fields.
 
-`AnnotatedTextRenderer` (→ `AnnotatedString` + `InlineTextContent` for the smileys) is the
-implementation; `rememberAnnotatedTextRenderer()` builds it from theme colours. The renderer owns
-the `LruCache`, which is why the model classes carry no `styledBody`/`styledAuthor` fields.
-
-`SpannedTextRenderer` (→ `CharSequence`) is the View implementation and is **dead** — nothing has
-referenced it since the last RecyclerView went.
+It is a port of `ZumpaSimpleParser.parseBody`, which is gone along with the `ZumpaTextRenderer<T>`
+interface and its `Spanned` implementation. That is what made rendering theme-free: `parseBody`
+resolved colours off a **themed Context**, which is why rendering could never live in a ViewModel.
 
 ## Images
 
@@ -315,8 +328,9 @@ crashes at first composition.
 
 ## Testing
 
-`app/src/test` — junit5, mockk, turbine, koin-test. 70 tests: the ViewModels' state machines, the
-repository's offline switching, the text renderer, and `ModulesTest` verifying the Koin graph.
+`app/src/test` — junit5, mockk, turbine, koin-test. 82 tests: the ViewModels' state machines, the
+repository's offline switching, the text renderer, the form encoding, the cookie interceptor, and
+`ModulesTest` verifying the Koin graph.
 
 ViewModel tests set `Dispatchers.setMain(UnconfinedTestDispatcher())` and assert on
 `uiState.value` / `effects` via turbine. Anything reaching `android.net.Uri` is a stub in a JVM
