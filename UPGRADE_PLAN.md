@@ -92,7 +92,7 @@ Not Jetifier-related, also kept and still dead upstream: `otto` (deprecated 2015
 
 ### D. MVVM â€” what the Koin step prepared, and what each screen still needs
 
-**Done — phases 0–8, see [`MVVM_PLAN.md`](MVVM_PLAN.md)** for the plan, the decisions behind it and
+**Done â€” phases 0â€“8, see [`MVVM_PLAN.md`](MVVM_PLAN.md)** for the plan, the decisions behind it and
 the remaining Compose phase. What follows is the summary of the starting conditions it was written
 against, kept for context.
 
