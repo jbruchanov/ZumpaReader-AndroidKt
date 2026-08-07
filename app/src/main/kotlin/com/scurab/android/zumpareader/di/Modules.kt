@@ -5,6 +5,7 @@ import com.scurab.android.zumpareader.BuildConfig
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZR
 import com.scurab.android.zumpareader.ZumpaAPI
+import com.scurab.android.zumpareader.app.MainViewModel
 import com.scurab.android.zumpareader.arch.DeviceConfig
 import com.scurab.android.zumpareader.ZumpaOfflineApi
 import com.scurab.android.zumpareader.ZumpaPHPAPI
@@ -23,6 +24,7 @@ import okhttp3.JavaNetCookieJar
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.android.ext.koin.androidContext
+import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import retrofit2.Retrofit
@@ -115,6 +117,7 @@ val networkModule = module {
  * from `org.koin.androidx.viewmodel.ext.android`.
  */
 val viewModelModule = module {
+    viewModel { MainViewModel(get()) }
 }
 
 val appModules = listOf(coreModule, networkModule, viewModelModule)
