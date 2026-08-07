@@ -4,6 +4,7 @@
 
 android-base = ["androidx-core-ktx", "androidx-annotation", "google-material"]
 android-lifecycle = ["androidx-lifecycle-runtime", "androidx-lifecycle-viewmodel"]
+compose = ["androidx-compose-ui", "androidx-compose-ui-graphics", "androidx-compose-ui-tooling-preview", "androidx-compose-foundation", "androidx-compose-material3", "androidx-activity-compose", "androidx-lifecycle-runtime-compose", "androidx-lifecycle-viewmodel-compose", "koin-androidx-compose"]
 coroutines = ["kotlinx-coroutines-core", "kotlinx-coroutines-android"]
 firebase = ["firebase-crashlytics", "firebase-messaging"]
 fresco = ["fresco-base", "fresco-animated-gif", "fresco-middleware"]
@@ -17,6 +18,7 @@ test = ["junit-jupiter", "mockk", "turbine", "kotlinx-coroutines-test", "koin-te
 android-application = { id = "com.android.application", version.ref = "android-gradle-plugin" }
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebase-plugin-crashlytics" }
 jetbrains-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+jetbrains-compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 google-services = { id = "com.google.gms.google-services", version.ref = "google-services" }
 
 [versions]
@@ -32,9 +34,13 @@ android-gradle-plugin = "8.13.2"
 kotson = "2.5.0"
 picasso = "2.8"
 
+androidx-activity-compose = "1.13.0"
 androidx-annotation = "1.10.0"
+androidx-compose-bom = "2026.06.01"
 androidx-core-ktx = "1.18.0"
 androidx-lifecycle = "2.11.0"
+#the compose artifacts of 2.11 demand AGP 9.1 + compileSdk 37, which Jetifier blocks - see UPGRADE_PLAN C
+androidx-lifecycle-compose = "2.10.0"
 firebase-bom = "34.17.0"
 firebase-plugin-crashlytics = "3.0.7"
 google-services = "4.5.0"
@@ -58,6 +64,17 @@ androidx-annotation = { module = "androidx.annotation:annotation", version.ref =
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidx-core-ktx" }
 androidx-lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "androidx-lifecycle" }
+androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle-compose" }
+androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle-compose" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity-compose" }
+androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "androidx-compose-bom" }
+#compose artifact versions are managed by the bom
+androidx-compose-foundation = { module = "androidx.compose.foundation:foundation" }
+androidx-compose-material3 = { module = "androidx.compose.material3:material3" }
+androidx-compose-ui = { module = "androidx.compose.ui:ui" }
+androidx-compose-ui-graphics = { module = "androidx.compose.ui:ui-graphics" }
+androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
+androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 #versions of firebase libraries are managed by the bom
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
@@ -72,6 +89,7 @@ koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin" }
 #koin versions are managed by the bom
 koin-android = { module = "io.insert-koin:koin-android" }
 koin-core = { module = "io.insert-koin:koin-core" }
+koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose" }
 koin-test = { module = "io.insert-koin:koin-test" }
 koin-test-junit5 = { module = "io.insert-koin:koin-test-junit5" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
