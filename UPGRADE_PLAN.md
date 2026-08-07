@@ -139,7 +139,51 @@ Ordered so the first screen carries the least risk:
 While in there: `ProgressDialog` → an inline overlay, and `ToggleAdapter`'s open state into UiState
 (see the exceptions in `ARCHITECTURE.md`).
 
-### E. Backend-facing bugs — after Compose
+### E. Known bugs
+
+#### E1. An image vanishes from the thread list after viewing it full screen
+
+Tap an image in a thread → it opens full screen and zooms fine → navigate back → **the image is
+gone from the list**. Reported from real use; not yet reproduced on a device here.
+
+What the code says, without having run it:
+
+* The shared element is set up in `SubListFragment.onItemClick(url, longClick, view)` with the
+  three-argument `makeSceneTransitionAnimation(activity, view, "transition_image")`, which assigns
+  the transition name to the clicked view for the duration of the transition. Only
+  `activity_image.xml` declares `transitionName` in a layout; `item_sub_list_image.xml` does not.
+* For an image row the clicked `view` is the whole `item_content` FrameLayout, not the
+  `SimpleDraweeView` inside it — see the `TYPE_IMAGE` branch of `SubListAdapter.onCreateViewHolder`.
+* The framework sets the source view **`INVISIBLE`** for the duration and restores it when the
+  *return* transition completes. In a RecyclerView the row can be recycled or rebound in the
+  meantime, so the restore can land on a different view or never run — which is exactly "the row is
+  still there but empty".
+* Nothing puts it back: `ZumpaSubItemViewHolder.loadImage` early-returns when `url == loadedUrl`,
+  so a rebind does not reset the drawee, and no code sets `visibility = VISIBLE` on bind.
+* `ImageActivity`'s `Failed` path calls `finish()` rather than `supportFinishAfterTransition()`,
+  which skips the return transition outright.
+
+**Phase 7 may have made it more likely, so check this before blaming it on the old code.** The
+bitmap now always loads asynchronously on `Dispatchers.IO`; the previous implementation hit the
+fresco *bitmap memory cache* synchronously through `CallerThreadExecutor`, so the image was
+frequently already set before the enter transition ran. `ImageActivity` never calls
+`supportPostponeEnterTransition()`, so the transition now starts against an empty `ImageView`.
+
+Things to try, cheapest first:
+
+1. `supportPostponeEnterTransition()` in `ImageActivity.onCreate`, `startPostponedEnterTransition()`
+   when `ImageUiState.Loaded` arrives.
+2. `setExitSharedElementCallback` on the fragment, remapping the name to whichever view holder
+   currently shows that url — the standard RecyclerView shared-element recipe, and the part that is
+   missing here.
+3. `supportFinishAfterTransition()` on the `Failed` path.
+4. Belt and braces: force `visibility = VISIBLE` when binding an image row.
+5. If it stays flaky, drop the shared element for image rows entirely. A plain fade costs little and
+   this transition has never had the callback machinery it needs.
+
+Needs a device (§A).
+
+#### Backend-facing — after Compose
 
 Not caused by the MVVM work. Both are in the request path and are cheapest to fix once the post/send
 flow is already state-driven.
