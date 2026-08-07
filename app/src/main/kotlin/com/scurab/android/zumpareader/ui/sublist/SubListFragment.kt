@@ -10,7 +10,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
-import androidx.core.app.ActivityOptionsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
@@ -324,11 +323,9 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
         when {
             threadId != 0 -> viewModel.onThreadLinkClick(threadId.toString())
             url.looksLikeImageUrl() -> {
+                //no shared element - see UPGRADE_PLAN.md E1
                 val activity = requireActivity()
-                val bundle = ActivityOptionsCompat
-                    .makeSceneTransitionAnimation(activity, view, getString(R.string.transition_image))
-                    .toBundle()
-                startActivity(ImageActivity.createIntent(activity, url), bundle)
+                startActivity(ImageActivity.createIntent(activity, url))
             }
 
             else -> context.startLinkActivity(url)

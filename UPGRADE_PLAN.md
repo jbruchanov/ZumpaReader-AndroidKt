@@ -99,13 +99,13 @@ In order of risk:
 
 ### B. The dependencies kept on purpose
 
-Two support-library users remain, so **`android.enableJetifier=true` has to stay**:
+**`swipy` is now the only thing keeping `android.enableJetifier=true`.**
 
 * `swipy` 1.2.3 (support 23.1.1, 2016) — its pull-to-refresh side is configurable and the thread
-  screen uses the bottom direction, which `androidx.swiperefreshlayout` cannot do. Replaceable only
-  in §D step 5.
-* `pinchtozoom` 0.1 (support 25.3.1, 2017) — with swipy staying, dropping it would not remove
-  Jetifier anyway, and vendoring it means untested gesture code.
+  screen uses the bottom direction, which `androidx.swiperefreshlayout` cannot do. Goes in Compose
+  phase C6, which hand-writes the bottom pull.
+* ~~`pinchtozoom` 0.1~~ → removed in Compose phase C1; the zoomable viewer is now
+  `graphicsLayer` + `detectTransformGestures`.
 
 Also kept and still dead upstream: `kotson` (2019), `picasso` (2022, while **Fresco** is also
 shipped — two image loaders). `otto` is gone as of MVVM phase 6.

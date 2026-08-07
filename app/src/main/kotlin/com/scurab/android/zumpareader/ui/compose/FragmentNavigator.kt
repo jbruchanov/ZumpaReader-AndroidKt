@@ -76,7 +76,14 @@ class ActivityNavigator(private val activity: ComponentActivity) : Navigator {
 
     override fun openLink(url: String) = activity.startLinkActivity(url)
 
-    override fun back() = activity.onBackPressedDispatcher.onBackPressed()
+    /**
+     * `finish()`, not `onBackPressedDispatcher.onBackPressed()`: a screen that installs a
+     * `BackHandler` and answers it by calling [back] would otherwise dispatch straight back into
+     * its own handler.
+     */
+    override fun back() {
+        activity.finish()
+    }
 
     override fun openThread(threadId: String) = unsupported("openThread")
 
