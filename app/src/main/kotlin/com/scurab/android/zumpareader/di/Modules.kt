@@ -9,11 +9,13 @@ import com.scurab.android.zumpareader.ZumpaOfflineApi
 import com.scurab.android.zumpareader.ZumpaPHPAPI
 import com.scurab.android.zumpareader.ZumpaWSAPI
 import com.scurab.android.zumpareader.arch.DeviceConfig
+import com.scurab.android.zumpareader.data.OversizedCookieInterceptor
 import com.scurab.android.zumpareader.data.ZumpaConverterFactory
 import com.scurab.android.zumpareader.data.ZumpaGenericConverterFactory
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.repository.AppEventBus
 import com.scurab.android.zumpareader.repository.AuthRepository
+import com.scurab.android.zumpareader.repository.CookieRepository
 import com.scurab.android.zumpareader.repository.ImageCacheRepository
 import com.scurab.android.zumpareader.ui.compose.buildImageLoader
 import com.scurab.android.zumpareader.repository.ImageUploadRepository
@@ -78,6 +80,7 @@ val coreModule = module {
     single { OfflineDownloadUseCase(get(), androidContext(), get()) }
     single { ImageCacheRepository(androidContext(), get()) }
     single { buildImageLoader(androidContext(), get()) }
+    single { CookieRepository(get(), get()) }
     single { AuthRepository(get(ONLINE_API), get(), get(), get(), get()) }
     single<NotificationState> { AndroidNotificationState(androidContext()) }
 
@@ -151,9 +154,9 @@ val viewModelModule = module {
 
 val appModules = listOf(coreModule, networkModule, viewModelModule)
 
-private fun buildHttpClient(cookieManager: CookieManager, zumpaPrefs: ZumpaPrefs): OkHttpClient {
+private fun buildHttpClient(cookieManager: CookieManager, cookies: CookieRepository): OkHttpClient {
     cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL)
-    cookieManager.put(URI.create(ZR.Constants.ZUMPA_MAIN_URL), zumpaPrefs.cookiesMap)
+    cookies.reset()
 
     val logging = HttpLoggingInterceptor()
     // set your desired log level
@@ -166,6 +169,8 @@ private fun buildHttpClient(cookieManager: CookieManager, zumpaPrefs: ZumpaPrefs
         readTimeout(TIMEOUT * 5, TimeUnit.MILLISECONDS)
         writeTimeout(TIMEOUT * 5, TimeUnit.MILLISECONDS)
         cookieJar(JavaNetCookieJar(cookieManager))
+        //application interceptor on purpose, see the class - it has to run above the cookie jar
+        addInterceptor(OversizedCookieInterceptor(cookies))
         addNetworkInterceptor { chain ->
             val req = chain.request()
             val rb = req

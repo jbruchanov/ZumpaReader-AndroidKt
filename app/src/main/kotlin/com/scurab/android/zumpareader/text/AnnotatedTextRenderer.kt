@@ -34,27 +34,32 @@ data class RenderedText(
 }
 
 /**
- * The compose implementation of [ZumpaTextRenderer], and the reason that interface exists.
+ * The single place that turns zumpa's markup into something renderable.
  *
  * A port of `ZumpaSimpleParser.parseBody`, reusing its patterns so the two cannot drift: urls get
  * the same half-size monospace treatment, quoted responses the same colour, and the smiley table is
  * the parser's own. Unlike the Spanned version it needs no themed Context - the colours are handed
  * in from [com.scurab.android.zumpareader.ui.compose.theme.AppTheme] and the drawables are resolved
- * by `painterResource` inside the inline content, at draw time.
+ * by `painterResource` inside the inline content, at draw time - unlike the `Spanned` renderer this
+ * replaced, which needed a themed Context and so could never live in a ViewModel.
  */
 class AnnotatedTextRenderer(
     private val responseColor: Color,
     private val ratingGoodColor: Color,
     private val ratingBadColor: Color,
-) : ZumpaTextRenderer<RenderedText> {
+) {
 
-    override fun body(markup: String): RenderedText = render(markup)
+    /** A message body, with smileys, links and quoted-response highlighting. */
+    fun body(markup: String): RenderedText = render(markup)
 
-    override fun subject(markup: String): RenderedText = render(markup)
+    /** A thread subject as it appears in a list row. */
+    fun subject(markup: String): RenderedText = render(markup)
 
-    override fun title(markup: String): RenderedText = render(markup)
+    /** A thread subject as it appears in the toolbar. */
+    fun title(markup: String): RenderedText = render(markup)
 
-    override fun author(name: String, rating: String?): RenderedText {
+    /** An author name with the optional `+3` / `-2` rating appended in the rating colour. */
+    fun author(name: String, rating: String?): RenderedText {
         if (rating.isNullOrEmpty()) {
             return RenderedText(AnnotatedString(name), emptyMap())
         }
