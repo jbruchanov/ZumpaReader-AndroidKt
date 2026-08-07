@@ -9,8 +9,8 @@ import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.TextView
 import com.scurab.android.zumpareader.R
-import com.scurab.android.zumpareader.model.Survey
-import com.scurab.android.zumpareader.model.SurveyItem
+import com.scurab.android.zumpareader.content.SurveyItemUiState
+import com.scurab.android.zumpareader.content.SurveyUiState
 
 
 /**
@@ -19,7 +19,7 @@ import com.scurab.android.zumpareader.model.SurveyItem
 class SurveyView : FrameLayout {
 
     interface ItemClickListener {
-        fun onItemClick(item: SurveyItem)
+        fun onItemClick(item: SurveyItemUiState)
     }
 
     private val content by lazy { findViewById<ViewGroup>(R.id.content) }
@@ -30,8 +30,8 @@ class SurveyView : FrameLayout {
     private val clickListenerInner: ((View) -> Unit) = { v -> dispatchButtonClick(v) }
     var surveyItemClickListener: ItemClickListener? = null
 
-    private var _survey: Survey? = null
-    var survey: Survey?
+    private var _survey: SurveyUiState? = null
+    var survey: SurveyUiState?
         get() = _survey
         set(value) {
             _survey = value
@@ -55,7 +55,7 @@ class SurveyView : FrameLayout {
     }
 
     private fun dispatchButtonClick(v: View) {
-        surveyItemClickListener?.onItemClick(v.tag as SurveyItem)
+        surveyItemClickListener?.onItemClick(v.tag as SurveyItemUiState)
     }
 
     protected fun onUpdateUI() {

@@ -15,123 +15,119 @@ import com.facebook.drawee.controller.BaseControllerListener
 import com.facebook.drawee.view.SimpleDraweeView
 import com.facebook.imagepipeline.image.ImageInfo
 import com.scurab.android.zumpareader.R
-import com.scurab.android.zumpareader.model.SurveyItem
-import com.scurab.android.zumpareader.model.ZumpaThreadItem
 import com.scurab.android.zumpareader.util.findViewById
-import com.scurab.android.zumpareader.util.isImageUri
 import com.scurab.android.zumpareader.util.scaledImageRequest
 import com.scurab.android.zumpareader.widget.SurveyView
 import com.scurab.android.zumpareader.widget.ToggleAdapter
 import com.scurab.android.zumpareader.widget.ToggleViewHolder
-import java.text.SimpleDateFormat
-import java.util.*
 
 /**
  * Created by JBruchanov on 27/11/2015.
+ *
+ * Takes a whole rendered list per emission. The flattening of a message into its message/link/
+ * image/survey rows moved to [SubListViewModel] - the adapter only picks a view type and binds.
  */
-class SubListAdapter : ToggleAdapter<ZumpaSubItemViewHolder> {
+class SubListAdapter : ToggleAdapter<ZumpaSubItemViewHolder>() {
 
     interface ItemClickListener {
-        fun onItemClick(position: Int, item: ZumpaThreadItem, longClick: Boolean, view: View)
+        fun onItemClick(position: Int, item: RenderedSubListRow.Message, longClick: Boolean, view: View)
         fun onItemClick(url: String, longClick: Boolean, view: View)
-        fun onMenuItemClick(position: Int, item: ZumpaThreadItem, type: Int)
+        fun onMenuItemClick(position: Int, item: RenderedSubListRow.Message, type: Int)
     }
 
     companion object {
-        val tReply = 1
-        val tCopy = 2
-        val tSpeak = 3
+        const val tReply = 1
+        const val tCopy = 2
+        const val tSpeak = 3
+
+        private const val TYPE_ITEM = 1
+        private const val TYPE_IMAGE = 2
+        private const val TYPE_URL = 3
+        private const val TYPE_SURVEY = 4
     }
 
-    private val TYPE_ITEM = 1
-    private val TYPE_IMAGE = 2
-    private val TYPE_URL = 3
-    private val TYPE_SURVEY = 4
+    var items: List<RenderedSubListRow> = emptyList()
+        private set
 
-    private val dateFormat = SimpleDateFormat("HH:mm.ss", Locale.US)
-    private val items: ArrayList<ZumpaThreadItem>
-    private val dataItems: ArrayList<SubListItem>
     var itemClickListener: ItemClickListener? = null
-    var loadImages: Boolean
     var surveyClickListner: SurveyView.ItemClickListener? = null
 
     @ColorInt
     private var contextColor: Int = 0
 
-    constructor(data: List<ZumpaThreadItem>, loadImages: Boolean = true) {
-        items = ArrayList(data)
-        this.loadImages = loadImages
-        dataItems = ArrayList((items.size * 1.3/*some bigger values for links etc*/).toInt())
-        buildAdapterItems(items, dataItems)
-    }
+    /**
+     * New answers arrive at the end, which is the case worth keeping cheap: a plain
+     * notifyDataSetChanged there would drop the insert animation and disturb the scroll position
+     * of someone reading the thread. A survey vote changes exactly one row. Anything else - a
+     * thread switch, a reload - is a full rebind, as it always was.
+     */
+    fun setItems(newItems: List<RenderedSubListRow>) {
+        val old = items
+        items = newItems
+        when {
+            old.isEmpty() || newItems.isEmpty() -> notifyDataSetChanged()
 
-    private fun buildAdapterItems(items: List<ZumpaThreadItem>, outDataItems: ArrayList<SubListItem>) {
-        val pos = outDataItems.lastOrNull()?.itemPosition
-        var lastIndex = if (pos != null) pos + 1 else 0//empty start with 0, otherwise with first newOne
+            newItems.size > old.size && newItems.subList(0, old.size) == old ->
+                notifyItemRangeInserted(old.size, newItems.size - old.size)
 
-        val sub = ArrayList<SubListItem>()
-        for (i in lastIndex..items.size - 1) {
-            val item = items[i]
-            outDataItems.add(SubListItem(item, i, TYPE_ITEM, null))
-            sub.clear()
-            item.urls?.let {
-                for (url in it) {
-                    val element = SubListItem(item, i, if (url.isImageUri() && loadImages) TYPE_IMAGE else TYPE_URL, url)
-                    sub.add(element)
+            newItems.size == old.size -> {
+                val changed = old.indices.filter { old[it] != newItems[it] }
+                when (changed.size) {
+                    0 -> Unit
+                    1 -> notifyItemChanged(changed.single())
+                    else -> notifyDataSetChanged()
                 }
-                sub.sortBy { it.type }
-                outDataItems.addAll(sub)
             }
-            if (i == 0 && item.survey != null) {
-                outDataItems.add(SubListItem(item, i, TYPE_SURVEY, null))
-            }
+
+            else -> notifyDataSetChanged()
         }
     }
 
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)
         (recyclerView.context as Activity).let {
-            var outTypedValue = TypedValue()
+            val outTypedValue = TypedValue()
             it.theme.resolveAttribute(R.attr.contextColor, outTypedValue, true)
             contextColor = outTypedValue.data
         }
     }
 
-    override fun getItemCount(): Int {
-        return dataItems.size
-    }
+    override fun getItemCount(): Int = items.size
 
-    override fun getItemViewType(position: Int): Int {
-        return dataItems[position].type
-    }
-
-    internal fun updateItemForUrl(position: Int) {
-        if (position >= 0 && position < dataItems.size) {
-            dataItems[position].type = TYPE_URL
-            notifyItemChanged(position)
-        }
+    override fun getItemViewType(position: Int): Int = when (items[position]) {
+        is RenderedSubListRow.Message -> TYPE_ITEM
+        is RenderedSubListRow.Image -> TYPE_IMAGE
+        is RenderedSubListRow.Link -> TYPE_URL
+        is RenderedSubListRow.Survey -> TYPE_SURVEY
     }
 
     override fun onBindViewHolder(holder: ZumpaSubItemViewHolder, position: Int) {
-        var dataItem = dataItems[position]
+        val row = items[position]
         val itemView = holder.itemView
-        holder.content.background?.apply { level = dataItem.itemPosition % 2 }
-        when (getItemViewType(position)) {
-            TYPE_ITEM -> {
-                val item = dataItem.item
-                holder.title.text = item.styledBody(itemView.context)
-                holder.author.text = item.styledAuthor(itemView.context)
-                holder.time.text = dateFormat.format(item.date)
-                holder.menu.background?.apply { level = dataItem.itemPosition % 2 }
+        holder.content.background?.apply { level = row.itemIndex % 2 }
+        when (row) {
+            is RenderedSubListRow.Message -> {
+                holder.title.text = row.body
+                holder.author.text = row.author
+                holder.time.text = row.time
+                holder.menu.background?.apply { level = row.itemIndex % 2 }
                 holder.content.translationX = 0f
             }
-            TYPE_URL -> {
-                val lastButton = (position + 1) > dataItems.size - 1 || dataItems[position + 1].type != TYPE_URL
-                itemView.setPadding(itemView.paddingLeft, itemView.paddingTop, itemView.paddingRight, if (lastButton) itemView.paddingLeft else itemView.paddingLeft / 2)
-                holder.button.text = dataItem.data
+
+            is RenderedSubListRow.Link -> {
+                val lastButton = (position + 1) > items.size - 1 ||
+                        items[position + 1] !is RenderedSubListRow.Link
+                itemView.setPadding(
+                    itemView.paddingLeft,
+                    itemView.paddingTop,
+                    itemView.paddingRight,
+                    if (lastButton) itemView.paddingLeft else itemView.paddingLeft / 2
+                )
+                holder.button.text = row.url
             }
-            TYPE_IMAGE -> holder.loadImage(dataItem.data!!)
-            TYPE_SURVEY -> holder.surveyView.survey = items[dataItem.itemPosition].survey
+
+            is RenderedSubListRow.Image -> holder.loadImage(row.url)
+            is RenderedSubListRow.Survey -> holder.surveyView.survey = row.survey
         }
         itemView.postInvalidate()
     }
@@ -141,19 +137,21 @@ class SubListAdapter : ToggleAdapter<ZumpaSubItemViewHolder> {
         return when (viewType) {
             TYPE_ITEM -> {
                 val vh = ZumpaSubItemViewHolder(this, li.inflate(R.layout.item_sub_list, parent, false))
-                vh.content.setOnClickListener { v -> dispatchClick(vh.adapterPosition, dataItems[vh.adapterPosition].item, v) }
-                vh.content.setOnLongClickListener { v -> dispatchClick(vh.adapterPosition, dataItems[vh.adapterPosition].item, v, true); true }
-                vh.menuReply.setOnClickListener { _ -> dispatchMenuItemClick(vh.adapterPosition, dataItems[vh.adapterPosition].item, tReply) }
-                vh.menuCopy.setOnClickListener { _ -> dispatchMenuItemClick(vh.adapterPosition, dataItems[vh.adapterPosition].item, tCopy) }
-                vh.menuSpeak.setOnClickListener { _ -> dispatchMenuItemClick(vh.adapterPosition, dataItems[vh.adapterPosition].item, tSpeak) }
+                vh.content.setOnClickListener { v -> vh.dispatchClick(v, longClick = false) }
+                vh.content.setOnLongClickListener { v -> vh.dispatchClick(v, longClick = true); true }
+                vh.menuReply.setOnClickListener { vh.dispatchMenuClick(tReply) }
+                vh.menuCopy.setOnClickListener { vh.dispatchMenuClick(tCopy) }
+                vh.menuSpeak.setOnClickListener { vh.dispatchMenuClick(tSpeak) }
                 vh
             }
+
             TYPE_URL -> {
                 val vh = ZumpaSubItemViewHolder(this, li.inflate(R.layout.item_sub_list_button, parent, false))
                 vh.button.setOnClickListener { v -> dispatchClick(vh.button.text.toString(), v) }
                 vh.button.setOnLongClickListener { v -> dispatchClick(vh.button.text.toString(), v, true); true }
                 vh
             }
+
             TYPE_IMAGE -> {
                 val view = li.inflate(R.layout.item_sub_list_image, parent, false)
                 val vh = ZumpaSubItemViewHolder(this, view)
@@ -161,55 +159,36 @@ class SubListAdapter : ToggleAdapter<ZumpaSubItemViewHolder> {
                 view.setOnLongClickListener { v -> vh.loadedUrl?.let { dispatchClick(it, v, true) }; true }
                 vh
             }
+
             TYPE_SURVEY -> {
                 val view = li.inflate(R.layout.item_sub_list_survey, parent, false) as SurveyView
                 view.surveyItemClickListener = object : SurveyView.ItemClickListener {
-                    override fun onItemClick(item: SurveyItem) {
+                    override fun onItemClick(item: SurveyItemUiState) {
                         surveyClickListner?.onItemClick(item)
                     }
                 }
                 ZumpaSubItemViewHolder(this, view)
             }
+
             else -> throw IllegalStateException("Invalid view type:$viewType")
         }
     }
 
-    protected fun dispatchClick(position: Int, item: ZumpaThreadItem, view: View, longClick: Boolean = false) {
-        itemClickListener?.onItemClick(position, item, longClick, view)
+    private fun ZumpaSubItemViewHolder.message(): RenderedSubListRow.Message? =
+        items.getOrNull(adapterPosition) as? RenderedSubListRow.Message
+
+    private fun ZumpaSubItemViewHolder.dispatchClick(view: View, longClick: Boolean) {
+        message()?.let { itemClickListener?.onItemClick(adapterPosition, it, longClick, view) }
     }
 
-    protected fun dispatchClick(url: String, view: View, longClick: Boolean = false) {
+    private fun ZumpaSubItemViewHolder.dispatchMenuClick(type: Int) {
+        message()?.let { itemClickListener?.onMenuItemClick(adapterPosition, it, type) }
+    }
+
+    private fun dispatchClick(url: String, view: View, longClick: Boolean = false) {
         itemClickListener?.onItemClick(url, longClick, view)
     }
-
-    protected fun dispatchMenuItemClick(position: Int, item: ZumpaThreadItem, type: Int) {
-        itemClickListener?.onMenuItemClick(position, item, type)
-    }
-
-    fun updateItems(updated: List<ZumpaThreadItem>, clearData: Boolean) {
-        if (clearData) {
-            items.clear()
-            dataItems.clear()
-        }
-        if (items.size != updated.size) {
-            val oldSize = dataItems.size
-            items.addAll(updated.subList(items.size, updated.size))
-            buildAdapterItems(items, dataItems)
-            if (clearData) {
-                notifyDataSetChanged()
-            } else {
-                notifyItemRangeInserted(oldSize, dataItems.size - oldSize)
-            }
-        } else if (items.size >= 0 && items[0].survey != null) {
-            //update survey if necessary
-            items[0].survey = updated[0].survey
-            val index = dataItems.indexOfFirst { it.type == TYPE_SURVEY }
-            notifyItemChanged(index)
-        }
-    }
 }
-
-private data class SubListItem(val item: ZumpaThreadItem, val itemPosition: Int, var type: Int, val data: String?)
 
 class ZumpaSubItemViewHolder(val adapter: SubListAdapter, val view: View) : ZumpaItemViewHolder(view), ToggleViewHolder {
     override val content by lazy { itemView.findViewById<View>(R.id.item_content) }
@@ -222,9 +201,9 @@ class ZumpaSubItemViewHolder(val adapter: SubListAdapter, val view: View) : Zump
     internal var hasFailed: Boolean = false
     internal val surveyView by lazy { view as SurveyView }
 
-    internal val menuReply by lazy {itemView.findViewById<View>(R.id.reply)}
-    internal val menuCopy by lazy {itemView.findViewById<View>(R.id.copy)}
-    internal val menuSpeak by lazy {itemView.findViewById<View>(R.id.speak)}
+    internal val menuReply by lazy { itemView.findViewById<View>(R.id.reply) }
+    internal val menuCopy by lazy { itemView.findViewById<View>(R.id.copy) }
+    internal val menuSpeak by lazy { itemView.findViewById<View>(R.id.speak) }
 
     fun loadImage(url: String) {
         if (url == loadedUrl) {

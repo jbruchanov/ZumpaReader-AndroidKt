@@ -1,13 +1,11 @@
 package com.scurab.android.zumpareader.content
 
-import android.annotation.SuppressLint
-import android.app.ProgressDialog
-import android.content.Context
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
-import android.text.ClipboardManager
-import android.text.style.ImageSpan
+import android.text.Editable
+import android.text.Spanned
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,82 +18,72 @@ import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutD
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.app.BaseFragment
 import com.scurab.android.zumpareader.app.ImageActivity
-import com.scurab.android.zumpareader.content.SubListAdapter.Companion.tReply
+import com.scurab.android.zumpareader.arch.CopyToClipboard
+import com.scurab.android.zumpareader.arch.HideKeyboard
+import com.scurab.android.zumpareader.arch.ShowToast
+import com.scurab.android.zumpareader.arch.UiEffect
 import com.scurab.android.zumpareader.content.post.PostFragment
-import com.scurab.android.zumpareader.event.LoadThreadEvent
 import com.scurab.android.zumpareader.ext.toast
-import com.scurab.android.zumpareader.extension.app
-import com.scurab.android.zumpareader.model.*
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
-import com.scurab.android.zumpareader.text.appendReply
-import com.scurab.android.zumpareader.text.containsAuthor
+import com.scurab.android.zumpareader.text.AuthorSpan
+import com.scurab.android.zumpareader.text.SpannedTextRenderer
+import com.scurab.android.zumpareader.ui.SendingDialogController
 import com.scurab.android.zumpareader.ui.hideAnimated
 import com.scurab.android.zumpareader.ui.isVisible
 import com.scurab.android.zumpareader.ui.showAnimated
-import com.scurab.android.zumpareader.util.*
+import com.scurab.android.zumpareader.util.getColorFromTheme
+import com.scurab.android.zumpareader.util.hideKeyboard
+import com.scurab.android.zumpareader.util.looksLikeImageUrl
+import com.scurab.android.zumpareader.util.obtainStyledColor
+import com.scurab.android.zumpareader.util.removeGlobalLayoutListenerSafe
+import com.scurab.android.zumpareader.util.saveToClipboard
+import com.scurab.android.zumpareader.util.startLinkActivity
 import com.scurab.android.zumpareader.widget.PostMessageView
 import com.scurab.android.zumpareader.widget.SurveyView
 import com.scurab.android.zumpareader.widget.ToggleAdapter
-import com.squareup.otto.Subscribe
-
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /**
  * Created by JBruchanov on 27/11/2015.
  */
-class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, SendingFragment, SurveyView.ItemClickListener, IsReloadable {
+class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener,
+    SurveyView.ItemClickListener, IsReloadable {
 
     companion object {
-        private val ARG_THREAD_ID: String = "ARG_THREAD_ID"
-        private val ARG_SCROLL_DOWN: String = "ARG_SCROLL_DOWN"
-        private val SCROLL_UP = -1
-        private val SCROLL_NONE = 0
-        private val SCROLL_DOWN = 1
+        private const val ARG_THREAD_ID: String = "ARG_THREAD_ID"
+        private const val ARG_SCROLL_DOWN: String = "ARG_SCROLL_DOWN"
 
         fun newInstance(threadId: String, scrollDown: Boolean = false): SubListFragment {
             return SubListFragment().apply {
-                var args = Bundle()
-                args.putString(ARG_THREAD_ID, threadId)
-                args.putBoolean(ARG_SCROLL_DOWN, scrollDown)
-                arguments = args
+                arguments = Bundle().apply {
+                    putString(ARG_THREAD_ID, threadId)
+                    putBoolean(ARG_SCROLL_DOWN, scrollDown)
+                }
             }
         }
     }
 
-    override val title: CharSequence
-        get() {
-            val subject = zumpaData[argThreadId]?.subject
-            return if (subject != null) ZumpaSimpleParser.parseBody(subject, context, ImageSpan.ALIGN_BASELINE) else getString(R.string.app_name)
-        }
+    private val viewModel: SubListViewModel by viewModel()
+    private val render by lazy { SubListRender(SpannedTextRenderer(requireContext())) }
+    private val listAdapter = SubListAdapter()
 
-    protected val argThreadId: String get() = arguments?.getString(ARG_THREAD_ID) ?: ""
-    protected val argScrollDown: Boolean get() = arguments?.getBoolean(ARG_SCROLL_DOWN) ?: false
-    private var firstLoad: Boolean = true
+    private val argThreadId: String get() = arguments?.getString(ARG_THREAD_ID) ?: ""
 
     private val recyclerView: RecyclerView? get() = view?.findViewById(R.id.recycler_view)
     private val swipyRefreshLayout: SwipyRefreshLayout? get() = view?.findViewById(R.id.swipe_refresh_layout)
     private val postMessageView: PostMessageView? get() = view?.findViewById(R.id.response_panel)
     private val contextColorText: Int by lazy { requireContext().obtainStyledColor(R.attr.contextColorText2) }
-    private val treeViewObserver: ViewTreeObserver.OnGlobalLayoutListener = ViewTreeObserver.OnGlobalLayoutListener { updateRecycleViewPadding() }
-    private lateinit var delegate: BehaviourDelegate
+    private val treeViewObserver = ViewTreeObserver.OnGlobalLayoutListener { updateRecycleViewPadding() }
+    private val sendingDialog by lazy { SendingDialogController(requireContext()) }
 
-    override var isLoading: Boolean
-        get() = super.isLoading
-        set(value) {
-            super.isLoading = value
-            progressBarVisible = value
-            swipyRefreshLayout?.let {
-                if (it.isRefreshing) {
-                    it.isRefreshing = value
-                }
-            }
-        }
+    private var renderedTitle: CharSequence = ""
+    private var isSettingDraft = false
 
-    override var sendingDialog: ProgressDialog? = null
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        delegate = if (isTablet) TabletBehaviour(this) else PhoneBehaviour(this)
-    }
+    override val title: CharSequence get() = renderedTitle
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val content = inflater.inflate(R.layout.view_recycler_refreshable_thread, container, false)
@@ -106,40 +94,187 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         recyclerView?.layoutManager = LinearLayoutManager(view.context, LinearLayoutManager.VERTICAL, false)
+        recyclerView?.adapter = listAdapter
+        listAdapter.itemClickListener = this
+        listAdapter.surveyClickListner = this
+
         swipyRefreshLayout?.apply {
             direction = SwipyRefreshLayoutDirection.BOTTOM
-            setOnRefreshListener { loadData() }
+            setOnRefreshListener { viewModel.onRefresh() }
             setColorSchemeColors(context.getColorFromTheme(R.attr.contextColor))
         }
         postMessageView?.apply {
+            visibility = View.INVISIBLE
             addButton.visibility = isTabletVisibility
-            addButton.setOnClickListener { dispatchOpenPostMessage() }
-            sendButton.setOnClickListener { dispatchSend() }
-            camera.setOnClickListener { dispatchOpenPostMessage(R.id.camera) }
-            photo.setOnClickListener { dispatchOpenPostMessage(R.id.photo) }
+            addButton.setOnClickListener { viewModel.onOpenPostFragment() }
+            sendButton.setOnClickListener { viewModel.onSend() }
+            camera.setOnClickListener { viewModel.onOpenPostFragment(R.id.camera) }
+            photo.setOnClickListener { viewModel.onOpenPostFragment(R.id.photo) }
+            message.addTextChangedListener(draftWatcher)
         }
-        delegate.onViewCreated()
-        loadData()
+
+        collectState()
+        viewModel.start(argThreadId)
     }
 
+    private fun collectState() {
+        viewModel.uiState
+            .map { it.rows }
+            .distinctUntilChanged()
+            .map { render.rows(it) }
+            .flowOn(Dispatchers.Default)
+            .collectWhileStarted { listAdapter.setItems(it) }
 
-    protected fun dispatchOpenPostMessage(flag: Int? = null) {
-        delegate.openPostFragment(flag)
+        viewModel.uiState
+            .map { it.title }
+            .distinctUntilChanged()
+            .map { if (it.isEmpty()) "" else render.titleOf(it) }
+            .flowOn(Dispatchers.Default)
+            .collectWhileStarted {
+                renderedTitle = it.ifEmpty { getString(R.string.app_name) }
+                onRefreshTitle()
+            }
+
+        viewModel.uiState
+            .map { it.isLoading }
+            .distinctUntilChanged()
+            .collectWhileStarted { isLoading ->
+                progressBarVisible = isLoading
+                swipyRefreshLayout?.let {
+                    if (it.isRefreshing != isLoading) {
+                        it.isRefreshing = isLoading
+                    }
+                }
+            }
+
+        viewModel.uiState
+            .map { it.isSending }
+            .distinctUntilChanged()
+            .collectWhileStarted { sendingDialog.update(it) }
+
+        viewModel.uiState
+            .map { it.isPostPanelVisible }
+            .distinctUntilChanged()
+            .collectWhileStarted { renderPostPanel(it) }
+
+        viewModel.uiState
+            .map { it.draft }
+            .distinctUntilChanged()
+            .collectWhileStarted { renderDraft(it) }
+
+        viewModel.effects.collectWhileStarted { onEffect(it) }
+    }
+
+    private fun renderPostPanel(isVisible: Boolean) {
+        val panel = postMessageView ?: return
+        if (isVisible && !panel.isVisible()) {
+            panel.showAnimated()
+            mainActivity?.hideFloatingButton()
+        } else if (!isVisible && panel.isVisible()) {
+            panel.hideAnimated()
+            mainActivity?.showFloatingButton()
+        }
+    }
+
+    /**
+     * Only writes when the model and the widget actually disagree - otherwise every keystroke would
+     * come back as a setText and fight the cursor. The reply headers get their colour back here,
+     * which is the styling half of what AuthorSpan used to do.
+     */
+    private fun renderDraft(draft: DraftUiState) {
+        val editText = postMessageView?.message ?: return
+        if (editText.text.toString() == draft.text) {
+            return
+        }
+        isSettingDraft = true
+        editText.setText(draft.text)
+        var start = 0
+        draft.headers.forEach { header ->
+            editText.text.setSpan(
+                AuthorSpan(contextColorText),
+                start,
+                start + header.length,
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            start += header.length
+        }
+        editText.setSelection(editText.length())
+        isSettingDraft = false
+    }
+
+    private val draftWatcher = object : TextWatcher {
+        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+        override fun afterTextChanged(s: Editable?) {
+            if (!isSettingDraft) {
+                viewModel.onDraftChanged(s?.toString() ?: "")
+            }
+        }
+    }
+
+    private fun onEffect(effect: UiEffect) {
+        when (effect) {
+            is SubListEffect.ScrollToBottom ->
+                recyclerView?.let { it.smoothScrollToPosition(it.adapter?.itemCount ?: 0) }
+
+            is SubListEffect.ScrollToTop ->
+                recyclerView?.let { it.smoothScrollBy(0, -2 * it.computeVerticalScrollOffset()) }
+
+            is SubListEffect.OpenThread ->
+                openFragment(newInstance(effect.threadId), true, true)
+
+            is SubListEffect.OpenPostFragment -> openPostFragment(effect.flag)
+            is CopyToClipboard -> {
+                requireContext().saveToClipboard(effect.text.toString())
+                toast(R.string.saved_into_clipboard)
+            }
+
+            is HideKeyboard -> requireContext().hideKeyboard(view)
+            is ShowToast -> effect.text?.let { toast(it) } ?: toast(effect.resId)
+            else -> Unit
+        }
+    }
+
+    private fun openPostFragment(flag: Int?) {
+        val fragment = if (flag == null) {
+            PostFragment()
+        } else {
+            PostFragment.newInstance(
+                title.toString(),
+                viewModel.uiState.value.draft.text,
+                null,
+                viewModel.uiState.value.threadId,
+                flag
+            )
+        }
+        if (isTablet) {
+            fragment.show(childFragmentManager, "PostFragment")
+        } else {
+            openFragment(fragment, true, false)
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        mainActivity?.let {
-            it.setScrollStrategyEnabled(false)
-            delegate.onResume()
-        }
+        mainActivity?.setScrollStrategyEnabled(false)
         requireView().viewTreeObserver.addOnGlobalLayoutListener(treeViewObserver)
     }
 
+    override fun onPause() {
+        mainActivity?.setScrollStrategyEnabled(true)
+        requireView().viewTreeObserver.removeGlobalLayoutListenerSafe(treeViewObserver)
+        super.onPause()
+    }
+
+    override fun onDestroyView() {
+        sendingDialog.update(false)
+        postMessageView?.message?.removeTextChangedListener(draftWatcher)
+        super.onDestroyView()
+    }
+
     private fun updateRecycleViewPadding() {
-        if (zumpaApp.zumpaPrefs.isLoggedInNotOffline ?: false) {
+        if (viewModel.uiState.value.canPost) {
             requireView().post {
-                //set padding for response panel
                 recyclerView?.apply {
                     setPadding(paddingLeft, paddingTop, paddingRight, postMessageView?.height ?: 0)
                 }
@@ -147,345 +282,59 @@ class SubListFragment : BaseFragment(), SubListAdapter.ItemClickListener, Sendin
         }
     }
 
-    override fun onPause() {
-        mainActivity?.setScrollStrategyEnabled(true)
-        isLoading = false
-        isSending = false
-        requireView().viewTreeObserver.removeGlobalLayoutListenerSafe(treeViewObserver)
-        super.onPause()
-    }
+    override fun onFloatingButtonClick() = viewModel.showPostPanel()
 
-    protected fun dispatchSend() {
-        var msg = postMessageView?.message?.text?.toString() ?: ""
-        val context = requireContext()
-        if (msg.isEmpty()) {
-            toast(R.string.err_empty_msg)
-            return
-        }
+    override fun onBackButtonClick(): Boolean = viewModel.onBackPressed() || super.onBackButtonClick()
 
-        app().zumpaAPI.let { api ->
-            val app = zumpaApp
-            val body = ZumpaThreadBody(app.zumpaPrefs.nickName, app.zumpaData[argThreadId]?.subject ?: "", msg, argThreadId)
-            isSending = true
-            context.hideKeyboard(view)
-            launchWithView {
-                try {
-                    ignoringZumpaRedirect { api.sendResponse(argThreadId, argThreadId, body) }
-                    hideMessagePanel(true)
-                    loadData(SCROLL_DOWN)
-                    isSending = false
-                } catch (err: Throwable) {
-                    err.message?.let { toast(it) }
-                    isSending = false
-                }
-            }
-        }
-    }
+    override fun reloadData() = viewModel.reload()
 
-    @Subscribe
-    fun onLoadThreadEvent(event: LoadThreadEvent) {
-        val sameThread = argThreadId == event.id
-        if (!sameThread) {
-            arguments?.putString(ARG_THREAD_ID, event.id)
-        }
-        delegate.onLoadThreadEvent(event)
-        loadData(event.id, true, if (sameThread) SCROLL_NONE else SCROLL_UP)
-    }
-
-    fun loadData(scrollWay: Int = SCROLL_NONE) {
-        loadData(argThreadId, false, scrollWay)
-    }
-
-    override fun reloadData() {
-        loadData(argThreadId, true, SCROLL_DOWN)
-        postMessageView?.let {
-            if (it.isVisible()) {
-                it.hideAnimated()
-            }
-        }
-        mainActivity?.floatingButton?.showAnimated()
-    }
-
-    fun loadData(tid: String, force: Boolean = false, scrollWay: Int = SCROLL_NONE) {
-        if ((isLoading && !force) || tid.isNullOrEmpty()) {
-            isSending = false
-            return
-        }
-        val context = requireActivity()
-        val api = zumpaApp.zumpaAPI
-        isLoading = true
-        launchWithView {
-            try {
-                val result = retrying {
-                    api.getThreadPage(tid, tid).also { page ->
-                        //the spans are built on the main thread on purpose
-                        page.items.forEach { item ->
-                            item.styledAuthor(context)
-                            item.styledBody(context)
-                        }
-                    }
-                }
-                val rv = recyclerView ?: return@launchWithView
-                val offsetY = -2 * rv.computeVerticalScrollOffset()
-                onResultLoaded(result, force)
-                val scrollWayValue = if (argScrollDown && firstLoad) SCROLL_DOWN else scrollWay
-                if (scrollWayValue != 0) {
-                    firstLoad = false
-                    when (scrollWayValue) {
-                        SCROLL_UP -> rv.smoothScrollBy(0, offsetY)
-                        SCROLL_DOWN -> rv.smoothScrollToPosition(rv.adapter?.itemCount ?: 0)
-                    }
-                }
-                isSending = false
-                isLoading = false
-            } catch (err: Throwable) {
-                err.message?.let { toast(it) }
-                isSending = false
-                isLoading = false
-            }
-        }
-    }
-
-
-    override fun onFloatingButtonClick() {
-        showMessagePanel()
-    }
-
-
-    override fun onBackButtonClick(): Boolean {
-        if (isLoggedIn) {
-            if (hideMessagePanel()) {
-                return true
-            }
-        }
-        return super.onBackButtonClick()
-    }
-
-    fun showMessagePanel() {
-        postMessageView?.let {
-            if (!it.isVisible()) {
-                it.showAnimated()
-            }
-            mainActivity?.floatingButton?.hideAnimated()
-        }
-    }
-
-    fun hideMessagePanel(clearText: Boolean = false): Boolean {
-        if (clearText) {
-            postMessageView?.message?.text = null
-        }
-        val result = delegate.hideMessagePanel()
-        return result ?: false
-    }
-
-    private fun onResultLoaded(result: ZumpaThreadResult, clearData: Boolean) {
-        result.items.let {
-            var items = it
-            storeReadState(result)
-            recyclerView?.let {
-                val loadImages = zumpaApp.zumpaPrefs.loadImages ?: true
-                if (it.adapter == null) {
-                    recyclerView?.adapter = SubListAdapter(items, loadImages).apply {
-                        itemClickListener = this@SubListFragment
-                        surveyClickListner = this@SubListFragment
-                    }
-                } else {
-                    (recyclerView?.adapter as SubListAdapter).apply {
-                        this.loadImages = loadImages
-                        updateItems(items, clearData)
-                    }
-                }
-            }
-        }
-    }
-
-    private fun storeReadState(result: ZumpaThreadResult) {
-        val zumpaReadStates = zumpaApp.zumpaReadStates
-        zumpaReadStates?.let {
-            val size = result.items.size - 1
-            if (it.containsKey(argThreadId)) {
-                it[argThreadId]!!.count = size//don't count 1st one as it's actual post
-            } else {
-                it[argThreadId] = ZumpaReadState(argThreadId, size)
-            }
-        }
-    }
-
-    override fun onMenuItemClick(position: Int, item: ZumpaThreadItem, type: Int) {
+    //region adapter callbacks
+    override fun onMenuItemClick(position: Int, item: RenderedSubListRow.Message, type: Int) {
         when (type) {
-            tReply -> {
-                postMessageView
-                    ?.takeIf { zumpaApp.zumpaPrefs.isLoggedInNotOffline }
-                    ?.let {
-                        showMessagePanel()
-                        it.message.text.apply {
-                            val text = "@${item.authorReal}: \n"
-                            val outRange = OutRef<IntRange>()
-                            if (containsAuthor(text, outRange)) {
-                                val range = outRange.data!!
-                                replace(range.first, range.last, "")
-                            } else {
-                                appendReply(text, contextColorText)
-                            }
-                        }
-                    }
-            }
-
-            SubListAdapter.tCopy -> {
-                (requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).apply {
-                    text = item.body
-                    toast(R.string.saved_into_clipboard)
-                }
-            }
-
-            SubListAdapter.tSpeak -> {
-                postMessageView
-                    ?.takeIf { zumpaApp.zumpaPrefs.isLoggedInNotOffline }
-                    ?.let {
-                        showMessagePanel()
-                        val result = it.message.text
-                        if (result.isNotEmpty()) {
-                            result.append("\n")
-                        }
-                        result.append("${item.author}: ${item.body}\n----\n")
-                        it.message.text = result
-                        it.message.setSelection(it.message.length())
-                    }
-            }
+            SubListAdapter.tReply -> viewModel.onReplyClick(item.rawAuthorReal)
+            SubListAdapter.tCopy -> viewModel.onCopyClick(item.rawBody)
+            SubListAdapter.tSpeak -> viewModel.onQuoteClick(item.rawAuthor, item.rawBody)
         }
         (recyclerView?.adapter as? ToggleAdapter)?.closeMenu(position)
     }
 
-    override fun onItemClick(position: Int, item: ZumpaThreadItem, longClick: Boolean, view: View) {
-        if (postMessageView != null && zumpaApp.zumpaPrefs.isLoggedInNotOffline ?: false) {
-            delegate.onItemClick(position, item, longClick)
+    override fun onItemClick(position: Int, item: RenderedSubListRow.Message, longClick: Boolean, view: View) {
+        if (!viewModel.uiState.value.canPost) {
+            return
+        }
+        if (longClick) {
+            (recyclerView?.adapter as? ToggleAdapter)?.toggleOpenState(position)
+        } else if (postMessageView?.isVisible() == true) {
+            viewModel.onReplyClick(item.rawAuthorReal)
         }
     }
 
-    override fun onItemClick(item: SurveyItem) {
-        if (zumpaApp.zumpaPrefs.isLoggedInNotOffline) {
-            zumpaApp.zumpaAPI.let { api ->
-                isSending = true
-                launchWithView {
-                    try {
-                        api.voteSurvey(ZumpaVoteSurveyBody(item.surveyId, item.id))
-                        loadData()
-                    } catch (err: Throwable) {
-                        err.message?.let { toast(it) }
-                        isSending = false
-                    }
-                }
-            }
-        }
-    }
+    override fun onItemClick(item: SurveyItemUiState) = viewModel.onSurveyVote(item)
 
+    /**
+     * Link routing stays here - it is navigation, and the image case needs the tapped view for the
+     * shared element transition.
+     */
     override fun onItemClick(url: String, longClick: Boolean, view: View) {
         val context = requireContext()
         if (longClick) {
             context.saveToClipboard(Uri.parse(url))
             toast(R.string.saved_into_clipboard)
-        } else {
-            val id = ZumpaSimpleParser.getZumpaThreadId(url)
-            if (id != 0) {
-                delegate.onThreadLinkClick(id)
-            } else {
+            return
+        }
+        val threadId = ZumpaSimpleParser.getZumpaThreadId(url)
+        when {
+            threadId != 0 -> viewModel.onThreadLinkClick(threadId.toString())
+            url.looksLikeImageUrl() -> {
                 val activity = requireActivity()
-                if (url.isImageUri()) {
-                    val bundle = ActivityOptionsCompat.makeSceneTransitionAnimation(activity, view, getString(R.string.transition_image)).toBundle()
-                    startActivity(ImageActivity.createIntent(activity, url), bundle)
-                } else {
-                    context.startLinkActivity(url)
-                }
+                val bundle = ActivityOptionsCompat
+                    .makeSceneTransitionAnimation(activity, view, getString(R.string.transition_image))
+                    .toBundle()
+                startActivity(ImageActivity.createIntent(activity, url), bundle)
             }
+
+            else -> context.startLinkActivity(url)
         }
     }
-
-    private abstract class BehaviourDelegate(val fragment: SubListFragment) {
-        open fun onThreadLinkClick(threadId: Int) {}
-        open fun onItemClick(position: Int, item: ZumpaThreadItem, longClick: Boolean) {}
-        open fun hideMessagePanel(): Boolean? {
-            return null
-        }
-
-        open fun onResume() {}
-        open fun onViewCreated() {}
-        open fun onLoadThreadEvent(event: LoadThreadEvent) {}
-        open fun openPostFragment(flag: Int?) {}
-    }
-
-    private class PhoneBehaviour(fragment: SubListFragment) : BehaviourDelegate(fragment) {
-        override fun onViewCreated() {
-            fragment.postMessageView?.visibility = View.INVISIBLE
-        }
-
-        override fun onResume() {
-            if (fragment.isLoggedIn) {
-                if (fragment.postMessageView?.isVisible() == true) {
-                    fragment.mainActivity?.floatingButton?.hideAnimated()
-                } else {
-                    fragment.mainActivity?.floatingButton?.showAnimated()
-                    hideMessagePanel()
-                }
-            }
-        }
-
-        override fun hideMessagePanel(): Boolean? {
-            fragment.postMessageView?.let {
-                if (it.isVisible()) {
-                    it.hideAnimated()
-                    fragment.mainActivity?.floatingButton?.showAnimated()
-                    return true
-                }
-            }
-            return null
-        }
-
-        override fun onItemClick(position: Int, item: ZumpaThreadItem, longClick: Boolean) {
-            if (longClick) {
-                (fragment.recyclerView?.adapter as? ToggleAdapter)?.toggleOpenState(position)
-            } else if (fragment.postMessageView?.isVisible() == true) {
-                fragment.onMenuItemClick(position, item, tReply)
-            }
-        }
-
-        override fun onThreadLinkClick(threadId: Int) {
-            fragment.openFragment(newInstance(threadId.toString()), true, true)
-        }
-
-        override fun openPostFragment(flag: Int?) {
-            val f = if (flag == null) {
-                PostFragment()
-            } else {
-                PostFragment.newInstance(fragment.title.toString(), fragment.postMessageView?.message?.text.toString(), null, fragment.argThreadId, flag)
-            }
-            fragment.openFragment(f, true, false)
-        }
-    }
-
-    private class TabletBehaviour(fragment: SubListFragment) : BehaviourDelegate(fragment) {
-        override fun onViewCreated() {
-            fragment.postMessageView?.visibility = View.INVISIBLE
-        }
-
-        override fun onThreadLinkClick(threadId: Int) {
-            fragment.onLoadThreadEvent(LoadThreadEvent(threadId.toString()))
-        }
-
-        @SuppressLint("RestrictedApi")
-        override fun onLoadThreadEvent(event: LoadThreadEvent) {
-            fragment.postMessageView?.visibility = View.VISIBLE
-            fragment.mainActivity?.floatingButton?.visibility = View.GONE
-        }
-
-        override fun openPostFragment(flag: Int?) {
-            val f = if (flag == null) {
-                PostFragment()
-            } else {
-                PostFragment
-                    .newInstance(fragment.title.toString(), fragment.postMessageView?.message?.text?.toString(), null, fragment.argThreadId, flag)
-
-            }
-            f.show(fragment.childFragmentManager, "PostFragment")
-        }
-    }
+    //endregion
 }
