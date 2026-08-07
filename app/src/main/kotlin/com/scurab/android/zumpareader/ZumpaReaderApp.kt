@@ -21,6 +21,8 @@ import com.scurab.android.zumpareader.gson.GsonExcludeStrategy
 import com.scurab.android.zumpareader.model.ZumpaReadState
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
+import com.scurab.android.zumpareader.repository.ZumpaReadStateRepository
+import com.scurab.android.zumpareader.repository.ZumpaThreadRepository
 import com.scurab.android.zumpareader.usecase.CreateNotificationChannelsUseCase
 import com.scurab.android.zumpareader.util.ZumpaPrefs
 import com.squareup.picasso.Picasso
@@ -54,12 +56,15 @@ class ZumpaReaderApp : Application() {
     private val gson: Gson by inject()
     val zumpaHttpClient: OkHttpClient by inject()
 
-    val zumpaData: TreeMap<String, ZumpaThread> = TreeMap()
+    private val threadRepository: ZumpaThreadRepository by inject()
+    private val readStateRepository: ZumpaReadStateRepository by inject()
 
-    var zumpaReadStates: TreeMap<String, ZumpaReadState> = TreeMap()
-        private set
+    //transitional accessors, the repositories own these now - see MVVM_PLAN.md phase 1.
+    //both delegate to the repository's backing map, so a not-yet-migrated screen writing here is
+    //visible to a not-yet-migrated screen reading here. Deleted in phase 8.
+    val zumpaData: TreeMap<String, ZumpaThread> get() = threadRepository.rawThreads
 
-    private val MAX_STATES_TO_STORE = 100
+    val zumpaReadStates: TreeMap<String, ZumpaReadState> get() = readStateRepository.raw
 
     override fun onCreate() {
         super.onCreate()
@@ -69,7 +74,6 @@ class ZumpaReaderApp : Application() {
             modules(appModules)
         }
         CreateNotificationChannelsUseCase(this)()
-        loadReadStates()
 
         initPicasso()
         Fresco.initialize(this)
@@ -98,7 +102,7 @@ class ZumpaReaderApp : Application() {
             override fun onActivityStopped(activity: Activity) {
                 activities--
                 if (activities == 0) {
-                    storeReadStates()
+                    readStateRepository.persist()
                 }
             }
         })
@@ -128,28 +132,6 @@ class ZumpaReaderApp : Application() {
             val result: LinkedHashMap<String, ZumpaThread> = gson.fromJson(jsonReader, type)
             zumpaOfflineApi.offlineData = result
         }
-    }
-
-    private fun loadReadStates() {
-        val json = zumpaPrefs.readStates
-        if (json != null) {
-            zumpaReadStates = gson.fromJson(json, object : TypeToken<TreeMap<String, ZumpaReadState>>() {}.type)
-        }
-    }
-
-    private fun storeReadStates() {
-        var toStore: Map<String, ZumpaReadState> = zumpaReadStates
-        if (zumpaReadStates.size > MAX_STATES_TO_STORE) {
-            var iterator = zumpaReadStates.descendingKeySet().iterator()
-            var last = iterator.next()
-            var first: String = ""
-            for (i in 1..MAX_STATES_TO_STORE) {
-                first = iterator.next()
-            }
-            toStore = zumpaReadStates.subMap(first, last)
-        }
-        val json = gson.toJson(toStore)
-        zumpaPrefs.readStates = json
     }
 
     private fun initPicasso() {

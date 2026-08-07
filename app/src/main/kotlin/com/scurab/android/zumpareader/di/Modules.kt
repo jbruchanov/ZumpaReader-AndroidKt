@@ -12,6 +12,12 @@ import com.scurab.android.zumpareader.ZumpaWSAPI
 import com.scurab.android.zumpareader.data.ZumpaConverterFactory
 import com.scurab.android.zumpareader.data.ZumpaGenericConverterFactory
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
+import com.scurab.android.zumpareader.repository.AppEventBus
+import com.scurab.android.zumpareader.repository.SelectedThreadStore
+import com.scurab.android.zumpareader.repository.ZumpaReadStateRepository
+import com.scurab.android.zumpareader.repository.ZumpaSettingsRepository
+import com.scurab.android.zumpareader.repository.ZumpaThreadRepository
+import com.scurab.android.zumpareader.repository.ZumpaThreadRepositoryImpl
 import com.scurab.android.zumpareader.util.ZumpaPrefs
 import okhttp3.JavaNetCookieJar
 import okhttp3.OkHttpClient
@@ -45,6 +51,17 @@ val coreModule = module {
             isShowLastUser = prefs.showLastAuthor
         }
     }
+
+    single { ZumpaSettingsRepository(get()) }
+    single { ZumpaReadStateRepository(get(), get()) }
+    single { SelectedThreadStore() }
+    single { AppEventBus() }
+
+    /**
+     * `api = { get() }` and not `api = get()`: the unqualified [ZumpaAPI] below is a factory, so
+     * handing this singleton an instance would freeze the online/offline choice forever.
+     */
+    single<ZumpaThreadRepository> { ZumpaThreadRepositoryImpl(api = { get() }) }
 }
 
 val networkModule = module {

@@ -19,22 +19,23 @@ class ZumpaPrefs(context: Context) {
         val KEY_FILTER = "KEY_FILTER"
         val KEY_NOTIFICATIONS = "KEY_NOTIFICATIONS"
         val KEY_CRASHYLYTICS = "KEY_CRASHYLYTICS"
+
+        //observed by ZumpaSettingsRepository, which needs the key a write lands on
+        val KEY_IS_LOGGED_IN = "KEY_IS_LOGGED_IN"
+        val KEY_LOAD_IMAGES = "KEY_LOAD_IMAGES"
     }
 
     private val KEY_COOKIES = "KEY_COOKIES"
-    private val KEY_IS_LOGGED_IN = "KEY_IS_LOGGED_IN"
-    private val KEY_LOAD_IMAGES = "KEY_LOAD_IMAGES"
     private val KEY_NICK_NAME = "KEY_NICK_NAME"
     private val KEY_READ_STATES = "KEY_READ_STATES"
     private val KEY_LAST_CAMERA_URI = "KEY_LAST_CAMERA_URI"
     private val KEY_PUSH_REG_ID = "KEY_PUSH_REG_ID"
     private val KEY_USER_ID = "KEY_USER_ID"
 
-    private val sharedPrefs: SharedPreferences
+    private val sharedPrefs: SharedPreferences = context.defaultSharedPreferences
 
-    init {
-        sharedPrefs = context.defaultSharedPreferences
-    }
+    /** For [com.scurab.android.zumpareader.repository.ZumpaSettingsRepository] to observe writes. */
+    val sharedPreferences: SharedPreferences get() = sharedPrefs
 
     var cookies: Set<String>?
         get() {
