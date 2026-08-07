@@ -93,7 +93,6 @@ dependencies {
 
     implementation libs.bundles.retrofit
 
-    implementation libs.swipy
 
     implementation libs.picasso
 

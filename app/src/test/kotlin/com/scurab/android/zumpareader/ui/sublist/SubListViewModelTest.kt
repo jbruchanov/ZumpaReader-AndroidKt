@@ -137,7 +137,7 @@ class SubListViewModelTest {
         coEvery { threads.loadThread("1") } returns listOf(item())
         val viewModel = viewModel()
 
-        viewModel.onReplyClick("bob")
+        viewModel.onReplyClicked("bob")
 
         assertEquals("@bob: \n", viewModel.uiState.value.draft.text)
         assertTrue(viewModel.uiState.value.isPostPanelVisible)
@@ -148,8 +148,8 @@ class SubListViewModelTest {
         coEvery { threads.loadThread("1") } returns listOf(item())
         val viewModel = viewModel()
 
-        viewModel.onReplyClick("bob")
-        viewModel.onReplyClick("bob")
+        viewModel.onReplyClicked("bob")
+        viewModel.onReplyClicked("bob")
 
         assertEquals("", viewModel.uiState.value.draft.text)
     }
@@ -159,9 +159,9 @@ class SubListViewModelTest {
         coEvery { threads.loadThread("1") } returns listOf(item())
         val viewModel = viewModel()
 
-        viewModel.onReplyClick("bob")
+        viewModel.onReplyClicked("bob")
         viewModel.onDraftChanged("@bob: \nmy answer")
-        viewModel.onReplyClick("ann")
+        viewModel.onReplyClicked("ann")
 
         assertEquals("@bob: \n@ann: \nmy answer", viewModel.uiState.value.draft.text)
     }
@@ -171,9 +171,9 @@ class SubListViewModelTest {
         coEvery { threads.loadThread("1") } returns listOf(item())
         val viewModel = viewModel()
 
-        viewModel.onReplyClick("bob")
+        viewModel.onReplyClicked("bob")
         viewModel.onDraftChanged("@bob: \nmy answer")
-        viewModel.onReplyClick("bob")
+        viewModel.onReplyClicked("bob")
 
         assertEquals("my answer", viewModel.uiState.value.draft.text)
     }
@@ -182,7 +182,7 @@ class SubListViewModelTest {
     fun `deleting a header by hand stops it being a header`() = runTest {
         coEvery { threads.loadThread("1") } returns listOf(item())
         val viewModel = viewModel()
-        viewModel.onReplyClick("bob")
+        viewModel.onReplyClicked("bob")
 
         viewModel.onDraftChanged("just my own text")
 
@@ -195,7 +195,7 @@ class SubListViewModelTest {
         coEvery { threads.loadThread("1") } returns listOf(item())
         val viewModel = viewModel()
 
-        viewModel.onQuoteClick("bob", "the original")
+        viewModel.onQuoteClicked("bob", "the original")
 
         assertEquals("bob: the original\n----\n", viewModel.uiState.value.draft.text)
     }
@@ -205,8 +205,8 @@ class SubListViewModelTest {
         coEvery { threads.loadThread("1") } returns listOf(item())
         val viewModel = viewModel()
 
-        viewModel.onQuoteClick("bob", "one")
-        viewModel.onQuoteClick("ann", "two")
+        viewModel.onQuoteClicked("bob", "one")
+        viewModel.onQuoteClicked("ann", "two")
 
         assertEquals("bob: one\n----\n\nann: two\n----\n", viewModel.uiState.value.draft.text)
     }
@@ -217,8 +217,8 @@ class SubListViewModelTest {
         coEvery { threads.loadThread("1") } returns listOf(item())
         val viewModel = viewModel()
 
-        viewModel.onReplyClick("bob")
-        viewModel.onQuoteClick("bob", "x")
+        viewModel.onReplyClicked("bob")
+        viewModel.onQuoteClicked("bob", "x")
 
         assertEquals("", viewModel.uiState.value.draft.text)
     }
@@ -232,7 +232,7 @@ class SubListViewModelTest {
         viewModel.onDraftChanged("my answer")
         val body = slot<ZumpaThreadBody>()
 
-        viewModel.onSend()
+        viewModel.onSendClicked()
 
         coVerify { threads.sendResponse("1", capture(body)) }
         assertEquals("my answer", body.captured.body)
@@ -247,7 +247,7 @@ class SubListViewModelTest {
         val viewModel = viewModel()
 
         viewModel.onDraftChanged("   ")
-        viewModel.onSend()
+        viewModel.onSendClicked()
 
         coVerify(exactly = 0) { threads.sendResponse(any(), any()) }
     }
@@ -259,7 +259,7 @@ class SubListViewModelTest {
         viewModel.onDraftChanged("my answer")
 
         viewModel.effects.test {
-            viewModel.onSend()
+            viewModel.onSendClicked()
             //HideKeyboard first then the scroll
             awaitItem()
             assertEquals(SubListEffect.ScrollToBottom, awaitItem())
@@ -284,12 +284,12 @@ class SubListViewModelTest {
 
         viewModel(isTablet = false).run {
             effects.test {
-                onThreadLinkClick("77")
+                onThreadLinkClicked("77")
                 assertEquals(SubListEffect.OpenThread("77"), awaitItem())
             }
         }
 
-        viewModel(isTablet = true).onThreadLinkClick("88")
+        viewModel(isTablet = true).onThreadLinkClicked("88")
         assertEquals("88", selectedThread.selected.value)
     }
 
