@@ -372,7 +372,7 @@ The only screen that is still MVC, converted straight to Compose + MVVM as you a
    `MemoryCachePolicy.DISABLED`, and `PicassoHttpDownloader2`'s cookie handling → the shared
    `OkHttpClient` in Coil's `ImageLoader` (which already has the cookie jar, so this mostly deletes
    code).
-2. **Delete `swipy` and `pinchtozoom`** — replaced in C6 and C1.
+2. **Delete `swipy`** — replaced in C6. (`pinchtozoom` already went in C1.)
 3. That empties `UPGRADE_PLAN.md` §B, so **`android.enableJetifier` comes out**, and §C unblocks:
    AGP 9, Gradle 9, core-ktx 1.19, compileSdk 37.
 4. **nav-compose**: fragments and `zumpaContent` are replaced by a `NavHost`; `LocalNavigator` gets

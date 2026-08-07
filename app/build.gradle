@@ -66,8 +66,8 @@ kotlin {
 configurations.configureEach {
     resolutionStrategy {
         // The lifecycle *-compose artifacts of 2.11 require AGP 9.1 and compileSdk 37. Getting there
-        // means dropping Jetifier, which means removing swipy and pinchtozoom, which is the last step
-        // of the compose migration - so they are held one release back until then.
+        // means dropping Jetifier, which now only swipy still pins - removed in the last step of the
+        // compose migration, so these are held one release back until then.
         // See UPGRADE_PLAN.md C and COMPOSE_PLAN.md C9.
         force "androidx.lifecycle:lifecycle-runtime-compose:" + libs.versions.androidx.lifecycle.compose.get()
         force "androidx.lifecycle:lifecycle-viewmodel-compose:" + libs.versions.androidx.lifecycle.compose.get()
@@ -101,7 +101,6 @@ dependencies {
 
     implementation libs.bundles.fresco
 
-    implementation libs.pinchtozoom
 
     testImplementation platform(libs.koin.bom)
     testImplementation platform(libs.junit.bom)

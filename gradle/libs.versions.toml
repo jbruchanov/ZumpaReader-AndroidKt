@@ -50,7 +50,6 @@ jsoup = "1.23.1"
 koin = "4.2.2"
 kotlinx-coroutines = "1.11.0"
 okhttp = "5.4.0"
-pinchtozoom = "0.1"
 retrofit = "3.0.0"
 swipy = "1.2.3"
 
@@ -107,7 +106,6 @@ okhttp-base = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 okhttp-urlconnection = { module = "com.squareup.okhttp3:okhttp-urlconnection", version.ref = "okhttp" }
 okhttp-logging = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "okhttp" }
 picasso = { module = "com.squareup.picasso:picasso", version.ref = "picasso" }
-pinchtozoom = { module = "com.bogdwellers:pinchtozoom", version.ref = "pinchtozoom" }
 retrofit-base = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 retrofit-converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
 swipy = { module = "com.github.orangegangsters:swipy", version.ref = "swipy" }

@@ -51,7 +51,6 @@
     <string name="action_start">Start</string>
     <string name="action_stop">Stop</string>
     <string name="pages">Pages</string>
-    <string name="transition_image">transition_image</string>
     <string name="share">Share</string>
     <string name="notifications">Notifications</string>
     <string name="enabled">Enabled</string>
