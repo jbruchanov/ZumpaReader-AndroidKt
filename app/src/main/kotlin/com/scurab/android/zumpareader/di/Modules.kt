@@ -9,6 +9,8 @@ import com.scurab.android.zumpareader.app.MainViewModel
 import com.scurab.android.zumpareader.arch.DeviceConfig
 import com.scurab.android.zumpareader.content.MainListViewModel
 import com.scurab.android.zumpareader.content.SubListViewModel
+import com.scurab.android.zumpareader.content.post.PostImageViewModel
+import com.scurab.android.zumpareader.content.post.PostViewModel
 import com.scurab.android.zumpareader.ZumpaOfflineApi
 import com.scurab.android.zumpareader.ZumpaPHPAPI
 import com.scurab.android.zumpareader.ZumpaWSAPI
@@ -16,6 +18,7 @@ import com.scurab.android.zumpareader.data.ZumpaConverterFactory
 import com.scurab.android.zumpareader.data.ZumpaGenericConverterFactory
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.repository.AppEventBus
+import com.scurab.android.zumpareader.repository.ImageUploadRepository
 import com.scurab.android.zumpareader.repository.SelectedThreadStore
 import com.scurab.android.zumpareader.repository.ZumpaReadStateRepository
 import com.scurab.android.zumpareader.repository.ZumpaSettingsRepository
@@ -60,6 +63,7 @@ val coreModule = module {
     single { ZumpaReadStateRepository(get(), get()) }
     single { SelectedThreadStore() }
     single { AppEventBus() }
+    single { ImageUploadRepository(get()) }
 
     /**
      * `api = { get() }` and not `api = get()`: the unqualified [ZumpaAPI] below is a factory, so
@@ -122,6 +126,8 @@ val viewModelModule = module {
     viewModel { MainViewModel(get()) }
     viewModel { MainListViewModel(get(), get(), get(), get(), get(), get()) }
     viewModel { SubListViewModel(get(), get(), get(), get(), get()) }
+    viewModel { PostViewModel(get(), get()) }
+    viewModel { PostImageViewModel(androidContext(), get()) }
 }
 
 val appModules = listOf(coreModule, networkModule, viewModelModule)

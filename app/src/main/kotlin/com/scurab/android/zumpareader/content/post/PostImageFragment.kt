@@ -1,6 +1,5 @@
 package com.scurab.android.zumpareader.content.post
 
-import android.app.ProgressDialog
 import android.content.Intent
 import android.graphics.Point
 import android.net.Uri
@@ -8,72 +7,51 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
 import android.widget.ImageView
-import android.widget.Toast
+import androidx.fragment.app.Fragment
 import com.scurab.android.zumpareader.R
-import com.scurab.android.zumpareader.content.SendingFragment
-import com.scurab.android.zumpareader.content.post.tasks.CopyFromResourcesTask
-import com.scurab.android.zumpareader.content.post.tasks.ProcessImageTask
+import com.scurab.android.zumpareader.arch.ShowToast
+import com.scurab.android.zumpareader.arch.UiEffect
+import com.scurab.android.zumpareader.arch.collectWhileStarted
 import com.scurab.android.zumpareader.drawable.SimpleProgressDrawable
 import com.scurab.android.zumpareader.ext.toast
-import com.scurab.android.zumpareader.extension.app
+import com.scurab.android.zumpareader.ui.SendingDialogController
 import com.scurab.android.zumpareader.util.asVisibility
 import com.scurab.android.zumpareader.util.saveToClipboard
 import com.scurab.android.zumpareader.widget.PostImagePanelView
 import com.squareup.picasso.Picasso
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.io.File
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.MultipartBody
-import okhttp3.RequestBody.Companion.asRequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
-
 
 /**
  * Created by JBruchanov on 08/01/2016.
  */
-class PostImageFragment : Fragment(), SendingFragment {
+class PostImageFragment : Fragment() {
 
     companion object {
         fun newInstance(uri: Uri): PostImageFragment {
-            return PostImageFragment().apply {
-                arguments = arguments(uri)
-            }
+            return PostImageFragment().apply { arguments = arguments(uri) }
         }
 
         fun arguments(uri: Uri): Bundle {
-            return Bundle().apply {
-                putParcelable(Intent.EXTRA_STREAM, uri)
-            }
+            return Bundle().apply { putParcelable(Intent.EXTRA_STREAM, uri) }
         }
     }
 
-    override var sendingDialog: ProgressDialog? = null
+    private val viewModel: PostImageViewModel by viewModel()
+    private val postViewModel: PostViewModel by viewModel(ownerProducer = { requireParentFragment() })
 
-    private val image: ImageView get() {
-        return requireView().findViewById(R.id.image)
-    }
+    private val image: ImageView get() = requireView().findViewById(R.id.image)
+    private val imagePanel: PostImagePanelView get() = requireView().findViewById(R.id.post_image_panel_view)
+    private val sendingDialog by lazy { SendingDialogController(requireContext()) }
 
-    private val imagePanel: PostImagePanelView get() {
-        return requireView().findViewById(R.id.post_image_panel_view)
-    }
+    private val imageUri: Uri
+        get() = arguments?.getParcelable(Intent.EXTRA_STREAM) ?: throw NullPointerException("Arguments")
 
-    private val imageUri by lazy { arguments?.getParcelable<Uri>(Intent.EXTRA_STREAM) ?: throw NullPointerException("Arguments") }
-    private var imageFile: String? = null
-    private var imageRotation = 0
-    private var restoreState = false
-
-    private var imageResolution: Point? = null
-    private var imageSize: Long = 0
-    private var imageResizedResolution: Point? = null
-    private var imageResizedSize: Long = 0
-    private var imageUploadedLink: String? = null
-
-    private val imageFileToUpload: String? get() {
-        return if (imageFile != null) imageFile + "_out" else null
-    }
+    private var loadedThumbnail: String? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_post_image, container, false)
@@ -81,130 +59,88 @@ class PostImageFragment : Fragment(), SendingFragment {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val context = requireContext()
-        try {
-            viewLifecycleOwner.lifecycleScope.launch {
-                try {
-                    val result = CopyFromResourcesTask(view.context, imageUri).execute()
-                    imageFile = result.imageFile!!.absolutePath
-                    if (!restoreState) {
-                        this@PostImageFragment.imageSize = result.imageSize
-                        this@PostImageFragment.imageResolution = result.imageResolution
-                        imagePanel.setImageSize(this@PostImageFragment.imageResolution, imageSize)
-                    }
-                    Picasso.get().load(result.thumbnail!!).placeholder(SimpleProgressDrawable(context)).into(image)
-                } catch (err: Throwable) {
-                    Toast.makeText(requireContext(), err.message ?: "Null message", Toast.LENGTH_LONG).show()
-                }
-            }
-            if (restoreState) {
-                imagePanel.setImageSize(imageResolution, imageSize)
-                if (imageResizedResolution != null) {
-                    imagePanel.setResizedImageSize(imageResizedResolution!!, imageResizedSize)
-                }
-                image.rotation = imageRotation.toFloat()
-                imagePanel.copy.visibility = (imageUploadedLink != null).asVisibility()
-            }
-        } catch (e: Throwable) {
-            toast(e.message)
-        }
-        imagePanel.upload.setOnClickListener { dispatchUpload() }
-        imagePanel.resize.setOnClickListener { onImageResize() }
-        imagePanel.rotateRight.setOnClickListener { onImageRotate() }
+
+        imagePanel.upload.setOnClickListener { viewModel.onUploadClick() }
+        imagePanel.resize.setOnClickListener { viewModel.onResizeClick() }
+        imagePanel.rotateRight.setOnClickListener { viewModel.onRotateClick() }
         imagePanel.copy.setOnClickListener { onCopyLinkToClipboard() }
+        imagePanel.sizeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                viewModel.onSampleSizeSelected(position)
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) = Unit
+        }
+
+        viewModel.uiState
+            .map { it.thumbnailPath }
+            .distinctUntilChanged()
+            .collectWhileStarted(viewLifecycleOwner) { path ->
+                if (path != null && path != loadedThumbnail) {
+                    loadedThumbnail = path
+                    Picasso.get()
+                        .load(File(path))
+                        .placeholder(SimpleProgressDrawable(requireContext()))
+                        .into(image)
+                }
+            }
+
+        viewModel.uiState
+            .map { it.original }
+            .distinctUntilChanged()
+            .collectWhileStarted(viewLifecycleOwner) { meta ->
+                imagePanel.setImageSize(meta?.let { Point(it.width, it.height) }, meta?.bytes ?: 0L)
+            }
+
+        viewModel.uiState
+            .map { it.resized }
+            .distinctUntilChanged()
+            .collectWhileStarted(viewLifecycleOwner) { meta ->
+                meta?.let { imagePanel.setResizedImageSize(Point(it.width, it.height), it.bytes) }
+            }
+
+        viewModel.uiState
+            .map { it.rotationDegrees }
+            .distinctUntilChanged()
+            .collectWhileStarted(viewLifecycleOwner) { image.animate().rotation(it.toFloat()) }
+
+        viewModel.uiState
+            .map { it.uploadedLink != null }
+            .distinctUntilChanged()
+            .collectWhileStarted(viewLifecycleOwner) { imagePanel.copy.visibility = it.asVisibility() }
+
+        viewModel.uiState
+            .map { it.isBusy }
+            .distinctUntilChanged()
+            .collectWhileStarted(viewLifecycleOwner) { sendingDialog.update(it) }
+
+        viewModel.effects.collectWhileStarted(viewLifecycleOwner) { onEffect(it) }
+
+        viewModel.start(imageUri)
     }
 
-    protected fun onCopyLinkToClipboard() {
-        val context = requireContext()
-        imageUploadedLink.let {
-            context.saveToClipboard(Uri.parse(it))
+    private fun onEffect(effect: UiEffect) {
+        when (effect) {
+            is PostImageEffect.ImageUploaded -> {
+                //the parent's draft is where the link belongs, and it switches to the message tab
+                postViewModel.onLinkShared(effect.link)
+                toast(R.string.done)
+            }
+
+            is ShowToast -> effect.text?.let { toast(it) } ?: toast(effect.resId)
+            else -> Unit
+        }
+    }
+
+    private fun onCopyLinkToClipboard() {
+        viewModel.uiState.value.uploadedLink?.let {
+            requireContext().saveToClipboard(Uri.parse(it))
             toast(R.string.saved_into_clipboard)
         }
     }
 
-    protected fun onImageResize() {
-        val size = 1 shl imagePanel.sizeSpinner.selectedItemPosition
-        onImageProcess(size, imageRotation)
-    }
-
-    protected fun onImageRotate() {
-        imageRotation = (imageRotation + 90) % 360
-
-        val size = 1 shl imagePanel.sizeSpinner.selectedItemPosition
-        onImageProcess(size, imageRotation)
-    }
-
-    private fun onImageProcess(inSample: Int, imageRotation: Int) {
-        isSending = true
-        imageFile?.let {
-            val task = ProcessImageTask(it, imageFileToUpload!!, inSample, imageRotation)
-            viewLifecycleOwner.lifecycleScope.launch {
-                try {
-                    val result = task.execute()
-                    isSending = false
-                    image.animate().rotation(imageRotation.toFloat())
-                    imageResizedResolution = result.imageResolution!!
-                    imageResizedSize = result.imageSize
-                    imagePanel.setResizedImageSize(result.imageResolution!!, result.imageSize)
-                } catch (err: Throwable) {
-                    isSending = false
-                    Toast.makeText(requireContext(), err.message ?: "Null message", Toast.LENGTH_LONG).show()
-                }
-            }
-        }
-    }
-
-    private fun dispatchUpload() {
-        var out = File(imageFileToUpload)
-        if (!out.exists()) {
-            out = File(imageFile)
-        }
-
-        isSending = true
-        val reqFile = out.asRequestBody("image/*".toMediaType())
-        val body = MultipartBody.Part.createFormData("image", out.name, reqFile)
-        val name = "Submit".toByteArray().toRequestBody("text/plain".toMediaType())
-
-        val context = requireContext()
-        val api = app().zumpaPHPAPI
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val url = api.postImage(body, name).asUTFString()
-                isSending = false
-                if (url.isNotEmpty()) {
-                    imageUploadedLink = url
-                    dispatchImageUploaded(url)
-                } else {
-                    toast(R.string.err_fail)
-                }
-            } catch (err: Throwable) {
-                isSending = false
-                err.printStackTrace()
-                toast(R.string.err_fail)
-            }
-        }
-    }
-
-    protected fun dispatchImageUploaded(result: String) {
-        (parentFragment as? PostFragment)?.apply {
-            onSharedImage(result)
-            toast(R.string.done)
-        }
-    }
-
     override fun onDestroyView() {
+        sendingDialog.update(false)
         super.onDestroyView()
-        restoreState = true
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        restoreState = false
-    }
-
-    override fun onPause() {
-        super.onPause()
-        isSending = false
     }
 }
-

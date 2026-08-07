@@ -6,6 +6,7 @@ import com.scurab.android.zumpareader.ZumpaPHPAPI
 import com.scurab.android.zumpareader.ZumpaWSAPI
 import com.scurab.android.zumpareader.arch.DeviceConfig
 import com.scurab.android.zumpareader.repository.AppEventBus
+import com.scurab.android.zumpareader.repository.ImageUploadRepository
 import com.scurab.android.zumpareader.repository.SelectedThreadStore
 import com.scurab.android.zumpareader.repository.ZumpaReadStateRepository
 import com.scurab.android.zumpareader.repository.ZumpaSettingsRepository
@@ -41,6 +42,7 @@ class ModulesTest {
                 ZumpaReadStateRepository::class,
                 SelectedThreadStore::class,
                 AppEventBus::class,
+                ImageUploadRepository::class,
                 // provided by networkModule
                 ZumpaAPI::class,
                 ZumpaWSAPI::class,
