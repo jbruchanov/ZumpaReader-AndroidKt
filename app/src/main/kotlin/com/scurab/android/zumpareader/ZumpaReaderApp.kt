@@ -3,32 +3,22 @@ package com.scurab.android.zumpareader
 import android.app.Activity
 import android.app.Application
 import android.os.Bundle
-import android.os.Environment
 import android.util.Log
 import com.facebook.drawee.backends.pipeline.Fresco
-import com.github.salomonbrys.kotson.DeserializerArg
-import com.github.salomonbrys.kotson.registerTypeAdapter
 import com.google.firebase.FirebaseApp
 import com.google.gson.Gson
-import com.google.gson.GsonBuilder
-import com.google.gson.JsonObject
-import com.google.gson.reflect.TypeToken
-import com.google.gson.stream.JsonReader
 import com.scurab.android.zumpareader.data.PicassoHttpDownloader2
 import com.scurab.android.zumpareader.di.ONLINE_API
 import com.scurab.android.zumpareader.di.appModules
-import com.scurab.android.zumpareader.gson.GsonExcludeStrategy
 import com.scurab.android.zumpareader.model.ZumpaReadState
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
+import com.scurab.android.zumpareader.repository.OfflineDataRepository
 import com.scurab.android.zumpareader.repository.ZumpaReadStateRepository
 import com.scurab.android.zumpareader.repository.ZumpaThreadRepository
 import com.scurab.android.zumpareader.usecase.CreateNotificationChannelsUseCase
 import com.scurab.android.zumpareader.util.ZumpaPrefs
 import com.squareup.picasso.Picasso
-import java.io.File
-import java.io.FileInputStream
-import java.io.InputStreamReader
 import java.net.CookieManager
 import java.util.*
 import okhttp3.OkHttpClient
@@ -44,10 +34,6 @@ import org.koin.core.logger.Level
  */
 class ZumpaReaderApp : Application() {
 
-    companion object {
-        val OFFLINE_FILE_NAME = "offline.json"
-    }
-
     //everything below is built by koin now, see di/Modules.kt, these are kept so the existing
     //`app().zumpaSomething` call sites keep working; new code should inject what it needs
     val zumpaParser: ZumpaSimpleParser by inject()
@@ -58,6 +44,7 @@ class ZumpaReaderApp : Application() {
 
     private val threadRepository: ZumpaThreadRepository by inject()
     private val readStateRepository: ZumpaReadStateRepository by inject()
+    private val offlineData: OfflineDataRepository by inject()
 
     //transitional accessors, the repositories own these now - see MVVM_PLAN.md phase 1.
     //both delegate to the repository's backing map, so a not-yet-migrated screen writing here is
@@ -106,31 +93,10 @@ class ZumpaReaderApp : Application() {
                 }
             }
         })
-        loadOfflineData()
+        offlineData.loadFromDisk()
         FirebaseApp.initializeApp(this)
         if (zumpaPrefs.userId == null) {
             zumpaPrefs.userId = UUID.randomUUID().toString()
-        }
-    }
-
-    fun loadOfflineData() {
-        val offline = File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), OFFLINE_FILE_NAME)
-        if (offline.exists() && zumpaPrefs.isOffline) {
-            val gsonBuilder = GsonBuilder().setExclusionStrategies(GsonExcludeStrategy())
-            gsonBuilder.registerTypeAdapter<ZumpaThread> {
-                deserialize { elem ->
-                    if (elem is DeserializerArg) {
-                        ZumpaThread.thread(elem.json as JsonObject)
-                    } else {
-                        ZumpaThread.thread(elem as JsonObject)
-                    }
-                }
-            }
-            val gson = gsonBuilder.create()
-            val type = object : TypeToken<LinkedHashMap<String, ZumpaThread>>() {}.type
-            val jsonReader = JsonReader(InputStreamReader(FileInputStream(offline)))
-            val result: LinkedHashMap<String, ZumpaThread> = gson.fromJson(jsonReader, type)
-            zumpaOfflineApi.offlineData = result
         }
     }
 
