@@ -12,87 +12,60 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection
-import com.scurab.android.zumpareader.BusProvider
 import com.scurab.android.zumpareader.R
-import com.scurab.android.zumpareader.ZR
 import com.scurab.android.zumpareader.app.BaseFragment
 import com.scurab.android.zumpareader.app.SettingsActivity
+import com.scurab.android.zumpareader.arch.ShowToast
+import com.scurab.android.zumpareader.arch.UiEffect
 import com.scurab.android.zumpareader.content.post.PostFragment
-import com.scurab.android.zumpareader.event.DialogEvent
-import com.scurab.android.zumpareader.event.LoadThreadEvent
 import com.scurab.android.zumpareader.ext.toast
-import com.scurab.android.zumpareader.model.ZumpaMainPageResult
-import com.scurab.android.zumpareader.model.ZumpaThread
-import com.scurab.android.zumpareader.model.ZumpaToggleBody
+import com.scurab.android.zumpareader.text.SpannedTextRenderer
 import com.scurab.android.zumpareader.ui.hideAnimated
-import com.scurab.android.zumpareader.ui.showAnimated
-import com.scurab.android.zumpareader.util.asListOfValues
 import com.scurab.android.zumpareader.util.getColorFromTheme
 import com.scurab.android.zumpareader.util.ifNull
-import com.scurab.android.zumpareader.util.retrying
 import com.scurab.android.zumpareader.widget.ToggleAdapter
-import com.squareup.otto.Subscribe
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /**
  * Created by JBruchanov on 24/11/2015.
  */
 open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener, IsReloadable {
 
+    private val viewModel: MainListViewModel by viewModel()
+
     private var content: View? = null
     private val recyclerView: RecyclerView get() = content!!.findViewById(R.id.recycler_view)
     private val swipeToRefresh: SwipyRefreshLayout get() = content!!.findViewById(R.id.swipe_refresh_layout)
-    private var lastFilter: String = ""
-    private var lastOffline: Boolean? = null
-    private var invalidateOptionsMenu = false
 
-    private var nextThreadId: String? = null
-    override var isLoading: Boolean
-        get() = super.isLoading
-        set(value) {
-            super.isLoading = value
-            progressBarVisible = value
-            swipeToRefresh.let {
-                if (it.isRefreshing) {
-                    it.isRefreshing = value
-                }
-            }
-        }
+    private val listAdapter = MainListAdapter()
+    private val render by lazy { MainListRender(SpannedTextRenderer(requireContext())) }
 
-    override val title: CharSequence get() {
-        val appName = getString(R.string.app_name)
-        return if (zumpaApp.zumpaPrefs.isOffline) {
-            "$appName (${getString(R.string.offline)})"
-        } else {
-            appName
+    private var isOffline = false
+    private var returningFromSettings = false
+
+    override val title: CharSequence
+        get() {
+            val appName = getString(R.string.app_name)
+            return if (isOffline) "$appName (${getString(R.string.offline)})" else appName
         }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
     }
 
-    @Subscribe fun onDialogEvent(dialogEvent: DialogEvent) {
-        onRefreshTitle()
-        if (zumpaApp.zumpaPrefs.isOffline) {
-            lastOffline = null
-            zumpaApp.loadOfflineData()
-            loadPage()
-        }
-    }
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         content.ifNull {
             content = inflater.inflate(R.layout.view_recycler_refreshable, container, false)
-            content.let {
-                swipeToRefresh.direction = SwipyRefreshLayoutDirection.TOP
-                swipeToRefresh.setColorSchemeColors(requireContext().getColorFromTheme(R.attr.contextColor))
-                recyclerView.apply {
-                    layoutManager = LinearLayoutManager(inflater.context, RecyclerView.VERTICAL, false)
-                }
-            }
+            swipeToRefresh.direction = SwipyRefreshLayoutDirection.TOP
+            swipeToRefresh.setColorSchemeColors(requireContext().getColorFromTheme(R.attr.contextColor))
+            recyclerView.layoutManager =
+                LinearLayoutManager(inflater.context, RecyclerView.VERTICAL, false)
         }
-
         return content
     }
 
@@ -104,241 +77,136 @@ open class MainListFragment : BaseFragment(), MainListAdapter.OnShowItemListener
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        swipeToRefresh.setOnRefreshListener { loadPage() }
-        recyclerView.adapter.ifNull {
-            loadPage(true)
+        listAdapter.setOnShowItemListener(this, SHOW_ITEM_END_OFFSET)
+        listAdapter.onItemClickListener = object : MainListAdapter.OnItemClickListener {
+            override fun onItemClick(item: RenderedThreadRow, position: Int, type: Int) {
+                when (type) {
+                    MainListAdapter.tThread -> viewModel.onThreadClick(item.id)
+                    MainListAdapter.tThreadLongClick -> onThreadLongClick(position)
+                    MainListAdapter.tFavorite -> onMenuAction(position) { viewModel.onFavoriteClick(item.id) }
+                    MainListAdapter.tIgnore -> onMenuAction(position) { viewModel.onIgnoreClick(item.id) }
+                    MainListAdapter.tShare -> onMenuAction(position) { viewModel.onShareClick(item.id) }
+                }
+            }
+        }
+        recyclerView.adapter = listAdapter
+        swipeToRefresh.setOnRefreshListener { viewModel.onRefresh() }
+
+        viewModel.uiState
+            .map { it.isLoading to it.isOffline }
+            .distinctUntilChanged()
+            .collectWhileStarted { (isLoading, offline) -> renderChrome(isLoading, offline) }
+
+        //the span building and the date formatting happen here, off the main thread
+        viewModel.uiState
+            .map { it.rows }
+            .distinctUntilChanged()
+            .map { render.rows(it) }
+            .flowOn(Dispatchers.Default)
+            .collectWhileStarted { listAdapter.setItems(it) }
+
+        viewModel.effects.collectWhileStarted { onEffect(it) }
+    }
+
+    private fun renderChrome(isLoading: Boolean, offline: Boolean) {
+        progressBarVisible = isLoading
+        //guarded, the widget also sets this itself when the user pulls
+        if (swipeToRefresh.isRefreshing != isLoading) {
+            swipeToRefresh.isRefreshing = isLoading
+        }
+        if (isOffline != offline) {
+            isOffline = offline
+            onRefreshTitle()
+            mainActivity?.invalidateOptionsMenu()
         }
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.settings -> {
+    private fun onEffect(effect: UiEffect) {
+        when (effect) {
+            is MainListEffect.OpenThread ->
+                openFragment(SubListFragment.newInstance(effect.threadId), true, true)
+
+            is MainListEffect.OpenSettings -> {
                 startActivity(Intent(context, SettingsActivity::class.java))
-                invalidateOptionsMenu = true
-                return true
+                returningFromSettings = true
             }
+
+            is MainListEffect.OpenPostDialog -> {
+                openFragment(PostFragment(), !isTablet, false)
+                mainActivity?.floatingButton?.hideAnimated()
+            }
+
+            is MainListEffect.ShowOfflineDownloadDialog ->
+                mainActivity?.supportFragmentManager?.let {
+                    OfflineDownloadFragment().show(it, OfflineDownloadFragment::class.java.name)
+                }
+
+            is MainListEffect.ShareThread -> onShare(effect.link)
+            is ShowToast -> effect.text?.let { toast(it) } ?: toast(effect.resId)
+            else -> Unit
+        }
+    }
+
+    private fun onShare(link: String) {
+        try {
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, link)
+            }
+            startActivity(Intent.createChooser(intent, getString(R.string.share)))
+        } catch (e: Exception) {
+            toast(R.string.unable_to_finish_operation)
+        }
+    }
+
+    /** The row menu slide-out is a pure view animation, it never was state. */
+    private fun onThreadLongClick(position: Int) {
+        if (viewModel.uiState.value.canInteract) {
+            (recyclerView.adapter as? ToggleAdapter)?.toggleOpenState(position)
+        }
+    }
+
+    private inline fun onMenuAction(position: Int, action: () -> Unit) {
+        (recyclerView.adapter as? ToggleAdapter)?.toggleOpenState(position)
+        action()
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.settings -> {
+                viewModel.onSettingsClick()
+                true
+            }
+
             R.id.offline -> {
-                var app = zumpaApp
-                if (!app.zumpaPrefs.isOffline) {
-                    app.zumpaPrefs.isOffline = !app.zumpaPrefs.isOffline
-                    OfflineDownloadFragment().show(mainActivity!!.supportFragmentManager, OfflineDownloadFragment::class.java.name)
-                    lastOffline = null
-                } else {
-                    app.zumpaPrefs.isOffline = !app.zumpaPrefs.isOffline
-                    reloadData()
-                }
-                onRefreshTitle()
-                mainActivity?.apply {
-                    invalidateOptionsMenu()
-                    if (app.zumpaPrefs.isOffline) {
-                        floatingButton.hideAnimated()
-                    } else {
-                        floatingButton.showAnimated()
-                    }
-                }
-                return true
+                viewModel.onOfflineToggle()
+                true
             }
-            else ->
-                return super.onOptionsItemSelected(item)
+
+            else -> super.onOptionsItemSelected(item)
         }
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.menu, menu)
-        menu.findItem(R.id.offline).apply {
-            setTitle(if (zumpaApp.zumpaPrefs.isOffline) R.string.online else R.string.offline)
-        }
+        menu.findItem(R.id.offline).setTitle(if (isOffline) R.string.online else R.string.offline)
     }
 
-    override fun reloadData() {
-        loadPage()
-    }
-
-    private fun loadPage(firstLoad:Boolean = false, fromThread: String? = null) {
-        if (isLoading || fromThread?.isEmpty() == true) {
-            return
-        }
-        val filter = zumpaApp.zumpaPrefs.filter
-        val offline = zumpaApp.zumpaPrefs.isOffline
-        if (lastFilter != filter || lastOffline != offline) {
-            (recyclerView.adapter as? MainListAdapter)?.apply {
-                removeAll()
-            }
-        }
-        lastOffline = offline
-        lastFilter = filter
-        isLoading = true
-
-        val api = zumpaApp.zumpaAPI
-        launchWithView {
-            try {
-                val result = retrying {
-                    if (fromThread != null) api.getMainPage(fromThread, filter) else api.getMainPage(filter)
-                }
-                onResultLoaded(result, firstLoad)
-                isLoading = false
-            } catch (err: Throwable) {
-                isLoading = false
-                err.message?.let { toast(it) }
-            }
-        }
-    }
+    override fun reloadData() = viewModel.onRefresh()
 
     override fun onStart() {
         super.onStart()
-        if (invalidateOptionsMenu) {
-            invalidateOptionsMenu = false
-            mainActivity!!.invalidateOptionsMenu()
+        if (returningFromSettings) {
+            returningFromSettings = false
+            mainActivity?.invalidateOptionsMenu()
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-        isLoading = false
-    }
+    override fun onShowingItem(source: MainListAdapter, item: Int) = viewModel.onLoadMore()
 
-    protected fun onResultLoaded(response: ZumpaMainPageResult?, firstLoad: Boolean) {
-        response?.let {
-            zumpaData.putAll(it.items)
-            nextThreadId = it.nextThreadId
-            val values = it.items.asListOfValues()
-            recyclerView.let {
-                var user = zumpaApp.zumpaPrefs.loggedUserName
-                zumpaApp.zumpaReadStates?.let {
-                    for (zumpaThread in values) {
-                        zumpaThread.setStateBasedOnReadValue(it[zumpaThread.id]?.count, user)
-                    }
-                }
-                if (it.adapter != null) {
-                    (it.adapter as MainListAdapter).addItems(values)
-                } else {
-                    val mainListAdapter = MainListAdapter(values)
-                    mainListAdapter.setOnShowItemListener(this@MainListFragment, 15)
-                    mainListAdapter.onItemClickListener = object : MainListAdapter.OnItemClickListener {
-                        override fun onItemClick(item: ZumpaThread, position: Int, type: Int) {
-                            when(type) {
-                                MainListAdapter.tThread -> onThreadItemClick(item, position)
-                                MainListAdapter.tThreadLongClick -> onThreadItemLongClick(item, position)
-                                MainListAdapter.tFavorite -> onThreadFavoriteClick(item, position)
-                                MainListAdapter.tIgnore -> onThreadIgnoreClick(item, position)
-                                MainListAdapter.tShare -> onThreadShareClick(item, position)
-                            }
-                        }
-                    }
-                    it.adapter = mainListAdapter
-                }
-                if (isTablet && firstLoad) {
-                    onThreadItemClick(zumpaData.lastEntry().value, 0)
-                }
-            }
-            isLoading = false
-        }
-    }
+    override fun onFloatingButtonClick() = viewModel.onFabClick()
 
-    private fun onThreadItemLongClick(item: ZumpaThread, position: Int) {
-        val prefs = zumpaApp.zumpaPrefs
-        if (!prefs.isOffline && prefs.isLoggedIn) {
-            (recyclerView.adapter as? ToggleAdapter)?.toggleOpenState(position)
-        }
-    }
-
-    private fun onThreadShareClick(item: ZumpaThread, position: Int) {
-        val prefs = zumpaApp.zumpaPrefs
-        if (!prefs.isOffline && prefs.isLoggedIn) {
-            (recyclerView.adapter as? MainListAdapter)
-                    ?.items
-                    ?.get(position)
-                    ?.let {
-                        try {
-                            val intent = Intent(Intent.ACTION_SEND)
-                            intent.type = "text/plain"
-                            val link = String.format(ZR.Constants.ZUMPA_THREAD_LINK, it.id)
-                            intent.putExtra(Intent.EXTRA_TEXT, link)
-                            startActivity(Intent.createChooser(intent, getString(R.string.share)))
-                            requireContext().startActivity(intent)
-                        } catch (e: Exception) {
-                            toast(R.string.unable_to_finish_operation)
-                        }
-                    }
-        }
-    }
-
-    private fun mainListAdapter() = (recyclerView.adapter as? MainListAdapter)
-
-    open fun onThreadItemClick(item: ZumpaThread, position: Int) {
-        isLoading = false
-        val oldState = item.state
-        item.setStateBasedOnReadValue(item.items, zumpaApp.zumpaPrefs.loggedUserName)
-        if (oldState != item.state || isTablet) {
-            mainListAdapter()?.let {
-                if (isTablet) {
-                    it.setSelectedItem(item, position)
-                } else {
-                    it.notifyItemChanged(position)
-                }
-            }
-        }
-
-        if (isTablet) {
-            BusProvider.post(LoadThreadEvent(item.id))
-        } else {
-            openFragment(SubListFragment.newInstance(item.id), true, true)
-        }
-    }
-
-    private fun onThreadIgnoreClick(item: ZumpaThread, position: Int) {
-        mainListAdapter()?.let { adapter ->
-            adapter.toggleOpenState(position)
-            zumpaApp.zumpaAPI.let { api ->
-                isLoading = true
-                launchWithView {
-                    try {
-                        api.toggleRate(ZumpaToggleBody(item.id, ZumpaToggleBody.tIgnore))
-                        isLoading = false
-                        zumpaData.remove(item.id)
-                        mainListAdapter()?.removeItem(item)
-                    } catch (err: Throwable) {
-                        isLoading = false
-                        err.message?.let { toast(it) }
-                    }
-                }
-            }
-        }
-    }
-
-    private fun onThreadFavoriteClick(item: ZumpaThread, position: Int) {
-        mainListAdapter()?.let {adapter ->
-            adapter.toggleOpenState(position)
-            zumpaApp.zumpaAPI.let { api ->
-                isLoading = true
-                launchWithView {
-                    try {
-                        api.toggleRate(ZumpaToggleBody(item.id, ZumpaToggleBody.tFavorite))
-                        isLoading = false
-                        item.isFavorite = !item.isFavorite
-                        mainListAdapter()?.notifyItemChanged(position)
-                    } catch (err: Throwable) {
-                        isLoading = false
-                        err.message?.let { toast(it) }
-                    }
-                }
-            }
-        }
-    }
-
-    override fun onShowingItem(source: MainListAdapter, item: Int) {
-        if (!isLoading) {
-            (recyclerView?.adapter as MainListAdapter).let {
-                loadPage(false, nextThreadId)
-            }
-
-        }
-    }
-
-    override fun onFloatingButtonClick() {
-        activity?.supportFragmentManager.let {
-            openFragment(PostFragment(), !isTablet, false)
-            mainActivity?.floatingButton?.hideAnimated()
-        }
+    private companion object {
+        const val SHOW_ITEM_END_OFFSET = 15
     }
 }

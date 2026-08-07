@@ -7,6 +7,7 @@ import com.scurab.android.zumpareader.ZR
 import com.scurab.android.zumpareader.ZumpaAPI
 import com.scurab.android.zumpareader.app.MainViewModel
 import com.scurab.android.zumpareader.arch.DeviceConfig
+import com.scurab.android.zumpareader.content.MainListViewModel
 import com.scurab.android.zumpareader.ZumpaOfflineApi
 import com.scurab.android.zumpareader.ZumpaPHPAPI
 import com.scurab.android.zumpareader.ZumpaWSAPI
@@ -118,6 +119,7 @@ val networkModule = module {
  */
 val viewModelModule = module {
     viewModel { MainViewModel(get()) }
+    viewModel { MainListViewModel(get(), get(), get(), get(), get(), get()) }
 }
 
 val appModules = listOf(coreModule, networkModule, viewModelModule)

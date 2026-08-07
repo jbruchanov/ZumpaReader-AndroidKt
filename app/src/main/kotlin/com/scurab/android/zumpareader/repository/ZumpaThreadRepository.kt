@@ -90,10 +90,14 @@ class ZumpaThreadRepositoryImpl(
 
     override suspend fun toggleFavorite(id: String) {
         api().toggleRate(ZumpaToggleBody(id, ZumpaToggleBody.tFavorite))
+        store[id]?.let { it.isFavorite = !it.isFavorite }
+        publish()
     }
 
+    /** Ignoring a thread takes it off the list for good, so it leaves the store too. */
     override suspend fun toggleIgnore(id: String) {
         api().toggleRate(ZumpaToggleBody(id, ZumpaToggleBody.tIgnore))
+        remove(id)
     }
 
     override suspend fun sendThread(body: ZumpaThreadBody): Boolean {
