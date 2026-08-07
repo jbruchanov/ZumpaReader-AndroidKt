@@ -5,6 +5,11 @@ import com.scurab.android.zumpareader.ZumpaAPI
 import com.scurab.android.zumpareader.ZumpaPHPAPI
 import com.scurab.android.zumpareader.ZumpaWSAPI
 import com.scurab.android.zumpareader.arch.DeviceConfig
+import com.scurab.android.zumpareader.repository.AppEventBus
+import com.scurab.android.zumpareader.repository.SelectedThreadStore
+import com.scurab.android.zumpareader.repository.ZumpaReadStateRepository
+import com.scurab.android.zumpareader.repository.ZumpaSettingsRepository
+import com.scurab.android.zumpareader.repository.ZumpaThreadRepository
 import com.scurab.android.zumpareader.util.ZumpaPrefs
 import com.google.gson.Gson
 import org.junit.jupiter.api.Test
@@ -26,11 +31,17 @@ class ModulesTest {
     fun `view model module resolves every dependency it declares`() {
         viewModelModule.verify(
             extraTypes = listOf(
-                // provided by coreModule / networkModule
+                // provided by coreModule
                 Context::class,
                 Gson::class,
                 DeviceConfig::class,
                 ZumpaPrefs::class,
+                ZumpaThreadRepository::class,
+                ZumpaSettingsRepository::class,
+                ZumpaReadStateRepository::class,
+                SelectedThreadStore::class,
+                AppEventBus::class,
+                // provided by networkModule
                 ZumpaAPI::class,
                 ZumpaWSAPI::class,
                 ZumpaPHPAPI::class,

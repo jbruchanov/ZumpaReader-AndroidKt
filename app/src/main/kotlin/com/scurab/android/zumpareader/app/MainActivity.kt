@@ -15,6 +15,9 @@ import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaReaderApp
+import com.scurab.android.zumpareader.arch.ShowToast
+import com.scurab.android.zumpareader.arch.UiEffect
+import com.scurab.android.zumpareader.arch.collectWhileStarted
 import com.scurab.android.zumpareader.content.IsReloadable
 import com.scurab.android.zumpareader.content.MainListFragment
 import com.scurab.android.zumpareader.content.SubListFragment
@@ -31,6 +34,7 @@ import com.scurab.android.zumpareader.util.ifNull
 import com.scurab.android.zumpareader.util.lastNonNullFragment
 import com.scurab.android.zumpareader.util.obtainStyledColor
 import com.scurab.android.zumpareader.util.wrapWithTint
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /**
  * Created by JBruchanov on 24/11/2015.
@@ -52,17 +56,24 @@ class MainActivity : AppCompatActivity() {
 
     val floatingButton: FloatingActionButton get() = _floatingButton!!
 
+    private val viewModel: MainViewModel by viewModel()
+
     val zumpaApp: ZumpaReaderApp
         get() {
             return application as ZumpaReaderApp
         }
 
+    /**
+     * Transitional: the screens that have not been migrated yet still push their loading state in
+     * here. Migrated screens let their own ui state drive it through [MainViewModel]. Removed with
+     * the last legacy caller in phase 8.
+     */
     var progressBarVisible: Boolean
         get() {
             return progressBar.visibility == View.VISIBLE
         }
         set(value) {
-            progressBar.visibility = if (value) View.VISIBLE else View.GONE
+            viewModel.setProgressVisible(value)
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -80,43 +91,58 @@ class MainActivity : AppCompatActivity() {
         val color = obtainStyledColor(R.attr.contextColor)
         progressBar.indeterminateDrawable = progressBar.indeterminateDrawable.wrapWithTint(color)
         toolbar.overflowIcon = resources.getDrawable(R.drawable.ic_more).wrapWithTint(color)
-        checkIntent(intent)
+
+        viewModel.uiState.collectWhileStarted(this) { render(it) }
+        viewModel.effects.collectWhileStarted(this) { onEffect(it) }
+
+        viewModel.onLaunch(intent.toLaunchPayload())
+    }
+
+    private fun render(state: MainUiState) {
+        progressBar.visibility = if (state.isProgressVisible) View.VISIBLE else View.GONE
+        _floatingButton?.let { fab ->
+            if (state.fab.isVisible) fab.showAnimated() else fab.hideAnimated()
+            ((fab.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior as QuickHideBehavior?)
+                    ?.enabled = state.fab.isScrollHideEnabled
+        }
+    }
+
+    private fun onEffect(effect: UiEffect) {
+        when (effect) {
+            is MainEffect.OpenThread ->
+                openFragment(SubListFragment.newInstance(effect.threadId), true, true)
+            is MainEffect.OpenPostDialog ->
+                PostFragment
+                        .newInstance(effect.subject, effect.text, effect.uris.toTypedArray().takeIf { it.isNotEmpty() })
+                        .show(supportFragmentManager, "PostFragment")
+            is ShowToast -> effect.text?.let { toast(it) } ?: toast(effect.resId)
+            else -> Unit
+        }
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        checkIntent(intent)
+        viewModel.onLaunch(intent.toLaunchPayload())
     }
 
-    private fun checkIntent(intent: Intent?) {
-        intent?.let {
-            val pushThreadId = it.getStringExtra(EXTRA_THREAD_ID)
-            if (pushThreadId != null) {
-                openFragment(SubListFragment.newInstance(pushThreadId), true, true)
-            } else {
-                val subject: String? = it.getStringExtra(Intent.EXTRA_SUBJECT)
-                val text: String? = it.getStringExtra(Intent.EXTRA_TEXT)
-                val uri1 = it.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
-                val uriMore = it.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
-                var uris: Array<Uri>? = null
-                if (uri1 != null) {
-                    uris = arrayOf(uri1)
-                } else if (uriMore != null) {
-                    uris = uriMore.toTypedArray()
+    /**
+     * Intent -> data here, the decision of what to do with it is in the ViewModel.
+     */
+    private fun Intent?.toLaunchPayload(): LaunchPayload {
+        val intent = this ?: return LaunchPayload()
+        intent.getStringExtra(EXTRA_THREAD_ID)?.let { return LaunchPayload(threadId = it) }
+
+        val single = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+        val multiple = intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
+        return LaunchPayload(
+                subject = intent.getStringExtra(Intent.EXTRA_SUBJECT),
+                text = intent.getStringExtra(Intent.EXTRA_TEXT),
+                uris = when {
+                    single != null -> listOf(single)
+                    multiple != null -> multiple.toList()
+                    else -> emptyList()
                 }
-                if (!(subject.isNullOrEmpty() && text.isNullOrEmpty() && uris == null)) {
-                    if (!zumpaApp.zumpaPrefs.isLoggedIn) {
-                        toast(R.string.err_login_first)
-                    } else {
-                        supportFragmentManager.let {
-                            PostFragment
-                                    .newInstance(subject, text, uris)
-                                    .show(supportFragmentManager, "PostFragment")
-                        }
-                    }
-                }
-            }
-        }
+        )
     }
 
     fun openFragment(fragment: Fragment, addToBackStack: Boolean = true, replace: Boolean = true) {
@@ -137,8 +163,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        val containsPostFragment = isTablet || supportFragmentManager.fragments.firstOrNull { it -> it is PostFragment } != null
-        floatingButton.visibility = if (zumpaApp.zumpaPrefs.isLoggedInNotOffline && !containsPostFragment) View.VISIBLE else View.GONE
+        val containsPostFragment = isTablet ||
+                supportFragmentManager.fragments.firstOrNull { it is PostFragment } != null
+        //the logged-in/offline half of the old condition comes from the settings flow now
+        viewModel.setFabWanted(!containsPostFragment)
     }
 
     fun onFloatingButtonClick() {
@@ -166,23 +194,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun hideFloatingButton() {
-        _floatingButton?.let {
-            it.hideAnimated()
-            ((it.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior as QuickHideBehavior?)?.enabled = false
-        }
-
+        viewModel.setFabWanted(false)
+        viewModel.setFabScrollHideEnabled(false)
     }
 
     fun showFloatingButton() {
-        _floatingButton?.let {
-            it.showAnimated()
-            ((it.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior as QuickHideBehavior?)?.enabled = true
-        }
+        viewModel.setFabWanted(true)
+        viewModel.setFabScrollHideEnabled(true)
     }
 
-
     fun setScrollStrategyEnabled(enabled: Boolean) {
-        ((floatingButton.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior as QuickHideBehavior?)?.enabled = enabled
+        viewModel.setFabScrollHideEnabled(enabled)
     }
 
     fun reloadData() {
