@@ -22,10 +22,10 @@ data class LoginResult(val isLoggedIn: Boolean, val isPushRegistered: Boolean)
 
 /**
  * Login, logout and push registration - roughly 90 lines that used to sit inline in
- * `SettingsActivity`, which is why none of it could be tested.
+ * the settings screen, which is why none of it could be tested.
  *
  * Also owns re-priming the parser and the cookie jar after a credential change. That used to happen
- * in the activity's `onPause`, far from the login that invalidated them.
+ * in the screen's `onPause`, far from the login that invalidated them.
  */
 class AuthRepository(
     private val onlineApi: ZumpaAPI,

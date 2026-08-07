@@ -17,9 +17,8 @@ import kotlinx.coroutines.flow.stateIn
  * Makes the reactive half of [ZumpaPrefs] observable, so screens stop re-reading preferences in
  * `onResume` to notice that the offline switch or the login state changed.
  *
- * [ZumpaPrefs] itself is untouched, so `SettingsActivity` - which is deliberately left on the
- * framework `PreferenceActivity` until the compose phase - keeps writing to it directly and this
- * repository picks the writes up through the shared preference listener.
+ * [ZumpaPrefs] itself is untouched - it is still what the settings screen writes to, and this
+ * repository picks those writes up through the shared preference listener.
  */
 class ZumpaSettingsRepository(private val prefs: ZumpaPrefs) {
 

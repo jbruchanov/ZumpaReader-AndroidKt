@@ -3,73 +3,60 @@ package com.scurab.android.zumpareader.ui.main
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentTransaction
-import com.scurab.android.zumpareader.R
-import com.scurab.android.zumpareader.arch.ShowToast
-import com.scurab.android.zumpareader.arch.UiEffect
-import com.scurab.android.zumpareader.arch.collectWhileStarted
-import com.scurab.android.zumpareader.ext.toast
-import com.scurab.android.zumpareader.ui.compose.zumpaContent
-import com.scurab.android.zumpareader.ui.mainlist.MainListFragment
-import com.scurab.android.zumpareader.ui.post.PostFragment
-import com.scurab.android.zumpareader.ui.sublist.SubListFragment
-import com.scurab.android.zumpareader.ui.tablet.TabletFragment
-import com.scurab.android.zumpareader.util.ifNull
-import org.koin.androidx.viewmodel.ext.android.viewModel
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import com.scurab.android.zumpareader.ui.compose.theme.AppTheme
+import com.scurab.android.zumpareader.ui.nav.ZumpaNavHost
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 
 /**
  * Created by JBruchanov on 24/11/2015.
  *
- * A shell: a fragment container, the back stack, and routing for whatever the app was launched
- * with. Every screen draws its own chrome, so there is no toolbar, progress bar or fab here any
- * more - and once nav-compose lands (C9) the container goes too.
+ * The app's only activity. It owns the window and turns Intents into [LaunchPayload]s; everything
+ * else - the back stack, the screens, the chrome - is compose, in [ZumpaNavHost].
  */
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
 
     companion object {
         val PUSH_REQ_CODE = 46879
         val EXTRA_THREAD_ID = "ThreadID"
     }
 
-    private val isTablet by lazy { resources.getBoolean(R.bool.is_tablet) }
-    private val viewModel: MainViewModel by viewModel()
+    /**
+     * Replayed, because `onCreate`'s intent arrives before the composition that consumes it. Later
+     * ones from [onNewIntent] simply overwrite it - a payload only matters until it is acted on.
+     */
+    private val launches = MutableSharedFlow<LaunchPayload>(
+        replay = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        supportFragmentManager.findFragmentById(R.id.fragment_container).ifNull {
-            openFragment(if (isTablet) TabletFragment() else MainListFragment(), false)
-        }
-
-        viewModel.effects.collectWhileStarted(this) { onEffect(it) }
-        viewModel.onLaunch(intent.toLaunchPayload())
-    }
-
-    private fun onEffect(effect: UiEffect) {
-        when (effect) {
-            is MainEffect.OpenThread ->
-                openFragment(SubListFragment.newInstance(effect.threadId), true, true)
-
-            is MainEffect.OpenPostDialog ->
-                PostFragment
-                    .newInstance(
-                        effect.subject,
-                        effect.text,
-                        effect.uris.toTypedArray().takeIf { it.isNotEmpty() },
-                    )
-                    .show(supportFragmentManager, "PostFragment")
-
-            is ShowToast -> effect.text?.let { toast(it) } ?: toast(effect.resId)
-            else -> Unit
+        onLaunchIntent(intent)
+        setContent {
+            AppTheme {
+                ZumpaNavHost(launches = launches, onExit = ::finish)
+            }
         }
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        viewModel.onLaunch(intent.toLaunchPayload())
+        onLaunchIntent(intent)
+    }
+
+    /**
+     * A relaunch with the same Intent - a rotation is not one, `configChanges` covers that, but a
+     * process death is - would otherwise re-open whatever the app was started with. The Intent is
+     * consumed so it only ever counts once.
+     */
+    private fun onLaunchIntent(intent: Intent?) {
+        val payload = intent.toLaunchPayload()
+        if (payload == LaunchPayload()) return
+        intent?.let { setIntent(Intent()) }
+        launches.tryEmit(payload)
     }
 
     /** Intent -> data here, the decision of what to do with it is in the ViewModel. */
@@ -88,19 +75,5 @@ class MainActivity : AppCompatActivity() {
                 else -> emptyList()
             },
         )
-    }
-
-    fun openFragment(fragment: Fragment, addToBackStack: Boolean = true, replace: Boolean = true) {
-        val tr = supportFragmentManager.beginTransaction()
-        if (addToBackStack) {
-            tr.addToBackStack(fragment.javaClass.canonicalName)
-        }
-        tr.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
-        if (replace) {
-            tr.replace(R.id.fragment_container, fragment, fragment.javaClass.canonicalName)
-        } else {
-            tr.add(R.id.fragment_container, fragment, fragment.javaClass.canonicalName)
-        }
-        tr.commitAllowingStateLoss()
     }
 }
