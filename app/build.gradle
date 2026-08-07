@@ -1,6 +1,7 @@
 apply from: 'tools.gradle'
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
+apply plugin: 'org.jetbrains.kotlin.plugin.compose'
 apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.google.firebase.crashlytics'
 
@@ -10,6 +11,7 @@ android {
 
     buildFeatures {
         buildConfig = true
+        compose = true
     }
     def fileProviderAuthority = "com.scurab.android.zumpareader.fileprovider"
     defaultConfig {
@@ -61,6 +63,17 @@ kotlin {
     }
 }
 
+configurations.configureEach {
+    resolutionStrategy {
+        // The lifecycle *-compose artifacts of 2.11 require AGP 9.1 and compileSdk 37. Getting there
+        // means dropping Jetifier, which means removing swipy and pinchtozoom, which is the last step
+        // of the compose migration - so they are held one release back until then.
+        // See UPGRADE_PLAN.md C and COMPOSE_PLAN.md C9.
+        force "androidx.lifecycle:lifecycle-runtime-compose:" + libs.versions.androidx.lifecycle.compose.get()
+        force "androidx.lifecycle:lifecycle-viewmodel-compose:" + libs.versions.androidx.lifecycle.compose.get()
+    }
+}
+
 dependencies {
     //compile fileTree(dir: 'libs', include: ['*.jar'])
     implementation(libs.kotlin.stdlib)
@@ -71,6 +84,9 @@ dependencies {
     implementation(libs.bundles.koin)
     implementation(libs.bundles.android.base)
     implementation(libs.bundles.android.lifecycle)
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.bundles.compose)
+    debugImplementation(libs.androidx.compose.ui.tooling)
     implementation(libs.jsoup)
     implementation(libs.gson)
     implementation(libs.bundles.okhttp)

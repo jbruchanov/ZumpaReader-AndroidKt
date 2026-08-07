@@ -385,6 +385,15 @@ The only screen that is still MVC, converted straight to Compose + MVVM as you a
 
 ## Risks
 
+0. **There is a dependency ceiling, and it is circular.** Found while doing C0: the
+   `lifecycle-runtime-compose` / `lifecycle-viewmodel-compose` artifacts of 2.11 require **AGP 9.1
+   and compileSdk 37**. Getting there means dropping Jetifier, which means removing `swipy` and
+   `pinchtozoom` — which is C9, the *last* step of this migration. So the whole Compose migration
+   runs one androidx release behind, and `app/build.gradle` holds those two artifacts at 2.10.0 with
+   a `resolutionStrategy.force`. Expect the same for other Compose-era androidx libraries added
+   later (nav-compose especially). The force comes out in C9 together with Jetifier, and that is the
+   moment to move everything forward at once. Note this does *not* affect `compose-bom` itself —
+   2026.06.01 is fine on AGP 8.13.
 1. **The bottom pull (C6)** is the only bespoke gesture work in the plan and the only piece with no
    library to fall back on. If it fights the `LazyColumn` fling, the escape hatch is the "auto-load
    at the end + top pull" option that was on the table.
