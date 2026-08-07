@@ -2,10 +2,12 @@
 
 [bundles]
 
-android-base = ["androidx-core-ktx", "androidx-annotation", "androidx-lifecycle-runtime", "google-material"]
+android-base = ["androidx-core-ktx", "androidx-annotation", "google-material"]
+android-lifecycle = ["androidx-lifecycle-runtime", "androidx-lifecycle-viewmodel"]
 coroutines = ["kotlinx-coroutines-core", "kotlinx-coroutines-android"]
 firebase = ["firebase-crashlytics", "firebase-messaging"]
 fresco = ["fresco-base", "fresco-animated-gif", "fresco-middleware"]
+koin = ["koin-core", "koin-android"]
 okhttp = ["okhttp-base", "okhttp-logging", "okhttp-urlconnection"]
 retrofit = ["retrofit-base", "retrofit-converter-gson"]
 
@@ -39,6 +41,7 @@ google-services = "4.5.0"
 google-material = "1.14.0"
 gson = "2.14.0"
 jsoup = "1.23.1"
+koin = "4.2.2"
 kotlinx-coroutines = "1.11.0"
 okhttp = "5.4.0"
 pinchtozoom = "0.1"
@@ -50,6 +53,7 @@ swipy = "1.2.3"
 androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidx-annotation" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidx-core-ktx" }
 androidx-lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidx-lifecycle" }
+androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "androidx-lifecycle" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 #versions of firebase libraries are managed by the bom
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
@@ -60,6 +64,10 @@ fresco-middleware = { module = "com.facebook.fresco:middleware", version.ref = "
 google-material = { module = "com.google.android.material:material", version.ref = "google-material" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
+koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin" }
+#koin versions are managed by the bom
+koin-android = { module = "io.insert-koin:koin-android" }
+koin-core = { module = "io.insert-koin:koin-core" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
