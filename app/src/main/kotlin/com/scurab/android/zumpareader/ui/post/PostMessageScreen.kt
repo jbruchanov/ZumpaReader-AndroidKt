@@ -87,10 +87,10 @@ private fun PostMessageScreen(uiState: PostUiState, eventHandler: PostMessageEve
 @Composable
 private fun PostActionsRow(uiState: PostUiState, eventHandler: PostMessageEventHandler) {
     Row(modifier = Modifier.fillMaxWidth()) {
-        ActionIcon(R.drawable.ic_photo, enabled = !uiState.isSending, onClick = eventHandler::onPhotoClicked)
-        ActionIcon(R.drawable.ic_camera, enabled = !uiState.isSending, onClick = eventHandler::onCameraClicked)
+        ActionIcon(R.drawable.ic_photo_black, enabled = !uiState.isSending, onClick = eventHandler::onPhotoClicked)
+        ActionIcon(R.drawable.ic_photo_camera_black, enabled = !uiState.isSending, onClick = eventHandler::onCameraClicked)
         Spacer(Modifier.weight(1f))
-        ActionIcon(R.drawable.ic_send, enabled = uiState.canSend, onClick = eventHandler::onSendClicked)
+        ActionIcon(R.drawable.ic_send_black, enabled = uiState.canSend, onClick = eventHandler::onSendClicked)
     }
 }
 

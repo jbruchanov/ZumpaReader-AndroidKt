@@ -154,7 +154,7 @@ private fun SubListScreen(
                     containerColor = AppTheme.colorScheme.context,
                     contentColor = AppTheme.colorScheme.primaryBackground,
                 ) {
-                    Icon(painterResource(R.drawable.ic_pen), contentDescription = null)
+                    Icon(painterResource(R.drawable.ic_pen_black), contentDescription = null)
                 }
             }
         },
@@ -273,14 +273,14 @@ private fun MessageRowMenu(row: SubListRowUiState.Message, eventHandler: SubList
         }
         IconButton(onClick = { eventHandler.onCopyClicked(row.body) }) {
             Icon(
-                painterResource(R.drawable.ic_copy),
+                painterResource(R.drawable.ic_copy_black),
                 contentDescription = null,
                 tint = AppTheme.colorScheme.context,
             )
         }
         IconButton(onClick = { eventHandler.onQuoteClicked(row.author, row.body) }) {
             Icon(
-                painterResource(R.drawable.ic_speak),
+                painterResource(R.drawable.ic_speak_black),
                 contentDescription = null,
                 tint = AppTheme.colorScheme.context,
             )
@@ -399,7 +399,7 @@ private fun ReplyPanel(uiState: SubListUiState, eventHandler: SubListEventHandle
             enabled = !uiState.isSending && !uiState.draft.isBlank,
         ) {
             Icon(
-                painterResource(R.drawable.ic_send),
+                painterResource(R.drawable.ic_send_black),
                 contentDescription = null,
                 tint = if (uiState.draft.isBlank) {
                     AppTheme.colorScheme.contextTextDisabled

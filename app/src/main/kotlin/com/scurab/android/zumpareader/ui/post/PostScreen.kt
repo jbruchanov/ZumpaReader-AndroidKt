@@ -177,7 +177,7 @@ private fun PostTabRow(uiState: PostUiState, selectedIndex: Int, eventHandler: P
 }
 
 private fun PostTabUiState.iconRes(): Int = when (this) {
-    is PostTabUiState.Message -> R.drawable.ic_pen
+    is PostTabUiState.Message -> R.drawable.ic_pen_black
     is PostTabUiState.Image -> iconRes
 }
 

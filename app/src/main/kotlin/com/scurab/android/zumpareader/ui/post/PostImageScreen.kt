@@ -166,12 +166,12 @@ private fun ImagePanel(uiState: PostImageUiState, eventHandler: PostImageEventHa
             verticalAlignment = Alignment.CenterVertically,
         ) {
             SampleSizeSelector(uiState, eventHandler)
-            PanelIcon(R.drawable.ic_resize, !uiState.isBusy, eventHandler::onResizeClicked)
-            PanelIcon(R.drawable.ic_rotate_right, !uiState.isBusy, eventHandler::onRotateClicked)
+            PanelIcon(R.drawable.ic_aspect_ratio_black, !uiState.isBusy, eventHandler::onResizeClicked)
+            PanelIcon(R.drawable.ic_rotate_right_black, !uiState.isBusy, eventHandler::onRotateClicked)
             if (uiState.uploadedLink != null) {
-                PanelIcon(R.drawable.ic_copy, true, eventHandler::onCopyLinkClicked)
+                PanelIcon(R.drawable.ic_copy_black, true, eventHandler::onCopyLinkClicked)
             }
-            PanelIcon(R.drawable.ic_send, !uiState.isBusy, eventHandler::onUploadClicked)
+            PanelIcon(R.drawable.ic_send_black, !uiState.isBusy, eventHandler::onUploadClicked)
         }
     }
 }

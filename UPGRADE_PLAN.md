@@ -161,10 +161,15 @@ While in there: `ProgressDialog` → an inline overlay, and `ToggleAdapter`'s op
 
 ### E. Known bugs
 
-#### E1. An image vanishes from the thread list after viewing it full screen
+#### ~~E1. An image vanishes from the thread list after viewing it full screen~~ → **fixed**
 
-Tap an image in a thread → it opens full screen and zooms fine → navigate back → **the image is
-gone from the list**. Reported from real use; not yet reproduced on a device here.
+Fixed in Compose C1 and **confirmed on an emulator**: tap an image, view it, go back, the row is
+still there. The fix was not in the viewer but at the call site - `makeSceneTransitionAnimation`
+marked the row as a shared element and the framework leaves one INVISIBLE until the return
+transition completes, which a recycled RecyclerView row never reliably does. Starting the activity
+without the transition was the whole fix.
+
+The original report, for the record:
 
 What the code says, without having run it:
 
