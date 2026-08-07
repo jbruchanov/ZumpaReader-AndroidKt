@@ -5,6 +5,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,7 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -40,6 +41,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -60,6 +62,7 @@ import android.content.Context
 import android.content.Intent
 import com.scurab.android.zumpareader.ui.compose.LocalNavigator
 import com.scurab.android.zumpareader.ui.compose.rememberAnnotatedTextRenderer
+import com.scurab.android.zumpareader.ui.compose.zumpaRowBackground
 import com.scurab.android.zumpareader.ui.compose.theme.AppTheme
 import org.koin.androidx.compose.koinViewModel
 import java.text.SimpleDateFormat
@@ -128,8 +131,9 @@ private fun MainListScreen(uiState: MainListUiState, eventHandler: MainListEvent
                 .padding(padding),
         ) {
             LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
-                items(uiState.rows, key = { it.id }) { row ->
-                    ThreadRow(row, eventHandler)
+                //the alternating background is keyed on list position, as the level-list was
+                itemsIndexed(uiState.rows, key = { _, row -> row.id }) { index, row ->
+                    ThreadRow(row, index, eventHandler)
                 }
             }
         }
@@ -194,7 +198,8 @@ private fun MainListTopBar(uiState: MainListUiState, eventHandler: MainListEvent
 }
 
 @Composable
-private fun ThreadRow(row: ThreadRowUiState, eventHandler: MainListEventHandler) {
+private fun ThreadRow(row: ThreadRowUiState, index: Int, eventHandler: MainListEventHandler) {
+    val interactionSource = remember { MutableInteractionSource() }
     val renderer = rememberAnnotatedTextRenderer()
     val subject = remember(row.subject, renderer) { renderer.subject(row.subject) }
     val time = remember(row.time, row.useShortTimeFormat) {
@@ -207,14 +212,10 @@ private fun ThreadRow(row: ThreadRowUiState, eventHandler: MainListEventHandler)
                 .fillMaxWidth()
                 //so the state bar's fillMaxHeight has something to measure against
                 .height(IntrinsicSize.Min)
-                .background(
-                    if (row.isSelected) {
-                        AppTheme.colorScheme.selectedBackground
-                    } else {
-                        AppTheme.colorScheme.primaryBackground
-                    }
-                )
+                .zumpaRowBackground(index, row.isSelected, interactionSource)
                 .combinedClickable(
+                    interactionSource = interactionSource,
+                    indication = null,
                     onClick = { eventHandler.onThreadClicked(row.id) },
                     onLongClick = { eventHandler.onThreadLongPressed(row.id) },
                 ),
@@ -286,7 +287,8 @@ private fun ThreadRow(row: ThreadRowUiState, eventHandler: MainListEventHandler)
 @Composable
 private fun ThreadStateBar(state: ThreadState) {
     val color = when (state) {
-        ThreadState.None -> AppTheme.colorScheme.primaryBackground
+        //no bar at all for a read thread, as level 0 of the state drawable was transparent
+        ThreadState.None -> Color.Transparent
         ThreadState.New -> AppTheme.colorScheme.threadStateNew
         ThreadState.Updated -> AppTheme.colorScheme.threadStateUpdated
         ThreadState.Own -> AppTheme.colorScheme.threadStateOwn
@@ -375,7 +377,7 @@ private fun MainListScreenLoadingPreview() = AppTheme {
 private fun ThreadRowStatesPreview() = AppTheme {
     Column {
         ThreadState.entries.forEach { state ->
-            ThreadRow(Fixtures.MainList.row(state = state), mock())
+            ThreadRow(Fixtures.MainList.row(state = state), state.ordinal, mock())
         }
     }
 }
@@ -383,5 +385,5 @@ private fun ThreadRowStatesPreview() = AppTheme {
 @Preview(showBackground = true, backgroundColor = 0xFF000000)
 @Composable
 private fun ThreadRowMenuOpenPreview() = AppTheme {
-    ThreadRow(Fixtures.MainList.row(isMenuOpen = true), mock())
+    ThreadRow(Fixtures.MainList.row(isMenuOpen = true), 0, mock())
 }

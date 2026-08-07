@@ -6,6 +6,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -59,6 +60,7 @@ import com.scurab.android.zumpareader.test.uiState
 import com.scurab.android.zumpareader.test.withSurvey
 import com.scurab.android.zumpareader.ui.compose.LocalNavigator
 import com.scurab.android.zumpareader.ui.compose.rememberAnnotatedTextRenderer
+import com.scurab.android.zumpareader.ui.compose.zumpaRowBackground
 import com.scurab.android.zumpareader.ui.compose.theme.AppTheme
 import com.scurab.android.zumpareader.util.saveToClipboard
 import org.koin.androidx.compose.koinViewModel
@@ -213,6 +215,7 @@ private fun SubListRow(row: SubListRowUiState, eventHandler: SubListEventHandler
 
 @Composable
 private fun MessageRow(row: SubListRowUiState.Message, eventHandler: SubListEventHandler) {
+    val interactionSource = remember { MutableInteractionSource() }
     val renderer = rememberAnnotatedTextRenderer()
     val body = remember(row.body, renderer) { renderer.body(row.body) }
     val author = remember(row.author, row.rating, renderer) { renderer.author(row.author, row.rating) }
@@ -222,8 +225,10 @@ private fun MessageRow(row: SubListRowUiState.Message, eventHandler: SubListEven
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(row.itemIndex.rowBackground())
+                .zumpaRowBackground(row.itemIndex, interactionSource = interactionSource)
                 .combinedClickable(
+                    interactionSource = interactionSource,
+                    indication = null,
                     onClick = { eventHandler.onMessageClicked(row) },
                     onLongClick = { eventHandler.onMessageLongPressed(row) },
                 )
@@ -294,7 +299,7 @@ private fun LinkRow(row: SubListRowUiState.Link, eventHandler: SubListEventHandl
         onClick = { eventHandler.onLinkClicked(row.url) },
         modifier = Modifier
             .fillMaxWidth()
-            .background(row.itemIndex.rowBackground())
+            .zumpaRowBackground(row.itemIndex)
             .padding(horizontal = AppTheme.spaces.listItemPadding),
     ) {
         Text(
@@ -316,7 +321,7 @@ private fun ImageRow(row: SubListRowUiState.Image, eventHandler: SubListEventHan
         contentScale = ContentScale.FillWidth,
         modifier = Modifier
             .fillMaxWidth()
-            .background(row.itemIndex.rowBackground())
+            .zumpaRowBackground(row.itemIndex)
             .combinedClickable(
                 onClick = { eventHandler.onImageClicked(row.url) },
                 onLongClick = { eventHandler.onLinkClicked(row.url) },
@@ -410,14 +415,6 @@ private fun ReplyPanel(uiState: SubListUiState, eventHandler: SubListEventHandle
         }
     }
 }
-
-@Composable
-private fun Int.rowBackground() =
-    if (this % 2 == 0) {
-        AppTheme.colorScheme.primaryBackground
-    } else {
-        AppTheme.colorScheme.secondaryBackground
-    }
 
 private val dateFormat = SimpleDateFormat("HH:mm.ss", Locale.US)
 private const val REPLY_MAX_LINES = 6
