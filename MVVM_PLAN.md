@@ -24,6 +24,41 @@ stands for anything new: `StateFlow` for state, `SharedFlow`/`Channel` for event
 
 ---
 
+## Package layout
+
+Each screen owns a package under `ui.`, holding its ViewModel, its ui state, its effects, its
+fragment/activity and its adapter + renderer. The old `app.` and `content.` groupings — which split
+by "is it a fragment" rather than by screen — are gone.
+
+```
+com.scurab.android.zumpareader
+├── arch/                BaseViewModel, UiEffect, collectWhileStarted, DeviceConfig
+├── repository/          the single owners of shared state, + AppEventBus, SelectedThreadStore
+├── text/                ZumpaTextRenderer<T> and its Spanned implementation
+├── usecase/             OfflineDownloadUseCase, CreateNotificationChannelsUseCase
+├── model/ data/ util/   parser output, retrofit converters, helpers
+├── widget/              custom views and view holders shared across screens
+└── ui/                  BaseFragment, BaseDialogFragment, SendingDialogController, view helpers
+    ├── main/            MainActivity      + MainViewModel
+    ├── mainlist/        MainListFragment  + MainListViewModel + adapter + render
+    ├── sublist/         SubListFragment   + SubListViewModel  + adapter + render
+    ├── post/            PostFragment + PostMessageFragment + PostImageFragment
+    │   └── tasks/       + PostViewModel + PostImageViewModel
+    ├── offline/         OfflineDownloadFragment + OfflineDownloadViewModel
+    ├── image/           ImageActivity     + ImageViewModel
+    ├── tablet/          TabletFragment (two-pane container, no ViewModel)
+    └── settings/        SettingsActivity (still MVC, see phase 9)
+```
+
+Test sources mirror it: `ui/main/MainViewModelTest`, `ui/sublist/SubListViewModelTest`, and so on.
+
+Two things deliberately did not move into a screen package: `ZumpaItemViewHolder` went to `widget/`
+because both list adapters extend it, and `SurveyUiState`/`SurveyItemUiState` stayed in `ui.sublist`
+even though `widget.SurveyView` binds them — they are the sub-list's state, and the widget already
+depended on those types before the move.
+
+---
+
 ## 0. Inventory
 
 | Screen | Class | Today | Target |
