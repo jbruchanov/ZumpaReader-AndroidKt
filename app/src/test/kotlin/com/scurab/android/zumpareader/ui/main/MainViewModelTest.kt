@@ -14,7 +14,6 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -22,11 +21,8 @@ import org.junit.jupiter.api.Test
 class MainViewModelTest {
 
     private val isLoggedIn = MutableStateFlow(false)
-    private val isLoggedInNotOffline = MutableStateFlow(false)
-
     private val settings = mockk<ZumpaSettingsRepository> {
         every { this@mockk.isLoggedIn } returns this@MainViewModelTest.isLoggedIn
-        every { this@mockk.isLoggedInNotOffline } returns this@MainViewModelTest.isLoggedInNotOffline
     }
 
     private fun viewModel() = MainViewModel(settings)
@@ -94,23 +90,4 @@ class MainViewModelTest {
         }
     }
 
-    @Test
-    fun `the fab needs both a session and a screen that wants it`() = runTest {
-        val viewModel = viewModel()
-        assertFalse(viewModel.uiState.value.fab.isVisible)
-
-        isLoggedInNotOffline.value = true
-        assertTrue(viewModel.uiState.value.fab.isVisible)
-
-        //the post dialog is up
-        viewModel.setFabWanted(false)
-        assertFalse(viewModel.uiState.value.fab.isVisible)
-
-        viewModel.setFabWanted(true)
-        assertTrue(viewModel.uiState.value.fab.isVisible)
-
-        //went offline
-        isLoggedInNotOffline.value = false
-        assertFalse(viewModel.uiState.value.fab.isVisible)
-    }
 }

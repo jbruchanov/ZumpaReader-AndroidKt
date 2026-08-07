@@ -28,8 +28,6 @@ class SubListFragment : BaseFragment() {
         }
     }
 
-    override val title: CharSequence? get() = null
-
     private val argThreadId: String get() = arguments?.getString(ARG_THREAD_ID) ?: ""
 
     override fun onCreateView(

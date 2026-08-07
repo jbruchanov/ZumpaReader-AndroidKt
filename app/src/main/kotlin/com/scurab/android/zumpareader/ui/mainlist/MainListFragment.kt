@@ -15,8 +15,6 @@ import com.scurab.android.zumpareader.ui.compose.zumpaContent
  */
 open class MainListFragment : BaseFragment() {
 
-    override val title: CharSequence? get() = null
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
