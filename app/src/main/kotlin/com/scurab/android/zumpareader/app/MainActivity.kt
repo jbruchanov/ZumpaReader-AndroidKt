@@ -211,13 +211,4 @@ class MainActivity : AppCompatActivity() {
         hideKeyboard(window.decorView)
         (supportFragmentManager.fragments.firstOrNull { it -> it is IsReloadable } as? IsReloadable)?.reloadData()
     }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (PostFragment.isRequestCode(requestCode)) {
-            (supportFragmentManager.findFragmentByTag(PostFragment::class.java.name) as PostFragment?)?.apply {
-                onActivityResult(requestCode, resultCode, data)
-            }
-        }
-    }
 }

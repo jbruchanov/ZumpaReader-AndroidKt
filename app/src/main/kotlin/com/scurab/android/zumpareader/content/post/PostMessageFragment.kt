@@ -1,68 +1,35 @@
 package com.scurab.android.zumpareader.content.post
 
-import android.app.ProgressDialog
-import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import com.scurab.android.zumpareader.R
-import com.scurab.android.zumpareader.ZumpaReaderApp
-import com.scurab.android.zumpareader.app.MainActivity
-import com.scurab.android.zumpareader.content.SendingFragment
-import com.scurab.android.zumpareader.ext.toast
-import com.scurab.android.zumpareader.extension.app
-import com.scurab.android.zumpareader.model.ZumpaThreadBody
-import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
-import com.scurab.android.zumpareader.util.hideKeyboard
-import com.scurab.android.zumpareader.util.ignoringZumpaRedirect
+import com.scurab.android.zumpareader.arch.collectWhileStarted
+import com.scurab.android.zumpareader.ui.SendingDialogController
 import com.scurab.android.zumpareader.widget.PostMessageView
-import androidx.fragment.app.DialogFragment
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /**
  * Created by JBruchanov on 31/12/2015.
+ *
+ * The message tab of [PostFragment]. It binds to the parent's [PostViewModel] rather than owning
+ * one - the subject and the message are the dialog's state, and the image tabs need to append
+ * their uploaded links to the same draft.
  */
-class PostMessageFragment : DialogFragment(), SendingFragment {
+class PostMessageFragment : Fragment() {
 
-    companion object {
-        private val SHOW_KEYBOARD = "SHOW_KEYBOARD"
-
-        fun newInstance(subject: String?, message: String?): PostMessageFragment {
-            return PostMessageFragment().apply {
-                arguments = PostFragment.arguments(subject, message)
-            }
-        }
-
-        fun arguments(subject: String?, message: String?, showKeyboard: Boolean = true, threadId: String? = null): Bundle {
-            return Bundle().apply {
-                putString(Intent.EXTRA_SUBJECT, subject)
-                putString(Intent.EXTRA_TEXT, message)
-                putBoolean(SHOW_KEYBOARD, showKeyboard)
-                putString(PostFragment.THREAD_ID, threadId)
-            }
-        }
-    }
+    private val viewModel: PostViewModel by viewModel(ownerProducer = { requireParentFragment() })
 
     private val postMessageView: PostMessageView? get() = view?.findViewById(R.id.post_message_view)
-    override var sendingDialog: ProgressDialog? = null
+    private val sendingDialog by lazy { SendingDialogController(requireContext()) }
 
-    val mainActivity: MainActivity?
-        get() {
-            return activity as MainActivity?
-        }
-    val zumpaApp: ZumpaReaderApp get() = app()
-
-    private val parentPostFragment: PostFragment? get() = parentFragment as PostFragment?
-
-    private val showKeyboard: Boolean by lazy { arguments?.getBoolean(SHOW_KEYBOARD) ?: false }
-    private val argSubject: String? by lazy { arguments?.getString(Intent.EXTRA_SUBJECT) }
-    private val argThreadId: String? by lazy { arguments?.getString(PostFragment.THREAD_ID) }
-    private val argMessage: String? by lazy { arguments?.getString(Intent.EXTRA_TEXT) }
-
-    private val links = ArrayList<String>()
+    private var isSettingText = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return inflater.inflate(R.layout.fragment_post_message, container, false)
@@ -72,98 +39,74 @@ class PostMessageFragment : DialogFragment(), SendingFragment {
         super.onViewCreated(view, savedInstanceState)
         postMessageView?.apply {
             setUIForNewMessage()
-            sendButton.setOnClickListener { dispatchSend() }
-            subject.setText(argSubject)
-            subject.isEnabled = argThreadId == null
-            message.setText(ZumpaSimpleParser.replaceLinksByZumpaLinks(argMessage))
-
-            camera.setOnClickListener { parentPostFragment?.onCameraClick() }
-            photo.setOnClickListener { parentPostFragment?.onPhotoClick() }
+            sendButton.setOnClickListener { viewModel.onSend() }
+            camera.setOnClickListener { viewModel.onCameraClick() }
+            photo.setOnClickListener { viewModel.onPhotoClick() }
+            subject.addTextChangedListener(subjectWatcher)
+            message.addTextChangedListener(messageWatcher)
         }
-    }
 
-    override fun onViewStateRestored(savedInstanceState: Bundle?) {
-        super.onViewStateRestored(savedInstanceState)
-        if (links.size > 0) {
-            postMessageView?.message?.let {
-                if (!it.text.isLastCharNewLine()) {
-                    it.append("\n")
-                }
-                for (link in links) {
-                    it.text.append(link.asZumpaLinkWithNewLine())
+        viewModel.uiState
+            .map { it.subject to it.isSubjectEditable }
+            .distinctUntilChanged()
+            .collectWhileStarted(viewLifecycleOwner) { (text, editable) ->
+                postMessageView?.subject?.let {
+                    it.isEnabled = editable
+                    if (it.text.toString() != text) {
+                        setTextKeepingCursor { it.setText(text) }
+                    }
                 }
             }
-            links.clear()
-        }
+
+        viewModel.uiState
+            .map { it.message }
+            .distinctUntilChanged()
+            .collectWhileStarted(viewLifecycleOwner) { text ->
+                postMessageView?.message?.let {
+                    if (it.text.toString() != text) {
+                        setTextKeepingCursor {
+                            it.setText(text)
+                            it.setSelection(it.length())
+                        }
+                    }
+                }
+            }
+
+        viewModel.uiState
+            .map { it.canSend }
+            .distinctUntilChanged()
+            .collectWhileStarted(viewLifecycleOwner) { postMessageView?.sendButton?.isEnabled = it }
+
+        viewModel.uiState
+            .map { it.isSending }
+            .distinctUntilChanged()
+            .collectWhileStarted(viewLifecycleOwner) { sendingDialog.update(it) }
     }
 
-    protected fun dispatchSend() {
-        val postMessageView = this.postMessageView ?: return
-        val subject = postMessageView.subject.text.toString().trim()
-        val message = postMessageView.message.text.toString().trim()
-        val context = requireContext()
+    private inline fun setTextKeepingCursor(block: () -> Unit) {
+        isSettingText = true
+        block()
+        isSettingText = false
+    }
 
-        if (subject.isEmpty()) {
-            toast(R.string.err_empty_subject)
-            return
-        }
+    private val subjectWatcher = watcher { viewModel.onSubjectChanged(it) }
 
-        if (message.isEmpty()) {
-            toast(R.string.err_empty_msg)
-            return
-        }
+    private val messageWatcher = watcher { viewModel.onMessageChanged(it) }
 
-        zumpaApp.zumpaAPI.let { api ->
-            val threadId = argThreadId
-            isSending = true
-            if (threadId == null) {
-                val body = ZumpaThreadBody(zumpaApp.zumpaPrefs.nickName, subject, message)
-                context.hideKeyboard(view)
-                viewLifecycleOwner.lifecycleScope.launch {
-                    try {
-                        ignoringZumpaRedirect { api.sendThread(body) }
-                        dismiss()
-                    } catch (err: Throwable) {
-                        err.message?.let { toast(it) }
-                        isSending = false
-                    }
-                }
-            } else {
-                val body = ZumpaThreadBody(zumpaApp.zumpaPrefs.nickName, zumpaApp.zumpaData[threadId]?.subject ?: argSubject!!, message, threadId)
-                viewLifecycleOwner.lifecycleScope.launch {
-                    try {
-                        ignoringZumpaRedirect { api.sendResponse(threadId, threadId, body) }
-                        dismiss()
-                    } catch (err: Throwable) {
-                        err.message?.let { toast(it) }
-                        isSending = false
-                    }
-                }
+    private inline fun watcher(crossinline onChanged: (String) -> Unit) = object : TextWatcher {
+        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+        override fun afterTextChanged(s: Editable?) {
+            if (!isSettingText) {
+                onChanged(s?.toString() ?: "")
             }
         }
     }
 
-    override fun dismiss() {
-        isSending = false
-        (parentFragment as PostFragment).dismissAllowingStateLoss()
-        mainActivity?.apply {
-            reloadData()
-        }
-    }
-
-    fun addLink(link: String) {
-        links.add(link)
-    }
-
-    fun addGiphyLink(link: String) {
-        postMessageView?.message?.append(link.asZumpaLinkWithNewLine())
-    }
-
-    private fun String.asZumpaLinkWithNewLine(): String {
-        return "<%s>\n".format(this)
-    }
-
-    private fun Editable.isLastCharNewLine(): Boolean {
-        return this.length == 0 || this.last() == '\n'
+    override fun onDestroyView() {
+        sendingDialog.update(false)
+        postMessageView?.subject?.removeTextChangedListener(subjectWatcher)
+        postMessageView?.message?.removeTextChangedListener(messageWatcher)
+        super.onDestroyView()
     }
 }
