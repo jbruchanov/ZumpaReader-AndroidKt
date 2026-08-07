@@ -684,6 +684,29 @@ Ordered so the first screen carries the least risk of the shared plumbing:
 
 ---
 
+## Phase 10 — known backend-facing bugs, after the Compose migration
+
+Not part of the MVVM work and not caused by it. Parked here rather than in an issue tracker so they
+stay attached to the plan; both are in the request path and are cheapest to fix once the post/send
+flow is already state-driven.
+
+1. **The cookie grows until the backend rejects the request.** `ZumpaPrefs.cookies` is a
+   `Set<String>` that is only ever replaced wholesale on login (`ParseUtils.extractCookies`), and
+   `cookiesMap` hands the whole set to `JavaNetCookieJar` on every request. Once it gets big enough
+   the server answers with an error instead of a page. It needs to be trimmed automatically —
+   drop expired and duplicate-name cookies before building the header, rather than leaving the user
+   to log out and back in.
+2. **Message text is not encoded/escaped properly on send.** `ZumpaThreadBody.toHttpPostString`
+   builds the form body by hand with `String.encodeHttp()` (`URLEncoder.encode(this, ENCODING)`,
+   where `ZR.Constants.ENCODING` is the forum's legacy charset). Characters outside that charset —
+   emoji above all — are silently dropped by the backend. Needs the body encoded so the forum
+   accepts it, or the unsupported characters rejected in the UI before sending rather than
+   disappearing after.
+
+Both should be re-raised once the Compose phase lands.
+
+---
+
 ## Risks and things to verify
 
 1. **The offline `factory<ZumpaAPI>` capture.** The single biggest trap: any ViewModel or `single`

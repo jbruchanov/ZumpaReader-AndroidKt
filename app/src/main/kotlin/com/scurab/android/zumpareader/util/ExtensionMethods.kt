@@ -176,6 +176,18 @@ fun String.isImageUri(): Boolean {
     }
 }
 
+private val IMAGE_EXTENSIONS = listOf(".jpg", ".jpeg", ".png", ".bmp", ".gif")
+
+/**
+ * The same decision as [isImageUri] without android.net.Uri, so the code that classifies a url can
+ * be unit tested. [Uri.getPath] drops the query and the fragment and this strips them by hand;
+ * everything else is the same suffix check.
+ */
+fun String.looksLikeImageUrl(): Boolean {
+    val path = substringBefore('#').substringBefore('?').lowercase()
+    return IMAGE_EXTENSIONS.any { path.endsWith(it) }
+}
+
 fun InputStream.contentAsString(): String {
     var bos = ByteArrayOutputStream()
     copyTo(bos)
