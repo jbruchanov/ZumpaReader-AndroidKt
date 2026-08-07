@@ -112,8 +112,8 @@ shipped — two image loaders). `otto` is gone as of MVVM phase 6.
 
 ### C. Toolchain — blocked by B
 
-1. `android.enableJetifier=true` → **blocked** by swipy + pinchtozoom. AGP 9 drops Jetifier
-   entirely, so AGP 9 requires resolving B first.
+1. `android.enableJetifier=true` → **blocked by `swipy` alone** now. AGP 9 drops Jetifier entirely,
+   so AGP 9 requires resolving B first.
 2. AGP 8.13.2 → 9.x + Gradle 9.x — blocked by 1.
 3. Then core-ktx 1.19.0 and compileSdk 37 become available — the dev device already runs Android 17.
 4. Optional while in there: `.gradle` → `.gradle.kts`, `org.gradle.configuration-cache=true`, a
@@ -121,8 +121,9 @@ shipped — two image loaders). `otto` is gone as of MVVM phase 6.
 
 ### D. Compose
 
-**The detailed per-screen plan is in [`COMPOSE_PLAN.md`](COMPOSE_PLAN.md)** — conventions, the
-Route/Screen split, previews and fixtures, and a phase per screen. Summary of the order:
+**The detailed per-screen plan is in [`COMPOSE_PLAN.md`](COMPOSE_PLAN.md)** — conventions, the two
+`Screen` overloads, previews and fixtures, and a phase per screen. Progress: **C0 and C1 done**
+(`ff326e1`, `0f09920`). Summary of the order:
 
 `SettingsActivity` is converted **last**, not first as this section originally said: every other
 screen is already MVVM, so converting them is a render-only change, while Settings is the one screen

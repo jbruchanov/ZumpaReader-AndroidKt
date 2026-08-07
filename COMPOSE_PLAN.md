@@ -13,7 +13,7 @@ deleted once the work lands.
 
 | # | Decision | Consequence |
 |---|---|---|
-| 1 | **`ZumpaTheme` wraps Material 3.** | The ~30 custom attrs of `ThemeBlack` become `ZumpaColors`/`ZumpaDimens`/`ZumpaTypography` CompositionLocals; M3 underneath supplies `PullToRefreshBox`, `Scaffold`, `TextField`, ripples. M3 defaults that fight the look get overridden once, in the theme. |
+| 1 | **`AppTheme` wraps Material 3.** | The ~30 custom attrs of `ThemeBlack` become `AppColorScheme`/`AppTypography`/`AppShapes`/`AppSizes`/`AppSpaces` behind an `object AppTheme`, shaped like `MaterialTheme`; M3 underneath supplies `PullToRefreshBox`, `Scaffold`, `TextField`, ripples. M3 defaults that fight the look get overridden once, in the theme. |
 | 2 | **Coil, and Fresco + Picasso are deleted at the end.** | The app currently ships two loaders. Ends with one. The offline disk prefetch (`OfflineDownloadUseCase`) and the cookie-aware downloader (`PicassoHttpDownloader2`) have to be rehosted on Coil/OkHttp — see §C9. |
 | 3 | **Navigation goes through `LocalNavigator`.** | Keeps `Screen(uiState, eventHandler)` at two arguments and keeps the fragment free of screen-specific code. The host provides a `FragmentManager`-backed implementation now and a nav-compose one later. |
 | 4 | **The thread screen's bottom pull is hand-written.** | Preserves the interaction exactly. It is the only reason `swipy` exists, and dropping swipy is what unblocks Jetifier → AGP 9 (`UPGRADE_PLAN.md` §B/§C). |
@@ -74,7 +74,7 @@ override fun onCreateView(…) = zumpaContent { MainListScreen() }
 ```
 
 `zumpaContent {}` is a shared helper (`ui/compose/Host.kt`) that installs a `ComposeView` with
-`ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed`, wraps in `ZumpaTheme`, and provides
+`ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed`, wraps in `AppTheme`, and provides
 `LocalNavigator`. When fragments go away, only `zumpaContent` changes.
 
 ### EventHandler
@@ -146,7 +146,7 @@ Interfaces only, which is all an `EventHandler` ever is.
 ```kotlin
 @Preview
 @Composable
-private fun MainListScreenPreview() = ZumpaTheme {
+private fun MainListScreenPreview() = AppTheme {
     MainListScreen(Fixtures.MainList.uiState(), mock())
 }
 ```
@@ -183,9 +183,12 @@ Dependencies (catalog): compose-bom, `ui`, `material3`, `ui-tooling-preview`, `a
 
 `ui/compose/`:
 
-* `ZumpaTheme.kt` — `ZumpaColors`, `ZumpaDimens`, `ZumpaTypography` data classes + CompositionLocals,
-  built from the values in `theme_black.xml` / `colors.xml` / `dimens.xml`, wrapping `MaterialTheme`
-  with a dark `ColorScheme` (`primary` = `contextColor` #FFA710, `background` = black,
+* `theme/` — `AppColorScheme`, `AppTypography`, `AppShapes`, `AppSizes`, `AppSpaces` (each an
+  `@Immutable` data class + a `staticCompositionLocalOf`), plus `AppTheme.kt` holding the
+  `@Composable AppTheme {}` and the `object AppTheme` with `@ReadOnlyComposable` getters - the same
+  pairing `MaterialTheme` uses, so a screen reads `AppTheme.colorScheme.context`. Values come from
+  `theme_black.xml` / `colors.xml` / `dimens.xml` and each property names its attr. Wraps
+  `MaterialTheme` with a dark `ColorScheme` (`primary` = `contextColor` #FFA710, `background` = black,
   `surface` = #202020, `onSurface` = white). One theme only — the app has never had a light mode.
   The drawable-reference attrs (`threadItemBackground`, `imageButtonBackground`, …) become
   `Modifier` extensions or `Brush`es rather than colours; the alternating row background is a
@@ -398,7 +401,7 @@ The only screen that is still MVC, converted straight to Compose + MVVM as you a
    library to fall back on. If it fights the `LazyColumn` fling, the escape hatch is the "auto-load
    at the end + top pull" option that was on the table.
 2. **Theme fidelity.** M3 will impose its own ripples, elevation tints and typography. Expect to
-   override `LocalRippleConfiguration`, surface tint and `Typography` in `ZumpaTheme` to keep the
+   override `LocalRippleConfiguration`, surface tint and `Typography` in `AppTheme` to keep the
    flat black look, and check the yellow accent against M3's tonal defaults early — C2 exists partly
    to catch this while the surface area is small.
 3. **`AnnotatedString` vs `ImageSpan`.** `AnnotatedTextRenderer` must reproduce inline smileys with
