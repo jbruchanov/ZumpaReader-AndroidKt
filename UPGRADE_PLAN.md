@@ -110,15 +110,24 @@ Still shipped and still dead upstream: `kotson` (2019), `picasso` (2022) and **F
 loaders are replaced by Coil as each screen converts, and get deleted in C9. `otto` went in MVVM
 phase 6.
 
-### C. Toolchain — **unblocked**
+### C. ~~Toolchain~~ → done
 
-1. ~~`android.enableJetifier=true`~~ → off as of C6, verified with a clean
-   `assembleDebug assembleRelease`.
-2. AGP 8.13.2 → 9.x + Gradle 9.x — **now possible**. Worth doing before C7: it is also what lifts
-   the `resolutionStrategy.force` holding `lifecycle-*-compose` at 2.10.0 (COMPOSE_PLAN risk 0).
-3. Then core-ktx 1.19.0 and compileSdk 37 become available — the dev device already runs Android 17.
-4. Optional while in there: `.gradle` → `.gradle.kts`, `org.gradle.configuration-cache=true`, a
-   `jvmToolchain(17)` declaration so the build stops depending on the launching JDK.
+Taken between Compose C6 and C7, because Jetifier coming out is what unblocked it and doing it while
+three screens still had View hosts was lower risk than after.
+
+1. ~~`android.enableJetifier`~~ → gone. AGP 9 drops Jetifier entirely, so the property is removed
+   rather than set to false.
+2. ~~AGP 8.13.2 → **9.3.1**~~. Gradle was already 9.5. Three breaking changes:
+   the `kotlin-android` plugin is redundant (AGP 9 has built-in Kotlin support) and is removed
+   along with its catalog alias; `getDefaultProguardFile('proguard-android.txt')` is rejected for
+   carrying `-dontoptimize` and becomes `proguard-android-optimize.txt`; the missing-`compileSdk`
+   error that appears alongside the plugin failure is a cascade, not a real one.
+3. ~~compileSdk 36 → **37**, core-ktx 1.18.0 → **1.19.0**~~.
+4. ~~The `resolutionStrategy.force` holding `lifecycle-*-compose` at 2.10.0~~ → lifted, they are on
+   2.11.0 with the rest of lifecycle (COMPOSE_PLAN risk 0 is closed).
+
+Still optional, not done: `.gradle` → `.gradle.kts`, `org.gradle.configuration-cache=true`, and a
+`jvmToolchain(17)` declaration so the build stops depending on the launching JDK.
 
 ### D. Compose
 
