@@ -3,12 +3,12 @@
 Branch `deps_update`. Versions resolved from Maven Central / `dl.google.com` on 2026-08-06.
 
 **Where it stands.** Dependencies are current, RxJava and Jetifier are gone, DI is Koin, **every
-screen is MVVM and Compose**, and Coil is the only image loader. How it is built now:
-[`ARCHITECTURE.md`](ARCHITECTURE.md).
+screen is MVVM and Compose**, Coil is the only image loader, and navigation is **Navigation 3 in a
+single activity with no fragments**. How it is built now: [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 Verified: `clean :app:assembleDebug :app:assembleRelease`, `lintVitalRelease` and `lintDebug` clean,
-70 unit tests. **Nothing has ever run on a device — §A is now the only thing standing between this
-branch and knowing whether it works.**
+70 unit tests, and a smoke test on an emulator (§A). **§E's two backend bugs are now the head of the
+queue** — they were parked until Compose landed, and it has.
 
 ---
 
@@ -68,14 +68,24 @@ in tests because it went through `android.net.Uri`.
 
 ## Remaining
 
-### A. Runtime check on a device — nothing else can substitute for it
+### A. Runtime check on a device — partly done
 
-**Still not done, and it now covers the MVVM work too.** Every screen's load path is new code, so
-the first call is the first test.
+**Smoke-tested on an emulator** (`Pixel_9a_A16`), not on the physical device: it has the **Play
+Store** build of `com.scurab.zumpareader` installed, so a debug-signed APK cannot install over it.
+Install from Android Studio with the release keystore, or uninstall the Play build first (losing app
+data).
 
-Blocked the same way as before: the connected device (Android 17) has the **Play Store** build of
-`com.scurab.zumpareader` installed, so a debug-signed APK cannot install over it. Install from
-Android Studio with the release keystore, or uninstall the Play build first (losing app data).
+Verified on the emulator: list loads live data with even/odd row colouring, thread rendering with
+inline smileys and quoted-response colouring, Coil images, the full-screen viewer and E1, settings
+including the notification-permission read on resume, the offline toggle round trip, the offline
+download dialog, the push-notification deep link (`--es ThreadID`), back through the whole stack,
+back at the root leaving the app, and **the back stack surviving `am kill`** (the `@Serializable`
+key persistence).
+
+Not verified — everything that needs a session, since the emulator is logged out: posting a thread
+or reply, favourite/ignore, survey voting, image copy/resize/rotate/upload, login/logout. Also
+unverified: the offline *download* itself (the Coil prefetch path), the bottom pull's 180px
+threshold, and double-tap zoom (adb taps could not hit the 300ms window).
 
 In order of risk:
 
@@ -125,16 +135,23 @@ three screens still had View hosts was lower risk than after.
    error that appears alongside the plugin failure is a cascade, not a real one.
 3. ~~compileSdk 36 → **37**, core-ktx 1.18.0 → **1.19.0**~~.
 4. ~~The `resolutionStrategy.force` holding `lifecycle-*-compose` at 2.10.0~~ → lifted, they are on
-   2.11.0 with the rest of lifecycle (COMPOSE_PLAN risk 0 is closed).
+   2.11.0 with the rest of lifecycle (the Compose plan's risk 0 is closed).
 
 Still optional, not done: `.gradle` → `.gradle.kts`, `org.gradle.configuration-cache=true`, and a
 `jvmToolchain(17)` declaration so the build stops depending on the launching JDK.
 
-### D. Compose
+### D. ~~Compose~~ → done, and Navigation 3 after it
 
-**The detailed per-screen plan is in [`COMPOSE_PLAN.md`](COMPOSE_PLAN.md)** — conventions, the two
-`Screen` overloads, previews and fixtures, and a phase per screen. Progress: **C0 and C1 done**
-(`ff326e1`, `0f09920`). Summary of the order:
+The conventions that came out of it — the two `Screen` overloads, `EventHandler`, previews and
+fixtures, `AppTheme`, the `Navigator` seam — are in [`ARCHITECTURE.md`](ARCHITECTURE.md).
+`COMPOSE_PLAN.md` was folded into it and deleted.
+
+Phases C0–C9, one commit each, `SettingsActivity` last. Then **Navigation 3**: `NavDisplay` with one
+`@Serializable` `ZumpaKey` per screen, `BackStackNavigator` behind the existing `Navigator`
+interface, and all seven fragments plus `ImageActivity` and `SettingsActivity` deleted. No screen
+composable changed when navigation did.
+
+Historic ordering notes:
 
 `SettingsActivity` is converted **last**, not first as this section originally said: every other
 screen is already MVVM, so converting them is a render-only change, while Settings is the one screen
@@ -208,10 +225,10 @@ Things to try, cheapest first:
 
 Needs a device (§A).
 
-#### Backend-facing — after Compose
+#### Backend-facing — ⏭ **next up**
 
-Not caused by the MVVM work. Both are in the request path and are cheapest to fix once the post/send
-flow is already state-driven.
+Not caused by the MVVM work. Both are in the request path and were parked until the post/send flow
+was state-driven, which it now is. Nothing else is blocking them.
 
 1. **The cookie grows until the backend rejects the request.** `ZumpaPrefs.cookies` is a
    `Set<String>` only ever replaced wholesale on login (`ParseUtils.extractCookies`), and
@@ -228,8 +245,13 @@ flow is already state-driven.
 
 * **`ZumpaSimpleParser` has no tests.** The source set exists now (MVVM phase 0), and this is the
   component most likely to break when the forum's HTML changes. Cheapest remaining value.
-* **`SavedStateHandle` is not wired anywhere.** The ViewModels survive rotation but not process
-  death; `androidx-lifecycle-viewmodel-savedstate` is not in the catalog. It matters most for
-  `PostFragment` (a half-written post) and the main list's paging position.
+* **`SavedStateHandle` is not wired anywhere.** Navigation 3 restores the *back stack* through
+  process death, so you come back to the right screen — but each ViewModel starts empty and reloads.
+  It matters most for `PostScreen` (a half-written post), the sub list's title, and the main list's
+  paging position. `rememberViewModelStoreNavEntryDecorator` already gives every entry a
+  `SavedStateRegistry`, so wiring it is now just adding the dependency and the constructor argument.
+* **`SpannedTextRenderer` is dead code.** Nothing has used it since the last RecyclerView went.
+  Deleting it leaves `ZumpaTextRenderer<T>` with a single implementation, so the interface probably
+  goes with it.
 * Bump `versionCode` / `versionName` in `app/build.gradle` before releasing.
 * ~~9 lint errors~~, ~~`GCMReceiver`~~, ~~no test source set~~ → done, see the table above.

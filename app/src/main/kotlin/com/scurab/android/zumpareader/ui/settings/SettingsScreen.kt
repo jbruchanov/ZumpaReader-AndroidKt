@@ -1,5 +1,12 @@
 package com.scurab.android.zumpareader.ui.settings
 
+import android.Manifest
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -38,6 +45,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.arch.CopyToClipboard
@@ -50,20 +58,28 @@ import com.scurab.android.zumpareader.test.loggedOut
 import com.scurab.android.zumpareader.test.mock
 import com.scurab.android.zumpareader.ui.compose.theme.AppTheme
 import com.scurab.android.zumpareader.util.saveToClipboard
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun SettingsScreen(
-    onRequestNotificationPermission: () -> Unit,
-    onOpenAppSettings: () -> Unit,
-    vm: SettingsViewModel,
-) {
+fun SettingsScreen(vm: SettingsViewModel = koinViewModel()) {
     val context = LocalContext.current
+    val requestNotifications = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { vm.onResumed() }
+
+    //the permission can be changed outside the app, so it is re-read on every return to the screen
+    LifecycleResumeEffect(Unit) {
+        vm.onResumed()
+        onPauseOrDispose { }
+    }
 
     LaunchedEffect(Unit) {
         vm.effects.collect { effect ->
             when (effect) {
-                is SettingsEffect.RequestNotificationPermission -> onRequestNotificationPermission()
-                is SettingsEffect.OpenAppSettings -> onOpenAppSettings()
+                is SettingsEffect.RequestNotificationPermission ->
+                    requestNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
+
+                is SettingsEffect.OpenAppSettings -> context.openAppSettings()
                 is CopyToClipboard -> {
                     context.saveToClipboard(effect.text.toString())
                     context.toast("'${effect.text}' saved to clipboard")
@@ -78,6 +94,13 @@ fun SettingsScreen(
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val eventHandler = vm
     SettingsScreen(uiState, eventHandler)
+}
+
+/** Where the user goes to grant a notification permission that was denied for good. */
+private fun Context.openAppSettings() {
+    startActivity(
+        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))
+    )
 }
 
 @Composable

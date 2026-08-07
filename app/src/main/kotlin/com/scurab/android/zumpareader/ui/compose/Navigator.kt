@@ -7,8 +7,8 @@ import com.scurab.android.zumpareader.ui.post.PostPicker
  * Everything a screen can navigate to, so a `Screen(uiState, eventHandler)` stays at two arguments
  * and the host holds no screen-specific code.
  *
- * Backed by the FragmentManager today; when nav-compose lands it gets a second implementation and
- * nothing inside a screen changes.
+ * Implemented by [com.scurab.android.zumpareader.ui.nav.BackStackNavigator] over the navigation-3
+ * back stack. A screen never names a destination class, only what it wants to open.
  */
 interface Navigator {
     fun openThread(threadId: String)
@@ -16,7 +16,7 @@ interface Navigator {
     /**
      * No shared element transition, unlike the View implementation - which is what fixes the image
      * vanishing from the list (UPGRADE_PLAN.md E1). If it is wanted back it returns as
-     * SharedTransitionLayout, which has no recycled-view problem.
+     * NavDisplay's `sharedTransitionScope`, which has no recycled-view problem.
      */
     fun openImage(url: String)
 
@@ -32,5 +32,5 @@ interface Navigator {
 }
 
 val LocalNavigator = staticCompositionLocalOf<Navigator> {
-    error("No Navigator provided, host the screen with zumpaContent {}")
+    error("No Navigator provided, the screen has to be hosted by ZumpaNavHost")
 }

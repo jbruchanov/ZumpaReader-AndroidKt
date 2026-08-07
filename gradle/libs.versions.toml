@@ -4,7 +4,7 @@
 
 android-base = ["androidx-core-ktx", "androidx-annotation", "google-material"]
 android-lifecycle = ["androidx-lifecycle-runtime", "androidx-lifecycle-viewmodel"]
-compose = ["androidx-compose-ui", "androidx-compose-ui-graphics", "androidx-compose-ui-tooling-preview", "androidx-compose-foundation", "androidx-compose-material3", "androidx-activity-compose", "androidx-lifecycle-runtime-compose", "androidx-lifecycle-viewmodel-compose", "koin-androidx-compose", "coil-compose", "coil-network-okhttp"]
+compose = ["androidx-compose-ui", "androidx-compose-ui-graphics", "androidx-compose-ui-tooling-preview", "androidx-compose-foundation", "androidx-compose-material3", "androidx-activity-compose", "androidx-lifecycle-runtime-compose", "androidx-lifecycle-viewmodel-compose", "koin-androidx-compose", "coil-compose", "coil-network-okhttp", "androidx-navigation3-runtime", "androidx-navigation3-ui", "androidx-lifecycle-viewmodel-navigation3", "kotlinx-serialization-json"]
 coroutines = ["kotlinx-coroutines-core", "kotlinx-coroutines-android"]
 firebase = ["firebase-crashlytics", "firebase-messaging"]
 koin = ["koin-core", "koin-android"]
@@ -17,6 +17,7 @@ test = ["junit-jupiter", "mockk", "turbine", "kotlinx-coroutines-test", "koin-te
 android-application = { id = "com.android.application", version.ref = "android-gradle-plugin" }
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebase-plugin-crashlytics" }
 jetbrains-compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+jetbrains-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 google-services = { id = "com.google.gms.google-services", version.ref = "google-services" }
 
 [versions]
@@ -33,7 +34,9 @@ kotson = "2.5.0"
 androidx-activity-compose = "1.13.0"
 androidx-annotation = "1.10.0"
 androidx-compose-bom = "2026.06.01"
+androidx-navigation3 = "1.1.5"
 coil = "3.5.0"
+kotlinx-serialization = "1.9.0"
 androidx-core-ktx = "1.19.0"
 androidx-lifecycle = "2.11.0"
 firebase-bom = "34.17.0"
@@ -68,6 +71,10 @@ androidx-compose-ui = { module = "androidx.compose.ui:ui" }
 androidx-compose-ui-graphics = { module = "androidx.compose.ui:ui-graphics" }
 androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
+androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "androidx-navigation3" }
+androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "androidx-navigation3" }
+androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "androidx-lifecycle" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }

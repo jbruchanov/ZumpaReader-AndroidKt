@@ -30,9 +30,9 @@ data class AppTypography(
     val surveyButton: TextStyle,
     /** `text_message` - 13sp */
     val message: TextStyle,
-    /** `ImageTable.Header` - 16sp bold */
+    /** The image screen's meta table header - 16sp bold */
     val tableHeader: TextStyle,
-    /** `ImageTable.Text` - 16sp */
+    /** The image screen's meta table cell - 16sp */
     val tableText: TextStyle,
 )
 
