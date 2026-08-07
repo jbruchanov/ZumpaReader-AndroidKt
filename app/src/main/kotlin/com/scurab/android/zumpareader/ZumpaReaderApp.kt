@@ -15,8 +15,8 @@ import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import com.google.gson.stream.JsonReader
 import com.scurab.android.zumpareader.data.PicassoHttpDownloader2
-import com.scurab.android.zumpareader.data.ZumpaConverterFactory
-import com.scurab.android.zumpareader.data.ZumpaGenericConverterFactory
+import com.scurab.android.zumpareader.di.ONLINE_API
+import com.scurab.android.zumpareader.di.appModules
 import com.scurab.android.zumpareader.gson.GsonExcludeStrategy
 import com.scurab.android.zumpareader.model.ZumpaReadState
 import com.scurab.android.zumpareader.model.ZumpaThread
@@ -28,13 +28,14 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
 import java.net.CookieManager
-import java.net.URI
 import java.util.*
-import java.util.concurrent.TimeUnit
-import okhttp3.JavaNetCookieJar
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.Retrofit
+import org.koin.android.ext.android.get
+import org.koin.android.ext.android.inject
+import org.koin.android.ext.koin.androidContext
+import org.koin.android.ext.koin.androidLogger
+import org.koin.core.context.startKoin
+import org.koin.core.logger.Level
 
 /**
  * Created by JBruchanov on 24/11/2015.
@@ -45,60 +46,28 @@ class ZumpaReaderApp : Application() {
         val OFFLINE_FILE_NAME = "offline.json"
     }
 
-    val zumpaParser: ZumpaSimpleParser by lazy {
-        ZumpaSimpleParser().apply {
-            userName = zumpaPrefs.loggedUserName
-            isShowLastUser = zumpaPrefs.showLastAuthor
-        }
-    }
+    //everything below is built by koin now, see di/Modules.kt, these are kept so the existing
+    //`app().zumpaSomething` call sites keep working; new code should inject what it needs
+    val zumpaParser: ZumpaSimpleParser by inject()
+    val zumpaPrefs: ZumpaPrefs by inject()
+    val cookieManager: CookieManager by inject()
+    private val gson: Gson by inject()
+    val zumpaHttpClient: OkHttpClient by inject()
 
-    val zumpaPrefs: ZumpaPrefs by lazy { ZumpaPrefs(this) }
     val zumpaData: TreeMap<String, ZumpaThread> = TreeMap()
 
     var zumpaReadStates: TreeMap<String, ZumpaReadState> = TreeMap()
         private set
 
-    val cookieManager: CookieManager = CookieManager()
-    private val gson: Gson = Gson()
     private val MAX_STATES_TO_STORE = 100
-    private val TIMEOUT = 5000L
-
-
-    val zumpaHttpClient: OkHttpClient by lazy { buildHttpClient(false) }
-    val zumpaSettingsHttpClient: OkHttpClient by lazy { zumpaHttpClient.newBuilder().followRedirects(false).build() }
-
-    private fun buildHttpClient(redirect: Boolean): OkHttpClient {
-        cookieManager.setCookiePolicy(java.net.CookiePolicy.ACCEPT_ALL)
-        cookieManager.put(URI.create(ZR.Constants.ZUMPA_MAIN_URL), zumpaPrefs.cookiesMap)
-
-        var logging = HttpLoggingInterceptor()
-        // set your desired log level
-        logging.level = HttpLoggingInterceptor.Level.BODY
-
-        return OkHttpClient.Builder().apply {
-            followRedirects(redirect)
-            cache(null)
-            connectTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
-            readTimeout(TIMEOUT * 5, TimeUnit.MILLISECONDS)
-            writeTimeout(TIMEOUT * 5, TimeUnit.MILLISECONDS)
-            cookieJar(JavaNetCookieJar(cookieManager))
-            addNetworkInterceptor { chain ->
-                val req = chain.request()
-                val rb = req
-                    .newBuilder()
-                    .addHeader("Cache-Control", "max-age=0")
-                    .url(req.url.newBuilder().addQueryParameter("_ts", System.currentTimeMillis().toString()).build())
-
-                chain.proceed(rb.build())
-            }
-            if (BuildConfig.DEBUG) {
-                addNetworkInterceptor(logging)
-            }
-        }.build()
-    }
 
     override fun onCreate() {
         super.onCreate()
+        startKoin {
+            androidLogger(if (BuildConfig.DEBUG) Level.INFO else Level.NONE)
+            androidContext(this@ZumpaReaderApp)
+            modules(appModules)
+        }
         CreateNotificationChannelsUseCase(this)()
         loadReadStates()
 
@@ -193,44 +162,15 @@ class ZumpaReaderApp : Application() {
         Picasso.setSingletonInstance(picasso)
     }
 
-    val zumpaAPI: ZumpaAPI
-        get() {
-            return if (zumpaPrefs.isOffline) zumpaOfflineApi else zumpaOnlineAPI
-        }
+    /**
+     * Resolved on every access, the definition picks online or offline by the current setting.
+     */
+    val zumpaAPI: ZumpaAPI get() = get()
 
-    val zumpaOnlineAPI: ZumpaAPI by lazy {
-        val retrofit = Retrofit.Builder()
-            .baseUrl(ZR.Constants.ZUMPA_MAIN_URL)
-            .addConverterFactory(ZumpaConverterFactory(zumpaParser))
-            .client(zumpaHttpClient)
-            .build()
-
-        retrofit.create(ZumpaAPI::class.java)
-    }
-
-    val zumpaOfflineApi: ZumpaOfflineApi by lazy {
-        ZumpaOfflineApi(LinkedHashMap())
-    }
-
-    val zumpaWebServiceAPI: ZumpaWSAPI by lazy {
-        val retrofit = Retrofit.Builder()
-            .baseUrl(ZR.Constants.ZUMPA_WS_MAIN_URL)
-            .addConverterFactory(ZumpaGenericConverterFactory())
-            .client(zumpaHttpClient)
-            .build()
-
-        retrofit.create(ZumpaWSAPI::class.java)
-    }
-
-    val zumpaPHPAPI: ZumpaPHPAPI by lazy {
-        val retrofit = Retrofit.Builder()
-            .baseUrl(ZR.Constants.ZUMPA_PHP_MAIN_URL)
-            .addConverterFactory(ZumpaGenericConverterFactory())
-            .client(zumpaHttpClient)
-            .build()
-
-        retrofit.create(ZumpaPHPAPI::class.java)
-    }
+    val zumpaOnlineAPI: ZumpaAPI by inject(ONLINE_API)
+    val zumpaOfflineApi: ZumpaOfflineApi by inject()
+    val zumpaWebServiceAPI: ZumpaWSAPI by inject()
+    val zumpaPHPAPI: ZumpaPHPAPI by inject()
 
     fun resetCookies() {
         cookieManager.cookieStore.removeAll()
