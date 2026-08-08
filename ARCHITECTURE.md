@@ -1,7 +1,22 @@
 # ZumpaReader – architecture
 
 How the app is built after the MVVM, Compose and Navigation-3 migrations. This is the reference;
-`UPGRADE_PLAN.md` is the history and the remaining work.
+`UPGRADE_PLAN.md` is the history and `KMP_PLAN.md` covers the multiplatform split.
+
+**Three modules.**
+
+| Module | What it is |
+|---|---|
+| `:shared` | Kotlin Multiplatform library — the parser, model, Ktor layer, repositories and use cases. Targets `androidTarget()` and `jvm()`. |
+| `:appAndroid` | The Android app: `androidx.compose`, navigation-3, Firebase, and the platform halves of the seams `:shared` declares (`KeyValueStore`, `PushTokenProvider`, `ImagePrefetcher`). |
+| `:appJvm` | A desktop app on Compose Multiplatform. `./gradlew :appJvm:run`. |
+
+The two apps **do not share UI**: `:appAndroid` is on `androidx.compose` and `:appJvm` on Compose
+Multiplatform, so each has its own screens. Merging them is phase 3 in `KMP_PLAN.md`.
+
+The `jvm()` target of `:shared` ships nothing on its own — it exists so an Android import leaking
+into `commonMain` breaks the build. `:appJvm` is what actually runs that code. iOS targets go in the
+same list later.
 
 **One activity, no fragments, no XML layouts.** Every screen is Compose + MVVM + Koin. Navigation is
 `androidx.navigation3` — the back stack is an observable list of keys.
