@@ -29,4 +29,5 @@ dependencyResolutionManagement {
 }
 
 include(":appAndroid")
+include(":appJvm")
 include(":shared")

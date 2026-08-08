@@ -18,6 +18,9 @@ android-application = { id = "com.android.application", version.ref = "android-g
 #agp 9 refuses com.android.library alongside the multiplatform plugin - this is its replacement
 android-kmp-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "android-gradle-plugin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+#compose multiplatform, for the desktop app - not androidx.compose, which is android only
+jetbrains-compose = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebase-plugin-crashlytics" }
 jetbrains-compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 jetbrains-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
@@ -30,6 +33,7 @@ android-sdk-min = "26"
 android-sdk-target = "36"
 
 kotlin = "2.4.10"
+compose-multiplatform = "1.11.1"
 jvmtarget = "17"
 android-gradle-plugin = "9.3.1"
 
