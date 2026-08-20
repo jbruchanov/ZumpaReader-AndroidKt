@@ -4,7 +4,7 @@
 
 android-base = ["androidx-core-ktx", "androidx-annotation", "google-material"]
 android-lifecycle = ["androidx-lifecycle-runtime", "androidx-lifecycle-viewmodel"]
-compose = ["androidx-compose-ui", "androidx-compose-ui-graphics", "androidx-compose-ui-tooling-preview", "androidx-compose-foundation", "androidx-compose-material3", "androidx-activity-compose", "androidx-lifecycle-runtime-compose", "androidx-lifecycle-viewmodel-compose", "koin-androidx-compose", "coil-compose", "coil-network-okhttp", "androidx-navigation3-runtime", "androidx-navigation3-ui", "androidx-lifecycle-viewmodel-navigation3"]
+compose = ["androidx-compose-ui", "androidx-compose-ui-graphics", "androidx-compose-ui-tooling-preview", "androidx-compose-foundation", "androidx-compose-material3", "androidx-activity-compose", "androidx-lifecycle-runtime-compose", "androidx-lifecycle-viewmodel-compose", "koin-androidx-compose", "androidx-compose-material-icons-extended", "coil-compose", "coil-network-ktor3", "androidx-navigation3-runtime", "androidx-navigation3-ui", "androidx-lifecycle-viewmodel-navigation3"]
 coroutines = ["kotlinx-coroutines-core", "kotlinx-coroutines-android"]
 firebase = ["firebase-crashlytics", "firebase-messaging"]
 koin = ["koin-core", "koin-android"]
@@ -55,7 +55,6 @@ kotlinx-coroutines = "1.11.0"
 kotlinx-datetime = "0.8.0"
 kotlinx-io = "0.9.0"
 ktor = "3.5.0"
-okhttp = "5.4.0"
 
 junit-jupiter = "5.11.4"
 mockk = "1.13.13"
@@ -74,6 +73,10 @@ androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = 
 #compose artifact versions are managed by the bom
 androidx-compose-foundation = { module = "androidx.compose.foundation:foundation" }
 androidx-compose-material3 = { module = "androidx.compose.material3:material3" }
+#the whole Material set. The artifact is 35MB of sources but costs ~3MB of apk unminified, and
+#nothing at all once R8 is on - measured. material-icons-core only carries 49 icons, which is nine
+#short of what this app draws, so the app would otherwise ship its own copies of the rest.
+androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 androidx-compose-ui = { module = "androidx.compose.ui:ui" }
 androidx-compose-ui-graphics = { module = "androidx.compose.ui:ui-graphics" }
 androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
@@ -83,7 +86,7 @@ androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", vers
 androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "androidx-lifecycle" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
-coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
+coil-network-ktor3 = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 #versions of firebase libraries are managed by the bom
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
@@ -111,7 +114,6 @@ junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
-okhttp-base = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 #the android engine; darwin takes its place on ios
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
