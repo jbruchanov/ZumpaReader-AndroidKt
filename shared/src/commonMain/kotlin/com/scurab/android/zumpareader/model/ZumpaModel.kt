@@ -21,7 +21,7 @@ constructor(val id: String,
         val STATE_RESPONSE_4U = 4
 
         //the JsonObject readers that used to live here are now
-        //com.scurab.android.zumpareader.data.OfflineThreadDto and ZumpaWsThreadDto
+        //com.scurab.android.zumpareader.data.OfflineThreadDto
     }
 
     constructor(id: String,
@@ -224,9 +224,4 @@ open class ZumpaGenericResponse(
     fun asUTFString() = data.decodeToString()
 }
 
-data class ZumpaWSBody(private val pages: Int = 1) : ZumpaBody {
-    override fun toHttpPostString(): String {
-        return "{\"Pages\" : $pages}"
-    }
-}
 //

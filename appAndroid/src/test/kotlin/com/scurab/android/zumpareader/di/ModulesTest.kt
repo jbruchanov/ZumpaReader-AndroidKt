@@ -3,7 +3,6 @@ package com.scurab.android.zumpareader.di
 import android.content.Context
 import com.scurab.android.zumpareader.ZumpaAPI
 import com.scurab.android.zumpareader.ZumpaPHPAPI
-import com.scurab.android.zumpareader.ZumpaWSAPI
 import com.scurab.android.zumpareader.arch.DeviceConfig
 import com.scurab.android.zumpareader.repository.AppEventBus
 import com.scurab.android.zumpareader.repository.AuthRepository
@@ -55,7 +54,6 @@ class ModulesTest {
                 OfflineDownloadUseCase::class,
                 // provided by networkModule
                 ZumpaAPI::class,
-                ZumpaWSAPI::class,
                 ZumpaPHPAPI::class,
                 // androidx plumbing koin injects into a ViewModel definition
                 androidx.lifecycle.SavedStateHandle::class,

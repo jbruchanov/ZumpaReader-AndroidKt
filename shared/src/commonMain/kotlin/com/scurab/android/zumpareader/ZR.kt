@@ -3,7 +3,6 @@ package com.scurab.android.zumpareader
 object ZR {
     object Constants {
         const val ZUMPA_MAIN_URL = "https://zunpa.cz"
-        const val ZUMPA_WS_MAIN_URL = "http://zumpaws.scurab.com:8104"
         const val ZUMPA_PHP_MAIN_URL = "http://zumpareader.scurab.com"
 
         /**

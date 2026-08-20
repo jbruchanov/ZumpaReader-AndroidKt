@@ -3,7 +3,6 @@ package com.scurab.android.zumpareader.data
 import com.scurab.android.zumpareader.ZR
 import com.scurab.android.zumpareader.ZumpaAPI
 import com.scurab.android.zumpareader.ZumpaPHPAPI
-import com.scurab.android.zumpareader.ZumpaWSAPI
 import com.scurab.android.zumpareader.model.ZumpaBody
 import com.scurab.android.zumpareader.model.ZumpaGenericResponse
 import com.scurab.android.zumpareader.model.ZumpaLoginBody
@@ -12,7 +11,6 @@ import com.scurab.android.zumpareader.model.ZumpaThreadBody
 import com.scurab.android.zumpareader.model.ZumpaThreadResult
 import com.scurab.android.zumpareader.model.ZumpaToggleBody
 import com.scurab.android.zumpareader.model.ZumpaVoteSurveyBody
-import com.scurab.android.zumpareader.model.ZumpaWSBody
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.util.decodeLatin2
 import io.ktor.client.HttpClient
@@ -115,19 +113,6 @@ class ZumpaApiImpl(
             }
             parameter("af", filter)
         }
-}
-
-class ZumpaWSApiImpl(
-    private val client: HttpClient,
-    private val baseUrl: String = ZR.Constants.ZUMPA_WS_MAIN_URL,
-) : ZumpaWSAPI {
-
-    override suspend fun getZumpa(body: ZumpaWSBody): ZumpaGenericResponse =
-        client.post("$baseUrl/zumpa") {
-            contentType(ContentType.Application.Json)
-            setBody(body.toHttpPostString())
-            expectSuccess = false
-        }.asGenericResponse()
 }
 
 class ZumpaPHPApiImpl(

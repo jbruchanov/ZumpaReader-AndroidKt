@@ -1,7 +1,9 @@
 package com.scurab.android.zumpareader.ui.offline
 
 import androidx.lifecycle.viewModelScope
+import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.arch.BaseViewModel
+import com.scurab.android.zumpareader.arch.ShowToast
 import com.scurab.android.zumpareader.arch.UiEffect
 import com.scurab.android.zumpareader.repository.AppEvent
 import com.scurab.android.zumpareader.repository.AppEventBus
@@ -16,6 +18,7 @@ data class OfflineDownloadUiState(
     val pages: String = "1",
     val downloadImages: Boolean = true,
     val threadsDownloaded: Int = 0,
+    val threadsTotal: Int = 0,
     val imagesDownloaded: Int = 0,
     val imagesTotal: Int = 0,
     val isRunning: Boolean = false,
@@ -58,24 +61,42 @@ class OfflineDownloadViewModel(
         if (state.isRunning) return
         val pages = state.pages.toIntOrNull() ?: return
         setState {
-            copy(isRunning = true, threadsDownloaded = 0, imagesDownloaded = 0, imagesTotal = 0)
+            copy(
+                isRunning = true,
+                threadsDownloaded = 0,
+                threadsTotal = 0,
+                imagesDownloaded = 0,
+                imagesTotal = 0,
+            )
         }
         job = viewModelScope.launch {
             try {
                 downloader.run(pages, state.downloadImages, offlineData.path)
                     .collect { progress ->
                         when (progress) {
-                            is OfflineProgress.Threads ->
-                                setState { copy(threadsDownloaded = progress.count) }
+                            is OfflineProgress.Threads -> setState {
+                                copy(
+                                    threadsDownloaded = progress.done,
+                                    threadsTotal = progress.total,
+                                )
+                            }
 
                             is OfflineProgress.Images -> setState {
                                 copy(imagesDownloaded = progress.done, imagesTotal = progress.total)
                             }
 
-                            is OfflineProgress.Done -> {
+                            //an empty result is a failed download, not a new snapshot - it must
+                            //not replace whatever is already there
+                            is OfflineProgress.Done -> if (progress.data.isEmpty()) {
+                                effect(ShowToast(resId = R.string.err_fail))
+                            } else {
                                 offlineData.setData(progress.data)
                                 threads.replaceAll(progress.data)
                                 eventBus.emit(AppEvent.OfflineDataChanged)
+                                if (!progress.snapshotWritten) {
+                                    //in memory for this session, but nothing to load next time
+                                    effect(ShowToast(resId = R.string.err_fail))
+                                }
                             }
                         }
                     }

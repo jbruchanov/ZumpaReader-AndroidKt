@@ -5,7 +5,6 @@ import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaAPI
 import com.scurab.android.zumpareader.ZumpaOfflineApi
 import com.scurab.android.zumpareader.ZumpaPHPAPI
-import com.scurab.android.zumpareader.ZumpaWSAPI
 import com.scurab.android.zumpareader.arch.DeviceConfig
 import android.content.Context
 import android.os.Environment
@@ -18,7 +17,6 @@ import com.scurab.android.zumpareader.util.SharedPreferencesStore
 import java.io.File
 import com.scurab.android.zumpareader.data.ZumpaApiImpl
 import com.scurab.android.zumpareader.data.ZumpaPHPApiImpl
-import com.scurab.android.zumpareader.data.ZumpaWSApiImpl
 import com.scurab.android.zumpareader.data.buildZumpaHttpClient
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.repository.AppEventBus
@@ -95,9 +93,11 @@ val coreModule = module {
     single { SelectedThreadStore() }
     single { AppEventBus() }
     single { ImageUploadRepository(get()) }
-    single { OfflineDataRepository(offlineSnapshotPath(androidContext()), get(), get(), get()) }
+    single { OfflineDataRepository(offlineSnapshotPath(androidContext()), get(), get()) }
     single<ImagePrefetcher> { CoilImagePrefetcher(androidContext(), get()) }
-    single { OfflineDownloadUseCase(get(), get(), get()) }
+    //the online api explicitly - a download started in offline mode must not read the snapshot
+    //it is about to replace
+    single { OfflineDownloadUseCase(get(ONLINE_API), get(), get()) }
     single { ImageCacheRepository(androidContext(), get()) }
     single { buildImageLoader(androidContext(), get()) }
     single { CookieRepository(get()) }
@@ -125,10 +125,15 @@ val networkModule = module {
      * keeps the API it was given at construction time.
      */
     factory<ZumpaAPI> {
-        if (get<ZumpaPrefs>().isOffline) get<ZumpaOfflineApi>() else get(ONLINE_API)
+        if (get<ZumpaPrefs>().isOffline) {
+            //here rather than at startup: this is the one place that knows offline mode is being
+            //used, so a snapshot downloaded in an earlier session is picked up on a toggle too
+            get<OfflineDataRepository>().ensureLoaded()
+            get<ZumpaOfflineApi>()
+        } else {
+            get(ONLINE_API)
+        }
     }
-
-    single<ZumpaWSAPI> { ZumpaWSApiImpl(get()) }
 
     single<ZumpaPHPAPI> { ZumpaPHPApiImpl(get()) }
 }
