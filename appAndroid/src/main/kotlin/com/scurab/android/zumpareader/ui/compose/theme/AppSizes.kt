@@ -26,6 +26,8 @@ data class AppSizes(
     /** An `ImageButton` of `item_main_list_menu`: a 24dp icon inside `?buttonBackground`. */
     val rowMenuButton: Dp,
     val rowMenuIcon: Dp,
+    /** What an inline image shows instead of itself when the picture is gone. */
+    val brokenImageIcon: Dp,
 )
 
 val DefaultSizes = AppSizes(
@@ -43,6 +45,7 @@ val DefaultSizes = AppSizes(
     topBarHeight = 56.dp,
     rowMenuButton = 36.dp,
     rowMenuIcon = 24.dp,
+    brokenImageIcon = 48.dp,
 )
 
 val LocalAppSizes = staticCompositionLocalOf { DefaultSizes }
