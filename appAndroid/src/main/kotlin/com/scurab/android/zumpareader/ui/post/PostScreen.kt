@@ -15,6 +15,10 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material.icons.filled.Photo
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Create
 import androidx.compose.material3.Icon
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Tab
@@ -31,7 +35,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -186,7 +191,7 @@ private fun PostTabRow(uiState: PostUiState, selectedIndex: Int, eventHandler: P
                 onClick = { eventHandler.onTabSelected(tab.tag) },
                 icon = {
                     Icon(
-                        painter = painterResource(tab.iconRes()),
+                        painter = tab.icon(),
                         contentDescription = null,
                         tint = AppTheme.colorScheme.context,
                     )
@@ -196,9 +201,12 @@ private fun PostTabRow(uiState: PostUiState, selectedIndex: Int, eventHandler: P
     }
 }
 
-private fun PostTabUiState.iconRes(): Int = when (this) {
-    is PostTabUiState.Message -> R.drawable.ic_pen_black
-    is PostTabUiState.Image -> iconRes
+/** Where the picture came from decides the glyph, which is a screen decision, not a model one. */
+@Composable
+private fun PostTabUiState.icon(): Painter = when (this) {
+    is PostTabUiState.Message -> rememberVectorPainter(Icons.Filled.Create)
+    is PostTabUiState.Image ->
+        rememberVectorPainter(if (fromCamera) Icons.Filled.PhotoCamera else Icons.Filled.Photo)
 }
 
 /**

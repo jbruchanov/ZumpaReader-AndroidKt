@@ -21,6 +21,11 @@ data class AppSizes(
     val buttonMinSize: Dp,
     val urlButtonStrokeWidth: Dp,
     val headerButtonTopGap: Dp,
+    /** `?actionBarSize` - what the AppCompat Toolbar was, against M3's taller 64dp default. */
+    val topBarHeight: Dp,
+    /** An `ImageButton` of `item_main_list_menu`: a 24dp icon inside `?buttonBackground`. */
+    val rowMenuButton: Dp,
+    val rowMenuIcon: Dp,
 )
 
 val DefaultSizes = AppSizes(
@@ -35,6 +40,9 @@ val DefaultSizes = AppSizes(
     buttonMinSize = 48.dp,
     urlButtonStrokeWidth = 1.dp,
     headerButtonTopGap = 52.dp,
+    topBarHeight = 56.dp,
+    rowMenuButton = 36.dp,
+    rowMenuIcon = 24.dp,
 )
 
 val LocalAppSizes = staticCompositionLocalOf { DefaultSizes }

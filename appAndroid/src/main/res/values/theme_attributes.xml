@@ -1,37 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- The only attr still read from code - see the note in theme_black.xml. -->
     <attr name="contextColor" format="color" />
-    <attr name="contextColor50p" format="color" />
-    <attr name="contextColor25p" format="color" />
-    <attr name="contextColorText" format="color" />
-    <attr name="contextColorText2" format="color" />
-    <attr name="primaryTextColor" format="color" />
-    <attr name="primaryBackgroundColor" format="color" />
-    <attr name="secondaryBackgroundColor" format="color" />
-    <attr name="selectedBackgroundColor" format="color" />
-
-    <attr name="imageButtonBackground" format="reference" />
-    <attr name="surveyButtonBackground" format="reference" />
-    <attr name="listItemPadding" format="dimension"/>
-    <attr name="threadItemBackground" format="reference"/>
-    <attr name="threadItemBackgroundNoPressedState" format="reference"/>
-    <attr name="tabButtonBackground" format="reference"/>
-    <attr name="nickNameColor" format="color"/>
-    <attr name="nickTextSize" format="dimension"/>
-    <attr name="subjectColor" format="color"/>
-    <attr name="subjectTextSize" format="dimension"/>
-    <attr name="subjectTextMinHeight" format="dimension"/>
-    <attr name="authorColor" format="color"/>
-    <attr name="scrollbarColor" format="color"/>
-    <attr name="authorTextSize" format="dimension"/>
-    <attr name="dateColor" format="color"/>
-    <attr name="dateTextSize" format="dimension"/>
-    <attr name="threadsColor" format="color"/>
-    <attr name="threadsTextSize" format="dimension"/>
-    <attr name="buttonTextColor" format="color" />
-    <attr name="buttonTextSize" format="dimension" />
-    <attr name="surveyButtonTextSize" format="dimension" />
-    <attr name="buttonBackground" format="reference" />
-    <attr name="itemStateWidth" format="dimension" />
-    <attr name="messageTextColor" format="color" />
 </resources>

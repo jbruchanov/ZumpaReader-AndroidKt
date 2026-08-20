@@ -1,23 +1,31 @@
 package com.scurab.android.zumpareader.ui.sublist
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.automirrored.filled.Reply
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.SpeakerNotes
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Create
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -29,20 +37,29 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.pullToRefresh
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.scurab.android.zumpareader.R
@@ -59,11 +76,18 @@ import com.scurab.android.zumpareader.test.sending
 import com.scurab.android.zumpareader.test.uiState
 import com.scurab.android.zumpareader.test.withSurvey
 import com.scurab.android.zumpareader.ui.compose.LocalNavigator
+import com.scurab.android.zumpareader.ui.compose.QuickHideFab
+import com.scurab.android.zumpareader.ui.compose.RevealRow
+import com.scurab.android.zumpareader.ui.compose.RevealRowMenuButton
+import com.scurab.android.zumpareader.ui.compose.quickHide
 import com.scurab.android.zumpareader.ui.compose.rememberAnnotatedTextRenderer
+import com.scurab.android.zumpareader.ui.compose.rememberQuickHideState
 import com.scurab.android.zumpareader.ui.compose.zumpaRowBackground
+import com.scurab.android.zumpareader.ui.compose.zumpaRowColor
 import com.scurab.android.zumpareader.ui.compose.theme.AppTheme
 import com.scurab.android.zumpareader.util.saveToClipboard
 import org.koin.androidx.compose.koinViewModel
+import java.util.Locale
 import com.scurab.android.zumpareader.util.formatPostTime
 
 @Composable
@@ -112,6 +136,7 @@ private fun SubListScreen(
     //back closes the reply panel before it leaves the screen, as it always did
     BackHandler(enabled = uiState.isPostPanelVisible) { eventHandler.onPostPanelDismissed() }
 
+    val quickHideState = rememberQuickHideState()
     val renderer = rememberAnnotatedTextRenderer()
     val title = remember(uiState.title, renderer) {
         if (uiState.title.isEmpty()) null else renderer.title(uiState.title)
@@ -119,8 +144,12 @@ private fun SubListScreen(
 
     Scaffold(
         containerColor = AppTheme.colorScheme.primaryBackground,
+        //safeDrawing so the ime is in there too, and the content slot below is the only place that
+        //applies any of it - anything else double counts
+        contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
-            Column {
+            //the bar and its progress strip are one translucent pane, which the list slides under
+            Box(Modifier.background(AppTheme.colorScheme.primaryBackground80p)) {
                 TopAppBar(
                     title = {
                         Text(
@@ -128,67 +157,118 @@ private fun SubListScreen(
                                 stringResource(R.string.app_name)
                             ),
                             inlineContent = title?.inlineContent.orEmpty(),
-                            style = AppTheme.typography.subject,
+                            style = AppTheme.typography.title,
                             color = AppTheme.colorScheme.primaryText,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = AppTheme.colorScheme.primaryBackground,
-                    ),
+                    expandedHeight = AppTheme.sizes.topBarHeight,
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
                 )
                 if (uiState.isLoading) {
+                    //over the bar rather than under it, so switching it on cannot change the bar
+                    //height - that height is the list contentPadding, so it used to shift every row
                     LinearProgressIndicator(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth(),
                         color = AppTheme.colorScheme.context,
-                        trackColor = AppTheme.colorScheme.primaryBackground,
+                        trackColor = Color.Transparent,
+                        //M3 gaps the track, the old bar was a plain strip
+                        gapSize = 0.dp,
                     )
                 }
             }
         },
         floatingActionButton = {
             if (uiState.canPost && !uiState.isPostPanelVisible) {
-                FloatingActionButton(
-                    onClick = eventHandler::onPostPanelRequested,
-                    containerColor = AppTheme.colorScheme.context,
-                    contentColor = AppTheme.colorScheme.primaryBackground,
-                ) {
-                    Icon(painterResource(R.drawable.ic_pen_black), contentDescription = null)
+                QuickHideFab(quickHideState) {
+                    FloatingActionButton(
+                        onClick = eventHandler::onPostPanelRequested,
+                        containerColor = AppTheme.colorScheme.context,
+                        contentColor = AppTheme.colorScheme.primaryBackground,
+                        //M3 draws a squircle, the old Material fab was round
+                        shape = CircleShape,
+                    ) {
+                        Icon(Icons.Filled.Create, contentDescription = null)
+                    }
                 }
             }
         },
     ) { padding ->
-        Column(
-            Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .imePadding()
-        ) {
-            PullToRefreshBox(
-                isRefreshing = uiState.isLoading,
-                onRefresh = eventHandler::onRefreshRequested,
+        //one inset, applied once: whatever is at the bottom of the screen takes it - the reply panel
+        //when it is up, otherwise the list. Adding imePadding on top of this is what counted twice.
+        val bottomInset = padding.calculateBottomPadding()
+
+        Column(Modifier.fillMaxSize()) {
+            //both ends refresh, so the spinner shows up at whichever end the drag came from
+            var pulledFromBottom by remember { mutableStateOf(false) }
+            val topState = rememberPullToRefreshState()
+            val bottomState = rememberPullToRefreshState()
+            val refreshingFromTop = uiState.isLoading && !pulledFromBottom
+            val refreshingFromBottom = uiState.isLoading && pulledFromBottom
+
+            //PullToRefreshBox would do the top half, but it has no way to disarm its own gesture
+            //while the *bottom* one is reloading - its isRefreshing is both the gate and the
+            //indicator, and here the two have to say different things
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f),
+                    .weight(1f)
+                    .pullToRefresh(
+                        isRefreshing = refreshingFromTop,
+                        state = topState,
+                        enabled = !uiState.isLoading,
+                        onRefresh = {
+                            pulledFromBottom = false
+                            eventHandler.onRefreshRequested()
+                        },
+                    ),
             ) {
                 LazyColumn(
                     state = listState,
+                    //contentPadding, not padding: the rows scroll under the translucent app bar
+                    contentPadding = PaddingValues(
+                        top = padding.calculateTopPadding(),
+                        bottom = if (uiState.isPostPanelVisible) 0.dp else bottomInset,
+                    ),
                     modifier = Modifier
                         .fillMaxSize()
+                        .quickHide(quickHideState)
                         .bottomPullToRefresh(
                             listState = listState,
+                            state = bottomState,
+                            isRefreshing = refreshingFromBottom,
                             enabled = !uiState.isLoading,
-                            onTriggered = eventHandler::onRefreshRequested,
+                            onTriggered = {
+                                pulledFromBottom = true
+                                eventHandler.onRefreshRequested()
+                            },
                         ),
                 ) {
                     items(uiState.rows, key = { it.key() }, contentType = { it::class }) { row ->
                         SubListRow(row, eventHandler)
                     }
                 }
+                PullToRefreshDefaults.Indicator(
+                    state = topState,
+                    isRefreshing = refreshingFromTop,
+                    //the box reaches under the app bar now, so the spinner starts below it
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = padding.calculateTopPadding()),
+                )
+                BottomPullToRefreshIndicator(
+                    state = bottomState,
+                    isRefreshing = refreshingFromBottom,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = if (uiState.isPostPanelVisible) 0.dp else bottomInset),
+                )
             }
             if (uiState.isPostPanelVisible) {
-                ReplyPanel(uiState, eventHandler)
+                ReplyPanel(uiState, eventHandler, bottomInset)
             }
         }
     }
@@ -213,20 +293,24 @@ private fun SubListRow(row: SubListRowUiState, eventHandler: SubListEventHandler
 
 @Composable
 private fun MessageRow(row: SubListRowUiState.Message, eventHandler: SubListEventHandler) {
-    val interactionSource = remember { MutableInteractionSource() }
     val renderer = rememberAnnotatedTextRenderer()
     val body = remember(row.body, renderer) { renderer.body(row.body) }
     val author = remember(row.author, row.rating, renderer) { renderer.author(row.author, row.rating) }
     val time = remember(row.time) { row.time.formatPostTime() }
 
-    Box(Modifier.fillMaxWidth()) {
+    RevealRow(
+        isOpen = row.isMenuOpen,
+        background = zumpaRowColor(row.itemIndex),
+        modifier = Modifier.fillMaxWidth(),
+        menu = { MessageRowMenu(row, eventHandler) },
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .zumpaRowBackground(row.itemIndex, interactionSource = interactionSource)
+                .zumpaRowBackground(row.itemIndex)
                 .combinedClickable(
-                    interactionSource = interactionSource,
-                    indication = null,
+                    interactionSource = null,
+                    indication = ripple(),
                     onClick = { eventHandler.onMessageClicked(row) },
                     onLongClick = { eventHandler.onMessageLongPressed(row) },
                 )
@@ -237,6 +321,8 @@ private fun MessageRow(row: SubListRowUiState.Message, eventHandler: SubListEven
                     text = author.text,
                     style = AppTheme.typography.author,
                     color = AppTheme.colorScheme.author,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),
                 )
                 Text(
@@ -245,68 +331,68 @@ private fun MessageRow(row: SubListRowUiState.Message, eventHandler: SubListEven
                     color = AppTheme.colorScheme.date,
                 )
             }
+            //the body was a ?subjectTextSize TextView, not the 13sp the post editor uses
             Text(
                 text = body.text,
                 inlineContent = body.inlineContent,
-                style = AppTheme.typography.message,
+                style = AppTheme.typography.subject,
                 color = AppTheme.colorScheme.subject,
+                modifier = Modifier.padding(top = AppTheme.spaces.small),
             )
-        }
-
-        AnimatedVisibility(
-            visible = row.isMenuOpen,
-            enter = slideInHorizontally { it },
-            exit = slideOutHorizontally { it },
-            modifier = Modifier.align(Alignment.CenterEnd),
-        ) {
-            MessageRowMenu(row, eventHandler)
         }
     }
 }
 
 @Composable
 private fun MessageRowMenu(row: SubListRowUiState.Message, eventHandler: SubListEventHandler) {
-    Row(Modifier.background(AppTheme.colorScheme.secondaryBackground)) {
-        IconButton(onClick = { eventHandler.onReplyClicked(row.authorReal) }) {
-            Icon(
-                painterResource(R.drawable.ic_reply_black),
-                contentDescription = null,
-                tint = AppTheme.colorScheme.context,
-            )
-        }
-        IconButton(onClick = { eventHandler.onCopyClicked(row.body) }) {
-            Icon(
-                painterResource(R.drawable.ic_copy_black),
-                contentDescription = null,
-                tint = AppTheme.colorScheme.context,
-            )
-        }
-        IconButton(onClick = { eventHandler.onQuoteClicked(row.author, row.body) }) {
-            Icon(
-                painterResource(R.drawable.ic_speak_black),
-                contentDescription = null,
-                tint = AppTheme.colorScheme.context,
-            )
-        }
+    RevealRowMenuButton(rememberVectorPainter(Icons.AutoMirrored.Filled.Reply)) {
+        eventHandler.onReplyClicked(row.authorReal)
+    }
+    RevealRowMenuButton(rememberVectorPainter(Icons.Filled.ContentCopy)) {
+        eventHandler.onCopyClicked(row.body)
+    }
+    //`speaker_notes` is the bubble-with-lines the quote button always had
+    RevealRowMenuButton(rememberVectorPainter(Icons.Filled.SpeakerNotes)) {
+        eventHandler.onQuoteClicked(row.author, row.body)
     }
 }
 
+/**
+ * `item_sub_list_button.xml`: a `?buttonBackground` Button - orange hairline outline, 5dp corners,
+ * no fill - inset from the row edges, with the all-caps middle-ellipsised url the widget produced.
+ */
 @Composable
 private fun LinkRow(row: SubListRowUiState.Link, eventHandler: SubListEventHandler) {
-    TextButton(
-        onClick = { eventHandler.onLinkClicked(row.url) },
+    val label = remember(row.url) { row.url.uppercase(Locale.ROOT) }
+
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .zumpaRowBackground(row.itemIndex)
-            .padding(horizontal = AppTheme.spaces.listItemPadding),
+            .padding(
+                horizontal = AppTheme.spaces.listItemPadding,
+                vertical = AppTheme.spaces.tiny,
+            ),
     ) {
         Text(
-            text = row.url,
+            text = label,
             style = AppTheme.typography.button,
             color = AppTheme.colorScheme.buttonText,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            maxLines = LINK_MAX_LINES,
+            overflow = TextOverflow.MiddleEllipsis,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(AppTheme.shapes.button)
+                .border(
+                    width = AppTheme.sizes.urlButtonStrokeWidth,
+                    color = AppTheme.colorScheme.context,
+                    shape = AppTheme.shapes.button,
+                )
+                .clickable(indication = ripple(), interactionSource = null) {
+                    eventHandler.onLinkClicked(row.url)
+                }
+                .padding(AppTheme.spaces.listItemPadding),
         )
     }
 }
@@ -353,7 +439,14 @@ private fun SurveyOption(item: SurveyItemUiState, eventHandler: SubListEventHand
     Box(
         Modifier
             .fillMaxWidth()
-            .background(AppTheme.colorScheme.primaryBackground, AppTheme.shapes.button)
+            .clip(AppTheme.shapes.button)
+            .background(AppTheme.colorScheme.primaryBackground)
+            //survey_button_background_theme_black layers url_button_background over the fill
+            .border(
+                width = AppTheme.sizes.urlButtonStrokeWidth,
+                color = AppTheme.colorScheme.context,
+                shape = AppTheme.shapes.button,
+            )
     ) {
         //the filled portion is the vote share, as the level drawable used to be
         Box(
@@ -380,12 +473,18 @@ private fun SurveyOption(item: SurveyItemUiState, eventHandler: SubListEventHand
 }
 
 @Composable
-private fun ReplyPanel(uiState: SubListUiState, eventHandler: SubListEventHandler) {
+private fun ReplyPanel(
+    uiState: SubListUiState,
+    eventHandler: SubListEventHandler,
+    bottomInset: Dp = 0.dp,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(AppTheme.colorScheme.secondaryBackground)
-            .padding(AppTheme.spaces.tiny),
+            .padding(AppTheme.spaces.tiny)
+            //inside the background, so the panel colour reaches under the navigation bar
+            .padding(bottom = bottomInset),
         verticalAlignment = Alignment.Bottom,
     ) {
         OutlinedTextField(
@@ -402,7 +501,7 @@ private fun ReplyPanel(uiState: SubListUiState, eventHandler: SubListEventHandle
             enabled = !uiState.isSending && !uiState.draft.isBlank,
         ) {
             Icon(
-                painterResource(R.drawable.ic_send_black),
+                Icons.AutoMirrored.Filled.Send,
                 contentDescription = null,
                 tint = if (uiState.draft.isBlank) {
                     AppTheme.colorScheme.contextTextDisabled
@@ -415,6 +514,7 @@ private fun ReplyPanel(uiState: SubListUiState, eventHandler: SubListEventHandle
 }
 
 private const val REPLY_MAX_LINES = 6
+private const val LINK_MAX_LINES = 2
 
 @Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 500)
 @Composable

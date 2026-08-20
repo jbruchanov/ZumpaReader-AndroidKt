@@ -1,11 +1,10 @@
 package com.scurab.android.zumpareader.ui.compose
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.interaction.InteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import com.scurab.android.zumpareader.ui.compose.theme.AppTheme
 
 /**
@@ -16,24 +15,20 @@ import com.scurab.android.zumpareader.ui.compose.theme.AppTheme
  * with its own default, pressed and selected appearance. Selection is a layer-list - the highlight
  * sits *over* the row's base colour rather than replacing it - which is why this paints twice.
  *
- * [interactionSource] is the one the row's `clickable`/`combinedClickable` was given; without it the
- * row simply never renders a pressed state.
+ * The pressed state is *not* here: rows carry a `ripple()` indication in the context colour, which
+ * is what the selector's flat `black_yellow_pressed` fill used to stand in for.
  */
 @Composable
-fun Modifier.zumpaRowBackground(
-    index: Int,
-    isSelected: Boolean = false,
-    interactionSource: InteractionSource? = null,
-): Modifier {
-    val isPressed = interactionSource?.collectIsPressedAsState()?.value ?: false
-    val isEven = index % 2 == 0
-    val base = when {
-        isPressed && isEven -> AppTheme.colorScheme.rowEvenPressed
-        isPressed -> AppTheme.colorScheme.rowOddPressed
-        isEven -> AppTheme.colorScheme.rowEven
-        else -> AppTheme.colorScheme.rowOdd
-    }
-    return background(base).let {
-        if (isSelected) it.background(AppTheme.colorScheme.selectedBackground) else it
-    }
+fun Modifier.zumpaRowBackground(index: Int, isSelected: Boolean = false): Modifier {
+    val base = background(zumpaRowColor(index))
+    return if (isSelected) base.background(AppTheme.colorScheme.selectedBackground) else base
 }
+
+/**
+ * The row's base colour on its own, for whatever has to paint the same thing behind the row -
+ * `item_list_background_no_pressed_state_theme_black`, which is what the context menu sat on.
+ */
+@Composable
+@ReadOnlyComposable
+fun zumpaRowColor(index: Int): Color =
+    if (index % 2 == 0) AppTheme.colorScheme.rowEven else AppTheme.colorScheme.rowOdd
