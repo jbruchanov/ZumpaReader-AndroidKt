@@ -88,6 +88,7 @@ import com.scurab.android.zumpareader.ui.compose.RevealRowMenuButton
 import com.scurab.android.zumpareader.ui.compose.quickHide
 import com.scurab.android.zumpareader.ui.compose.rememberAnnotatedTextRenderer
 import com.scurab.android.zumpareader.ui.compose.rememberQuickHideState
+import com.scurab.android.zumpareader.ui.compose.sharedImage
 import com.scurab.android.zumpareader.ui.compose.shimmer
 import com.scurab.android.zumpareader.ui.compose.zumpaRowBackground
 import com.scurab.android.zumpareader.ui.compose.zumpaRowColor
@@ -445,11 +446,15 @@ private fun ImageRow(row: SubListRowUiState.Image, eventHandler: SubListEventHan
                 )
             }
 
+            //the loaded picture is the one that flies to the viewer, so the shared element goes
+            //here rather than on the row: the placeholder has nothing worth animating
             is AsyncImagePainter.State.Success -> Image(
                 painter = painter,
                 contentDescription = null,
                 contentScale = ContentScale.FillWidth,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .sharedImage(row.url),
             )
 
             //Empty is the state before the request starts, which for the eye is still waiting

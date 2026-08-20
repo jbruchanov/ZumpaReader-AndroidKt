@@ -1,5 +1,7 @@
 package com.scurab.android.zumpareader.ui.nav
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -18,6 +20,7 @@ import com.scurab.android.zumpareader.arch.DeviceConfig
 import com.scurab.android.zumpareader.arch.ShowToast
 import com.scurab.android.zumpareader.ext.toast
 import com.scurab.android.zumpareader.ui.compose.LocalNavigator
+import com.scurab.android.zumpareader.ui.compose.LocalSharedTransitionScope
 import com.scurab.android.zumpareader.ui.image.ImageScreen
 import com.scurab.android.zumpareader.ui.main.LaunchPayload
 import com.scurab.android.zumpareader.ui.main.MainEffect
@@ -40,6 +43,7 @@ import org.koin.compose.koinInject
  * a share. The decision of what to do with it belongs to [MainViewModel], so this only forwards it.
  * @param onExit back at the root, which only the activity can act on.
  */
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun ZumpaNavHost(launches: Flow<LaunchPayload>, onExit: () -> Unit) {
     val context = LocalContext.current
@@ -68,33 +72,42 @@ fun ZumpaNavHost(launches: Flow<LaunchPayload>, onExit: () -> Unit) {
         }
     }
 
-    CompositionLocalProvider(LocalNavigator provides navigator) {
-        NavDisplay(
-            backStack = backStack,
-            modifier = Modifier.fillMaxSize(),
-            onBack = {
-                //the root never gets here, NavDisplay leaves back to the activity instead
-                if (backStack.size > 1) backStack.removeAt(backStack.lastIndex)
-            },
-            entryDecorators = listOf(
-                rememberSaveableStateHolderNavEntryDecorator(),
-                //so koinViewModel() in a screen is scoped to its entry and dies with it
-                rememberViewModelStoreNavEntryDecorator(),
-            ),
-            sceneStrategies = listOf(DialogSceneStrategy()),
-            entryProvider = entryProvider {
-                entry<MainListKey> { MainListScreen() }
-                entry<TwoPaneKey> { TwoPaneScreen() }
-                entry<SubListKey> { key -> SubListScreen(key.threadId) }
-                entry<ImageKey> { key -> ImageScreen(key.url) }
-                entry<SettingsKey> { SettingsScreen() }
-                entry<OfflineDownloadKey>(metadata = DIALOG) { OfflineDownloadScreen() }
-                //a dialog on a tablet, a full screen on a phone - as it always was
-                entry<PostKey>(metadata = if (device.isTablet) DIALOG else emptyMap()) { key ->
-                    PostScreen(key.toArgs(), key.picker)
-                }
-            },
-        )
+    //SharedTransitionLayout wraps the whole host because a shared element has to be measured
+    //against something both screens are inside. Handed down as a composition local rather than a
+    //parameter so a screen that is composed outside a host - a preview, the tablet pane - does not
+    //have to take one it cannot be given.
+    SharedTransitionLayout {
+        CompositionLocalProvider(
+            LocalNavigator provides navigator,
+            LocalSharedTransitionScope provides this@SharedTransitionLayout,
+        ) {
+            NavDisplay(
+                backStack = backStack,
+                modifier = Modifier.fillMaxSize(),
+                onBack = {
+                    //the root never gets here, NavDisplay leaves back to the activity instead
+                    if (backStack.size > 1) backStack.removeAt(backStack.lastIndex)
+                },
+                entryDecorators = listOf(
+                    rememberSaveableStateHolderNavEntryDecorator(),
+                    //so koinViewModel() in a screen is scoped to its entry and dies with it
+                    rememberViewModelStoreNavEntryDecorator(),
+                ),
+                sceneStrategies = listOf(DialogSceneStrategy()),
+                entryProvider = entryProvider {
+                    entry<MainListKey> { MainListScreen() }
+                    entry<TwoPaneKey> { TwoPaneScreen() }
+                    entry<SubListKey> { key -> SubListScreen(key.threadId) }
+                    entry<ImageKey> { key -> ImageScreen(key.url) }
+                    entry<SettingsKey> { SettingsScreen() }
+                    entry<OfflineDownloadKey>(metadata = DIALOG) { OfflineDownloadScreen() }
+                    //a dialog on a tablet, a full screen on a phone - as it always was
+                    entry<PostKey>(metadata = if (device.isTablet) DIALOG else emptyMap()) { key ->
+                        PostScreen(key.toArgs(), key.picker)
+                    }
+                },
+            )
+        }
     }
 }
 
