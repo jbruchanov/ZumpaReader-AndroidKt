@@ -8,7 +8,6 @@ import com.scurab.android.zumpareader.model.ZumpaThreadBody
 import com.scurab.android.zumpareader.model.ZumpaThreadResult
 import com.scurab.android.zumpareader.model.ZumpaToggleBody
 import com.scurab.android.zumpareader.model.ZumpaVoteSurveyBody
-import com.scurab.android.zumpareader.model.ZumpaWSBody
 
 /**
  * The forum's endpoints. Plain suspend functions since the move to Ktor - the retrofit annotations
@@ -38,10 +37,6 @@ interface ZumpaAPI {
     suspend fun voteSurvey(body: ZumpaVoteSurveyBody): ZumpaGenericResponse
 
     suspend fun toggleRate(body: ZumpaToggleBody): ZumpaGenericResponse
-}
-
-interface ZumpaWSAPI {
-    suspend fun getZumpa(body: ZumpaWSBody): ZumpaGenericResponse
 }
 
 interface ZumpaPHPAPI {

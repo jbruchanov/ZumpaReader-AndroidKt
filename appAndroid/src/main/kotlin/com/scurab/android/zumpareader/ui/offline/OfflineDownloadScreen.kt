@@ -110,7 +110,11 @@ private fun OfflineDownloadScreen(
             modifier = Modifier.align(Alignment.CenterHorizontally),
         )
 
-        CounterRow(stringResource(R.string.threads), uiState.threadsDownloaded.toString())
+        //a thread body is a request of its own now, so this counts up rather than landing at once
+        CounterRow(
+            label = stringResource(R.string.threads),
+            value = "%s/%s".format(uiState.threadsDownloaded, uiState.threadsTotal),
+        )
         CounterRow(
             label = stringResource(R.string.images),
             value = "%s/%s".format(uiState.imagesDownloaded, uiState.imagesTotal),

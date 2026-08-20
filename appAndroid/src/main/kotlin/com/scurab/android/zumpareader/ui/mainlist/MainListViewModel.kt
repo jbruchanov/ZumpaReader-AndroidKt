@@ -103,6 +103,13 @@ class MainListViewModel(
         viewModelScope.launch {
             settings.isOffline.collect { offline ->
                 setState { copy(isOffline = offline) }
+                //the switch changes where the list comes from, so the list has to be read again.
+                //This is the only trigger: the download dialog is not the only way into offline
+                //mode - Settings has the same switch - and a download that is dismissed or fails
+                //used to leave the list showing nothing at all.
+                if (lastOffline != null && lastOffline != offline) {
+                    load()
+                }
             }
         }
         viewModelScope.launch {
@@ -236,12 +243,10 @@ class MainListViewModel(
     override fun onOfflineToggled() {
         val goingOffline = !settings.isOffline.value
         settings.setOffline(goingOffline)
+        //the reload is driven by the isOffline collector above, either way. All this adds is the
+        //offer to refresh the snapshot on the way in.
         if (goingOffline) {
-            //the dialog fills the offline store, the reload happens on AppEvent.OfflineDataChanged
-            lastOffline = null
             effect(MainListEffect.ShowOfflineDownloadDialog)
-        } else {
-            load()
         }
     }
 

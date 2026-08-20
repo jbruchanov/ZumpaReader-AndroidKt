@@ -4,7 +4,6 @@ import com.scurab.android.zumpareader.ZumpaOfflineApi
 import com.scurab.android.zumpareader.data.OfflineThreadDto
 import com.scurab.android.zumpareader.data.toDomain
 import com.scurab.android.zumpareader.model.ZumpaThread
-import com.scurab.android.zumpareader.util.ZumpaPrefs
 import kotlinx.io.buffered
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
@@ -21,16 +20,29 @@ import kotlinx.serialization.json.Json
 class OfflineDataRepository(
     private val snapshotPath: String,
     private val offlineApi: ZumpaOfflineApi,
-    private val prefs: ZumpaPrefs,
     private val json: Json,
 ) {
 
+    private var isLoaded = false
+
     val path: String get() = snapshotPath
 
-    /** Only reads when offline mode is on, as it always did. */
-    fun loadFromDisk() {
+    /**
+     * Fills the offline api from disk, once.
+     *
+     * This used to run only in `Application.onCreate`, and only when offline mode was *already* on,
+     * which meant switching into offline mode during a session never read the snapshot: the store
+     * stayed empty and the list came up blank however good the file on disk was. So it is called
+     * from the api factory instead - wherever offline mode is actually used, cold start or toggle -
+     * and is a no-op after the first time.
+     */
+    fun ensureLoaded() {
+        if (isLoaded) {
+            return
+        }
+        isLoaded = true
         val file = Path(snapshotPath)
-        if (!SystemFileSystem.exists(file) || !prefs.isOffline) {
+        if (!SystemFileSystem.exists(file)) {
             return
         }
         val text = SystemFileSystem.source(file).buffered().use { it.readString() }
@@ -40,7 +52,9 @@ class OfflineDataRepository(
         }
     }
 
+    /** A fresh download, which is also the newest thing on disk - so no reload can undo it. */
     fun setData(data: LinkedHashMap<String, ZumpaThread>) {
+        isLoaded = true
         offlineApi.offlineData = data
     }
 

@@ -2,6 +2,7 @@ package com.scurab.android.zumpareader.data
 
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.model.ZumpaThreadItem
+import com.scurab.android.zumpareader.util.looksLikeImageUrl
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -93,3 +94,18 @@ fun ZumpaThreadItem.toDto(): OfflineThreadItemDto = OfflineThreadItemDto(
     urls = urls,
     rating = rating,
 )
+
+/** Only the image urls are worth prefetching for offline use. */
+fun List<ZumpaThread>.offlineImageUrls(): Set<String> {
+    val urls = LinkedHashSet<String>()
+    forEach { thread ->
+        thread.offlineItems?.forEach { item ->
+            item.urls?.forEach { url ->
+                if (url.looksLikeImageUrl()) {
+                    urls += url
+                }
+            }
+        }
+    }
+    return urls
+}

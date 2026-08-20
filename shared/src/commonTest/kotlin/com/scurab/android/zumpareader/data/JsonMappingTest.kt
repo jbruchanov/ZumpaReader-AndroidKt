@@ -3,7 +3,6 @@ package com.scurab.android.zumpareader.data
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 import com.scurab.android.zumpareader.model.ZumpaReadState
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.model.ZumpaThreadItem
@@ -171,67 +170,7 @@ class JsonMappingTest {
     }
     //endregion
 
-    //region web service
-    @Test
-    fun `the web service response maps onto the model`() {
-        //field names taken from the gson reader this replaces
-        val wire = """
-            {
-              "Context": {
-                "Items": [
-                  {
-                    "ID": "999",
-                    "Subject": "ws subject",
-                    "Time": 1754000000000,
-                    "Author": "ws author",
-                    "HasRespondForYou": true,
-                    "Items": [
-                      {
-                        "AuthorReal": "real name",
-                        "AuthorFake": "fake name",
-                        "Body": "the body",
-                        "Time": 111,
-                        "InsideUris": ["https://a.b/c.jpg", "https://d.e/f"]
-                      }
-                    ]
-                  }
-                ]
-              }
-            }
-        """.trimIndent()
-
-        val threads = json.decodeFromString<ZumpaWsResponseDto>(wire).context.items.map { it.toDomain() }
-
-        assertEquals(1, threads.size)
-        val thread = threads.single()
-        assertEquals("999", thread.id)
-        assertEquals("ws subject", thread.subject)
-        assertEquals("ws author", thread.author)
-        assertEquals(1_754_000_000_000L, thread.time)
-        assertTrue(thread.hasResponseForYou)
-
-        val item = requireNotNull(thread.offlineItems).single()
-        assertEquals("the body", item.body)
-        assertEquals(111L, item.time)
-        assertEquals("real name", item.authorReal)
-        //AuthorFake is ignored - the gson version read AuthorReal in both branches of its check and
-        //this port keeps that. See the comment on ZumpaWsItemDto.toDomain.
-        assertEquals("real name", item.author)
-        assertEquals(listOf("https://a.b/c.jpg", "https://d.e/f"), item.urls)
-    }
-
-    @Test
-    fun `unknown fields from the web service are ignored`() {
-        val wire = """
-            {"Context":{"Items":[{"ID":"1","Subject":"s","SomethingNew":true,"Items":[]}]},"Extra":1}
-        """.trimIndent()
-
-        val threads = json.decodeFromString<ZumpaWsResponseDto>(wire).context.items
-
-        assertEquals(1, threads.size)
-        assertEquals("1", threads.single().id)
-    }
-
+    //region prefetching
     @Test
     fun `only image urls are collected for prefetching`() {
         val urls = listOf(thread()).offlineImageUrls()

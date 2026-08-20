@@ -7,7 +7,6 @@ import com.google.firebase.FirebaseApp
 import com.scurab.android.zumpareader.di.ONLINE_API
 import com.scurab.android.zumpareader.di.appModules
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
-import com.scurab.android.zumpareader.repository.OfflineDataRepository
 import com.scurab.android.zumpareader.repository.ZumpaReadStateRepository
 import com.scurab.android.zumpareader.usecase.CreateNotificationChannelsUseCase
 import com.scurab.android.zumpareader.util.ZumpaPrefs
@@ -31,7 +30,6 @@ class ZumpaReaderApp : Application() {
     val zumpaPrefs: ZumpaPrefs by inject()
 
     private val readStateRepository: ZumpaReadStateRepository by inject()
-    private val offlineData: OfflineDataRepository by inject()
 
     override fun onCreate() {
         super.onCreate()
@@ -71,7 +69,8 @@ class ZumpaReaderApp : Application() {
                 }
             }
         })
-        offlineData.loadFromDisk()
+        //the offline snapshot is not read here any more - the api factory does it lazily, so a
+        //toggle into offline mode picks it up and an online start does not pay for the parse
         FirebaseApp.initializeApp(this)
         if (zumpaPrefs.userId == null) {
             //kotlin.uuid rather than java.util.UUID - same hyphenated form, no jvm dependency
