@@ -1,6 +1,7 @@
 package com.scurab.android.zumpareader.ui.sublist
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -11,10 +12,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -25,6 +28,7 @@ import androidx.compose.material.icons.filled.SpeakerNotes
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -43,6 +47,7 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,7 +66,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil3.compose.AsyncImage
+import coil3.compose.AsyncImagePainter
+import coil3.compose.rememberAsyncImagePainter
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.arch.CopyToClipboard
 import com.scurab.android.zumpareader.arch.HideKeyboard
@@ -82,6 +88,7 @@ import com.scurab.android.zumpareader.ui.compose.RevealRowMenuButton
 import com.scurab.android.zumpareader.ui.compose.quickHide
 import com.scurab.android.zumpareader.ui.compose.rememberAnnotatedTextRenderer
 import com.scurab.android.zumpareader.ui.compose.rememberQuickHideState
+import com.scurab.android.zumpareader.ui.compose.shimmer
 import com.scurab.android.zumpareader.ui.compose.zumpaRowBackground
 import com.scurab.android.zumpareader.ui.compose.zumpaRowColor
 import com.scurab.android.zumpareader.ui.compose.theme.AppTheme
@@ -397,20 +404,77 @@ private fun LinkRow(row: SubListRowUiState.Link, eventHandler: SubListEventHandl
     }
 }
 
+/**
+ * An inline image, which is the one row whose height is not known until the bytes arrive.
+ *
+ * A plain AsyncImage measures to nothing until then, so the row was simply invisible while it loaded
+ * and stayed invisible for good if it failed - and the forum is full of links to pictures that have
+ * since gone. So the placeholder holds 16:9 of space and shimmers, and a failure keeps that space
+ * and says so instead of collapsing. Once the image is there it takes its own aspect ratio, as
+ * before: the 16:9 is a guess for the wait, not a crop.
+ *
+ * `rememberAsyncImagePainter` rather than SubcomposeAsyncImage - this is a list row, and reading the
+ * painter state costs nothing next to subcomposing every one of them.
+ */
 @Composable
 private fun ImageRow(row: SubListRowUiState.Image, eventHandler: SubListEventHandler) {
-    AsyncImage(
-        model = row.url,
-        contentDescription = null,
-        contentScale = ContentScale.FillWidth,
+    val painter = rememberAsyncImagePainter(model = row.url)
+    val state by painter.state.collectAsState()
+
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .zumpaRowBackground(row.itemIndex)
             .combinedClickable(
+                interactionSource = null,
+                indication = ripple(),
                 onClick = { eventHandler.onImageClicked(row.url) },
                 onLongClick = { eventHandler.onLinkClicked(row.url) },
             )
             .padding(AppTheme.spaces.listItemPadding),
+        contentAlignment = Alignment.Center,
+    ) {
+        when (state) {
+            is AsyncImagePainter.State.Error -> ImageRowPlaceholder {
+                Icon(
+                    imageVector = Icons.Filled.BrokenImage,
+                    contentDescription = stringResource(R.string.unable_to_finish_operation),
+                    //grey rather than a dimmed orange: nothing here is disabled, it is absent
+                    tint = AppTheme.colorScheme.hint,
+                    modifier = Modifier.size(AppTheme.sizes.brokenImageIcon),
+                )
+            }
+
+            is AsyncImagePainter.State.Success -> Image(
+                painter = painter,
+                contentDescription = null,
+                contentScale = ContentScale.FillWidth,
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            //Empty is the state before the request starts, which for the eye is still waiting
+            else -> ImageRowPlaceholder(Modifier.shimmer())
+        }
+    }
+}
+
+/** The space an inline image will take, held while it loads and kept if it never does. */
+@Composable
+private fun ImageRowPlaceholder(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit = {},
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(IMAGE_PLACEHOLDER_RATIO)
+            .clip(AppTheme.shapes.button)
+            //filled either way, so the slot reads as somewhere a picture goes rather than as a gap
+            //with an icon in it. The shimmer paints over this.
+            .background(AppTheme.colorScheme.secondaryBackground)
+            .then(modifier),
+        contentAlignment = Alignment.Center,
+        content = { content() },
     )
 }
 
@@ -514,6 +578,9 @@ private fun ReplyPanel(
 }
 
 private const val REPLY_MAX_LINES = 6
+
+/** Nothing is known about the picture before it lands, and 16:9 is the least surprising guess. */
+private const val IMAGE_PLACEHOLDER_RATIO = 16f / 9f
 private const val LINK_MAX_LINES = 2
 
 @Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 500)
