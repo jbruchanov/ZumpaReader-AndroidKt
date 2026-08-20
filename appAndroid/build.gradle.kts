@@ -102,8 +102,6 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.bundles.ktor)
-    //coil brings its own okhttp network layer, independent of the ktor engine
-    implementation(libs.okhttp.base)
 
     testImplementation(platform(libs.koin.bom))
     testImplementation(platform(libs.junit.bom))

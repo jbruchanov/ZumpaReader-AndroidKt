@@ -1,6 +1,7 @@
 package com.scurab.android.zumpareader.ui.post
 
 import android.net.Uri
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +17,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.filled.AspectRatio
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.RotateRight
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,12 +41,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.arch.CopyToClipboard
 import com.scurab.android.zumpareader.arch.ShowToast
@@ -54,6 +63,12 @@ import com.scurab.android.zumpareader.test.uploaded
 import com.scurab.android.zumpareader.ui.compose.theme.AppTheme
 import com.scurab.android.zumpareader.util.saveToClipboard
 import org.koin.androidx.compose.koinViewModel
+import java.io.File
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.min
+import kotlin.math.sin
 
 /**
  * [onLinkUploaded] is how a finished upload reaches the message draft. The host passes
@@ -122,30 +137,52 @@ private fun PostImageScreen(uiState: PostImageUiState, eventHandler: PostImageEv
 }
 
 /**
- * The thumbnail. A file path today because `CopyFromResourcesTask` writes one - it becomes an
- * `AsyncImage` model when Coil lands in C9, which is also when the rotation stops needing a
- * graphicsLayer of its own.
+ * The thumbnail `CopyFromResourcesTask` wrote, which is `Picasso.get().load(File(path))` into a
+ * `fitCenter` ImageView as it was, and the animated `image.animate().rotation(..)` on top.
+ *
+ * The rotation has to be a display transform: only the *upload* is rotated on disk (that is
+ * `ProcessImageTask` writing `<hash>_out`), the thumbnail is written once and never touched again.
  */
 @Composable
 private fun ImagePreview(uiState: PostImageUiState) {
+    val rotation by animateFloatAsState(
+        targetValue = uiState.rotationDegrees.toFloat(),
+        label = "rotation",
+    )
+    val path = uiState.thumbnailPath
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .graphicsLayer { rotationZ = uiState.rotationDegrees.toFloat() },
+            .graphicsLayer {
+                rotationZ = rotation
+                //a rotated rectangle needs a bigger box than it came from, so shrink to whatever
+                //still fits - otherwise a portrait photo turned on its side runs off both edges,
+                //which is what the old ImageView did
+                val radians = rotation * PI.toFloat() / STRAIGHT_ANGLE
+                val sin = abs(sin(radians))
+                val cos = abs(cos(radians))
+                val turnedWidth = size.width * cos + size.height * sin
+                val turnedHeight = size.width * sin + size.height * cos
+                val fit = min(size.width / turnedWidth, size.height / turnedHeight)
+                scaleX = fit
+                scaleY = fit
+            },
         contentAlignment = Alignment.Center,
     ) {
-        if (uiState.thumbnailPath == null) {
+        if (path == null) {
+            //still being copied out of the picker
             Text(
                 text = stringResource(R.string.wheeeee),
                 style = AppTheme.typography.author,
                 color = AppTheme.colorScheme.primaryText,
             )
         } else {
-            //placeholder until Coil - see C9
-            Text(
-                text = uiState.thumbnailPath.substringAfterLast('/'),
-                style = AppTheme.typography.author,
-                color = AppTheme.colorScheme.context,
+            AsyncImage(
+                model = remember(path) { File(path) },
+                contentDescription = null,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxSize(),
             )
         }
     }
@@ -174,12 +211,28 @@ private fun ImagePanel(uiState: PostImageUiState, eventHandler: PostImageEventHa
             verticalAlignment = Alignment.CenterVertically,
         ) {
             SampleSizeSelector(uiState, eventHandler)
-            PanelIcon(R.drawable.ic_aspect_ratio_black, !uiState.isBusy, eventHandler::onResizeClicked)
-            PanelIcon(R.drawable.ic_rotate_right_black, !uiState.isBusy, eventHandler::onRotateClicked)
+            PanelIcon(
+                rememberVectorPainter(Icons.Filled.AspectRatio),
+                !uiState.isBusy,
+                eventHandler::onResizeClicked,
+            )
+            PanelIcon(
+                rememberVectorPainter(Icons.Filled.RotateRight),
+                !uiState.isBusy,
+                eventHandler::onRotateClicked,
+            )
             if (uiState.uploadedLink != null) {
-                PanelIcon(R.drawable.ic_copy_black, true, eventHandler::onCopyLinkClicked)
+                PanelIcon(
+                    rememberVectorPainter(Icons.Filled.ContentCopy),
+                    true,
+                    eventHandler::onCopyLinkClicked,
+                )
             }
-            PanelIcon(R.drawable.ic_send_black, !uiState.isBusy, eventHandler::onUploadClicked)
+            PanelIcon(
+                rememberVectorPainter(Icons.AutoMirrored.Filled.Send),
+                !uiState.isBusy,
+                eventHandler::onUploadClicked,
+            )
         }
     }
 }
@@ -240,10 +293,10 @@ private fun SampleSizeSelector(uiState: PostImageUiState, eventHandler: PostImag
 }
 
 @Composable
-private fun PanelIcon(iconRes: Int, enabled: Boolean, onClick: () -> Unit) {
+private fun PanelIcon(icon: Painter, enabled: Boolean, onClick: () -> Unit) {
     IconButton(onClick = onClick, enabled = enabled) {
         Icon(
-            painter = painterResource(iconRes),
+            painter = icon,
             contentDescription = null,
             tint = if (enabled) {
                 AppTheme.colorScheme.context
@@ -255,6 +308,7 @@ private fun PanelIcon(iconRes: Int, enabled: Boolean, onClick: () -> Unit) {
 }
 
 private val SELECTOR_WIDTH = 96.dp
+private const val STRAIGHT_ANGLE = 180f
 
 @Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 400)
 @Composable

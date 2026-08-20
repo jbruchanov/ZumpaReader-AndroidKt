@@ -17,6 +17,7 @@ import com.scurab.android.zumpareader.util.SharedPreferencesStore
 import java.io.File
 import com.scurab.android.zumpareader.data.ZumpaApiImpl
 import com.scurab.android.zumpareader.data.ZumpaPHPApiImpl
+import com.scurab.android.zumpareader.data.buildImageHttpClient
 import com.scurab.android.zumpareader.data.buildZumpaHttpClient
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.repository.AppEventBus
@@ -43,6 +44,7 @@ import com.scurab.android.zumpareader.ui.settings.SettingsViewModel
 import com.scurab.android.zumpareader.ui.sublist.SubListViewModel
 import com.scurab.android.zumpareader.usecase.OfflineDownloadUseCase
 import com.scurab.android.zumpareader.util.ZumpaPrefs
+import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.okhttp.OkHttp
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
@@ -55,6 +57,12 @@ import org.koin.dsl.module
  * online/offline switch below.
  */
 val ONLINE_API = named("onlineApi")
+
+/**
+ * The image client, kept behind a qualifier because there are two `HttpClient`s - see
+ * [com.scurab.android.zumpareader.data.buildImageHttpClient] for why they cannot be one.
+ */
+val IMAGE_CLIENT = named("imageClient")
 
 
 /**
@@ -99,7 +107,7 @@ val coreModule = module {
     //it is about to replace
     single { OfflineDownloadUseCase(get(ONLINE_API), get(), get()) }
     single { ImageCacheRepository(androidContext(), get()) }
-    single { buildImageLoader(androidContext(), get()) }
+    single { buildImageLoader(androidContext(), get(IMAGE_CLIENT)) }
     single { CookieRepository(get()) }
     single<PushTokenProvider> { FirebasePushTokenProvider() }
     single { AuthRepository(get(ONLINE_API), get(), get(), get(), get(), get()) }
@@ -113,7 +121,12 @@ val coreModule = module {
 }
 
 val networkModule = module {
-    single { buildZumpaHttpClient(OkHttp.create(), get(), isDebug = BuildConfig.DEBUG) }
+    //one engine, so both clients share its connection pool and its threads
+    single<HttpClientEngine> { OkHttp.create() }
+
+    single { buildZumpaHttpClient(get(), get(), isDebug = BuildConfig.DEBUG) }
+
+    single(IMAGE_CLIENT) { buildImageHttpClient(get(), get()) }
 
     single<ZumpaAPI>(ONLINE_API) { ZumpaApiImpl(get(), get()) }
 

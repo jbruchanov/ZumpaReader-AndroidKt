@@ -63,6 +63,34 @@ fun buildZumpaHttpClient(
 }
 
 /**
+ * The client Coil loads images through. Shares [cookies] with [buildZumpaHttpClient], so the forum
+ * still recognises the session on its own image host - which is the whole reason the old code handed
+ * Picasso the app`s `OkHttpClient` through `PicassoHttpDownloader2`.
+ *
+ * It cannot *be* that client, for two reasons that are settings rather than preference:
+ *
+ * - **`followRedirects`**. The main client has it off because for the forum a 302 *is* the answer to
+ *   a post. An image url that redirects would simply fail.
+ * - **No cache busting.** The `_ts` parameter is right for a list page that must not be stale and
+ *   wrong for a jpeg that never changes - it would make every request a miss for anything
+ *   downstream that caches by url.
+ *
+ * `expectSuccess` is off because Coil reads the status itself.
+ */
+fun buildImageHttpClient(engine: HttpClientEngine, cookies: CookieRepository): HttpClient =
+    HttpClient(engine) {
+        followRedirects = true
+        expectSuccess = false
+
+        install(HttpTimeout) {
+            connectTimeoutMillis = TIMEOUT_MS
+            requestTimeoutMillis = BODY_TIMEOUT_MS
+            socketTimeoutMillis = BODY_TIMEOUT_MS
+        }
+        install(HttpCookies) { storage = cookies.storage }
+    }
+
+/**
  * The forum caches aggressively, so every request carries a throwaway `_ts`. Was a network
  * interceptor on the okhttp client.
  */
