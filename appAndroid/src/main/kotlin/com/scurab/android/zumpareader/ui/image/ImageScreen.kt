@@ -36,7 +36,9 @@ import com.scurab.android.zumpareader.test.failed
 import com.scurab.android.zumpareader.test.imageBitmap
 import com.scurab.android.zumpareader.test.loaded
 import com.scurab.android.zumpareader.test.mock
+import coil3.compose.SubcomposeAsyncImage
 import com.scurab.android.zumpareader.ui.compose.LocalNavigator
+import com.scurab.android.zumpareader.ui.compose.sharedImage
 import com.scurab.android.zumpareader.ui.compose.theme.AppTheme
 import org.koin.androidx.compose.koinViewModel
 
@@ -64,11 +66,11 @@ fun ImageScreen(url: String, vm: ImageViewModel = koinViewModel()) {
 
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val eventHandler = vm
-    ImageScreen(uiState, eventHandler)
+    ImageScreen(uiState, eventHandler, url)
 }
 
 @Composable
-private fun ImageScreen(uiState: ImageUiState, eventHandler: ImageEventHandler) {
+private fun ImageScreen(uiState: ImageUiState, eventHandler: ImageEventHandler, url: String = "") {
     BackHandler { eventHandler.onCloseRequested() }
 
     Box(
@@ -77,20 +79,42 @@ private fun ImageScreen(uiState: ImageUiState, eventHandler: ImageEventHandler) 
             .background(AppTheme.colorScheme.primaryBackground),
         contentAlignment = Alignment.Center,
     ) {
-        when (uiState) {
-            is ImageUiState.Loading -> CircularProgressIndicator(
-                modifier = Modifier.size(AppTheme.sizes.progressBar),
-                color = AppTheme.colorScheme.context,
-            )
+        //one box holds the shared element for the whole screen, whatever is inside it at the time.
+        //The full size bitmap arrives after the transition has already started, and a key that
+        //appeared halfway through would have nothing to animate from.
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .sharedImage(url),
+            contentAlignment = Alignment.Center,
+        ) {
+            when (uiState) {
+                //the row has just drawn this url, so coil has it: showing it here gives the
+                //transition something to grow while the full size bitmap decodes. Subcompose so the
+                //spinner is only for a cold open - a spinner over a picture that is already there
+                //looks broken.
+                is ImageUiState.Loading -> SubcomposeAsyncImage(
+                    model = url,
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    loading = {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(AppTheme.sizes.progressBar),
+                            color = AppTheme.colorScheme.context,
+                        )
+                    },
+                    modifier = Modifier.fillMaxSize(),
+                )
 
-            is ImageUiState.Loaded -> ZoomableImage(uiState.bitmap.asImageBitmap())
+                is ImageUiState.Loaded -> ZoomableImage(uiState.bitmap.asImageBitmap())
 
-            //momentary - the browser is already opening and the screen is closing behind it
-            is ImageUiState.Failed -> Text(
-                text = stringResource(R.string.unable_to_finish_operation),
-                style = AppTheme.typography.subject,
-                color = AppTheme.colorScheme.primaryText,
-            )
+                //momentary - the browser is already opening and the screen is closing behind it
+                is ImageUiState.Failed -> Text(
+                    text = stringResource(R.string.unable_to_finish_operation),
+                    style = AppTheme.typography.subject,
+                    color = AppTheme.colorScheme.primaryText,
+                )
+            }
         }
     }
 }
