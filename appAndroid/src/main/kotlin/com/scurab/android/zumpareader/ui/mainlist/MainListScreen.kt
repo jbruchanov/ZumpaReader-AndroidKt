@@ -137,7 +137,8 @@ private fun MainListScreen(uiState: MainListUiState, eventHandler: MainListEvent
                     FloatingActionButton(
                         onClick = eventHandler::onFabClicked,
                         containerColor = AppTheme.colorScheme.context,
-                        contentColor = AppTheme.colorScheme.primaryBackground,
+                        //white on the orange, which is what ic_add_white was
+                        contentColor = AppTheme.colorScheme.primaryText,
                         //M3 draws a squircle, the old Material fab was round
                         shape = CircleShape,
                     ) {
