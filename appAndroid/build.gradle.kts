@@ -63,7 +63,10 @@ android {
             isMinifyEnabled = false
         }
         release {
-            isMinifyEnabled = false
+            //on since the compose migration: R8 takes the apk from 16MB to under 5MB, which is what
+            //makes the whole Material icon set affordable - see the note in the version catalog
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.getByName("release")
         }

@@ -1,17 +1,16 @@
-# Add project specific ProGuard rules here.
-# By default, the flags in this file are appended to flags specified
-# in F:\0Work\android-sdk/tools/proguard/proguard-android.txt
-# You can edit the include path and order by changing the proguardFiles
-# directive in build.gradle.
+# R8 is on for release - see `isMinifyEnabled` in build.gradle.kts. This file is deliberately short,
+# because almost everything this app needs is already brought in by the libraries themselves:
 #
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# - **kotlinx.serialization** ships R8 rules (`META-INF/com.android.tools/r8/`) that keep the
+#   generated `$serializer` for every `@Serializable`. That is what the Navigation 3 keys and the
+#   offline snapshot depend on, and it is why the DTOs name every key with `@SerialName` - the
+#   property names *are* renamed by R8, the json keys must not be.
+# - **Compose**, **Firebase** and **Coil** ship their own consumer rules.
+# - **Koin** needs none: definitions are lambdas that call constructors directly, and a definition
+#   is keyed on the `KClass` object rather than on its name, so obfuscation cannot break a lookup.
+# - **Ktor** engines are constructed explicitly (`HttpClient(OkHttp.create())`), not discovered
+#   through a `ServiceLoader`, so the engine does not need keeping either.
 
-# Add any project specific keep options here:
-
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Crashlytics reports are unreadable without these; its gradle plugin uploads the mapping file.
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
