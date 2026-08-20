@@ -11,7 +11,6 @@ import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.em
 import androidx.compose.foundation.text.InlineTextContent
@@ -169,7 +168,6 @@ class AnnotatedTextRenderer(
         val LINK_STYLE = SpanStyle(
             fontSize = 0.5.em,
             fontFamily = FontFamily.Monospace,
-            textDecoration = TextDecoration.Underline,
         )
     }
 }

@@ -1,10 +1,13 @@
 package com.scurab.android.zumpareader.ui.main
 
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import com.scurab.android.zumpareader.ui.compose.theme.AppTheme
 import com.scurab.android.zumpareader.ui.nav.ZumpaNavHost
 import kotlinx.coroutines.channels.BufferOverflow
@@ -33,6 +36,13 @@ class MainActivity : ComponentActivity() {
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        //the app draws its own chrome over the system bars - see the translucent top bars. `dark`
+        //rather than the default so the icons stay light even when the phone is in light mode: the
+        //only theme this app has is black.
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+        )
         super.onCreate(savedInstanceState)
         onLaunchIntent(intent)
         setContent {

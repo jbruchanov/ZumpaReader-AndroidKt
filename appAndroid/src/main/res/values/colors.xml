@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!--
+      The palette the *platform* still needs: styles.xml for the window background, the accent and
+      the hint colour, ic_launcher_circular for its background, theme_black for contextColor.
+
+      Everything the app draws itself is in `ui/compose/theme/AppColorScheme.kt` instead - these are
+      not duplicated there, they are the same values arrived at from the other side.
+    -->
     <color name="colorAccent">@color/yellow_orange</color>
 
-
     <color name="black">#000</color>
-    <color name="dark">#202020</color>
     <color name="grey">#808080</color>
-    <color name="black_yellow_pressed">#503405</color>
-    <color name="dark_yellow_pressed">#654A1A</color>
     <color name="white">#FFF</color>
     <color name="yellow_orange">#FFA710</color>
-    <color name="blue_gray">#0d8aac</color>
-    <color name="yellow_orange_50p">#80FFA710</color>
-    <color name="yellow_orange_25p">#40FFA710</color>
-
 </resources>

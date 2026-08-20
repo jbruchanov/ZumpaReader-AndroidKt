@@ -1,7 +1,6 @@
 package com.scurab.android.zumpareader.ui.post
 
 import android.net.Uri
-import androidx.annotation.DrawableRes
 import androidx.lifecycle.viewModelScope
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.arch.BaseViewModel
@@ -25,10 +24,14 @@ sealed interface PostTabUiState {
         override val tag: String get() = POST_MESSAGE_TAB
     }
 
+    /**
+     * [fromCamera] rather than an icon: which glyph that becomes is the screen`s business, and a
+     * ViewModel has no reason to hold a drawable id - see `PostTabUiState.icon()` in PostScreen.
+     */
     data class Image(
         override val tag: String,
         val uri: Uri,
-        @DrawableRes val iconRes: Int,
+        val fromCamera: Boolean,
     ) : PostTabUiState
 }
 
@@ -106,7 +109,7 @@ class PostViewModel(
                 tabs = buildList {
                     add(PostTabUiState.Message)
                     args.uris.forEachIndexed { index, uri ->
-                        add(PostTabUiState.Image("${index + 2}", uri, R.drawable.ic_photo_black))
+                        add(PostTabUiState.Image("${index + 2}", uri, fromCamera = false))
                     }
                 },
                 //a single shared image goes straight to its tab
@@ -136,7 +139,7 @@ class PostViewModel(
                 tabs = tabs + PostTabUiState.Image(
                     tag = tag,
                     uri = uri,
-                    iconRes = if (fromCamera) R.drawable.ic_photo_camera_black else R.drawable.ic_photo_black,
+                    fromCamera = fromCamera,
                 ),
                 selectedTabTag = tag,
             )

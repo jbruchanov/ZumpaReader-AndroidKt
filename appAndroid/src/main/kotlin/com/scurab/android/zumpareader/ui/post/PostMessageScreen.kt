@@ -14,6 +14,10 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.filled.Photo
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -21,7 +25,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -94,18 +99,30 @@ private fun PostMessageScreen(uiState: PostUiState, eventHandler: PostMessageEve
 @Composable
 private fun PostActionsRow(uiState: PostUiState, eventHandler: PostMessageEventHandler) {
     Row(modifier = Modifier.fillMaxWidth()) {
-        ActionIcon(R.drawable.ic_photo_black, enabled = !uiState.isSending, onClick = eventHandler::onPhotoClicked)
-        ActionIcon(R.drawable.ic_photo_camera_black, enabled = !uiState.isSending, onClick = eventHandler::onCameraClicked)
+        ActionIcon(
+            icon = rememberVectorPainter(Icons.Filled.Photo),
+            enabled = !uiState.isSending,
+            onClick = eventHandler::onPhotoClicked,
+        )
+        ActionIcon(
+            icon = rememberVectorPainter(Icons.Filled.PhotoCamera),
+            enabled = !uiState.isSending,
+            onClick = eventHandler::onCameraClicked,
+        )
         Spacer(Modifier.weight(1f))
-        ActionIcon(R.drawable.ic_send_black, enabled = uiState.canSend, onClick = eventHandler::onSendClicked)
+        ActionIcon(
+            icon = rememberVectorPainter(Icons.AutoMirrored.Filled.Send),
+            enabled = uiState.canSend,
+            onClick = eventHandler::onSendClicked,
+        )
     }
 }
 
 @Composable
-private fun ActionIcon(iconRes: Int, enabled: Boolean, onClick: () -> Unit) {
+private fun ActionIcon(icon: Painter, enabled: Boolean, onClick: () -> Unit) {
     IconButton(onClick = onClick, enabled = enabled) {
         Icon(
-            painter = painterResource(iconRes),
+            painter = icon,
             contentDescription = null,
             tint = if (enabled) {
                 AppTheme.colorScheme.context

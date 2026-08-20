@@ -1,24 +1,30 @@
 package com.scurab.android.zumpareader.ui.mainlist
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -31,6 +37,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -43,10 +52,11 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.arch.ShowToast
@@ -61,8 +71,14 @@ import com.scurab.android.zumpareader.test.uiState
 import android.content.Context
 import android.content.Intent
 import com.scurab.android.zumpareader.ui.compose.LocalNavigator
+import com.scurab.android.zumpareader.ui.compose.QuickHideFab
+import com.scurab.android.zumpareader.ui.compose.RevealRow
+import com.scurab.android.zumpareader.ui.compose.RevealRowMenuButton
+import com.scurab.android.zumpareader.ui.compose.quickHide
 import com.scurab.android.zumpareader.ui.compose.rememberAnnotatedTextRenderer
+import com.scurab.android.zumpareader.ui.compose.rememberQuickHideState
 import com.scurab.android.zumpareader.ui.compose.zumpaRowBackground
+import com.scurab.android.zumpareader.ui.compose.zumpaRowColor
 import com.scurab.android.zumpareader.ui.compose.theme.AppTheme
 import org.koin.androidx.compose.koinViewModel
 import com.scurab.android.zumpareader.util.formatThreadListTime
@@ -106,17 +122,27 @@ private fun MainListScreen(uiState: MainListUiState, eventHandler: MainListEvent
             }
     }
 
+    val refreshState = rememberPullToRefreshState()
+    val quickHideState = rememberQuickHideState()
+
     Scaffold(
         containerColor = AppTheme.colorScheme.primaryBackground,
+        //safeDrawing so the ime is in there too, and the content slot below is the only place that
+        //applies any of it - anything else double counts
+        contentWindowInsets = WindowInsets.safeDrawing,
         topBar = { MainListTopBar(uiState, eventHandler) },
         floatingActionButton = {
             if (uiState.canInteract) {
-                FloatingActionButton(
-                    onClick = eventHandler::onFabClicked,
-                    containerColor = AppTheme.colorScheme.context,
-                    contentColor = AppTheme.colorScheme.primaryBackground,
-                ) {
-                    Icon(painterResource(R.drawable.ic_add_black), contentDescription = null)
+                QuickHideFab(quickHideState) {
+                    FloatingActionButton(
+                        onClick = eventHandler::onFabClicked,
+                        containerColor = AppTheme.colorScheme.context,
+                        contentColor = AppTheme.colorScheme.primaryBackground,
+                        //M3 draws a squircle, the old Material fab was round
+                        shape = CircleShape,
+                    ) {
+                        Icon(Icons.Filled.Add, contentDescription = null)
+                    }
                 }
             }
         },
@@ -124,11 +150,31 @@ private fun MainListScreen(uiState: MainListUiState, eventHandler: MainListEvent
         PullToRefreshBox(
             isRefreshing = uiState.isLoading,
             onRefresh = eventHandler::onRefreshRequested,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
+            state = refreshState,
+            indicator = {
+                PullToRefreshDefaults.Indicator(
+                    state = refreshState,
+                    isRefreshing = uiState.isLoading,
+                    //the box is the whole screen now, so the spinner starts below the app bar
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = padding.calculateTopPadding()),
+                )
+            },
+            modifier = Modifier.fillMaxSize(),
         ) {
-            LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
+            //contentPadding, not padding: the rows scroll under the translucent app bar, and
+            //the alternating background still runs edge to edge - which a side inset would break
+            LazyColumn(
+                state = listState,
+                contentPadding = PaddingValues(
+                    top = padding.calculateTopPadding(),
+                    bottom = padding.calculateBottomPadding(),
+                ),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .quickHide(quickHideState),
+            ) {
                 //the alternating background is keyed on list position, as the level-list was
                 itemsIndexed(uiState.rows, key = { _, row -> row.id }) { index, row ->
                     ThreadRow(row, index, eventHandler)
@@ -145,22 +191,22 @@ private fun MainListTopBar(uiState: MainListUiState, eventHandler: MainListEvent
     val appName = stringResource(R.string.app_name)
     val offline = stringResource(R.string.offline)
 
-    Column {
+    //the bar and its progress strip are one translucent pane, which the list slides under
+    Box(Modifier.background(AppTheme.colorScheme.primaryBackground80p)) {
         TopAppBar(
             title = {
                 Text(
                     text = if (uiState.isOffline) "$appName ($offline)" else appName,
-                    style = AppTheme.typography.subject,
+                    style = AppTheme.typography.title,
                     color = AppTheme.colorScheme.primaryText,
                 )
             },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = AppTheme.colorScheme.primaryBackground,
-            ),
+            expandedHeight = AppTheme.sizes.topBarHeight,
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
             actions = {
                 IconButton(onClick = { menuExpanded = true }) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_more_vert_black),
+                        imageVector = Icons.Filled.MoreVert,
                         contentDescription = null,
                         tint = AppTheme.colorScheme.context,
                     )
@@ -186,10 +232,16 @@ private fun MainListTopBar(uiState: MainListUiState, eventHandler: MainListEvent
             },
         )
         if (uiState.isLoading) {
+            //over the bar rather than under it, so switching it on cannot change the bar height -
+            //that height is the list contentPadding, so it used to shift every row
             LinearProgressIndicator(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth(),
                 color = AppTheme.colorScheme.context,
-                trackColor = AppTheme.colorScheme.primaryBackground,
+                trackColor = Color.Transparent,
+                //M3 gaps the track, the old bar was a plain strip
+                gapSize = 0.dp,
             )
         }
     }
@@ -197,57 +249,88 @@ private fun MainListTopBar(uiState: MainListUiState, eventHandler: MainListEvent
 
 @Composable
 private fun ThreadRow(row: ThreadRowUiState, index: Int, eventHandler: MainListEventHandler) {
-    val interactionSource = remember { MutableInteractionSource() }
     val renderer = rememberAnnotatedTextRenderer()
     val subject = remember(row.subject, renderer) { renderer.subject(row.subject) }
     val time = remember(row.time, row.useShortTimeFormat) {
         row.time.formatThreadListTime(row.useShortTimeFormat)
     }
 
-    Box(Modifier.fillMaxWidth()) {
+    RevealRow(
+        isOpen = row.isMenuOpen,
+        background = zumpaRowColor(index),
+        modifier = Modifier.fillMaxWidth(),
+        menu = { ThreadRowMenu(row, eventHandler) },
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                //so the state bar's fillMaxHeight has something to measure against
+                //so the state bar has something for its fillMaxHeight to measure against
                 .height(IntrinsicSize.Min)
-                .zumpaRowBackground(index, row.isSelected, interactionSource)
+                .zumpaRowBackground(index, row.isSelected)
                 .combinedClickable(
-                    interactionSource = interactionSource,
-                    indication = null,
+                    interactionSource = null,
+                    indication = ripple(),
                     onClick = { eventHandler.onThreadClicked(row.id) },
                     onLongClick = { eventHandler.onThreadLongPressed(row.id) },
                 ),
-            verticalAlignment = Alignment.CenterVertically,
         ) {
             //outside the padding, hard against the edge, as the xml had it
             ThreadStateBar(row.state)
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(AppTheme.spaces.listItemPadding)
-                    .padding(start = AppTheme.spaces.normal),
+                    .padding(AppTheme.spaces.listItemPadding),
             ) {
-                Text(
-                    text = subject.text,
-                    inlineContent = subject.inlineContent,
-                    style = AppTheme.typography.subject,
-                    color = AppTheme.colorScheme.subject,
-                    maxLines = SUBJECT_MAX_LINES,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(AppTheme.spaces.small)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = subject.text,
+                        inlineContent = subject.inlineContent,
+                        style = AppTheme.typography.subject,
+                        color = AppTheme.colorScheme.subject,
+                        maxLines = SUBJECT_MAX_LINES,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = AppTheme.sizes.subjectMinHeight),
+                    )
+                    if (row.isFavorite) {
+                        Icon(
+                            imageVector = Icons.Filled.Star,
+                            contentDescription = null,
+                            tint = AppTheme.colorScheme.context,
+                            modifier = Modifier.padding(start = AppTheme.spaces.tiny),
+                        )
+                    }
+                }
+                //author takes the slack, so the count and the time sit against the right edge
+                Row(
+                    modifier = Modifier.padding(top = AppTheme.spaces.small),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Text(
                         text = row.author,
                         style = AppTheme.typography.author,
                         color = AppTheme.colorScheme.author,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f),
                     )
                     row.lastAuthor?.let {
                         Text(
                             text = it,
                             style = AppTheme.typography.nickName,
                             color = AppTheme.colorScheme.nickName,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(start = AppTheme.spaces.normal),
                         )
                     }
+                    Text(
+                        text = row.answerCount.toString(),
+                        style = AppTheme.typography.threads,
+                        color = AppTheme.colorScheme.threads,
+                        modifier = Modifier.padding(horizontal = AppTheme.spaces.normal),
+                    )
                     Text(
                         text = time,
                         style = AppTheme.typography.date,
@@ -255,28 +338,6 @@ private fun ThreadRow(row: ThreadRowUiState, index: Int, eventHandler: MainListE
                     )
                 }
             }
-            if (row.isFavorite) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_grade_black),
-                    contentDescription = null,
-                    tint = AppTheme.colorScheme.context,
-                )
-            }
-            Text(
-                text = row.answerCount.toString(),
-                style = AppTheme.typography.threads,
-                color = AppTheme.colorScheme.threads,
-                modifier = Modifier.padding(horizontal = AppTheme.spaces.large),
-            )
-        }
-
-        AnimatedVisibility(
-            visible = row.isMenuOpen,
-            enter = slideInHorizontally { it },
-            exit = slideOutHorizontally { it },
-            modifier = Modifier.align(Alignment.CenterEnd),
-        ) {
-            ThreadRowMenu(row, eventHandler)
         }
     }
 }
@@ -302,30 +363,14 @@ private fun ThreadStateBar(state: ThreadState) {
 
 @Composable
 private fun ThreadRowMenu(row: ThreadRowUiState, eventHandler: MainListEventHandler) {
-    Row(
-        modifier = Modifier.background(AppTheme.colorScheme.secondaryBackground),
-    ) {
-        IconButton(onClick = { eventHandler.onFavoriteClicked(row.id) }) {
-            Icon(
-                painterResource(R.drawable.ic_grade_black_36dp),
-                contentDescription = null,
-                tint = AppTheme.colorScheme.context,
-            )
-        }
-        IconButton(onClick = { eventHandler.onIgnoreClicked(row.id) }) {
-            Icon(
-                painterResource(R.drawable.ic_block_black_36dp),
-                contentDescription = null,
-                tint = AppTheme.colorScheme.context,
-            )
-        }
-        IconButton(onClick = { eventHandler.onShareClicked(row.id) }) {
-            Icon(
-                painterResource(R.drawable.ic_share_black),
-                contentDescription = null,
-                tint = AppTheme.colorScheme.context,
-            )
-        }
+    RevealRowMenuButton(rememberVectorPainter(Icons.Filled.Star)) {
+        eventHandler.onFavoriteClicked(row.id)
+    }
+    RevealRowMenuButton(rememberVectorPainter(Icons.Filled.Block)) {
+        eventHandler.onIgnoreClicked(row.id)
+    }
+    RevealRowMenuButton(rememberVectorPainter(Icons.Filled.Share)) {
+        eventHandler.onShareClicked(row.id)
     }
 }
 

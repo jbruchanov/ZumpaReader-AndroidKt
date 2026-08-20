@@ -21,6 +21,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -41,7 +44,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -152,13 +154,11 @@ private fun SettingsScreen(uiState: SettingsUiState, eventHandler: SettingsEvent
                         Icon(
                             //the icon shows what tapping it does, so it is the crossed-out eye
                             //while the password is on screen
-                            painter = painterResource(
-                                if (uiState.isPasswordVisible) {
-                                    R.drawable.ic_visibility_off
-                                } else {
-                                    R.drawable.ic_visibility
-                                },
-                            ),
+                            imageVector = if (uiState.isPasswordVisible) {
+                                Icons.Filled.VisibilityOff
+                            } else {
+                                Icons.Filled.Visibility
+                            },
                             contentDescription = stringResource(
                                 if (uiState.isPasswordVisible) R.string.hide_password else R.string.show_password,
                             ),

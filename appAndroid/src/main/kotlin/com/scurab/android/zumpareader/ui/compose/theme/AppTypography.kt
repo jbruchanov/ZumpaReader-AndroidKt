@@ -14,6 +14,8 @@ import androidx.compose.ui.unit.sp
  */
 @Immutable
 data class AppTypography(
+    /** `?actionBarTitleTextSize` - 20sp, the size the AppCompat Toolbar drew its title at. */
+    val title: TextStyle,
     /** `nickTextSize` - 12sp */
     val nickName: TextStyle,
     /** `subjectTextSize` - 16sp */
@@ -22,7 +24,7 @@ data class AppTypography(
     val author: TextStyle,
     /** `dateTextSize` - 12sp */
     val date: TextStyle,
-    /** `threadsTextSize` - 14sp */
+    /** `threadsTextSize` - 14sp, bold, as the answer count always was. */
     val threads: TextStyle,
     /** `buttonTextSize` - 12sp */
     val button: TextStyle,
@@ -37,11 +39,12 @@ data class AppTypography(
 )
 
 val DefaultTypography = AppTypography(
+    title = TextStyle(fontSize = 20.sp),
     nickName = TextStyle(fontSize = 12.sp),
     subject = TextStyle(fontSize = 16.sp),
     author = TextStyle(fontSize = 12.sp),
     date = TextStyle(fontSize = 12.sp),
-    threads = TextStyle(fontSize = 14.sp),
+    threads = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold),
     button = TextStyle(fontSize = 12.sp),
     surveyButton = TextStyle(fontSize = 10.5.sp),
     message = TextStyle(fontSize = 13.sp),

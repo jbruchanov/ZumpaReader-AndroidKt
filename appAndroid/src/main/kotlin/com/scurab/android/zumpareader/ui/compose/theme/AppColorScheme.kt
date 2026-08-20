@@ -24,19 +24,22 @@ data class AppColorScheme(
     val contextText2: Color,
     val primaryText: Color,
     val primaryBackground: Color,
+    /**
+     * [primaryBackground] at 80%, for the chrome the list scrolls underneath - the app bar is no
+     * longer a wall above the content, it floats over it.
+     */
+    val primaryBackground80p: Color,
     val secondaryBackground: Color,
     val selectedBackground: Color,
     val hint: Color,
 
     /**
      * `item_list_background_theme_black`, a level-list keyed on `position % 2`. Even rows sit on
-     * [rowEven], odd on [rowOdd], each with its own pressed tint; selection layers
-     * [selectedBackground] over whichever base the row has, rather than replacing it.
+     * [rowEven], odd on [rowOdd]; selection layers [selectedBackground] over whichever base the row
+     * has, rather than replacing it. The pressed state is a [context] ripple, not a base swap.
      */
     val rowEven: Color,
     val rowOdd: Color,
-    val rowEvenPressed: Color,
-    val rowOddPressed: Color,
     //endregion
 
     //region semantic - the ?attr each widget actually referenced
@@ -66,8 +69,7 @@ private object Palette {
     val YellowOrange25p = Color(0x40FFA710)
     val BlueGray = Color(0xFF0D8AAC)
     val Black = Color(0xFF000000)
-    val BlackYellowPressed = Color(0xFF503405)
-    val DarkYellowPressed = Color(0xFF654A1A)
+    val Black80p = Color(0xCC000000)
     val Dark = Color(0xFF202020)
     val Grey = Color(0xFF808080)
     val White = Color(0xFFFFFFFF)
@@ -89,14 +91,13 @@ val BlackColorScheme = AppColorScheme(
     contextText2 = Palette.BlueGray,
     primaryText = Palette.White,
     primaryBackground = Palette.Black,
+    primaryBackground80p = Palette.Black80p,
     secondaryBackground = Palette.Dark,
     selectedBackground = Palette.YellowOrange25p,
     hint = Palette.Grey,
 
     rowEven = Palette.Black,
     rowOdd = Palette.Dark,
-    rowEvenPressed = Palette.BlackYellowPressed,
-    rowOddPressed = Palette.DarkYellowPressed,
 
     nickName = Palette.YellowOrange,
     subject = Palette.White,

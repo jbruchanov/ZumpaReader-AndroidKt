@@ -1,7 +1,9 @@
 package com.scurab.android.zumpareader.ui.compose.theme
 
+import androidx.compose.material3.LocalRippleConfiguration
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RippleConfiguration
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
@@ -18,7 +20,8 @@ import androidx.compose.runtime.remember
  *
  * Material 3 sits underneath so its components (Scaffold, TextField, PullToRefreshBox) work, but it
  * is not the source of truth for anything the app draws itself. Its colour scheme is filled in from
- * the palette so that a stray Material default lands somewhere plausible rather than purple.
+ * the palette so that a stray Material default lands somewhere plausible rather than purple, and its
+ * ripple is pinned to [AppColorScheme.context] so every pressed state in the app is the same orange.
  */
 @Composable
 fun AppTheme(
@@ -43,6 +46,7 @@ fun AppTheme(
             error = colorScheme.ratingBad,
         )
     }
+    val ripple = remember(colorScheme) { RippleConfiguration(color = colorScheme.context) }
 
     CompositionLocalProvider(
         LocalAppColorScheme provides colorScheme,
@@ -50,6 +54,7 @@ fun AppTheme(
         LocalAppShapes provides shapes,
         LocalAppSizes provides sizes,
         LocalAppSpaces provides spaces,
+        LocalRippleConfiguration provides ripple,
     ) {
         MaterialTheme(
             colorScheme = material,
