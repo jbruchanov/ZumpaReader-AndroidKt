@@ -2,7 +2,7 @@
 <resources>
     <!--
       The palette the *platform* still needs: styles.xml for the window background, the accent and
-      the hint colour, ic_launcher_circular for its background, theme_black for contextColor.
+      the hint colour, ic_launcher for the adaptive icon background, theme_black for contextColor.
 
       Everything the app draws itself is in `ui/compose/theme/AppColorScheme.kt` instead - these are
       not duplicated there, they are the same values arrived at from the other side.
