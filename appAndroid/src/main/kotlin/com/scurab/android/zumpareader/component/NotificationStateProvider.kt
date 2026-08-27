@@ -1,7 +1,6 @@
 package com.scurab.android.zumpareader.component
 
 import android.content.Context
-import android.os.Build
 import androidx.core.app.NotificationManagerCompat
 
 class NotificationStateProvider(private val notificationManager: NotificationManagerCompat) {
@@ -18,10 +17,9 @@ class NotificationStateProvider(private val notificationManager: NotificationMan
     }
 
     fun isChannelEnabled(channel: String): Boolean {
-        return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O/*A8, API26*/) {
-            true
-            //if global switch is turned off, then you can still have channel having the importance (aka is turned no)
-        } else if (hasNotificationsPermissionGranted()) {
+        //the global switch being off still leaves a channel with an importance of its own, which
+        //is why both are asked about rather than just the one
+        return if (hasNotificationsPermissionGranted()) {
             val channelImportance = notificationManager.notificationChannelsCompat
                 .firstOrNull { it.id == channel }
                 ?.importance

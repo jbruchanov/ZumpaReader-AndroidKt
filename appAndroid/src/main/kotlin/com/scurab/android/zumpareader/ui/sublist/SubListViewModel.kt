@@ -385,8 +385,6 @@ class SubListViewModel(
         }
     }
 
-    fun onOpenPostDialog() = effect(SubListEffect.OpenPostDialog(state.threadId))
-
     override fun onReplyPhotoClicked() =
         effect(SubListEffect.OpenPostDialog(state.threadId, PostPicker.Gallery))
 

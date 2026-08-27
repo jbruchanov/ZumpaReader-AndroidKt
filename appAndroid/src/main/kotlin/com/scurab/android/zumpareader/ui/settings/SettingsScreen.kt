@@ -3,8 +3,8 @@ package com.scurab.android.zumpareader.ui.settings
 import android.Manifest
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.provider.Settings
+import androidx.core.net.toUri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -104,7 +104,7 @@ fun SettingsScreen(vm: SettingsViewModel = koinViewModel()) {
 /** Where the user goes to grant a notification permission that was denied for good. */
 private fun Context.openAppSettings() {
     startActivity(
-        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))
+        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:$packageName".toUri())
     )
 }
 
