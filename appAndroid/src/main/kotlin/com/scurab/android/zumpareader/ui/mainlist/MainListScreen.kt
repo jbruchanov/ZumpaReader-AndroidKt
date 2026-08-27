@@ -31,6 +31,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
@@ -250,6 +251,14 @@ private fun MainListTopBar(uiState: MainListUiState, eventHandler: MainListEvent
                     )
                 }
             },
+        )
+        //A line between the header and what scrolls under it. Under the progress strip in the
+        //stack on purpose: while a load is running that strip is the separator, and the two sitting
+        //on top of each other would only thicken it.
+        HorizontalDivider(
+            modifier = Modifier.align(Alignment.BottomCenter),
+            thickness = AppTheme.sizes.divider,
+            color = AppTheme.colorScheme.context,
         )
         if (uiState.isLoading) {
             //over the bar rather than under it, so switching it on cannot change the bar height -

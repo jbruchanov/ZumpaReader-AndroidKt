@@ -3,6 +3,7 @@ package com.scurab.android.zumpareader.ui.sublist
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -38,6 +39,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -175,11 +177,29 @@ private fun SubListScreen(
                             style = AppTheme.typography.title,
                             color = AppTheme.colorScheme.primaryText,
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
+                            //Clip rather than Ellipsis: the marquee measures the text unbounded, so
+                            //nothing overflows for an ellipsis to shorten anyway.
+                            overflow = TextOverflow.Clip,
+                            //A subject too long for the bar scrolls past instead of being cut off
+                            //with a full stop where the interesting half was. Does nothing at all
+                            //when the subject fits, so a short one simply sits still, and pauses
+                            //between passes so the beginning can be read before it moves off.
+                            modifier = Modifier.basicMarquee(
+                                iterations = Int.MAX_VALUE,
+                                velocity = MARQUEE_VELOCITY,
+                            ),
                         )
                     },
                     expandedHeight = AppTheme.sizes.topBarHeight,
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+                )
+                //A line between the header and what scrolls under it. Under the progress
+                //strip in the stack on purpose: while a load is running that strip is the
+                //separator, and the two on top of each other would only thicken it.
+                HorizontalDivider(
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                    thickness = AppTheme.sizes.divider,
+                    color = AppTheme.colorScheme.context,
                 )
                 if (uiState.isLoading) {
                     //over the bar rather than under it, so switching it on cannot change the bar
@@ -679,6 +699,9 @@ private fun RowScope.ReplyActionIcons(
         onClick = eventHandler::onSendClicked,
     )
 }
+
+/** Slower than the 30dp/s default, so a long subject can be read rather than watched. */
+private val MARQUEE_VELOCITY = 20.dp
 
 private const val REPLY_MAX_LINES = 6
 
