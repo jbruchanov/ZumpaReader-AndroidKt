@@ -223,7 +223,14 @@ private fun SubListScreen(
                         )
                     },
                     expandedHeight = AppTheme.sizes.topBarHeight,
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        //and still transparent once scrolled. M3 fades in its own surface colour as
+                        //a bar collapses, which would put a second background over the translucent
+                        //pane the Box around this already draws - that pane is the background,
+                        //black at 80%.
+                        scrolledContainerColor = Color.Transparent,
+                    ),
                     //safeDrawing, not the systemBarsForVisualComponents the default uses: that
                     //one leaves out the display cutout, which in landscape is exactly the inset on
                     //the side the title runs into. Applied here and only here - the Box outside
