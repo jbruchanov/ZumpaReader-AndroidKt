@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
@@ -61,6 +62,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -161,7 +163,26 @@ private fun SubListScreen(
         if (uiState.title.isEmpty()) null else renderer.title(uiState.title)
     }
 
+    //enterAlways: the bar goes as the thread is read downwards and comes straight back on the
+    //first upward scroll, wherever in the thread that is - a long thread should not have to be
+    //scrolled to the top to get the subject back.
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    /*
+     * The height the bar has when it is fully out, which is what the list is padded by - not
+     * `padding.calculateTopPadding()`.
+     *
+     * Scaffold reports the bar's *current* measured height, and a collapsing bar's height changes
+     * every frame of the collapse. Feeding that to a LazyColumn's contentPadding would move the
+     * content while it was already being scrolled. It does not need to move: the rows scroll under
+     * this bar by design, so a bar on its way out uncovers rows that were already there rather
+     * than freeing up room that has to be taken up.
+     */
+    val expandedTopPadding = AppTheme.sizes.topBarHeight +
+        WindowInsets.safeDrawing.only(WindowInsetsSides.Top).asPaddingValues().calculateTopPadding()
+
     Scaffold(
+        //the bar reads the thread's scrolling through this
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = AppTheme.colorScheme.primaryBackground,
         //safeDrawing so the ime is in there too, and the content slot below is the only place that
         //applies any of it - anything else double counts
@@ -209,6 +230,7 @@ private fun SubListScreen(
                     //keeps its background running edge to edge and under the status bar.
                     windowInsets = WindowInsets.safeDrawing
                         .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top),
+                    scrollBehavior = scrollBehavior,
                 )
                 //A line between the header and what scrolls under it. Under the progress
                 //strip in the stack on purpose: while a load is running that strip is the
@@ -301,7 +323,7 @@ private fun SubListScreen(
                     state = listState,
                     //contentPadding, not padding: the rows scroll under the translucent app bar
                     contentPadding = PaddingValues(
-                        top = padding.calculateTopPadding(),
+                        top = expandedTopPadding,
                         //the fab no longer moves out of the way, so the list ends above it -
                         //otherwise the last message sits under it and cannot be read
                         bottom = (if (uiState.isPostPanelVisible) 0.dp else bottomInset) + fabSpace,
@@ -329,7 +351,7 @@ private fun SubListScreen(
                     //the box reaches under the app bar now, so the spinner starts below it
                     modifier = Modifier
                         .align(Alignment.TopCenter)
-                        .padding(top = padding.calculateTopPadding()),
+                        .padding(top = expandedTopPadding),
                 )
                 BottomPullToRefreshIndicator(
                     state = bottomState,
