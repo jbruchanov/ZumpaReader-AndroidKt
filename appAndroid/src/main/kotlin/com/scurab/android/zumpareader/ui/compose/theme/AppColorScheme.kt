@@ -49,8 +49,6 @@ data class AppColorScheme(
     val date: Color,
     val threads: Color,
     val buttonText: Color,
-    val message: Color,
-    val scrollbar: Color,
     //endregion
 
     //region content
@@ -105,8 +103,6 @@ val BlackColorScheme = AppColorScheme(
     date = Palette.White,
     threads = Palette.White,
     buttonText = Palette.YellowOrange,
-    message = Palette.Black,
-    scrollbar = Palette.YellowOrange50p,
 
     ratingGood = Palette.RatingGood,
     ratingBad = Palette.RatingBad,

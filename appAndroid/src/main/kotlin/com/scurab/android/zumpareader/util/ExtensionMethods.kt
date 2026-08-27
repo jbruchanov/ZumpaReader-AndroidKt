@@ -4,7 +4,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
+import androidx.core.net.toUri
 import android.util.TypedValue
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ext.toast
@@ -22,13 +22,13 @@ fun Context.obtainStyledColor(attr: Int): Int {
     return typedValue.data
 }
 
-fun Context.getRandomCameraFileUri(withScheme: Boolean = false): String {
+fun Context.getRandomCameraFileUri(): String {
     val path = File(applicationContext.filesDir.absolutePath, "Pictures" /*file_paths.xml Path */)
     if (!path.exists()) {
         path.mkdir()
     }
     val file = File(path, "camera_%s.jpg".format(System.currentTimeMillis()))
-    return if (withScheme) "file://" + file.absolutePath else file.absolutePath
+    return file.absolutePath
 }
 
 fun Context.saveToClipboard(text: String?) {
@@ -41,7 +41,7 @@ fun Context.saveToClipboard(text: String?) {
 fun Context.startLinkActivity(url: String) {
     try {
         val intent = Intent(Intent.ACTION_VIEW)
-        intent.data = Uri.parse(url)
+        intent.data = url.toUri()
         startActivity(intent)
     } catch (e: Throwable) {
         e.printStackTrace()

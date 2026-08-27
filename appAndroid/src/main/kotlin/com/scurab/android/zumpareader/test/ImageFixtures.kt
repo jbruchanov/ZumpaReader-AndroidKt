@@ -2,6 +2,7 @@ package com.scurab.android.zumpareader.test
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import androidx.core.graphics.createBitmap
 import android.graphics.Paint
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -18,7 +19,7 @@ fun Fixtures.Image.imageBitmap(): ImageBitmap = bitmap().asImageBitmap()
  * A checkerboard, so a preview of the zoom gesture shows something with edges to pan against.
  */
 private fun bitmap(size: Int = 240, cells: Int = 6): Bitmap {
-    val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+    val bitmap = createBitmap(size, size)
     val canvas = Canvas(bitmap)
     val paint = Paint()
     val cell = size / cells
