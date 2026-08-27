@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.lazy.LazyColumn
@@ -29,6 +30,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -224,6 +226,11 @@ private fun MainListScreen(
                 itemsIndexed(uiState.rows, key = { _, row -> row.id }) { index, row ->
                     ThreadRow(row, index, rowPadding, eventHandler)
                 }
+                //Online only: a snapshot is the whole list, and the offline api answers with an
+                //empty next thread id, so there is never a page on its way to wait for.
+                if (uiState.isLoadingNextPage && !uiState.isOffline) {
+                    item(key = NEXT_PAGE_ROW_KEY) { NextPageRow() }
+                }
             }
         }
     }
@@ -314,6 +321,23 @@ private fun MainListTopBar(
                 gapSize = 0.dp,
             )
         }
+    }
+}
+
+/** The end of the list while the page after it is on its way. */
+@Composable
+private fun NextPageRow() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(AppTheme.spaces.large),
+        contentAlignment = Alignment.Center,
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(AppTheme.sizes.progressBar),
+            color = AppTheme.colorScheme.context,
+            strokeWidth = AppTheme.sizes.urlButtonStrokeWidth * 2,
+        )
     }
 }
 
@@ -467,6 +491,9 @@ private fun Context.shareLink(link: String) {
 }
 
 private const val LOAD_MORE_OFFSET = 15
+
+/** Its own key, so it is never mistaken for a thread id. */
+private const val NEXT_PAGE_ROW_KEY = "next-page"
 private const val SUBJECT_MAX_LINES = 3
 
 @Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 420)

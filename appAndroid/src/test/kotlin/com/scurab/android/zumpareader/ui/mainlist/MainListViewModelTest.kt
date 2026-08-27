@@ -262,6 +262,31 @@ class MainListViewModelTest {
     }
 
     @Test
+    fun `only a page being appended shows the next page row`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        var call = 0
+        coEvery { threads.loadMainPage(any(), any()) } coAnswers {
+            call++
+            if (call == 1) {
+                page("9", thread("10"))
+            } else {
+                gate.await()
+                page("", thread("11"))
+            }
+        }
+
+        val vm = viewModel()
+        //reading the list from the beginning is the top bar's business, not a row at the end
+        assertFalse(vm.uiState.value.isLoadingNextPage)
+
+        vm.onEndReached()
+        assertTrue(vm.uiState.value.isLoadingNextPage)
+
+        gate.complete(Unit)
+        assertFalse(vm.uiState.value.isLoadingNextPage)
+    }
+
+    @Test
     fun `a response for you outranks everything else`() = runTest {
         coEvery { threads.loadMainPage(any(), any()) } returns
             page("9", thread("10", responseForYou = true))

@@ -43,6 +43,11 @@ data class ThreadRowUiState(
 data class MainListUiState(
     val rows: List<ThreadRowUiState> = emptyList(),
     val isLoading: Boolean = false,
+    /**
+     * A page being appended, as opposed to the list being read from the beginning. The list shows
+     * this one at its end and the top bar shows [isLoading], so the two are asked separately.
+     */
+    val isLoadingNextPage: Boolean = false,
     val isOffline: Boolean = false,
     val isLoggedIn: Boolean = false,
     /** Everything that writes needs a session and a connection. */
@@ -197,7 +202,7 @@ class MainListViewModel(
         }
         lastFilter = filter
         lastOffline = offline
-        setState { copy(isLoading = true) }
+        setState { copy(isLoading = true, isLoadingNextPage = fromThread != null) }
 
         viewModelScope.launch {
             try {
@@ -224,7 +229,7 @@ class MainListViewModel(
             } catch (err: Throwable) {
                 onError(err)
             } finally {
-                setState { copy(isLoading = false) }
+                setState { copy(isLoading = false, isLoadingNextPage = false) }
                 if (pendingReload) {
                     pendingReload = false
                     load(force = true)
