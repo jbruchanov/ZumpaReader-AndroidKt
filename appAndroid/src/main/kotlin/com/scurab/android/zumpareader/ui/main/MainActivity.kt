@@ -8,10 +8,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import com.scurab.android.zumpareader.arch.WindowLayout
 import com.scurab.android.zumpareader.ui.compose.theme.AppTheme
 import com.scurab.android.zumpareader.ui.nav.ZumpaNavHost
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import org.koin.android.ext.android.inject
 
 /**
  * Created by JBruchanov on 24/11/2015.
@@ -35,6 +37,8 @@ class MainActivity : ComponentActivity() {
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
 
+    private val windowLayout: WindowLayout by inject()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         //the app draws its own chrome over the system bars - see the translucent top bars. `dark`
         //rather than the default so the icons stay light even when the phone is in light mode: the
@@ -44,7 +48,14 @@ class MainActivity : ComponentActivity() {
             navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
         )
         super.onCreate(savedInstanceState)
-        onLaunchIntent(intent)
+        //before the first composition, so the list ViewModel's first load already knows whether it
+        //has a detail pane to select a thread into
+        windowLayout.onWidthChanged(resources.configuration.screenWidthDp)
+        //only on a genuinely fresh start: a recreation - a rotation is one now - re-delivers the
+        //Intent the app was started with, and that payload has already been acted on
+        if (savedInstanceState == null) {
+            onLaunchIntent(intent)
+        }
         setContent {
             AppTheme {
                 ZumpaNavHost(launches = launches, onExit = ::finish)
@@ -58,9 +69,9 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * A relaunch with the same Intent - a rotation is not one, `configChanges` covers that, but a
-     * process death is - would otherwise re-open whatever the app was started with. The Intent is
-     * consumed so it only ever counts once.
+     * The Intent is consumed as well as guarded by the saved state, for the case the saved state
+     * does not survive: a payload only ever counts once, or a notification tap would re-open its
+     * thread every time the activity came back.
      */
     private fun onLaunchIntent(intent: Intent?) {
         val payload = intent.toLaunchPayload()

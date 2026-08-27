@@ -13,23 +13,25 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.automirrored.filled.Reply
+import androidx.compose.material.icons.filled.BrokenImage
+import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.SpeakerNotes
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.BrokenImage
-import androidx.compose.material.icons.filled.Create
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -57,6 +59,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -208,6 +211,14 @@ private fun SubListScreen(
         //one inset, applied once: whatever is at the bottom of the screen takes it - the reply panel
         //when it is up, otherwise the list. Adding imePadding on top of this is what counted twice.
         val bottomInset = padding.calculateBottomPadding()
+        //the side insets stop here and travel down to the rows instead. Putting them on the
+        //LazyColumn - as contentPadding or as a modifier - would inset the alternating background
+        //with the text, and in landscape that leaves a bare stripe of window down one side.
+        val layoutDirection = LocalLayoutDirection.current
+        val rowPadding = PaddingValues(
+            start = padding.calculateStartPadding(layoutDirection),
+            end = padding.calculateEndPadding(layoutDirection),
+        )
 
         Column(Modifier.fillMaxSize()) {
             //both ends refresh, so the spinner shows up at whichever end the drag came from
@@ -256,7 +267,7 @@ private fun SubListScreen(
                         ),
                 ) {
                     items(uiState.rows, key = { it.key() }, contentType = { it::class }) { row ->
-                        SubListRow(row, eventHandler)
+                        SubListRow(row, rowPadding, eventHandler)
                     }
                 }
                 PullToRefreshDefaults.Indicator(
@@ -276,7 +287,7 @@ private fun SubListScreen(
                 )
             }
             if (uiState.isPostPanelVisible) {
-                ReplyPanel(uiState, eventHandler, bottomInset)
+                ReplyPanel(uiState, eventHandler, bottomInset, rowPadding)
             }
         }
     }
@@ -290,17 +301,25 @@ private fun SubListRowUiState.key(): String = when (this) {
 }
 
 @Composable
-private fun SubListRow(row: SubListRowUiState, eventHandler: SubListEventHandler) {
+private fun SubListRow(
+    row: SubListRowUiState,
+    contentPadding: PaddingValues,
+    eventHandler: SubListEventHandler,
+) {
     when (row) {
-        is SubListRowUiState.Message -> MessageRow(row, eventHandler)
-        is SubListRowUiState.Link -> LinkRow(row, eventHandler)
-        is SubListRowUiState.Image -> ImageRow(row, eventHandler)
-        is SubListRowUiState.Survey -> SurveyCard(row.survey, eventHandler)
+        is SubListRowUiState.Message -> MessageRow(row, contentPadding, eventHandler)
+        is SubListRowUiState.Link -> LinkRow(row, contentPadding, eventHandler)
+        is SubListRowUiState.Image -> ImageRow(row, contentPadding, eventHandler)
+        is SubListRowUiState.Survey -> SurveyCard(row.survey, contentPadding, eventHandler)
     }
 }
 
 @Composable
-private fun MessageRow(row: SubListRowUiState.Message, eventHandler: SubListEventHandler) {
+private fun MessageRow(
+    row: SubListRowUiState.Message,
+    contentPadding: PaddingValues,
+    eventHandler: SubListEventHandler,
+) {
     val renderer = rememberAnnotatedTextRenderer()
     val body = remember(row.body, renderer) { renderer.body(row.body) }
     val author = remember(row.author, row.rating, renderer) { renderer.author(row.author, row.rating) }
@@ -310,6 +329,7 @@ private fun MessageRow(row: SubListRowUiState.Message, eventHandler: SubListEven
         isOpen = row.isMenuOpen,
         background = zumpaRowColor(row.itemIndex),
         modifier = Modifier.fillMaxWidth(),
+        menuStartPadding = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
         menu = { MessageRowMenu(row, eventHandler) },
     ) {
         Column(
@@ -322,6 +342,8 @@ private fun MessageRow(row: SubListRowUiState.Message, eventHandler: SubListEven
                     onClick = { eventHandler.onMessageClicked(row) },
                     onLongClick = { eventHandler.onMessageLongPressed(row) },
                 )
+                //after the background and the ripple, so both still run to the window edge
+                .padding(contentPadding)
                 .padding(AppTheme.spaces.listItemPadding),
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(AppTheme.spaces.small)) {
@@ -370,13 +392,18 @@ private fun MessageRowMenu(row: SubListRowUiState.Message, eventHandler: SubList
  * no fill - inset from the row edges, with the all-caps middle-ellipsised url the widget produced.
  */
 @Composable
-private fun LinkRow(row: SubListRowUiState.Link, eventHandler: SubListEventHandler) {
+private fun LinkRow(
+    row: SubListRowUiState.Link,
+    contentPadding: PaddingValues,
+    eventHandler: SubListEventHandler,
+) {
     val label = remember(row.url) { row.url.uppercase(Locale.ROOT) }
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .zumpaRowBackground(row.itemIndex)
+            .padding(contentPadding)
             .padding(
                 horizontal = AppTheme.spaces.listItemPadding,
                 vertical = AppTheme.spaces.tiny,
@@ -405,20 +432,12 @@ private fun LinkRow(row: SubListRowUiState.Link, eventHandler: SubListEventHandl
     }
 }
 
-/**
- * An inline image, which is the one row whose height is not known until the bytes arrive.
- *
- * A plain AsyncImage measures to nothing until then, so the row was simply invisible while it loaded
- * and stayed invisible for good if it failed - and the forum is full of links to pictures that have
- * since gone. So the placeholder holds 16:9 of space and shimmers, and a failure keeps that space
- * and says so instead of collapsing. Once the image is there it takes its own aspect ratio, as
- * before: the 16:9 is a guess for the wait, not a crop.
- *
- * `rememberAsyncImagePainter` rather than SubcomposeAsyncImage - this is a list row, and reading the
- * painter state costs nothing next to subcomposing every one of them.
- */
 @Composable
-private fun ImageRow(row: SubListRowUiState.Image, eventHandler: SubListEventHandler) {
+private fun ImageRow(
+    row: SubListRowUiState.Image,
+    contentPadding: PaddingValues,
+    eventHandler: SubListEventHandler,
+) {
     val painter = rememberAsyncImagePainter(model = row.url)
     val state by painter.state.collectAsState()
 
@@ -432,6 +451,7 @@ private fun ImageRow(row: SubListRowUiState.Image, eventHandler: SubListEventHan
                 onClick = { eventHandler.onImageClicked(row.url) },
                 onLongClick = { eventHandler.onLinkClicked(row.url) },
             )
+            .padding(contentPadding)
             .padding(AppTheme.spaces.listItemPadding),
         contentAlignment = Alignment.Center,
     ) {
@@ -484,11 +504,16 @@ private fun ImageRowPlaceholder(
 }
 
 @Composable
-private fun SurveyCard(survey: SurveyUiState, eventHandler: SubListEventHandler) {
+private fun SurveyCard(
+    survey: SurveyUiState,
+    contentPadding: PaddingValues,
+    eventHandler: SubListEventHandler,
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(AppTheme.colorScheme.secondaryBackground)
+            .padding(contentPadding)
             .padding(AppTheme.spaces.listItemPadding),
         verticalArrangement = Arrangement.spacedBy(AppTheme.spaces.small),
     ) {
@@ -546,14 +571,17 @@ private fun ReplyPanel(
     uiState: SubListUiState,
     eventHandler: SubListEventHandler,
     bottomInset: Dp = 0.dp,
+    contentPadding: PaddingValues = PaddingValues(),
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(AppTheme.colorScheme.secondaryBackground)
             .padding(AppTheme.spaces.tiny)
-            //inside the background, so the panel colour reaches under the navigation bar
-            .padding(bottom = bottomInset),
+            //inside the background, so the panel colour reaches under the navigation bar - the
+            //side insets go here for the same reason, or the field slides under a landscape one
+            .padding(bottom = bottomInset)
+            .padding(contentPadding),
         verticalAlignment = Alignment.Bottom,
     ) {
         OutlinedTextField(
@@ -615,11 +643,11 @@ private fun SubListScreenSendingPreview() = AppTheme {
 @Preview(showBackground = true, backgroundColor = 0xFF000000)
 @Composable
 private fun MessageRowMenuOpenPreview() = AppTheme {
-    MessageRow(Fixtures.SubList.message(isMenuOpen = true), mock())
+    MessageRow(Fixtures.SubList.message(isMenuOpen = true), PaddingValues(), mock())
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFF000000)
 @Composable
 private fun SurveyCardPreview() = AppTheme {
-    SurveyCard(Fixtures.SubList.survey(), mock())
+    SurveyCard(Fixtures.SubList.survey(), PaddingValues(), mock())
 }

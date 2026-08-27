@@ -49,9 +49,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -148,6 +151,14 @@ private fun MainListScreen(uiState: MainListUiState, eventHandler: MainListEvent
             }
         },
     ) { padding ->
+        //the side insets stop here and travel down to the rows instead. Putting them on the
+        //LazyColumn - as contentPadding or as a modifier - would inset the alternating background
+        //with the text, and in landscape that leaves a bare stripe of window down one side.
+        val layoutDirection = LocalLayoutDirection.current
+        val rowPadding = PaddingValues(
+            start = padding.calculateStartPadding(layoutDirection),
+            end = padding.calculateEndPadding(layoutDirection),
+        )
         PullToRefreshBox(
             isRefreshing = uiState.isLoading,
             onRefresh = eventHandler::onRefreshRequested,
@@ -178,7 +189,7 @@ private fun MainListScreen(uiState: MainListUiState, eventHandler: MainListEvent
             ) {
                 //the alternating background is keyed on list position, as the level-list was
                 itemsIndexed(uiState.rows, key = { _, row -> row.id }) { index, row ->
-                    ThreadRow(row, index, eventHandler)
+                    ThreadRow(row, index, rowPadding, eventHandler)
                 }
             }
         }
@@ -249,7 +260,12 @@ private fun MainListTopBar(uiState: MainListUiState, eventHandler: MainListEvent
 }
 
 @Composable
-private fun ThreadRow(row: ThreadRowUiState, index: Int, eventHandler: MainListEventHandler) {
+private fun ThreadRow(
+    row: ThreadRowUiState,
+    index: Int,
+    contentPadding: PaddingValues,
+    eventHandler: MainListEventHandler,
+) {
     val renderer = rememberAnnotatedTextRenderer()
     val subject = remember(row.subject, renderer) { renderer.subject(row.subject) }
     val time = remember(row.time, row.useShortTimeFormat) {
@@ -260,6 +276,7 @@ private fun ThreadRow(row: ThreadRowUiState, index: Int, eventHandler: MainListE
         isOpen = row.isMenuOpen,
         background = zumpaRowColor(index),
         modifier = Modifier.fillMaxWidth(),
+        menuStartPadding = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
         menu = { ThreadRowMenu(row, eventHandler) },
     ) {
         Row(
@@ -275,11 +292,15 @@ private fun ThreadRow(row: ThreadRowUiState, index: Int, eventHandler: MainListE
                     onLongClick = { eventHandler.onThreadLongPressed(row.id) },
                 ),
         ) {
-            //outside the padding, hard against the edge, as the xml had it
+            //hard against the edge, as the xml had it - the row colour, the ripple and this line
+            //all still reach the window, and the inset opens up after it rather than before
             ThreadStateBar(row.state)
             Column(
                 modifier = Modifier
                     .weight(1f)
+                    //the side insets sit between the state line and the text: the line keeps the
+                    //edge, the reading matter clears a navigation bar or a cutout
+                    .padding(contentPadding)
                     .padding(AppTheme.spaces.listItemPadding),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -419,7 +440,7 @@ private fun MainListScreenLoadingPreview() = AppTheme {
 private fun ThreadRowStatesPreview() = AppTheme {
     Column {
         ThreadState.entries.forEach { state ->
-            ThreadRow(Fixtures.MainList.row(state = state), state.ordinal, mock())
+            ThreadRow(Fixtures.MainList.row(state = state), state.ordinal, PaddingValues(), mock())
         }
     }
 }
@@ -427,5 +448,5 @@ private fun ThreadRowStatesPreview() = AppTheme {
 @Preview(showBackground = true, backgroundColor = 0xFF000000)
 @Composable
 private fun ThreadRowMenuOpenPreview() = AppTheme {
-    ThreadRow(Fixtures.MainList.row(isMenuOpen = true), 0, mock())
+    ThreadRow(Fixtures.MainList.row(isMenuOpen = true), 0, PaddingValues(), mock())
 }

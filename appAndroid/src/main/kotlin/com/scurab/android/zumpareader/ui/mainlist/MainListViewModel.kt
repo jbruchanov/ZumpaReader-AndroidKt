@@ -3,8 +3,8 @@ package com.scurab.android.zumpareader.ui.mainlist
 import androidx.lifecycle.viewModelScope
 import com.scurab.android.zumpareader.ZR
 import com.scurab.android.zumpareader.arch.BaseViewModel
-import com.scurab.android.zumpareader.arch.DeviceConfig
 import com.scurab.android.zumpareader.arch.UiEffect
+import com.scurab.android.zumpareader.arch.WindowLayout
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.repository.AppEvent
 import com.scurab.android.zumpareader.repository.AppEventBus
@@ -77,7 +77,7 @@ class MainListViewModel(
     private val readStates: ZumpaReadStateRepository,
     private val selectedThread: SelectedThreadStore,
     private val eventBus: AppEventBus,
-    private val device: DeviceConfig,
+    private val windowLayout: WindowLayout,
 ) : BaseViewModel<MainListUiState>(MainListUiState()), MainListEventHandler {
 
     /**
@@ -100,6 +100,9 @@ class MainListViewModel(
     private var openMenuId: String? = null
 
     init {
+        viewModelScope.launch {
+            windowLayout.isTwoPane.collect { fillEmptyDetailPane() }
+        }
         viewModelScope.launch {
             settings.isOffline.collect { offline ->
                 setState { copy(isOffline = offline) }
@@ -179,8 +182,8 @@ class MainListViewModel(
                         thread.stateFor(readStates.readCount(thread.id), userName)
                 }
                 publishRows()
-                if (isFirstLoad && device.isTablet) {
-                    threads.lastThread()?.let { selectedThread.select(it.id) }
+                if (isFirstLoad) {
+                    fillEmptyDetailPane()
                 }
             } catch (err: Throwable) {
                 onError(err)
@@ -188,6 +191,20 @@ class MainListViewModel(
                 setState { copy(isLoading = false) }
             }
         }
+    }
+
+    /**
+     * A detail pane with nothing in it has nothing to say, so it opens on the newest thread. This is
+     * what the tablet always did on its first load; a phone reaches it by being turned on its side,
+     * which is why it is also collected rather than only done once - either the pane or the list can
+     * be the one that arrives second.
+     *
+     * Not an explicit pick: it fills a pane that is there anyway, and losing the pane again must not
+     * navigate to a thread nobody asked for.
+     */
+    private fun fillEmptyDetailPane() {
+        if (!windowLayout.isTwoPane.value || selectedThread.selected.value != null) return
+        threads.lastThread()?.let { selectedThread.select(it.id, explicit = false) }
     }
 
     override fun onThreadClicked(threadId: String) {
@@ -199,7 +216,7 @@ class MainListViewModel(
         )
         openMenuId = null
         publishRows()
-        if (device.isTablet) {
+        if (windowLayout.isTwoPane.value) {
             selectedThread.select(threadId)
         } else {
             effect(MainListEffect.OpenThread(threadId))

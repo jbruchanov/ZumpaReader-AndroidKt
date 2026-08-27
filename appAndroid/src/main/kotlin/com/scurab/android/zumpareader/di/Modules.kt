@@ -1,11 +1,10 @@
 package com.scurab.android.zumpareader.di
 
 import com.scurab.android.zumpareader.BuildConfig
-import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.ZumpaAPI
 import com.scurab.android.zumpareader.ZumpaOfflineApi
 import com.scurab.android.zumpareader.ZumpaPHPAPI
-import com.scurab.android.zumpareader.arch.DeviceConfig
+import com.scurab.android.zumpareader.arch.WindowLayout
 import android.content.Context
 import android.os.Environment
 import com.scurab.android.zumpareader.repository.CoilImagePrefetcher
@@ -87,7 +86,8 @@ val coreModule = module {
             explicitNulls = false
         }
     }
-    single { DeviceConfig(isTablet = androidContext().resources.getBoolean(R.bool.is_tablet)) }
+    //no width to read at this point - MainActivity seeds it before it draws anything
+    single { WindowLayout() }
     single {
         val prefs = get<ZumpaPrefs>()
         ZumpaSimpleParser().apply {

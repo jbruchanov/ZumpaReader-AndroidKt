@@ -3,7 +3,7 @@ package com.scurab.android.zumpareader.di
 import android.content.Context
 import com.scurab.android.zumpareader.ZumpaAPI
 import com.scurab.android.zumpareader.ZumpaPHPAPI
-import com.scurab.android.zumpareader.arch.DeviceConfig
+import com.scurab.android.zumpareader.arch.WindowLayout
 import com.scurab.android.zumpareader.repository.AppEventBus
 import com.scurab.android.zumpareader.repository.AuthRepository
 import com.scurab.android.zumpareader.ui.settings.NotificationState
@@ -39,7 +39,7 @@ class ModulesTest {
                 // provided by coreModule
                 Context::class,
                 Json::class,
-                DeviceConfig::class,
+                WindowLayout::class,
                 ZumpaPrefs::class,
                 ZumpaThreadRepository::class,
                 ZumpaSettingsRepository::class,
