@@ -154,9 +154,13 @@ private fun PostScreen(uiState: PostUiState, eventHandler: PostEventHandler) {
             pagerState.animateScrollToPage(index)
         }
     }
-    //pager -> state, for a swipe
+    //pager -> state, for a swipe. settledPage, not currentPage: currentPage moves as the pager
+    //travels, so animating to a freshly added tab reported every page it passed through on the way
+    //- each one setting selectedTabTag, which restarted the effect above and left the pager on
+    //whichever page it had reached rather than the new picture. A settled page only reports once
+    //the pager has stopped, and by then it agrees with the tag that sent it there.
     LaunchedEffect(pagerState) {
-        snapshotFlow { pagerState.currentPage }.collect { page ->
+        snapshotFlow { pagerState.settledPage }.collect { page ->
             uiState.tabs.getOrNull(page)?.let { eventHandler.onTabSelected(it.tag) }
         }
     }

@@ -127,6 +127,20 @@ class PostViewModelTest {
     }
 
     @Test
+    fun `a picked picture opens on its own tab`() {
+        val vm = viewModel()
+
+        //mockk rather than Uri.parse: android.net.Uri is a stub on the jvm, and the ViewModel only
+        //ever stores this one and prints it into the tab tag
+        vm.onImagePicked(mockk<android.net.Uri>(relaxed = true), fromCamera = true)
+
+        val tabs = vm.uiState.value.tabs
+        assertEquals(2, tabs.size)
+        //the tab the picture went on, not the message tab it was taken from
+        assertEquals(tabs.last().tag, vm.uiState.value.selectedTabTag)
+    }
+
+    @Test
     fun `an uploaded image link lands in the message and brings the tab forward`() {
         val viewModel = viewModel()
         viewModel.onMessageChanged("look at this")

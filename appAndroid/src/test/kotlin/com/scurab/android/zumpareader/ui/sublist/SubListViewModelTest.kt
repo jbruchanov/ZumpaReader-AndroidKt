@@ -263,7 +263,8 @@ class SubListViewModelTest {
             viewModel.onSendClicked()
             //HideKeyboard first then the scroll
             awaitItem()
-            assertEquals(SubListEffect.ScrollToBottom, awaitItem())
+            //the last row of what the reload published, not of what was on screen before it
+            assertEquals(SubListEffect.ScrollToBottom(viewModel.uiState.value.rows.lastIndex), awaitItem())
         }
     }
     //endregion

@@ -115,7 +115,14 @@ interface SubListEventHandler {
 }
 
 sealed interface SubListEffect : UiEffect {
-    data object ScrollToBottom : SubListEffect
+    /**
+     * @param index the row to end on. Carried rather than worked out in the screen, because the
+     * only thing that knows how many rows there are the moment they are published is whatever
+     * published them. Reading the list's own `totalItemsCount` when the effect arrives gives the
+     * count from before the reload - the list lays out on a later frame - which is how a reply that
+     * had just been sent ended up one row off the bottom.
+     */
+    data class ScrollToBottom(val index: Int) : SubListEffect
     data object ScrollToTop : SubListEffect
     /** Phone only - on a tablet a thread link swaps the pane through [SelectedThreadStore]. */
     data class OpenThread(val threadId: String) : SubListEffect
@@ -214,7 +221,8 @@ class SubListViewModel(
                 setState { copy(title = threads.thread(threadId)?.subject ?: title) }
                 publishRows()
                 when {
-                    scrollToBottom -> effect(SubListEffect.ScrollToBottom)
+                    scrollToBottom ->
+                        effect(SubListEffect.ScrollToBottom(maxOf(0, state.rows.lastIndex)))
                     scrollToTop -> effect(SubListEffect.ScrollToTop)
                 }
             } catch (err: Throwable) {
