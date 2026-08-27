@@ -4,20 +4,20 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.shape.CircleShape
@@ -25,17 +25,17 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.automirrored.filled.Reply
-import androidx.compose.material.icons.filled.BrokenImage
-import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Photo
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.SpeakerNotes
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -63,7 +63,6 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -93,12 +92,13 @@ import com.scurab.android.zumpareader.ui.compose.rememberAnnotatedTextRenderer
 import com.scurab.android.zumpareader.ui.compose.rememberQuickHideState
 import com.scurab.android.zumpareader.ui.compose.sharedImage
 import com.scurab.android.zumpareader.ui.compose.shimmer
+import com.scurab.android.zumpareader.ui.compose.ActionIcon
+import com.scurab.android.zumpareader.ui.compose.UrlButton
 import com.scurab.android.zumpareader.ui.compose.zumpaRowBackground
 import com.scurab.android.zumpareader.ui.compose.zumpaRowColor
 import com.scurab.android.zumpareader.ui.compose.theme.AppTheme
 import com.scurab.android.zumpareader.util.saveToClipboard
 import org.koin.androidx.compose.koinViewModel
-import java.util.Locale
 import com.scurab.android.zumpareader.util.formatPostTime
 
 @Composable
@@ -118,7 +118,8 @@ fun SubListScreen(threadId: String, vm: SubListViewModel = koinViewModel()) {
                 is SubListEffect.OpenThread -> navigator.openThread(effect.threadId)
                 is SubListEffect.OpenImage -> navigator.openImage(effect.url)
                 is SubListEffect.OpenLink -> navigator.openLink(effect.url)
-                is SubListEffect.OpenPostDialog -> navigator.openPostDialog()
+                is SubListEffect.OpenPostDialog ->
+                    navigator.openPostDialog(effect.threadId, effect.picker)
                 is CopyToClipboard -> {
                     context.saveToClipboard(effect.text.toString())
                     context.toast(R.string.saved_into_clipboard)
@@ -198,11 +199,14 @@ private fun SubListScreen(
                     FloatingActionButton(
                         onClick = eventHandler::onPostPanelRequested,
                         containerColor = AppTheme.colorScheme.context,
-                        contentColor = AppTheme.colorScheme.primaryBackground,
+                        //white on the orange, like the plus on the list - the icon takes this as
+                        //its LocalContentColor, so both fabs read the same way
+                        contentColor = AppTheme.colorScheme.primaryText,
                         //M3 draws a squircle, the old Material fab was round
                         shape = CircleShape,
                     ) {
-                        Icon(Icons.Filled.Create, contentDescription = null)
+                        //the same plus the list has, not a pen: one fab, one meaning
+                        Icon(Icons.Filled.Add, contentDescription = null)
                     }
                 }
             }
@@ -397,8 +401,6 @@ private fun LinkRow(
     contentPadding: PaddingValues,
     eventHandler: SubListEventHandler,
 ) {
-    val label = remember(row.url) { row.url.uppercase(Locale.ROOT) }
-
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -409,26 +411,10 @@ private fun LinkRow(
                 vertical = AppTheme.spaces.tiny,
             ),
     ) {
-        Text(
-            text = label,
-            style = AppTheme.typography.button,
-            color = AppTheme.colorScheme.buttonText,
-            textAlign = TextAlign.Center,
-            maxLines = LINK_MAX_LINES,
-            overflow = TextOverflow.MiddleEllipsis,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(AppTheme.shapes.button)
-                .border(
-                    width = AppTheme.sizes.urlButtonStrokeWidth,
-                    color = AppTheme.colorScheme.context,
-                    shape = AppTheme.shapes.button,
-                )
-                .clickable(indication = ripple(), interactionSource = null) {
-                    eventHandler.onLinkClicked(row.url)
-                }
-                .padding(AppTheme.spaces.listItemPadding),
-        )
+        UrlButton(
+            url = row.url,
+            onLongClick = { eventHandler.onLinkLongPressed(row.url) },
+        ) { eventHandler.onLinkClicked(row.url) }
     }
 }
 
@@ -441,30 +427,26 @@ private fun ImageRow(
     val painter = rememberAsyncImagePainter(model = row.url)
     val state by painter.state.collectAsState()
 
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .zumpaRowBackground(row.itemIndex)
-            .combinedClickable(
-                interactionSource = null,
-                indication = ripple(),
-                onClick = { eventHandler.onImageClicked(row.url) },
-                onLongClick = { eventHandler.onLinkClicked(row.url) },
-            )
             .padding(contentPadding)
             .padding(AppTheme.spaces.listItemPadding),
-        contentAlignment = Alignment.Center,
+        verticalArrangement = Arrangement.spacedBy(AppTheme.spaces.tiny),
     ) {
+        //above the picture, so it is plain what the picture is meant to be - and the only thing
+        //left when there is not going to be one. It also replaces the row`s old long press: the
+        //address is a button now rather than something you had to know to hold the row for.
+        UrlButton(
+            url = row.url,
+            onLongClick = { eventHandler.onLinkLongPressed(row.url) },
+        ) { eventHandler.onLinkClicked(row.url) }
+
         when (state) {
-            is AsyncImagePainter.State.Error -> ImageRowPlaceholder {
-                Icon(
-                    imageVector = Icons.Filled.BrokenImage,
-                    contentDescription = stringResource(R.string.unable_to_finish_operation),
-                    //grey rather than a dimmed orange: nothing here is disabled, it is absent
-                    tint = AppTheme.colorScheme.hint,
-                    modifier = Modifier.size(AppTheme.sizes.brokenImageIcon),
-                )
-            }
+            //nothing to show and nothing more to wait for, so the row collapses to the button
+            //above rather than holding 16:9 of empty space around a broken-picture icon
+            is AsyncImagePainter.State.Error -> Unit
 
             //the loaded picture is the one that flies to the viewer, so the shared element goes
             //here rather than on the row: the placeholder has nothing worth animating
@@ -474,6 +456,14 @@ private fun ImageRow(
                 contentScale = ContentScale.FillWidth,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .clip(AppTheme.shapes.button)
+                    //hold the picture itself to copy its address too, not only the button above it
+                    .combinedClickable(
+                        indication = ripple(),
+                        interactionSource = null,
+                        onLongClick = { eventHandler.onLinkLongPressed(row.url) },
+                        onClick = { eventHandler.onImageClicked(row.url) },
+                    )
                     .sharedImage(row.url),
             )
 
@@ -483,23 +473,18 @@ private fun ImageRow(
     }
 }
 
-/** The space an inline image will take, held while it loads and kept if it never does. */
+/** The space an inline image will take, held while it loads. A failed load keeps nothing. */
 @Composable
-private fun ImageRowPlaceholder(
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit = {},
-) {
+private fun ImageRowPlaceholder(modifier: Modifier = Modifier) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(IMAGE_PLACEHOLDER_RATIO)
             .clip(AppTheme.shapes.button)
-            //filled either way, so the slot reads as somewhere a picture goes rather than as a gap
-            //with an icon in it. The shimmer paints over this.
+            //filled, so the slot reads as somewhere a picture goes rather than as a gap. The
+            //shimmer paints over this.
             .background(AppTheme.colorScheme.secondaryBackground)
             .then(modifier),
-        contentAlignment = Alignment.Center,
-        content = { content() },
     )
 }
 
@@ -573,7 +558,10 @@ private fun ReplyPanel(
     bottomInset: Dp = 0.dp,
     contentPadding: PaddingValues = PaddingValues(),
 ) {
-    Row(
+    //The shape widget_post_message.xml had, which this panel used to be an instance of: the field
+    //on a line of its own, then the buttons underneath - photo and camera at the start, send at the
+    //end. It had become a single row with the field squeezed beside the send button.
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(AppTheme.colorScheme.secondaryBackground)
@@ -582,7 +570,6 @@ private fun ReplyPanel(
             //side insets go here for the same reason, or the field slides under a landscape one
             .padding(bottom = bottomInset)
             .padding(contentPadding),
-        verticalAlignment = Alignment.Bottom,
     ) {
         OutlinedTextField(
             value = uiState.draft.text,
@@ -591,20 +578,29 @@ private fun ReplyPanel(
             textStyle = AppTheme.typography.message,
             shape = AppTheme.shapes.editText,
             maxLines = REPLY_MAX_LINES,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .fillMaxWidth()
+                //`response_edit_text_min_height` - one line of reply, growing to REPLY_MAX_LINES
+                .heightIn(min = AppTheme.sizes.responseEditTextMinHeight),
         )
-        IconButton(
-            onClick = eventHandler::onSendClicked,
-            enabled = !uiState.isSending && !uiState.draft.isBlank,
-        ) {
-            Icon(
-                Icons.AutoMirrored.Filled.Send,
-                contentDescription = null,
-                tint = if (uiState.draft.isBlank) {
-                    AppTheme.colorScheme.contextTextDisabled
-                } else {
-                    AppTheme.colorScheme.context
-                },
+        Row(modifier = Modifier.fillMaxWidth()) {
+            //both open the post screen on this thread with that picker, which is what the old
+            //buttons did through onOpenPostFragment(R.id.photo)
+            ActionIcon(
+                icon = rememberVectorPainter(Icons.Filled.Photo),
+                enabled = !uiState.isSending,
+                onClick = eventHandler::onReplyPhotoClicked,
+            )
+            ActionIcon(
+                icon = rememberVectorPainter(Icons.Filled.PhotoCamera),
+                enabled = !uiState.isSending,
+                onClick = eventHandler::onReplyCameraClicked,
+            )
+            Spacer(Modifier.weight(1f))
+            ActionIcon(
+                icon = rememberVectorPainter(Icons.AutoMirrored.Filled.Send),
+                enabled = !uiState.isSending && !uiState.draft.isBlank,
+                onClick = eventHandler::onSendClicked,
             )
         }
     }

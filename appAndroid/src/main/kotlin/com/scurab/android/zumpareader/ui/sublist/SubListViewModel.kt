@@ -13,6 +13,7 @@ import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.repository.AppEvent
 import com.scurab.android.zumpareader.repository.AppEventBus
 import com.scurab.android.zumpareader.repository.SelectedThreadStore
+import com.scurab.android.zumpareader.ui.post.PostPicker
 import com.scurab.android.zumpareader.repository.ZumpaReadStateRepository
 import com.scurab.android.zumpareader.repository.ZumpaSettingsRepository
 import com.scurab.android.zumpareader.repository.ZumpaThreadRepository
@@ -104,9 +105,12 @@ interface SubListEventHandler {
     fun onSendClicked()
     fun onSurveyItemClicked(item: SurveyItemUiState)
     fun onLinkClicked(url: String)
+    fun onLinkLongPressed(url: String)
     fun onImageClicked(url: String)
     fun onPostPanelRequested()
     fun onPostPanelDismissed()
+    fun onReplyPhotoClicked()
+    fun onReplyCameraClicked()
     fun onMenuToggled(itemIndex: Int)
 }
 
@@ -115,7 +119,14 @@ sealed interface SubListEffect : UiEffect {
     data object ScrollToTop : SubListEffect
     /** Phone only - on a tablet a thread link swaps the pane through [SelectedThreadStore]. */
     data class OpenThread(val threadId: String) : SubListEffect
-    data object OpenPostDialog : SubListEffect
+    /**
+     * The post screen, for this thread. [picker] opens straight into the gallery or the camera - the
+     * reply panel`s two image buttons, which did `onOpenPostFragment(R.id.photo)` before.
+     */
+    data class OpenPostDialog(
+        val threadId: String,
+        val picker: PostPicker? = null,
+    ) : SubListEffect
     data class OpenImage(val url: String) : SubListEffect
     data class OpenLink(val url: String) : SubListEffect
 }
@@ -289,6 +300,13 @@ class SubListViewModel(
         }
     }
 
+    /**
+     * Holding a link or a picture copies its address, which is what `onItemClick(url, longClick)`
+     * did before the compose migration - the screen toasts `saved_into_clipboard` off the back of
+     * the effect, as it did then.
+     */
+    override fun onLinkLongPressed(url: String) = effect(CopyToClipboard(url))
+
     override fun onImageClicked(url: String) = effect(SubListEffect.OpenImage(url))
 
     override fun onPostPanelRequested() = showPostPanel()
@@ -359,7 +377,13 @@ class SubListViewModel(
         }
     }
 
-    fun onOpenPostDialog() = effect(SubListEffect.OpenPostDialog)
+    fun onOpenPostDialog() = effect(SubListEffect.OpenPostDialog(state.threadId))
+
+    override fun onReplyPhotoClicked() =
+        effect(SubListEffect.OpenPostDialog(state.threadId, PostPicker.Gallery))
+
+    override fun onReplyCameraClicked() =
+        effect(SubListEffect.OpenPostDialog(state.threadId, PostPicker.Camera))
 
     private fun publishRows() {
         val loadImages = settings.loadImages.value

@@ -69,6 +69,14 @@ sealed interface MainListEffect : UiEffect {
     data object OpenSettings : MainListEffect
     data object OpenPostDialog : MainListEffect
     data object ShowOfflineDownloadDialog : MainListEffect
+
+    /**
+     * The list started over, so it belongs back at the top - a reload puts the new threads at index
+     * 0 and the rows are keyed, so a list left part way down would otherwise hold its old anchor
+     * and quietly keep the new ones off screen above it. Not sent for paging: appending a page must
+     * leave the reader where they were.
+     */
+    data object ScrollToTop : MainListEffect
 }
 
 class MainListViewModel(
@@ -182,6 +190,13 @@ class MainListViewModel(
                         thread.stateFor(readStates.readCount(thread.id), userName)
                 }
                 publishRows()
+                //after publishRows, so the rows the list is being sent to the top of are already
+                //there. `fromThread` is the whole distinction: null is a reload of the list from
+                //the beginning - pull to refresh, a new filter, the offline switch, a post landing
+                //- and non-null is the next page.
+                if (fromThread == null && !isFirstLoad) {
+                    effect(MainListEffect.ScrollToTop)
+                }
                 if (isFirstLoad) {
                     fillEmptyDetailPane()
                 }

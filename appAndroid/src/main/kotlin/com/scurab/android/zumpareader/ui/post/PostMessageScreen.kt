@@ -20,8 +20,6 @@ import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,6 +44,7 @@ import com.scurab.android.zumpareader.test.mock
 import com.scurab.android.zumpareader.test.newThread
 import com.scurab.android.zumpareader.test.reply
 import com.scurab.android.zumpareader.test.sending
+import com.scurab.android.zumpareader.ui.compose.ActionIcon
 import com.scurab.android.zumpareader.ui.compose.theme.AppTheme
 import org.koin.androidx.compose.koinViewModel
 
@@ -185,21 +184,6 @@ private fun PostActionsRow(uiState: PostUiState, eventHandler: PostMessageEventH
             icon = rememberVectorPainter(Icons.AutoMirrored.Filled.Send),
             enabled = uiState.canSend,
             onClick = eventHandler::onSendClicked,
-        )
-    }
-}
-
-@Composable
-private fun ActionIcon(icon: Painter, enabled: Boolean, onClick: () -> Unit) {
-    IconButton(onClick = onClick, enabled = enabled) {
-        Icon(
-            painter = icon,
-            contentDescription = null,
-            tint = if (enabled) {
-                AppTheme.colorScheme.context
-            } else {
-                AppTheme.colorScheme.contextTextDisabled
-            },
         )
     }
 }
