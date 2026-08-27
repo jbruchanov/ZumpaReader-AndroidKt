@@ -87,6 +87,7 @@ import com.scurab.android.zumpareader.ui.compose.RevealRowMenuButton
 import com.scurab.android.zumpareader.ui.compose.quickHide
 import com.scurab.android.zumpareader.ui.compose.rememberAnnotatedTextRenderer
 import com.scurab.android.zumpareader.ui.compose.rememberQuickHideState
+import com.scurab.android.zumpareader.ui.compose.rememberSyncedTopAppBarScroll
 import com.scurab.android.zumpareader.ui.compose.zumpaRowBackground
 import com.scurab.android.zumpareader.ui.compose.zumpaRowColor
 import com.scurab.android.zumpareader.ui.compose.theme.AppTheme
@@ -145,6 +146,9 @@ private fun MainListScreen(
     //enterAlways, as on a thread: the bar goes as the list is read downwards and comes back on the
     //first upward scroll, wherever in the list that is.
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    //not scrollBehavior.nestedScrollConnection: that one takes the gesture for the bar
+    //before the content sees any of it - see rememberSyncedTopAppBarScroll
+    val syncedScroll = rememberSyncedTopAppBarScroll(scrollBehavior.state)
     /*
      * The height the bar has when it is fully out, which is what the list is padded by - not
      * `padding.calculateTopPadding()`, which is the bar's *current* height and so changes every
@@ -157,7 +161,7 @@ private fun MainListScreen(
 
     Scaffold(
         //the bar reads the list's scrolling through this
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = Modifier.nestedScroll(syncedScroll),
         containerColor = AppTheme.colorScheme.primaryBackground,
         //safeDrawing so the ime is in there too, and the content slot below is the only place that
         //applies any of it - anything else double counts

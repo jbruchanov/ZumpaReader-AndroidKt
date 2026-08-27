@@ -100,6 +100,7 @@ import com.scurab.android.zumpareader.ui.compose.RevealRowMenuButton
 import com.scurab.android.zumpareader.ui.compose.quickHide
 import com.scurab.android.zumpareader.ui.compose.rememberAnnotatedTextRenderer
 import com.scurab.android.zumpareader.ui.compose.rememberQuickHideState
+import com.scurab.android.zumpareader.ui.compose.rememberSyncedTopAppBarScroll
 import com.scurab.android.zumpareader.ui.compose.sharedImage
 import com.scurab.android.zumpareader.ui.compose.shimmer
 import com.scurab.android.zumpareader.ui.compose.ActionIcon
@@ -167,6 +168,9 @@ private fun SubListScreen(
     //first upward scroll, wherever in the thread that is - a long thread should not have to be
     //scrolled to the top to get the subject back.
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    //not scrollBehavior.nestedScrollConnection: that one takes the gesture for the bar
+    //before the content sees any of it - see rememberSyncedTopAppBarScroll
+    val syncedScroll = rememberSyncedTopAppBarScroll(scrollBehavior.state)
     /*
      * The height the bar has when it is fully out, which is what the list is padded by - not
      * `padding.calculateTopPadding()`.
@@ -182,7 +186,7 @@ private fun SubListScreen(
 
     Scaffold(
         //the bar reads the thread's scrolling through this
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = Modifier.nestedScroll(syncedScroll),
         containerColor = AppTheme.colorScheme.primaryBackground,
         //safeDrawing so the ime is in there too, and the content slot below is the only place that
         //applies any of it - anything else double counts
