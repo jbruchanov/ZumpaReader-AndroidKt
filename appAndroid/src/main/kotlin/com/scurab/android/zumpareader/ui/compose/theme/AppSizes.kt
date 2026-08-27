@@ -26,6 +26,8 @@ data class AppSizes(
     /** An `ImageButton` of `item_main_list_menu`: a 24dp icon inside `?buttonBackground`. */
     val rowMenuButton: Dp,
     val rowMenuIcon: Dp,
+    /** M3's own fab height. Needed as a number because the list has to leave room for one. */
+    val fabSize: Dp,
 )
 
 val DefaultSizes = AppSizes(
@@ -43,6 +45,7 @@ val DefaultSizes = AppSizes(
     topBarHeight = 56.dp,
     rowMenuButton = 36.dp,
     rowMenuIcon = 24.dp,
+    fabSize = 56.dp,
 )
 
 val LocalAppSizes = staticCompositionLocalOf { DefaultSizes }
