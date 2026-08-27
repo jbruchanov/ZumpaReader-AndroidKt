@@ -537,16 +537,18 @@ private fun SurveyOption(item: SurveyItemUiState, eventHandler: SubListEventHand
                 shape = AppTheme.shapes.button,
             )
     ) {
-        //the filled portion is the vote share, as the level drawable used to be
-        Box(
-            Modifier
-                .fillMaxWidth(item.percents / 100f)
-                .matchParentSize()
-                .background(
-                    if (item.voted) AppTheme.colorScheme.context50p else AppTheme.colorScheme.context25p,
-                    AppTheme.shapes.button,
-                )
-        )
+        //The vote share, as the level drawable used to be - but only behind the option that was
+        //voted for. Every option carrying a tint made the whole survey look answered several times
+        //over, and the share is in each label as a number anyway, so the bar says nothing the row
+        //does not. The one that was voted for takes the lighter of the two tints, not the heavier.
+        if (item.voted) {
+            Box(
+                Modifier
+                    .fillMaxWidth(item.percents / 100f)
+                    .matchParentSize()
+                    .background(AppTheme.colorScheme.context25p, AppTheme.shapes.button)
+            )
+        }
         TextButton(
             onClick = { eventHandler.onSurveyItemClicked(item) },
             modifier = Modifier.fillMaxWidth(),
