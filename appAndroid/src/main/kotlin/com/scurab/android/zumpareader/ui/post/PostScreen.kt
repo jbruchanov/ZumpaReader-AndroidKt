@@ -78,22 +78,35 @@ fun PostScreen(
     var cameraTarget by rememberSaveable { mutableStateOf<Uri?>(null) }
     //see the LaunchedEffect below - the picker is a one-shot that has to outlive this process
     var pickerConsumed by rememberSaveable { mutableStateOf(false) }
-    //The picture is staged here rather than handed to the ViewModel from the callback, because the
-    //callback can run before `start` does. A camera app is heavy enough to get this process killed,
-    //so coming back can mean a fresh ViewModel: the result is delivered as the launcher registers,
-    //which is before any LaunchedEffect, and `start` would then have re-initialised the tabs on top
-    //of the one the picture just added - a round trip that ended with nothing to show for it.
+    /*
+     * Both results are staged here and applied from one place below, rather than handed to the
+     * ViewModel from their callbacks.
+     *
+     * Staging at all is because a callback can run before `start` does: a camera app is heavy enough
+     * to get this process killed, so coming back can mean a fresh ViewModel, and the result is
+     * delivered as the launcher registers - before any LaunchedEffect. `start` would then have
+     * re-initialised the tabs on top of the one the picture just added.
+     *
+     * Staging *both* is because only the camera went through here before, while the gallery called
+     * the ViewModel straight from its callback. Two paths that are meant to end identically but do
+     * not run identically is exactly what shows up as one of them opening its tab and the other not.
+     */
     var pendingImage by rememberSaveable { mutableStateOf<Uri?>(null) }
+    var pendingImageFromCamera by rememberSaveable { mutableStateOf(false) }
 
     val takePicture = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { saved ->
         val uri = cameraTarget
         cameraTarget = null
         if (saved && uri != null) {
+            pendingImageFromCamera = true
             pendingImage = uri
         }
     }
     val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let { vm.onImagePicked(it, fromCamera = false) }
+        uri?.let {
+            pendingImageFromCamera = false
+            pendingImage = it
+        }
     }
 
     LaunchedEffect(Unit) {
@@ -133,8 +146,9 @@ fun PostScreen(
     //picture this runs once `start` has already had its say and cannot undo it.
     LaunchedEffect(pendingImage) {
         pendingImage?.let { uri ->
+            val fromCamera = pendingImageFromCamera
             pendingImage = null
-            vm.onImagePicked(uri, fromCamera = true)
+            vm.onImagePicked(uri, fromCamera = fromCamera)
         }
     }
 
@@ -151,7 +165,12 @@ private fun PostScreen(uiState: PostUiState, eventHandler: PostEventHandler) {
     LaunchedEffect(uiState.selectedTabTag, uiState.tabs.size) {
         val index = uiState.tabs.indexOfFirst { it.tag == uiState.selectedTabTag }
         if (index >= 0 && index != pagerState.currentPage) {
-            pagerState.animateScrollToPage(index)
+            //scrollToPage, not animateScrollToPage: a tab added a frame ago is a page the pager has
+            //not measured yet, and an animation towards it has to settle before it counts as
+            //arrived - so a picture could land while the pager stayed where it was. A jump is also
+            //the right move for a picture just taken, and spares composing every image tab in
+            //between, each of which carries a ViewModel.
+            pagerState.scrollToPage(index)
         }
     }
     //pager -> state, for a swipe. settledPage, not currentPage: currentPage moves as the pager
