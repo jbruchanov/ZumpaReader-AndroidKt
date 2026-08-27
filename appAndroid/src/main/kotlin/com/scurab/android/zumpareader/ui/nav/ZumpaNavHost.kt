@@ -166,5 +166,13 @@ fun ZumpaNavHost(launches: Flow<LaunchPayload>, onExit: () -> Unit) {
  * Both dialogs decide for themselves when they may go away - the download dialog blocks back while
  * it is downloading - so a tap outside must not take that decision from them. Back is left alone:
  * the screen's own `BackHandler` sits inside the dialog and wins over it when it wants to.
+ *
+ * `decorFitsSystemWindows = false` is what makes the keyboard animate rather than jump. Left true -
+ * the default - the platform fits the dialog window to the system windows itself, which means it
+ * resizes the dialog in one step when the ime appears and reports `WindowInsets.ime` as zero inside
+ * it. Turning it off hands the insets to the content, which is already set up to take them:
+ * PostScreen pads the top and the sides, PostMessageScreen pads the bottom.
  */
-private val DIALOG = DialogSceneStrategy.dialog(DialogProperties(dismissOnClickOutside = false))
+private val DIALOG = DialogSceneStrategy.dialog(
+    DialogProperties(dismissOnClickOutside = false, decorFitsSystemWindows = false)
+)

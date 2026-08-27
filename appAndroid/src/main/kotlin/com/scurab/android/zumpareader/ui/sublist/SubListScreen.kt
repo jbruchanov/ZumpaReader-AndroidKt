@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -37,7 +38,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -56,6 +56,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -148,8 +149,8 @@ private fun SubListScreen(
     //back closes the reply panel before it leaves the screen, as it always did
     BackHandler(enabled = uiState.isPostPanelVisible) { eventHandler.onPostPanelDismissed() }
 
-    val quickHideState = rememberQuickHideState()
     val renderer = rememberAnnotatedTextRenderer()
+    val fabVisible = uiState.canPost && !uiState.isPostPanelVisible
     val title = remember(uiState.title, renderer) {
         if (uiState.title.isEmpty()) null else renderer.title(uiState.title)
     }
@@ -194,20 +195,21 @@ private fun SubListScreen(
             }
         },
         floatingActionButton = {
-            if (uiState.canPost && !uiState.isPostPanelVisible) {
-                QuickHideFab(quickHideState) {
-                    FloatingActionButton(
-                        onClick = eventHandler::onPostPanelRequested,
-                        containerColor = AppTheme.colorScheme.context,
-                        //white on the orange, like the plus on the list - the icon takes this as
-                        //its LocalContentColor, so both fabs read the same way
-                        contentColor = AppTheme.colorScheme.primaryText,
-                        //M3 draws a squircle, the old Material fab was round
-                        shape = CircleShape,
-                    ) {
-                        //the same plus the list has, not a pen: one fab, one meaning
-                        Icon(Icons.Filled.Add, contentDescription = null)
-                    }
+            //no QuickHideFab here, unlike the list: the way to answer a thread should not be
+            //something you have to stop scrolling to get back. The list leaves room for it instead
+            //of sliding it out of the way - see fabSpace below.
+            if (fabVisible) {
+                FloatingActionButton(
+                    onClick = eventHandler::onPostPanelRequested,
+                    containerColor = AppTheme.colorScheme.context,
+                    //white on the orange, like the plus on the list - the icon takes this as its
+                    //LocalContentColor, so both fabs read the same way
+                    contentColor = AppTheme.colorScheme.primaryText,
+                    //M3 draws a squircle, the old Material fab was round
+                    shape = CircleShape,
+                ) {
+                    //the same plus the list has, not a pen: one fab, one meaning
+                    Icon(Icons.Filled.Add, contentDescription = null)
                 }
             }
         },
@@ -215,6 +217,13 @@ private fun SubListScreen(
         //one inset, applied once: whatever is at the bottom of the screen takes it - the reply panel
         //when it is up, otherwise the list. Adding imePadding on top of this is what counted twice.
         val bottomInset = padding.calculateBottomPadding()
+        //what the fab occupies, now that it stays put: its own height plus the margin the Scaffold
+        //places it with, on each side of it
+        val fabSpace = if (fabVisible) {
+            AppTheme.sizes.fabSize + AppTheme.spaces.fabMargin * 2
+        } else {
+            0.dp
+        }
         //the side insets stop here and travel down to the rows instead. Putting them on the
         //LazyColumn - as contentPadding or as a modifier - would inset the alternating background
         //with the text, and in landscape that leaves a bare stripe of window down one side.
@@ -254,11 +263,12 @@ private fun SubListScreen(
                     //contentPadding, not padding: the rows scroll under the translucent app bar
                     contentPadding = PaddingValues(
                         top = padding.calculateTopPadding(),
-                        bottom = if (uiState.isPostPanelVisible) 0.dp else bottomInset,
+                        //the fab no longer moves out of the way, so the list ends above it -
+                        //otherwise the last message sits under it and cannot be read
+                        bottom = (if (uiState.isPostPanelVisible) 0.dp else bottomInset) + fabSpace,
                     ),
                     modifier = Modifier
                         .fillMaxSize()
-                        .quickHide(quickHideState)
                         .bottomPullToRefresh(
                             listState = listState,
                             state = bottomState,
@@ -427,26 +437,22 @@ private fun ImageRow(
     val painter = rememberAsyncImagePainter(model = row.url)
     val state by painter.state.collectAsState()
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .zumpaRowBackground(row.itemIndex)
             .padding(contentPadding)
             .padding(AppTheme.spaces.listItemPadding),
-        verticalArrangement = Arrangement.spacedBy(AppTheme.spaces.tiny),
+        contentAlignment = Alignment.Center,
     ) {
-        //above the picture, so it is plain what the picture is meant to be - and the only thing
-        //left when there is not going to be one. It also replaces the row`s old long press: the
-        //address is a button now rather than something you had to know to hold the row for.
-        UrlButton(
-            url = row.url,
-            onLongClick = { eventHandler.onLinkLongPressed(row.url) },
-        ) { eventHandler.onLinkClicked(row.url) }
-
         when (state) {
-            //nothing to show and nothing more to wait for, so the row collapses to the button
-            //above rather than holding 16:9 of empty space around a broken-picture icon
-            is AsyncImagePainter.State.Error -> Unit
+            //nothing to show and nothing more to wait for, so all that is left is the address as
+            //something to press - rather than 16:9 of empty space around a broken-picture icon.
+            //A picture that loaded speaks for itself and gets no caption.
+            is AsyncImagePainter.State.Error -> UrlButton(
+                url = row.url,
+                onLongClick = { eventHandler.onLinkLongPressed(row.url) },
+            ) { eventHandler.onLinkClicked(row.url) }
 
             //the loaded picture is the one that flies to the viewer, so the shared element goes
             //here rather than on the row: the placeholder has nothing worth animating
@@ -457,7 +463,8 @@ private fun ImageRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(AppTheme.shapes.button)
-                    //hold the picture itself to copy its address too, not only the button above it
+                    //hold the picture to copy its address - the only way to it now that a
+                    //picture which loaded carries no caption
                     .combinedClickable(
                         indication = ripple(),
                         interactionSource = null,
@@ -571,18 +578,35 @@ private fun ReplyPanel(
             .padding(bottom = bottomInset)
             .padding(contentPadding),
     ) {
-        OutlinedTextField(
-            value = uiState.draft.text,
-            onValueChange = eventHandler::onDraftChanged,
-            enabled = !uiState.isSending,
-            textStyle = AppTheme.typography.message,
-            shape = AppTheme.shapes.editText,
-            maxLines = REPLY_MAX_LINES,
+        //A BasicTextField rather than an OutlinedTextField: the latter carries ~16dp of padding
+        //of its own and a 56dp floor before any of ours, which is the bulk that was there. This is
+        //the legacy field - a rounded rect, `gap_small` inside it, `response_edit_text_min_height`
+        //tall - and nothing else.
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                //`response_edit_text_min_height` - one line of reply, growing to REPLY_MAX_LINES
-                .heightIn(min = AppTheme.sizes.responseEditTextMinHeight),
-        )
+                .heightIn(min = AppTheme.sizes.responseEditTextMinHeight)
+                .border(
+                    width = AppTheme.sizes.urlButtonStrokeWidth,
+                    color = AppTheme.colorScheme.context25p,
+                    shape = AppTheme.shapes.editText,
+                )
+                .padding(AppTheme.spaces.small),
+            //centred while it is one line, and it grows downwards from there
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            BasicTextField(
+                value = uiState.draft.text,
+                onValueChange = eventHandler::onDraftChanged,
+                enabled = !uiState.isSending,
+                textStyle = AppTheme.typography.message.copy(
+                    color = AppTheme.colorScheme.message,
+                ),
+                cursorBrush = SolidColor(AppTheme.colorScheme.context),
+                maxLines = REPLY_MAX_LINES,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
         Row(modifier = Modifier.fillMaxWidth()) {
             //both open the post screen on this thread with that picker, which is what the old
             //buttons did through onOpenPostFragment(R.id.photo)
