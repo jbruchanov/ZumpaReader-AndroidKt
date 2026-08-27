@@ -78,12 +78,18 @@ fun PostScreen(
     var cameraTarget by rememberSaveable { mutableStateOf<Uri?>(null) }
     //see the LaunchedEffect below - the picker is a one-shot that has to outlive this process
     var pickerConsumed by rememberSaveable { mutableStateOf(false) }
+    //The picture is staged here rather than handed to the ViewModel from the callback, because the
+    //callback can run before `start` does. A camera app is heavy enough to get this process killed,
+    //so coming back can mean a fresh ViewModel: the result is delivered as the launcher registers,
+    //which is before any LaunchedEffect, and `start` would then have re-initialised the tabs on top
+    //of the one the picture just added - a round trip that ended with nothing to show for it.
+    var pendingImage by rememberSaveable { mutableStateOf<Uri?>(null) }
 
     val takePicture = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { saved ->
         val uri = cameraTarget
         cameraTarget = null
         if (saved && uri != null) {
-            vm.onImagePicked(uri, fromCamera = true)
+            pendingImage = uri
         }
     }
     val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
@@ -121,6 +127,14 @@ fun PostScreen(
         if (!pickerConsumed) {
             pickerConsumed = true
             vm.onPicker(picker)
+        }
+    }
+    //After the one above, always: declared later, so on a composition that restores a staged
+    //picture this runs once `start` has already had its say and cannot undo it.
+    LaunchedEffect(pendingImage) {
+        pendingImage?.let { uri ->
+            pendingImage = null
+            vm.onImagePicked(uri, fromCamera = true)
         }
     }
 
