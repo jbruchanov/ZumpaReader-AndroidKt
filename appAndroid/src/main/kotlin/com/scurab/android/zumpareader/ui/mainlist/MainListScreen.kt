@@ -7,12 +7,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
@@ -224,6 +226,12 @@ private fun MainListTopBar(uiState: MainListUiState, eventHandler: MainListEvent
             },
             expandedHeight = AppTheme.sizes.topBarHeight,
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+            //safeDrawing, not the systemBarsForVisualComponents the default uses: that
+            //one leaves out the display cutout, which in landscape is exactly the inset on
+            //the side the title runs into. Applied here and only here - the Box outside
+            //keeps its background running edge to edge and under the status bar.
+            windowInsets = WindowInsets.safeDrawing
+                .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top),
             actions = {
                 IconButton(onClick = { menuExpanded = true }) {
                     Icon(
