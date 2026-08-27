@@ -14,6 +14,9 @@ measured against its real alpha bounding box rather than the file edges. At 54dp
 silhouette sits inside the 66dp circle with zero clipping on any mask - verified by counting
 opaque pixels outside the circle - while still filling ~75% of the 72dp visible viewport.
 
+The monochrome layer is an alpha negative - a solid tile with the face drawn through it as holes
+- because tinted linework on its own is too thin to survive themed-icon size. See inverted().
+
 The art is placed on its centre of mass, not on its bounding box. The jaw and brow carry most of
 the weight while thin protrusions stretch the box down and right, so box-centring leaves it
 visibly sitting low and left inside a circle mask. The mass centroid is 3.9% left and 3.1% above
@@ -63,7 +66,8 @@ def monochrome(rgba):
     """Ink-only alpha: black linework goes opaque, the white face fill drops out.
 
     A themed icon is tinted one flat colour, so handing it the filled silhouette would give a
-    featureless blob - only the linework carries the face.
+    featureless blob - only the linework carries the face. This layer is then inverted by
+    `inverted()` before it ships; see there for why.
     """
     alpha = Image.eval(rgba.convert("L"), lambda v: 255 - v)
     alpha = Image.composite(alpha, Image.new("L", rgba.size, 0), rgba.getchannel("A"))
@@ -102,6 +106,19 @@ def optical_offset(layer, samples=512):
     return (0.5 - sx / total / samples), (0.5 - sy / total / samples)
 
 
+def inverted(layer):
+    """Alpha negative across the whole canvas: the linework becomes the holes, the rest fills in.
+
+    Tinted linework alone is too thin to read at themed-icon size - it turns to mush. Flipping it
+    makes the plate colour draw the face through a solid tinted tile, which holds up small. The
+    fill running edge to edge is fine: it is background, the mask crops it, and the part that
+    carries meaning - the holes - stays inside the 66dp safe circle.
+    """
+    out = Image.new("RGBA", layer.size, (0, 0, 0, 0))
+    out.putalpha(Image.eval(layer.getchannel("A"), lambda v: 255 - v))
+    return out
+
+
 def centred(layer, canvas_px, content_px, offset=(0.0, 0.0)):
     """Scale layer to content_px wide and place it on a transparent square.
 
@@ -137,7 +154,7 @@ def main():
         content = round(CONTENT_DP * scale)
         write(centred(face, canvas, content, offset),
               f"mipmap-{density}", "ic_launcher_foreground.png")
-        write(centred(ink, canvas, content, offset),
+        write(inverted(centred(ink, canvas, content, offset)),
               f"mipmap-{density}", "ic_launcher_monochrome.png")
 
         legacy_px = round(LEGACY_DP * scale)
