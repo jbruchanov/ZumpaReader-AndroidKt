@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import com.scurab.android.zumpareader.arch.WindowLayout
 import com.scurab.android.zumpareader.model.ZumpaMainPageResult
 import com.scurab.android.zumpareader.model.ZumpaThread
+import com.scurab.android.zumpareader.repository.AppEvent
 import com.scurab.android.zumpareader.repository.AppEventBus
 import com.scurab.android.zumpareader.repository.SelectedThreadStore
 import com.scurab.android.zumpareader.repository.ZumpaReadStateRepository
@@ -13,6 +14,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -216,6 +218,47 @@ class MainListViewModelTest {
         assertFalse(vm.uiState.value.rows.any { it.isSelected })
         assertEquals(null, selectedThread.selected.value)
         assertFalse(selectedThread.isExplicit)
+    }
+
+    @Test
+    fun `a finished offline download refills the list`() = runTest {
+        //going offline with no snapshot yet: the offline api has nothing to answer with
+        coEvery { threads.loadMainPage(any(), any()) } returns page("", *emptyArray())
+        val vm = viewModel()
+        isOffline.value = true
+
+        assertTrue(vm.uiState.value.rows.isEmpty())
+
+        //what the download does when it finishes
+        coEvery { threads.loadMainPage(any(), any()) } returns page("", thread("10"), thread("11"))
+        eventBus.emit(AppEvent.OfflineDataChanged)
+
+        assertEquals(listOf("11", "10"), vm.uiState.value.rows.map { it.id })
+    }
+
+    @Test
+    fun `a reload asked for while one is running is not dropped`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        var call = 0
+        coEvery { threads.loadMainPage(any(), any()) } coAnswers {
+            call++
+            if (call == 1) {
+                gate.await()
+                page("", thread("10"))
+            } else {
+                page("", thread("20"), thread("21"))
+            }
+        }
+
+        //the first load is still in flight - this is the offline snapshot as it was
+        val vm = viewModel()
+        //and the download lands while it is
+        eventBus.emit(AppEvent.OfflineDataChanged)
+        gate.complete(Unit)
+
+        //the reload the event asked for has to happen: the first load answered with the data from
+        //before the download, and nothing else is going to come along and correct it
+        assertEquals(listOf("21", "20"), vm.uiState.value.rows.map { it.id })
     }
 
     @Test
