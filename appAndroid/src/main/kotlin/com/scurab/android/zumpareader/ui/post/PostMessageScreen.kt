@@ -6,6 +6,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.WindowInsets
@@ -29,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
@@ -109,38 +111,68 @@ private fun PostMessageScreen(uiState: PostUiState, eventHandler: PostMessageEve
             )
         }
 
-        OutlinedTextField(
-            value = messageValue.value,
-            onValueChange = {
-                messageValue.value = it
-                eventHandler.onMessageChanged(it.text)
-            },
-            enabled = !uiState.isSending,
-            label = { Text(stringResource(R.string.message)) },
-            textStyle = AppTheme.typography.message,
-            shape = AppTheme.shapes.editText,
-            //fixed at two lines in a short window, so the field scrolls its own text and the screen
-            //scrolls the rest, rather than one field trying to do both. min as well as max, or it
-            //would still grow a line at a time and push the action row down the scroll
-            minLines = if (isCompactHeight) COMPACT_MESSAGE_LINES else 1,
-            maxLines = if (isCompactHeight) COMPACT_MESSAGE_LINES else Int.MAX_VALUE,
-            modifier = Modifier
-                .fillMaxWidth()
-                //weight only where the height is bounded: inside a vertical scroll the column has
-                //no height to share out, and heightIn would fight the two-line lock
-                .then(
-                    if (isCompactHeight) {
-                        Modifier
-                    } else {
-                        Modifier
-                            .weight(1f)
-                            .heightIn(min = AppTheme.sizes.newMessageEditTextMinHeight)
-                    }
-                ),
-        )
-
-        PostActionsRow(uiState, eventHandler)
+        //A short window puts the field and the buttons beside each other instead of stacking them,
+        //because the height a second row costs is the height the field has left. Taller than that
+        //and they stack, with the field taking the slack.
+        if (isCompactHeight) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                MessageField(
+                    value = messageValue,
+                    uiState = uiState,
+                    eventHandler = eventHandler,
+                    lines = COMPACT_MESSAGE_LINES,
+                    //the field takes the slack, so the buttons need no spacer to sit at the end
+                    modifier = Modifier.weight(1f),
+                )
+                PostActionIcons(uiState, eventHandler, spaced = false)
+            }
+        } else {
+            MessageField(
+                value = messageValue,
+                uiState = uiState,
+                eventHandler = eventHandler,
+                lines = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .heightIn(min = AppTheme.sizes.newMessageEditTextMinHeight),
+            )
+            Row(modifier = Modifier.fillMaxWidth()) {
+                PostActionIcons(uiState, eventHandler, spaced = true)
+            }
+        }
     }
+}
+
+/**
+ * @param lines fixes the field at that many lines - min as well as max, or it would still grow a
+ * line at a time and push whatever is beside or below it around. Null lets it grow.
+ */
+@Composable
+private fun MessageField(
+    value: MutableState<TextFieldValue>,
+    uiState: PostUiState,
+    eventHandler: PostMessageEventHandler,
+    lines: Int?,
+    modifier: Modifier = Modifier,
+) {
+    OutlinedTextField(
+        value = value.value,
+        onValueChange = {
+            value.value = it
+            eventHandler.onMessageChanged(it.text)
+        },
+        enabled = !uiState.isSending,
+        label = { Text(stringResource(R.string.message)) },
+        textStyle = AppTheme.typography.message,
+        shape = AppTheme.shapes.editText,
+        minLines = lines ?: 1,
+        maxLines = lines ?: Int.MAX_VALUE,
+        modifier = modifier,
+    )
 }
 
 /**
@@ -166,26 +198,32 @@ private fun rememberFieldValue(text: String): MutableState<TextFieldValue> {
     return state
 }
 
+/**
+ * @param spaced pushes send to the far end. Wanted when the icons are a row of their own, not when
+ * something beside them already takes the slack.
+ */
 @Composable
-private fun PostActionsRow(uiState: PostUiState, eventHandler: PostMessageEventHandler) {
-    Row(modifier = Modifier.fillMaxWidth()) {
-        ActionIcon(
-            icon = rememberVectorPainter(Icons.Filled.Photo),
-            enabled = !uiState.isSending,
-            onClick = eventHandler::onPhotoClicked,
-        )
-        ActionIcon(
-            icon = rememberVectorPainter(Icons.Filled.PhotoCamera),
-            enabled = !uiState.isSending,
-            onClick = eventHandler::onCameraClicked,
-        )
-        Spacer(Modifier.weight(1f))
-        ActionIcon(
-            icon = rememberVectorPainter(Icons.AutoMirrored.Filled.Send),
-            enabled = uiState.canSend,
-            onClick = eventHandler::onSendClicked,
-        )
-    }
+private fun RowScope.PostActionIcons(
+    uiState: PostUiState,
+    eventHandler: PostMessageEventHandler,
+    spaced: Boolean,
+) {
+    ActionIcon(
+        icon = rememberVectorPainter(Icons.Filled.Photo),
+        enabled = !uiState.isSending,
+        onClick = eventHandler::onPhotoClicked,
+    )
+    ActionIcon(
+        icon = rememberVectorPainter(Icons.Filled.PhotoCamera),
+        enabled = !uiState.isSending,
+        onClick = eventHandler::onCameraClicked,
+    )
+    if (spaced) Spacer(Modifier.weight(1f))
+    ActionIcon(
+        icon = rememberVectorPainter(Icons.AutoMirrored.Filled.Send),
+        enabled = uiState.canSend,
+        onClick = eventHandler::onSendClicked,
+    )
 }
 
 private const val SUBJECT_MAX_LINES = 5
@@ -211,7 +249,7 @@ private fun PostMessageSendingPreview() = AppTheme {
     PostMessageScreen(Fixtures.Post.sending(), mock())
 }
 
-/** A phone in landscape: everything scrolls and the message field holds two lines. */
+/** A phone in landscape: field and buttons share a row, and the lot scrolls. */
 @Preview(showBackground = true, backgroundColor = 0xFF000000, widthDp = 740, heightDp = 300)
 @Composable
 private fun PostMessageCompactHeightPreview() = AppTheme {
