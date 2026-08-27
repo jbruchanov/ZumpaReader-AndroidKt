@@ -105,6 +105,9 @@ class MainListViewModel(
     private var lastFilter: String? = null
     private var lastOffline: Boolean? = null
     private var isFirstLoad = true
+
+    /** A reload asked for while one was already running - see [load]. */
+    private var pendingReload = false
     private var openMenuId: String? = null
 
     init {
@@ -141,10 +144,12 @@ class MainListViewModel(
         viewModelScope.launch {
             eventBus.events.collect { event ->
                 when (event) {
-                    is AppEvent.OfflineDataChanged -> {
-                        lastOffline = null
-                        load()
-                    }
+                    //force, rather than the `lastOffline = null` this used to do. That trick got
+                    //the reload to treat the offline state as changed, but it also left lastOffline
+                    //null afterwards - and the isOffline collector above only reloads when
+                    //lastOffline is *not* null, so one download quietly stopped the offline switch
+                    //from reloading anything for the rest of the session.
+                    is AppEvent.OfflineDataChanged -> load(force = true)
 
                     is AppEvent.ContentPosted -> load()
                 }
@@ -164,13 +169,29 @@ class MainListViewModel(
         load(fromThread = next)
     }
 
-    private fun load(fromThread: String? = null, isFirstLoad: Boolean = false) {
+    /**
+     * @param force reload from the beginning even though nothing about the query changed - the data
+     * underneath did. A finished offline download is the case: same filter, same offline flag, an
+     * entirely different snapshot to read.
+     */
+    private fun load(
+        fromThread: String? = null,
+        isFirstLoad: Boolean = false,
+        force: Boolean = false,
+    ) {
         if (state.isLoading) {
+            //Asking for the next page while a load runs is nothing - it will still be there.
+            //Asking for a reload is not: it is the answer to the data having changed
+            //underneath, and dropping it leaves the list showing what was there before the
+            //change with nothing left to trigger another try. Remembered and run afterwards.
+            if (fromThread == null) {
+                pendingReload = true
+            }
             return
         }
         val filter = settings.filter.value
         val offline = settings.isOffline.value
-        if (lastFilter != filter || lastOffline != offline) {
+        if (force || lastFilter != filter || lastOffline != offline) {
             loaded.clear()
             rowStates.clear()
         }
@@ -204,6 +225,10 @@ class MainListViewModel(
                 onError(err)
             } finally {
                 setState { copy(isLoading = false) }
+                if (pendingReload) {
+                    pendingReload = false
+                    load(force = true)
+                }
             }
         }
     }
