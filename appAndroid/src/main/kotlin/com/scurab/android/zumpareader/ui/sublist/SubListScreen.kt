@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.lazy.LazyColumn
@@ -184,14 +186,29 @@ private fun SubListScreen(
                             //with a full stop where the interesting half was. Does nothing at all
                             //when the subject fits, so a short one simply sits still, and pauses
                             //between passes so the beginning can be read before it moves off.
-                            modifier = Modifier.basicMarquee(
-                                iterations = Int.MAX_VALUE,
-                                velocity = MARQUEE_VELOCITY,
-                            ),
+                            //
+                            //The end padding is because M3 insets the title by 16dp at the start
+                            //but only by however wide the actions are at the end - and this bar
+                            //has none, so the text ran to the edge on one side and sat 16dp in
+                            //on the other. 12dp, because M3 already puts 4dp on both ends of the
+                            //title slot. Outside the marquee, so the text scrolls within the
+                            //padding rather than through it.
+                            modifier = Modifier
+                                .padding(end = AppTheme.spaces.mid)
+                                .basicMarquee(
+                                    iterations = Int.MAX_VALUE,
+                                    velocity = MARQUEE_VELOCITY,
+                                ),
                         )
                     },
                     expandedHeight = AppTheme.sizes.topBarHeight,
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+                    //safeDrawing, not the systemBarsForVisualComponents the default uses: that
+                    //one leaves out the display cutout, which in landscape is exactly the inset on
+                    //the side the title runs into. Applied here and only here - the Box outside
+                    //keeps its background running edge to edge and under the status bar.
+                    windowInsets = WindowInsets.safeDrawing
+                        .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top),
                 )
                 //A line between the header and what scrolls under it. Under the progress
                 //strip in the stack on purpose: while a load is running that strip is the
