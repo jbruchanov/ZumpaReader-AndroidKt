@@ -1,7 +1,7 @@
 package com.scurab.android.zumpareader.ui.mainlist
 
 import app.cash.turbine.test
-import com.scurab.android.zumpareader.arch.DeviceConfig
+import com.scurab.android.zumpareader.arch.WindowLayout
 import com.scurab.android.zumpareader.model.ZumpaMainPageResult
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.repository.AppEventBus
@@ -21,6 +21,8 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -65,8 +67,8 @@ class MainListViewModelTest {
         items = LinkedHashMap(threads.associateBy { it.id })
     )
 
-    private fun viewModel(isTablet: Boolean = false) = MainListViewModel(
-        threads, settings, readStates, selectedThread, eventBus, DeviceConfig(isTablet)
+    private fun viewModel(isTwoPane: Boolean = false) = MainListViewModel(
+        threads, settings, readStates, selectedThread, eventBus, WindowLayout(isTwoPane)
     )
 
     @BeforeEach
@@ -133,23 +135,72 @@ class MainListViewModelTest {
     }
 
     @Test
-    fun `a phone opens the thread while a tablet selects it`() = runTest {
+    fun `one pane opens the thread while two panes select it`() = runTest {
         coEvery { threads.loadMainPage(any(), any()) } returns page("9", thread("10"))
 
-        viewModel(isTablet = false).run {
+        viewModel(isTwoPane = false).run {
             effects.test {
                 onThreadClicked("10")
                 assertEquals(MainListEffect.OpenThread("10"), awaitItem())
             }
         }
 
-        viewModel(isTablet = true).run {
+        viewModel(isTwoPane = true).run {
             effects.test {
                 onThreadClicked("10")
                 expectNoEvents()
             }
         }
         assertEquals("10", selectedThread.selected.value)
+    }
+
+    @Test
+    fun `the thread the detail pane opens on is not one the user picked`() = runTest {
+        coEvery { threads.loadMainPage(any(), any()) } returns page("9", thread("10"))
+        every { threads.lastThread() } returns thread("10")
+
+        viewModel(isTwoPane = true)
+
+        //good enough to fill a pane that would otherwise be empty - and not something to navigate
+        //to when the window narrows and that pane goes away
+        assertEquals("10", selectedThread.selected.value)
+        assertFalse(selectedThread.isExplicit)
+
+        viewModel(isTwoPane = true).onThreadClicked("10")
+        assertTrue(selectedThread.isExplicit)
+    }
+
+    @Test
+    fun `the pane fills itself when the window grows into one`() = runTest {
+        coEvery { threads.loadMainPage(any(), any()) } returns page("9", thread("10"))
+        every { threads.lastThread() } returns thread("10")
+        val windowLayout = WindowLayout(isTwoPane = false)
+        MainListViewModel(threads, settings, readStates, selectedThread, eventBus, windowLayout)
+
+        //no pane yet, so nothing is picked for it
+        assertEquals(null, selectedThread.selected.value)
+
+        windowLayout.onWidthChanged(WindowLayout.TWO_PANE_MIN_WIDTH_DP)
+
+        assertEquals("10", selectedThread.selected.value)
+        assertFalse(selectedThread.isExplicit)
+    }
+
+    @Test
+    fun `clearing the selection unlights the row`() = runTest {
+        coEvery { threads.loadMainPage(any(), any()) } returns page("9", thread("10"))
+        val vm = viewModel(isTwoPane = true)
+        vm.onThreadClicked("10")
+
+        assertTrue(vm.uiState.value.rows.single { it.id == "10" }.isSelected)
+
+        //what losing the second pane does: the thread becomes a screen of its own and stops being a
+        //selection, so nothing in the list behind it stays lit
+        selectedThread.clear()
+
+        assertFalse(vm.uiState.value.rows.any { it.isSelected })
+        assertEquals(null, selectedThread.selected.value)
+        assertFalse(selectedThread.isExplicit)
     }
 
     @Test

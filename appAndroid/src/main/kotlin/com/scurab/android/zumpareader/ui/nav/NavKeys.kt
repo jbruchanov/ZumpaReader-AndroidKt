@@ -14,13 +14,13 @@ import kotlinx.serialization.Serializable
  */
 sealed interface ZumpaKey : NavKey
 
-/** The phone's root. */
+/**
+ * The root, in both layouts. What it draws depends on how wide the window is - the list alone, or
+ * the list with a detail pane - which is a rendering decision rather than a destination, so there
+ * is no separate key for it: a rotation would otherwise have to rewrite the bottom of the stack.
+ */
 @Serializable
 data object MainListKey : ZumpaKey
-
-/** The tablet's root - the same list with a detail pane next to it. */
-@Serializable
-data object TwoPaneKey : ZumpaKey
 
 @Serializable
 data class SubListKey(val threadId: String) : ZumpaKey

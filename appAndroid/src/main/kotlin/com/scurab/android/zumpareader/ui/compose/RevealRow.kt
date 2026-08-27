@@ -27,7 +27,9 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import com.scurab.android.zumpareader.ui.compose.theme.AppTheme
 
 /**
@@ -41,12 +43,18 @@ import com.scurab.android.zumpareader.ui.compose.theme.AppTheme
  * [background] is painted across the full row height behind the menu, the way the menu's own
  * `?threadItemBackgroundNoPressedState` did, so the uncovered strip is the row's colour rather than
  * the window's.
+ *
+ * [menuStartPadding] holds the menu clear of a side navigation bar or a cutout: it is uncovered at
+ * the start edge, which in landscape is where that furniture tends to be. The content is left
+ * alone - a row insets its own text *inside* its background, so the colour and the ripple still
+ * reach the window edge - so this only has to move the buttons and the slide that uncovers them.
  */
 @Composable
 fun RevealRow(
     isOpen: Boolean,
     background: Color,
     modifier: Modifier = Modifier,
+    menuStartPadding: Dp = 0.dp,
     menu: @Composable RowScope.() -> Unit,
     content: @Composable () -> Unit,
 ) {
@@ -63,7 +71,10 @@ fun RevealRow(
         Row(
             modifier = Modifier
                 .align(Alignment.CenterStart)
+                //onSizeChanged outside the start padding on purpose: the slide has to clear where
+                //the buttons actually sit, and the inset pushes them further in
                 .onSizeChanged { menuWidth = it.width }
+                .padding(start = menuStartPadding)
                 .padding(horizontal = AppTheme.spaces.normal),
             horizontalArrangement = Arrangement.spacedBy(AppTheme.spaces.normal),
             verticalAlignment = Alignment.CenterVertically,

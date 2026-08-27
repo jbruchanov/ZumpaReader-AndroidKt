@@ -1,7 +1,7 @@
 package com.scurab.android.zumpareader.ui.sublist
 
 import app.cash.turbine.test
-import com.scurab.android.zumpareader.arch.DeviceConfig
+import com.scurab.android.zumpareader.arch.WindowLayout
 import com.scurab.android.zumpareader.model.Survey
 import com.scurab.android.zumpareader.model.SurveyItem
 import com.scurab.android.zumpareader.model.ZumpaThread
@@ -57,8 +57,8 @@ class SubListViewModelTest {
         this.survey = survey
     }
 
-    private fun viewModel(isTablet: Boolean = false) = SubListViewModel(
-        threads, settings, readStates, selectedThread, AppEventBus(), DeviceConfig(isTablet)
+    private fun viewModel(isTwoPane: Boolean = false) = SubListViewModel(
+        threads, settings, readStates, selectedThread, AppEventBus(), WindowLayout(isTwoPane)
     ).also { it.start("1") }
 
     @BeforeEach
@@ -279,24 +279,36 @@ class SubListViewModelTest {
     }
 
     @Test
-    fun `a thread link opens a new screen on a phone and swaps the pane on a tablet`() = runTest {
+    fun `a thread link opens a new screen with one pane and swaps the pane with two`() = runTest {
         coEvery { threads.loadThread(any()) } returns listOf(item())
 
-        viewModel(isTablet = false).run {
+        viewModel(isTwoPane = false).run {
             effects.test {
                 onThreadLinkClicked("77")
                 assertEquals(SubListEffect.OpenThread("77"), awaitItem())
             }
         }
 
-        viewModel(isTablet = true).onThreadLinkClicked("88")
+        viewModel(isTwoPane = true).onThreadLinkClicked("88")
         assertEquals("88", selectedThread.selected.value)
+    }
+
+    @Test
+    fun `a selection elsewhere is ignored when this screen is the only pane`() = runTest {
+        coEvery { threads.loadThread(any()) } returns listOf(item())
+        val viewModel = viewModel(isTwoPane = false)
+
+        selectedThread.select("42")
+
+        //with one pane the thread came from the back stack, and the selection is only a note of
+        //where the user was for the next rotation
+        assertEquals("1", viewModel.uiState.value.threadId)
     }
 
     @Test
     fun `selecting a thread elsewhere loads it here`() = runTest {
         coEvery { threads.loadThread(any()) } returns listOf(item())
-        val viewModel = viewModel(isTablet = true)
+        val viewModel = viewModel(isTwoPane = true)
 
         selectedThread.select("42")
 

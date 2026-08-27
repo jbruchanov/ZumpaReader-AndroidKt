@@ -8,7 +8,10 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
@@ -16,9 +19,10 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.scene.DialogSceneStrategy
 import androidx.navigation3.ui.NavDisplay
-import com.scurab.android.zumpareader.arch.DeviceConfig
 import com.scurab.android.zumpareader.arch.ShowToast
+import com.scurab.android.zumpareader.arch.WindowLayout
 import com.scurab.android.zumpareader.ext.toast
+import com.scurab.android.zumpareader.repository.SelectedThreadStore
 import com.scurab.android.zumpareader.ui.compose.LocalNavigator
 import com.scurab.android.zumpareader.ui.compose.LocalSharedTransitionScope
 import com.scurab.android.zumpareader.ui.image.ImageScreen
@@ -47,11 +51,57 @@ import org.koin.compose.koinInject
 @Composable
 fun ZumpaNavHost(launches: Flow<LaunchPayload>, onExit: () -> Unit) {
     val context = LocalContext.current
-    val device = koinInject<DeviceConfig>()
     //not scoped to an entry - this one belongs to the activity, like the intent it reacts to
     val mainViewModel = koinViewModel<MainViewModel>()
-    val backStack = rememberNavBackStack(if (device.isTablet) TwoPaneKey else MainListKey)
+    val backStack = rememberNavBackStack(MainListKey)
     val navigator = remember(backStack) { BackStackNavigator(backStack, context, onExit) }
+
+    //the window, not the device: a phone in landscape gets the two panes a tablet gets. Read from
+    //the container rather than injected, because this is the one place that recomposes when it
+    //changes; the ViewModels get told about it below, since a click has to decide the same thing.
+    val windowLayout = koinInject<WindowLayout>()
+    val selectedThread = koinInject<SelectedThreadStore>()
+    val density = LocalDensity.current
+    val containerWidth = LocalWindowInfo.current.containerSize.width
+    val widthDp = remember(density, containerWidth) { with(density) { containerWidth.toDp() } }
+    val isTwoPane = widthDp.value >= WindowLayout.TWO_PANE_MIN_WIDTH_DP
+    //Width alone said "wide enough for two panes, so wide enough for a dialog", and a phone on its
+    //side is where those two come apart: it clears the width bar and is barely a third of the
+    //height. The post screen is a tab row over a growing text field over an action row, with the
+    //keyboard up - a dialog that shape needs height, so it has to ask for height.
+    //
+    //The height comes from the configuration and not from the container the width comes from,
+    //because the container is what the keyboard shrinks. Reading it there would drop a tablet in
+    //landscape under the threshold the moment the field was focused, and swap the dialog for a full
+    //screen mid-sentence; a configuration height is not touched by the ime.
+    val screenHeightDp = LocalConfiguration.current.screenHeightDp
+    val postAsDialog = isTwoPane && screenHeightDp >= WindowLayout.COMPACT_HEIGHT_DP
+    LaunchedEffect(widthDp) { windowLayout.onWidthChanged(widthDp.value.toInt()) }
+
+    //crossing the threshold moves the open thread between a pane and a screen of its own, so the
+    //back stack has to be fixed up: the same thread must not be visible twice, and must not vanish.
+    LaunchedEffect(isTwoPane) {
+        if (isTwoPane) {
+            backStack.filterIsInstance<SubListKey>().lastOrNull()?.let { key ->
+                selectedThread.select(key.threadId)
+                backStack.removeAll { it is SubListKey }
+            }
+        } else {
+            val selected = selectedThread.selected.value
+            if (selected != null && selectedThread.isExplicit &&
+                backStack.none { it is SubListKey }
+            ) {
+                //under whatever is on top rather than over it, so rotating with a dialog or the
+                //settings open still finds the thread waiting when that closes
+                backStack.add(1, SubListKey(selected))
+            }
+            //after the hand-over, never before it: the back stack entry is built out of this. The
+            //thread is a screen now, so it is not a selection any more - leaving it set would light
+            //a row in the list underneath, which reads as "open" for something that is only behind.
+            //Rotating back re-selects from the back stack above, so nothing is lost by dropping it.
+            selectedThread.clear()
+        }
+    }
 
     LaunchedEffect(Unit) { launches.collect { mainViewModel.onLaunch(it) } }
     LaunchedEffect(Unit) {
@@ -95,14 +145,15 @@ fun ZumpaNavHost(launches: Flow<LaunchPayload>, onExit: () -> Unit) {
                 ),
                 sceneStrategies = listOf(DialogSceneStrategy()),
                 entryProvider = entryProvider {
-                    entry<MainListKey> { MainListScreen() }
-                    entry<TwoPaneKey> { TwoPaneScreen() }
+                    //one root for both layouts, so rotating keeps the list's ViewModel and its
+                    //place in the back stack instead of swapping one root key for another
+                    entry<MainListKey> { if (isTwoPane) TwoPaneScreen() else MainListScreen() }
                     entry<SubListKey> { key -> SubListScreen(key.threadId) }
                     entry<ImageKey> { key -> ImageScreen(key.url) }
                     entry<SettingsKey> { SettingsScreen() }
                     entry<OfflineDownloadKey>(metadata = DIALOG) { OfflineDownloadScreen() }
-                    //a dialog on a tablet, a full screen on a phone - as it always was
-                    entry<PostKey>(metadata = if (device.isTablet) DIALOG else emptyMap()) { key ->
+                    //a dialog where there is room for one, a full screen where not
+                    entry<PostKey>(metadata = if (postAsDialog) DIALOG else emptyMap()) { key ->
                         PostScreen(key.toArgs(), key.picker)
                     }
                 },

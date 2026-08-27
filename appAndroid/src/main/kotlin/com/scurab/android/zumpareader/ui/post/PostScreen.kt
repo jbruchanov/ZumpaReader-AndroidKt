@@ -29,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -70,7 +71,11 @@ fun PostScreen(
     val navigator = LocalNavigator.current
     val context = LocalContext.current
     val keyboard = LocalSoftwareKeyboardController.current
-    var cameraTarget by remember { mutableStateOf<Uri?>(null) }
+    //saveable, not remembered: the camera is a separate activity in front of this one, and turning
+    //the phone to frame a shot is the obvious thing to do while it is. A plain remember loses the
+    //file we told the camera to write to, and the picture then lands nowhere - the callback fires
+    //with a null target and drops it. Uri is Parcelable, so the default saver takes it.
+    var cameraTarget by rememberSaveable { mutableStateOf<Uri?>(null) }
 
     val takePicture = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { saved ->
         val uri = cameraTarget

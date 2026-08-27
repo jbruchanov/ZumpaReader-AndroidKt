@@ -3,19 +3,19 @@ package com.scurab.android.zumpareader.ui.sublist
 import androidx.lifecycle.viewModelScope
 import com.scurab.android.zumpareader.arch.BaseViewModel
 import com.scurab.android.zumpareader.arch.CopyToClipboard
-import com.scurab.android.zumpareader.arch.DeviceConfig
 import com.scurab.android.zumpareader.arch.HideKeyboard
 import com.scurab.android.zumpareader.arch.UiEffect
+import com.scurab.android.zumpareader.arch.WindowLayout
 import com.scurab.android.zumpareader.model.ZumpaThreadBody
 import com.scurab.android.zumpareader.model.ZumpaThreadItem
 import com.scurab.android.zumpareader.model.ZumpaVoteSurveyBody
+import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.repository.AppEvent
 import com.scurab.android.zumpareader.repository.AppEventBus
 import com.scurab.android.zumpareader.repository.SelectedThreadStore
 import com.scurab.android.zumpareader.repository.ZumpaReadStateRepository
 import com.scurab.android.zumpareader.repository.ZumpaSettingsRepository
 import com.scurab.android.zumpareader.repository.ZumpaThreadRepository
-import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.util.looksLikeImageUrl
 import kotlinx.coroutines.launch
 
@@ -126,7 +126,7 @@ class SubListViewModel(
     private val readStates: ZumpaReadStateRepository,
     private val selectedThread: SelectedThreadStore,
     private val eventBus: AppEventBus,
-    private val device: DeviceConfig,
+    private val windowLayout: WindowLayout,
 ) : BaseViewModel<SubListUiState>(SubListUiState()), SubListEventHandler {
 
     private var items: List<ZumpaThreadItem> = emptyList()
@@ -150,9 +150,11 @@ class SubListViewModel(
             }
         }
         viewModelScope.launch {
-            //on a tablet this is how the list pane hands a thread over
+            //with two panes this is how the list pane hands a thread over. With one it is only
+            //a memory of what was open, for the next rotation, and must not steer this screen -
+            //which is showing whatever thread it was navigated to.
             selectedThread.selected.collect { threadId ->
-                if (threadId != null && threadId != state.threadId) {
+                if (windowLayout.isTwoPane.value && threadId != null && threadId != state.threadId) {
                     openThread(threadId)
                 }
             }
@@ -176,8 +178,8 @@ class SubListViewModel(
                 threadId = threadId,
                 title = threads.thread(threadId)?.subject ?: "",
                 rows = emptyList(),
-                //selecting a thread on a tablet is what reveals the reply box there
-                isPostPanelVisible = if (device.isTablet) true else isPostPanelVisible,
+                //selecting a thread in the detail pane is what reveals the reply box there
+                isPostPanelVisible = if (windowLayout.isTwoPane.value) true else isPostPanelVisible,
             )
         }
         load(scrollToTop = isSwitch)
@@ -303,7 +305,7 @@ class SubListViewModel(
 
     /** True when it had something to close, which is what the back gesture consumes. */
     fun onBackPressed(): Boolean {
-        if (state.canPost && state.isPostPanelVisible && !device.isTablet) {
+        if (state.canPost && state.isPostPanelVisible && !windowLayout.isTwoPane.value) {
             setState { copy(isPostPanelVisible = false) }
             return true
         }
@@ -350,7 +352,7 @@ class SubListViewModel(
     }
 
     fun onThreadLinkClicked(threadId: String) {
-        if (device.isTablet) {
+        if (windowLayout.isTwoPane.value) {
             selectedThread.select(threadId)
         } else {
             effect(SubListEffect.OpenThread(threadId))
