@@ -115,8 +115,7 @@ fun SubListScreen(threadId: String, vm: SubListViewModel = koinViewModel()) {
     LaunchedEffect(Unit) {
         vm.effects.collect { effect ->
             when (effect) {
-                is SubListEffect.ScrollToBottom ->
-                    listState.animateScrollToItem(maxOf(0, listState.layoutInfo.totalItemsCount - 1))
+                is SubListEffect.ScrollToBottom -> listState.animateScrollToItem(effect.index)
 
                 is SubListEffect.ScrollToTop -> listState.animateScrollToItem(0)
                 is SubListEffect.OpenThread -> navigator.openThread(effect.threadId)
