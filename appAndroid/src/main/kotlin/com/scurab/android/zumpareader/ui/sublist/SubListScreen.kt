@@ -571,7 +571,10 @@ private fun ReplyPanel(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(AppTheme.colorScheme.secondaryBackground)
+            //primaryBackground, like the full screen version of the same thing. This was
+            //secondaryBackground - #202020 - which against a black app reads as a grey panel, so
+            //writing a reply here and writing one on the post screen did not look alike.
+            .background(AppTheme.colorScheme.primaryBackground)
             .padding(AppTheme.spaces.tiny)
             //inside the background, so the panel colour reaches under the navigation bar - the
             //side insets go here for the same reason, or the field slides under a landscape one
@@ -599,8 +602,12 @@ private fun ReplyPanel(
                 value = uiState.draft.text,
                 onValueChange = eventHandler::onDraftChanged,
                 enabled = !uiState.isSending,
+                //primaryText, not colorScheme.message: that one is Black, because the legacy field
+                //it came from was a solid white rounded rect. This field is dark, so the text on it
+                //is white like the rest of the app. BasicTextField does not read LocalTextStyle, so
+                //it has to be said here rather than inherited.
                 textStyle = AppTheme.typography.message.copy(
-                    color = AppTheme.colorScheme.message,
+                    color = AppTheme.colorScheme.primaryText,
                 ),
                 cursorBrush = SolidColor(AppTheme.colorScheme.context),
                 maxLines = REPLY_MAX_LINES,

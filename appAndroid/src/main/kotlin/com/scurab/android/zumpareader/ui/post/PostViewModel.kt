@@ -90,7 +90,9 @@ class PostViewModel(
     /**
      * The `argFlag` opens the camera or the gallery straight away, once. The old implementation
      * carried a `//TODO: doesn't work with lifecycle!, has to be saved` next to this flag and hand
-     * rolled it through onSaveInstanceState; here it simply lives as long as the dialog does.
+     * rolled it through onSaveInstanceState - and that TODO was right. This one only covers a
+     * single ViewModel lifetime; PostScreen holds the durable half in saved state, because the
+     * picker it guards is restored off the back stack after the process is killed.
      */
     private var isFlagConsumed = false
 

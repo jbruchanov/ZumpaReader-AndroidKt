@@ -76,6 +76,8 @@ fun PostScreen(
     //file we told the camera to write to, and the picture then lands nowhere - the callback fires
     //with a null target and drops it. Uri is Parcelable, so the default saver takes it.
     var cameraTarget by rememberSaveable { mutableStateOf<Uri?>(null) }
+    //see the LaunchedEffect below - the picker is a one-shot that has to outlive this process
+    var pickerConsumed by rememberSaveable { mutableStateOf(false) }
 
     val takePicture = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { saved ->
         val uri = cameraTarget
@@ -111,7 +113,15 @@ fun PostScreen(
     }
     LaunchedEffect(args) {
         vm.start(args)
-        vm.onPicker(picker)
+        //Saveable, because the thing being consumed is not: `picker` rides on the PostKey and the
+        //back stack saves that, while the ViewModel flag guarding it only lived as long as the
+        //ViewModel. Being killed with the camera in front is the ordinary case, not the unlucky one
+        //- a camera app is heavy - and coming back to a fresh ViewModel re-read the picker off the
+        //restored key and launched the camera again, on top of the picture just taken.
+        if (!pickerConsumed) {
+            pickerConsumed = true
+            vm.onPicker(picker)
+        }
     }
 
     val uiState by vm.uiState.collectAsStateWithLifecycle()
