@@ -187,6 +187,21 @@ class MainListViewModelTest {
     }
 
     @Test
+    fun `a reload sends the list back to the top but paging does not`() = runTest {
+        coEvery { threads.loadMainPage(any(), any()) } returns page("9", thread("10"))
+        val vm = viewModel()
+
+        vm.effects.test {
+            vm.onRefreshRequested()
+            assertEquals(MainListEffect.ScrollToTop, awaitItem())
+
+            //appending the next page has to leave the reader where they were
+            vm.onEndReached()
+            expectNoEvents()
+        }
+    }
+
+    @Test
     fun `clearing the selection unlights the row`() = runTest {
         coEvery { threads.loadMainPage(any(), any()) } returns page("9", thread("10"))
         val vm = viewModel(isTwoPane = true)

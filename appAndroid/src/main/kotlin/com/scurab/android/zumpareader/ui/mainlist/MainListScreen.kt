@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.filled.Block
@@ -90,6 +91,8 @@ import com.scurab.android.zumpareader.util.formatThreadListTime
 fun MainListScreen(vm: MainListViewModel = koinViewModel()) {
     val navigator = LocalNavigator.current
     val context = LocalContext.current
+    //hoisted so the effect handler below can reach it, the way SubListScreen already takes one
+    val listState = rememberLazyListState()
 
     LaunchedEffect(Unit) {
         vm.effects.collect { effect ->
@@ -99,6 +102,9 @@ fun MainListScreen(vm: MainListViewModel = koinViewModel()) {
                 is MainListEffect.OpenPostDialog -> navigator.openPostDialog()
                 is MainListEffect.ShowOfflineDownloadDialog -> navigator.openOfflineDownload()
                 is MainListEffect.ShareThread -> context.shareLink(effect.link)
+                //not animated: the rows underneath have just been replaced, so there is nothing
+                //meaningful to travel through - and from far down the list it would be a long trip
+                is MainListEffect.ScrollToTop -> listState.scrollToItem(0)
                 is ShowToast -> effect.text?.let { context.toast(it) } ?: context.toast(effect.resId)
                 else -> Unit
             }
@@ -107,14 +113,16 @@ fun MainListScreen(vm: MainListViewModel = koinViewModel()) {
 
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val eventHandler = vm
-    MainListScreen(uiState, eventHandler)
+    MainListScreen(uiState, eventHandler, listState)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun MainListScreen(uiState: MainListUiState, eventHandler: MainListEventHandler) {
-    val listState = rememberLazyListState()
-
+private fun MainListScreen(
+    uiState: MainListUiState,
+    eventHandler: MainListEventHandler,
+    listState: LazyListState = rememberLazyListState(),
+) {
     //paging: the old adapter fired 15 rows from the end, so does this
     LaunchedEffect(listState, uiState.rows.size) {
         snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0 }

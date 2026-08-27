@@ -1,6 +1,7 @@
 package com.scurab.android.zumpareader.ui.sublist
 
 import app.cash.turbine.test
+import com.scurab.android.zumpareader.arch.CopyToClipboard
 import com.scurab.android.zumpareader.arch.WindowLayout
 import com.scurab.android.zumpareader.model.Survey
 import com.scurab.android.zumpareader.model.SurveyItem
@@ -276,6 +277,18 @@ class SubListViewModelTest {
         assertTrue(viewModel.onBackPressed())
         assertFalse(viewModel.uiState.value.isPostPanelVisible)
         assertFalse(viewModel.onBackPressed())
+    }
+
+    @Test
+    fun `holding a link or a picture copies its address`() = runTest {
+        coEvery { threads.loadThread("1") } returns listOf(item())
+
+        viewModel().run {
+            effects.test {
+                onLinkLongPressed("http://x.com/a.jpg")
+                assertEquals(CopyToClipboard("http://x.com/a.jpg"), awaitItem())
+            }
+        }
     }
 
     @Test
