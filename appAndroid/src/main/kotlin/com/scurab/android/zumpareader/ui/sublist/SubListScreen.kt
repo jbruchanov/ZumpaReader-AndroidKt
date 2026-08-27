@@ -62,6 +62,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.draw.clip
@@ -212,14 +213,27 @@ private fun SubListScreen(
                             //when the subject fits, so a short one simply sits still, and pauses
                             //between passes so the beginning can be read before it moves off.
                             //
-                            //The end padding is because M3 insets the title by 16dp at the start
-                            //but only by however wide the actions are at the end - and this bar
-                            //has none, so the text ran to the edge on one side and sat 16dp in
-                            //on the other. 12dp, because M3 already puts 4dp on both ends of the
-                            //title slot. Outside the marquee, so the text scrolls within the
-                            //padding rather than through it.
+                            //Edge to edge, which means undoing what M3 puts around a title: it
+                            //places the title slot TITLE_INSET in from the start and pads that slot
+                            //by TITLE_SLOT_PADDING on both ends. Left alone the subject scrolled
+                            //between those, which for a marquee is a dead strip at each end rather
+                            //than text arriving and leaving at the edge of the screen. So the text
+                            //is measured wider by the padding it is losing and placed back out to
+                            //x = 0. Both numbers are M3's own and private, so this drifts if it
+                            //ever changes them - a few dp of asymmetry, nothing worse.
                             modifier = Modifier
-                                .padding(end = AppTheme.spaces.mid)
+                                .layout { measurable, constraints ->
+                                    val bleed = TITLE_SLOT_PADDING.roundToPx()
+                                    val shift = (TITLE_INSET + TITLE_SLOT_PADDING).roundToPx()
+                                    val placeable = measurable.measure(
+                                        constraints.copy(
+                                            maxWidth = constraints.maxWidth + bleed * 2,
+                                        )
+                                    )
+                                    layout(placeable.width, placeable.height) {
+                                        placeable.place(-shift, 0)
+                                    }
+                                }
                                 .basicMarquee(
                                     iterations = Int.MAX_VALUE,
                                     velocity = MARQUEE_VELOCITY,
@@ -752,6 +766,12 @@ private fun RowScope.ReplyActionIcons(
 
 /** Slower than the 30dp/s default, so a long subject can be read rather than watched. */
 private val MARQUEE_VELOCITY = 20.dp
+
+/** M3's `TopAppBarTitleInset` - where it starts the title slot when there is no navigation icon. */
+private val TITLE_INSET = 12.dp
+
+/** M3's `TopAppBarHorizontalPadding`, which it puts on both ends of the title slot. */
+private val TITLE_SLOT_PADDING = 4.dp
 
 private const val REPLY_MAX_LINES = 6
 
