@@ -213,25 +213,52 @@ private fun SubListScreen(
                             //when the subject fits, so a short one simply sits still, and pauses
                             //between passes so the beginning can be read before it moves off.
                             //
-                            //Edge to edge, which means undoing what M3 puts around a title: it
-                            //places the title slot TITLE_INSET in from the start and pads that slot
-                            //by TITLE_SLOT_PADDING on both ends. Left alone the subject scrolled
-                            //between those, which for a marquee is a dead strip at each end rather
-                            //than text arriving and leaving at the edge of the screen. So the text
-                            //is measured wider by the padding it is losing and placed back out to
-                            //x = 0. Both numbers are M3's own and private, so this drifts if it
-                            //ever changes them - a few dp of asymmetry, nothing worse.
+                            /*
+                             * A subject that fits keeps a margin; one that has to scroll takes the
+                             * whole width of the bar.
+                             *
+                             * M3 places the title slot TITLE_INSET in from the start and pads that
+                             * slot by TITLE_SLOT_PADDING at both ends, so there is already a margin
+                             * at the start and next to nothing at the end. Short subjects get the
+                             * start margin matched at the end. Long ones instead give both up: a
+                             * marquee inside a margin has a dead strip at each end, when what is
+                             * wanted is text arriving and leaving at the edge.
+                             *
+                             * The choice is made against the *full* width and not the padded one,
+                             * so the two outcomes cannot contradict each other. Deciding on the
+                             * padded width would let a subject that only just overflows it go
+                             * edge to edge and then fit after all - and a subject that fits does
+                             * not scroll, which is a flush static title, the thing being avoided.
+                             *
+                             * Both M3 numbers are private, so this drifts if it ever changes them.
+                             * A few dp of margin is the worst of it.
+                             */
                             modifier = Modifier
                                 .layout { measurable, constraints ->
                                     val bleed = TITLE_SLOT_PADDING.roundToPx()
                                     val shift = (TITLE_INSET + TITLE_SLOT_PADDING).roundToPx()
-                                    val placeable = measurable.measure(
-                                        constraints.copy(
-                                            maxWidth = constraints.maxWidth + bleed * 2,
+                                    val endPadding = TITLE_END_PADDING.roundToPx()
+                                    val full = constraints.maxWidth + bleed * 2
+                                    val subject =
+                                        measurable.maxIntrinsicWidth(constraints.maxHeight)
+                                    if (subject > full) {
+                                        val placeable = measurable.measure(
+                                            constraints.copy(maxWidth = full)
                                         )
-                                    )
-                                    layout(placeable.width, placeable.height) {
-                                        placeable.place(-shift, 0)
+                                        layout(placeable.width, placeable.height) {
+                                            placeable.place(-shift, 0)
+                                        }
+                                    } else {
+                                        val placeable = measurable.measure(
+                                            constraints.copy(
+                                                maxWidth =
+                                                    (constraints.maxWidth - endPadding)
+                                                        .coerceAtLeast(0),
+                                            )
+                                        )
+                                        layout(placeable.width, placeable.height) {
+                                            placeable.place(0, 0)
+                                        }
                                     }
                                 }
                                 .basicMarquee(
@@ -772,6 +799,9 @@ private val TITLE_INSET = 12.dp
 
 /** M3's `TopAppBarHorizontalPadding`, which it puts on both ends of the title slot. */
 private val TITLE_SLOT_PADDING = 4.dp
+
+/** What it takes to match M3's start margin at the end, the slot's own 4dp being already there. */
+private val TITLE_END_PADDING = 12.dp
 
 private const val REPLY_MAX_LINES = 6
 
