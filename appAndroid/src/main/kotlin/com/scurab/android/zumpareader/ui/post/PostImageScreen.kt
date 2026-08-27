@@ -193,7 +193,8 @@ private fun ImagePanel(uiState: PostImageUiState, eventHandler: PostImageEventHa
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(AppTheme.colorScheme.secondaryBackground)
+            //black like the rest of the write screen this sits in - see the reply panel
+            .background(AppTheme.colorScheme.primaryBackground)
             .padding(AppTheme.spaces.normal),
         verticalArrangement = Arrangement.spacedBy(AppTheme.spaces.small),
     ) {
