@@ -40,6 +40,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -54,8 +55,10 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -139,12 +142,27 @@ private fun MainListScreen(
     val refreshState = rememberPullToRefreshState()
     val quickHideState = rememberQuickHideState()
 
+    //enterAlways, as on a thread: the bar goes as the list is read downwards and comes back on the
+    //first upward scroll, wherever in the list that is.
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    /*
+     * The height the bar has when it is fully out, which is what the list is padded by - not
+     * `padding.calculateTopPadding()`, which is the bar's *current* height and so changes every
+     * frame of a collapse. Feeding that to a LazyColumn's contentPadding would move the content
+     * while it was already being scrolled, and it does not need to move: the rows scroll under this
+     * bar by design, so a bar on its way out uncovers rows that were already there.
+     */
+    val expandedTopPadding = AppTheme.sizes.topBarHeight +
+        WindowInsets.safeDrawing.only(WindowInsetsSides.Top).asPaddingValues().calculateTopPadding()
+
     Scaffold(
+        //the bar reads the list's scrolling through this
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = AppTheme.colorScheme.primaryBackground,
         //safeDrawing so the ime is in there too, and the content slot below is the only place that
         //applies any of it - anything else double counts
         contentWindowInsets = WindowInsets.safeDrawing,
-        topBar = { MainListTopBar(uiState, eventHandler) },
+        topBar = { MainListTopBar(uiState, eventHandler, scrollBehavior) },
         floatingActionButton = {
             if (uiState.canInteract) {
                 QuickHideFab(quickHideState) {
@@ -181,7 +199,7 @@ private fun MainListScreen(
                     //the box is the whole screen now, so the spinner starts below the app bar
                     modifier = Modifier
                         .align(Alignment.TopCenter)
-                        .padding(top = padding.calculateTopPadding()),
+                        .padding(top = expandedTopPadding),
                 )
             },
             modifier = Modifier.fillMaxSize(),
@@ -191,7 +209,7 @@ private fun MainListScreen(
             LazyColumn(
                 state = listState,
                 contentPadding = PaddingValues(
-                    top = padding.calculateTopPadding(),
+                    top = expandedTopPadding,
                     bottom = padding.calculateBottomPadding(),
                 ),
                 modifier = Modifier
@@ -209,7 +227,11 @@ private fun MainListScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun MainListTopBar(uiState: MainListUiState, eventHandler: MainListEventHandler) {
+private fun MainListTopBar(
+    uiState: MainListUiState,
+    eventHandler: MainListEventHandler,
+    scrollBehavior: TopAppBarScrollBehavior,
+) {
     var menuExpanded by remember { mutableStateOf(false) }
     val appName = stringResource(R.string.app_name)
     val offline = stringResource(R.string.offline)
@@ -225,7 +247,14 @@ private fun MainListTopBar(uiState: MainListUiState, eventHandler: MainListEvent
                 )
             },
             expandedHeight = AppTheme.sizes.topBarHeight,
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.Transparent,
+                //and still transparent once scrolled. M3 fades in its own surface colour as a bar
+                //collapses, which would put a second background over the translucent pane the Box
+                //around this already draws - that pane is the background, black at 80%.
+                scrolledContainerColor = Color.Transparent,
+            ),
+            scrollBehavior = scrollBehavior,
             //safeDrawing, not the systemBarsForVisualComponents the default uses: that
             //one leaves out the display cutout, which in landscape is exactly the inset on
             //the side the title runs into. Applied here and only here - the Box outside
