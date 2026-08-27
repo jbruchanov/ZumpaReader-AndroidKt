@@ -624,7 +624,9 @@ private fun ReplyField(
             .heightIn(min = AppTheme.sizes.responseEditTextMinHeight)
             .border(
                 width = AppTheme.sizes.urlButtonStrokeWidth,
-                color = AppTheme.colorScheme.context25p,
+                //full orange, like every other outline the app draws - context25p left it as a
+                //hint of a box rather than a box
+                color = AppTheme.colorScheme.context,
                 shape = AppTheme.shapes.editText,
             )
             .padding(AppTheme.spaces.small),
