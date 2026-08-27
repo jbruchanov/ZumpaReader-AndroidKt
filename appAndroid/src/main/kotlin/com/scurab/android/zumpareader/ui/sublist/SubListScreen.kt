@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
@@ -61,6 +62,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -75,6 +77,7 @@ import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.arch.CopyToClipboard
 import com.scurab.android.zumpareader.arch.HideKeyboard
 import com.scurab.android.zumpareader.arch.ShowToast
+import com.scurab.android.zumpareader.arch.WindowLayout
 import com.scurab.android.zumpareader.ext.toast
 import com.scurab.android.zumpareader.test.Fixtures
 import com.scurab.android.zumpareader.test.message
@@ -565,9 +568,12 @@ private fun ReplyPanel(
     bottomInset: Dp = 0.dp,
     contentPadding: PaddingValues = PaddingValues(),
 ) {
-    //The shape widget_post_message.xml had, which this panel used to be an instance of: the field
-    //on a line of its own, then the buttons underneath - photo and camera at the start, send at the
-    //end. It had become a single row with the field squeezed beside the send button.
+    //The shape widget_post_message.xml had, which this panel used to be an instance of: the field on
+    //a line of its own, then the buttons underneath - photo and camera at the start, send at the
+    //end. A short window - a phone in landscape - puts them all on one row instead, because the
+    //height a second row costs is the height the thread has left to show above the keyboard.
+    val isCompactHeight = LocalConfiguration.current.screenHeightDp < WindowLayout.COMPACT_HEIGHT_DP
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -581,60 +587,94 @@ private fun ReplyPanel(
             .padding(bottom = bottomInset)
             .padding(contentPadding),
     ) {
-        //A BasicTextField rather than an OutlinedTextField: the latter carries ~16dp of padding
-        //of its own and a 56dp floor before any of ours, which is the bulk that was there. This is
-        //the legacy field - a rounded rect, `gap_small` inside it, `response_edit_text_min_height`
-        //tall - and nothing else.
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = AppTheme.sizes.responseEditTextMinHeight)
-                .border(
-                    width = AppTheme.sizes.urlButtonStrokeWidth,
-                    color = AppTheme.colorScheme.context25p,
-                    shape = AppTheme.shapes.editText,
-                )
-                .padding(AppTheme.spaces.small),
-            //centred while it is one line, and it grows downwards from there
-            contentAlignment = Alignment.CenterStart,
-        ) {
-            BasicTextField(
-                value = uiState.draft.text,
-                onValueChange = eventHandler::onDraftChanged,
-                enabled = !uiState.isSending,
-                //primaryText, not colorScheme.message: that one is Black, because the legacy field
-                //it came from was a solid white rounded rect. This field is dark, so the text on it
-                //is white like the rest of the app. BasicTextField does not read LocalTextStyle, so
-                //it has to be said here rather than inherited.
-                textStyle = AppTheme.typography.message.copy(
-                    color = AppTheme.colorScheme.primaryText,
-                ),
-                cursorBrush = SolidColor(AppTheme.colorScheme.context),
-                maxLines = REPLY_MAX_LINES,
+        if (isCompactHeight) {
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-            )
-        }
-        Row(modifier = Modifier.fillMaxWidth()) {
-            //both open the post screen on this thread with that picker, which is what the old
-            //buttons did through onOpenPostFragment(R.id.photo)
-            ActionIcon(
-                icon = rememberVectorPainter(Icons.Filled.Photo),
-                enabled = !uiState.isSending,
-                onClick = eventHandler::onReplyPhotoClicked,
-            )
-            ActionIcon(
-                icon = rememberVectorPainter(Icons.Filled.PhotoCamera),
-                enabled = !uiState.isSending,
-                onClick = eventHandler::onReplyCameraClicked,
-            )
-            Spacer(Modifier.weight(1f))
-            ActionIcon(
-                icon = rememberVectorPainter(Icons.AutoMirrored.Filled.Send),
-                enabled = !uiState.isSending && !uiState.draft.isBlank,
-                onClick = eventHandler::onSendClicked,
-            )
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                //the field takes the slack, so the buttons need no spacer to sit at the end
+                ReplyField(uiState, eventHandler, Modifier.weight(1f))
+                ReplyActionIcons(uiState, eventHandler, spaced = false)
+            }
+        } else {
+            ReplyField(uiState, eventHandler, Modifier.fillMaxWidth())
+            Row(modifier = Modifier.fillMaxWidth()) {
+                ReplyActionIcons(uiState, eventHandler, spaced = true)
+            }
         }
     }
+}
+
+/**
+ * A BasicTextField rather than an OutlinedTextField: the latter carries ~16dp of padding of its own
+ * and a 56dp floor before any of ours, which was the bulk of what was there. This is the legacy
+ * field - a rounded rect, `gap_small` inside it, `response_edit_text_min_height` tall - and nothing
+ * else.
+ */
+@Composable
+private fun ReplyField(
+    uiState: SubListUiState,
+    eventHandler: SubListEventHandler,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .heightIn(min = AppTheme.sizes.responseEditTextMinHeight)
+            .border(
+                width = AppTheme.sizes.urlButtonStrokeWidth,
+                color = AppTheme.colorScheme.context25p,
+                shape = AppTheme.shapes.editText,
+            )
+            .padding(AppTheme.spaces.small),
+        //centred while it is one line, and it grows downwards from there
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        BasicTextField(
+            value = uiState.draft.text,
+            onValueChange = eventHandler::onDraftChanged,
+            enabled = !uiState.isSending,
+            //primaryText, not colorScheme.message: that one is Black, because the legacy field it
+            //came from was a solid white rounded rect. This field is dark, so the text on it is
+            //white like the rest of the app. BasicTextField does not read LocalTextStyle, so it has
+            //to be said here rather than inherited.
+            textStyle = AppTheme.typography.message.copy(
+                color = AppTheme.colorScheme.primaryText,
+            ),
+            cursorBrush = SolidColor(AppTheme.colorScheme.context),
+            maxLines = REPLY_MAX_LINES,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+/**
+ * @param spaced pushes send to the far end. Wanted when the icons are a row of their own, not when
+ * the field beside them already takes the slack.
+ */
+@Composable
+private fun RowScope.ReplyActionIcons(
+    uiState: SubListUiState,
+    eventHandler: SubListEventHandler,
+    spaced: Boolean,
+) {
+    //both open the post screen on this thread with that picker, which is what the old buttons did
+    //through onOpenPostFragment(R.id.photo)
+    ActionIcon(
+        icon = rememberVectorPainter(Icons.Filled.Photo),
+        enabled = !uiState.isSending,
+        onClick = eventHandler::onReplyPhotoClicked,
+    )
+    ActionIcon(
+        icon = rememberVectorPainter(Icons.Filled.PhotoCamera),
+        enabled = !uiState.isSending,
+        onClick = eventHandler::onReplyCameraClicked,
+    )
+    if (spaced) Spacer(Modifier.weight(1f))
+    ActionIcon(
+        icon = rememberVectorPainter(Icons.AutoMirrored.Filled.Send),
+        enabled = !uiState.isSending && !uiState.draft.isBlank,
+        onClick = eventHandler::onSendClicked,
+    )
 }
 
 private const val REPLY_MAX_LINES = 6
