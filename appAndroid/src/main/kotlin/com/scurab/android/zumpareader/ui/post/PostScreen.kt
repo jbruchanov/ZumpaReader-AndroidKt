@@ -41,6 +41,7 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.flow.drop
 import com.scurab.android.zumpareader.BuildConfig
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.arch.HideKeyboard
@@ -173,15 +174,26 @@ private fun PostScreen(uiState: PostUiState, eventHandler: PostEventHandler) {
             pagerState.scrollToPage(index)
         }
     }
-    //pager -> state, for a swipe. settledPage, not currentPage: currentPage moves as the pager
-    //travels, so animating to a freshly added tab reported every page it passed through on the way
-    //- each one setting selectedTabTag, which restarted the effect above and left the pager on
-    //whichever page it had reached rather than the new picture. A settled page only reports once
-    //the pager has stopped, and by then it agrees with the tag that sent it there.
+    /*
+     * pager -> state, for a swipe.
+     *
+     * `drop(1)` because snapshotFlow hands over the current value the moment it is collected, and
+     * that first value is never a swipe - it is just wherever the pager already was. On a fresh
+     * composition it is the restored page, which is page zero, so this reported "the message tab is
+     * selected" immediately and took the selection back off a picture that had only just set it.
+     * That is why a camera picture missed its tab while a gallery one did not: coming back from the
+     * camera recreates this composition and coming back from the picker does not, so only the camera
+     * got the spurious first emission.
+     *
+     * settledPage rather than currentPage so a page the pager is merely travelling through is not
+     * reported as a choice either.
+     */
     LaunchedEffect(pagerState) {
-        snapshotFlow { pagerState.settledPage }.collect { page ->
-            uiState.tabs.getOrNull(page)?.let { eventHandler.onTabSelected(it.tag) }
-        }
+        snapshotFlow { pagerState.settledPage }
+            .drop(1)
+            .collect { page ->
+                uiState.tabs.getOrNull(page)?.let { eventHandler.onTabSelected(it.tag) }
+            }
     }
 
     Column(
