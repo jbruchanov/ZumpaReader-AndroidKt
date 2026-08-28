@@ -25,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -33,6 +34,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.scurab.android.zumpareader.model.ZumpaThread
+import com.scurab.android.zumpareader.model.ZumpaThreadBody
 import com.scurab.android.zumpareader.arch.WindowLayout
 import com.scurab.android.zumpareader.usecase.OfflineProgress
 import kotlinx.coroutines.launch
@@ -79,6 +81,8 @@ private fun App(wiring: Wiring) {
     var isAppending by remember { mutableStateOf(false) }
     var selected by remember { mutableStateOf<String?>(null) }
     var isLoginOpen by remember { mutableStateOf(false) }
+    var composing by remember { mutableStateOf<Composing?>(null) }
+    var isSending by remember { mutableStateOf(false) }
     var status by remember { mutableStateOf<String?>(null) }
 
     suspend fun reload() {
@@ -146,6 +150,36 @@ private fun App(wiring: Wiring) {
         }
     }
 
+    /** A new thread, or an answer to one - the same call the Android post screen makes. */
+    suspend fun send(target: Composing, subject: String, message: String) {
+        isSending = true
+        val nick = wiring.settings.nickName
+        runCatching {
+            when (target) {
+                is Composing.NewThread ->
+                    wiring.threads.sendThread(ZumpaThreadBody(nick, subject, message))
+
+                is Composing.Reply -> wiring.threads.sendResponse(
+                    threadId = target.threadId,
+                    body = ZumpaThreadBody(nick, target.subject, message, target.threadId),
+                )
+            }
+        }.onSuccess {
+            composing = null
+            status = "Sent"
+            //the forum has something new on it either way, so what is on screen is stale
+            reload()
+            //and a reply is in the thread that is open, which reloads by being re-selected
+            if (target is Composing.Reply) {
+                selected = null
+                selected = target.threadId
+            }
+        }.onFailure {
+            status = it.message ?: "Could not send"
+        }
+        isSending = false
+    }
+
     //the switch changes where the list comes from, so the list has to be read again
     LaunchedEffect(isOffline) { reload() }
 
@@ -211,6 +245,17 @@ private fun App(wiring: Wiring) {
                 },
             )
 
+            //Signed in and online is the whole condition: the forum will not take a post from
+            //anyone else, and an offline snapshot is a read of something that has already happened.
+            val canWrite = isLoggedIn && !isOffline
+            val writeTarget: Composing? = when {
+                !canWrite -> null
+                //answering the thread on screen, or starting one from the list
+                isShowingDetail -> selected?.let { Composing.Reply(it, subjectOf(threads, it)) }
+                else -> Composing.NewThread
+            }
+
+            Box(Modifier.weight(1f)) {
             if (isTwoPane) {
                 Row(Modifier.fillMaxSize()) {
                     Box(Modifier.weight(LIST_WEIGHT)) {
@@ -242,7 +287,23 @@ private fun App(wiring: Wiring) {
                     onRetry = { scope.launch { reload() } },
                 )
             }
+            writeTarget?.let { target ->
+                WriteFab(
+                    isReply = target is Composing.Reply,
+                    modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp),
+                ) { composing = target }
+            }
+            }
         }
+    }
+
+    composing?.let { target ->
+        ComposeDialog(
+            composing = target,
+            isSending = isSending,
+            onDismiss = { composing = null },
+            onSend = { subject, message -> scope.launch { send(target, subject, message) } },
+        )
     }
 
     status?.let { StatusToast(it) { status = null } }
@@ -279,3 +340,7 @@ internal val RowEven = Color(0xFF000000)
 internal val RowOdd = Color(0xFF1A1A1A)
 internal val DividerColor = Color(0x40FFA710)
 internal val SelectedRow = Color(0x30FFA710)
+
+/** The subject of a thread the list already knows about - the reply dialog says what it answers. */
+private fun subjectOf(threads: List<ZumpaThread>, id: String): String =
+    threads.firstOrNull { it.id == id }?.subject.orEmpty()
