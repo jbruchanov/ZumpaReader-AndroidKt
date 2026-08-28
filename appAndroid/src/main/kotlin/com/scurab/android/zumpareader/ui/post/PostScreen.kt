@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.FileProvider
+import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.drop
 import com.scurab.android.zumpareader.BuildConfig
@@ -80,34 +81,33 @@ fun PostScreen(
     //see the LaunchedEffect below - the picker is a one-shot that has to outlive this process
     var pickerConsumed by rememberSaveable { mutableStateOf(false) }
     /*
-     * Both results are staged here and applied from one place below, rather than handed to the
-     * ViewModel from their callbacks.
+     * Every picture picked, in order, and saved - so this and not the ViewModel is what remembers
+     * them.
      *
-     * Staging at all is because a callback can run before `start` does: a camera app is heavy enough
-     * to get this process killed, so coming back can mean a fresh ViewModel, and the result is
-     * delivered as the launcher registers - before any LaunchedEffect. `start` would then have
-     * re-initialised the tabs on top of the one the picture just added.
+     * A camera app is heavy enough to get this process killed, so coming back can mean a fresh
+     * ViewModel. When that happened, `start` rebuilt the tabs from the arguments and every picture
+     * picked before it was gone - which is why picking three ended with two tabs however many times
+     * it was tried. Keeping the list here instead means the ViewModel can be handed the lot and
+     * rebuild from it, and being saved state it survives the same death the ViewModel does not.
      *
-     * Staging *both* is because only the camera went through here before, while the gallery called
-     * the ViewModel straight from its callback. Two paths that are meant to end identically but do
-     * not run identically is exactly what shows up as one of them opening its tab and the other not.
+     * Both pickers go through this. Only the camera used to; the gallery called the ViewModel
+     * straight from its callback, and two paths meant to end identically that do not run
+     * identically is exactly what shows up as one working and the other not.
+     *
+     * Strings because that is what saves without a Saver of its own - `fromCamera` first, the
+     * uri after it, a shape no uri can collide with.
      */
-    var pendingImage by rememberSaveable { mutableStateOf<Uri?>(null) }
-    var pendingImageFromCamera by rememberSaveable { mutableStateOf(false) }
+    var picks by rememberSaveable { mutableStateOf(emptyList<String>()) }
 
     val takePicture = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { saved ->
         val uri = cameraTarget
         cameraTarget = null
         if (saved && uri != null) {
-            pendingImageFromCamera = true
-            pendingImage = uri
+            picks = picks + encodePick(uri, fromCamera = true)
         }
     }
     val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let {
-            pendingImageFromCamera = false
-            pendingImage = it
-        }
+        uri?.let { picks = picks + encodePick(it, fromCamera = false) }
     }
 
     LaunchedEffect(Unit) {
@@ -143,14 +143,11 @@ fun PostScreen(
             vm.onPicker(picker)
         }
     }
-    //After the one above, always: declared later, so on a composition that restores a staged
-    //picture this runs once `start` has already had its say and cannot undo it.
-    LaunchedEffect(pendingImage) {
-        pendingImage?.let { uri ->
-            val fromCamera = pendingImageFromCamera
-            pendingImage = null
-            vm.onImagePicked(uri, fromCamera = fromCamera)
-        }
+    //After the one above, always: declared later, so on a composition that restores a list of
+    //picks this runs once `start` has already had its say and cannot undo it. Idempotent, so it
+    //costs nothing to run again for a list that has not changed.
+    LaunchedEffect(picks) {
+        vm.applyPicks(picks.map(::decodePick))
     }
 
     val uiState by vm.uiState.collectAsStateWithLifecycle()
@@ -302,3 +299,11 @@ private fun PostScreenMessageOnlyPreview() = AppTheme {
 private fun PostScreenWithImagesPreview() = AppTheme {
     PostScreen(Fixtures.Post.tabs(), mock())
 }
+
+private fun encodePick(uri: Uri, fromCamera: Boolean): String =
+    "${if (fromCamera) "1" else "0"}|$uri"
+
+private fun decodePick(encoded: String): PickedImage = PickedImage(
+    uri = encoded.substringAfter('|').toUri(),
+    fromCamera = encoded.substringBefore('|') == "1",
+)
