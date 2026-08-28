@@ -1,26 +1,27 @@
 package com.scurab.zumpareader.desktop
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -30,102 +31,210 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.scurab.android.zumpareader.model.ZumpaThread
-import com.scurab.android.zumpareader.util.formatThreadListTime
+import com.scurab.android.zumpareader.usecase.OfflineProgress
 import kotlinx.coroutines.launch
 
 /**
  * The desktop entry point.
  *
- * Deliberately one screen: this module exists to prove `:shared` runs off Android, and the thread
- * list exercises the whole chain - the Ktor client on its jvm engine, the ISO-8859-2 decoding, the
- * Ksoup parser, `kotlinx-datetime` formatting and the repository - in one go.
+ * Two panes, always: a desktop window is never the narrow case the Android app switches layout for,
+ * so there is nothing to decide - the list on the left, whatever is selected on the right. That is
+ * the tablet layout of `:appAndroid`, which is why this has no navigation of any kind.
+ *
+ * The UI is not shared with Android - `:appAndroid` is on `androidx.compose` and this is on Compose
+ * Multiplatform - so this is a second, smaller implementation over the same `:shared` stack rather
+ * than the same screens. Merging them is phase 3 in `KMP_PLAN.md`.
  */
 fun main() = application {
     val wiring = remember { Wiring() }
     Window(
         onCloseRequest = ::exitApplication,
         title = "ZumpaReader (desktop)",
-        state = rememberWindowState(width = 900.dp, height = 700.dp),
+        state = rememberWindowState(width = 1200.dp, height = 800.dp),
     ) {
-        MainList(wiring)
+        App(wiring)
     }
 }
 
-private sealed interface ListState {
-    data object Loading : ListState
-    data class Loaded(val threads: List<ZumpaThread>) : ListState
-    data class Failed(val message: String) : ListState
+/** Loading, loaded or failed - the three states every call in here can be in. */
+internal sealed interface Loadable {
+    data object Loading : Loadable
+    data object Loaded : Loadable
+    data class Failed(val message: String) : Loadable
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun MainList(wiring: Wiring) {
-    var state by remember { mutableStateOf<ListState>(ListState.Loading) }
+private fun App(wiring: Wiring) {
     val scope = rememberCoroutineScope()
+    val isOffline by wiring.settings.isOffline.collectAsState()
+    val isLoggedIn by wiring.settings.isLoggedIn.collectAsState()
 
-    suspend fun load() {
-        state = ListState.Loading
-        state = runCatching { wiring.threads.loadMainPage(fromThread = null, filter = "0") }
-            .fold(
-                onSuccess = { ListState.Loaded(it.items.values.sortedByDescending { t -> t.idLong }) },
-                onFailure = { ListState.Failed(it.message ?: it::class.simpleName ?: "failed") },
-            )
+    var threads by remember { mutableStateOf<List<ZumpaThread>>(emptyList()) }
+    var listState by remember { mutableStateOf<Loadable>(Loadable.Loading) }
+    var nextThreadId by remember { mutableStateOf<String?>(null) }
+    var isAppending by remember { mutableStateOf(false) }
+    var selected by remember { mutableStateOf<String?>(null) }
+    var isLoginOpen by remember { mutableStateOf(false) }
+    var status by remember { mutableStateOf<String?>(null) }
+
+    suspend fun reload() {
+        listState = Loadable.Loading
+        runCatching {
+            wiring.threads.loadMainPage(fromThread = null, filter = wiring.settings.filter.value)
+        }.onSuccess { result ->
+            threads = result.items.values.sortedByDescending { it.idLong }
+            nextThreadId = result.nextThreadId.takeIf { it.isNotEmpty() }
+            listState = Loadable.Loaded
+        }.onFailure {
+            listState = Loadable.Failed(it.message ?: it::class.simpleName ?: "failed")
+        }
     }
 
-    LaunchedEffect(Unit) { load() }
-
-    Column(Modifier.fillMaxSize().background(Background)) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text("Žumpa", color = Accent, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            Box(Modifier.weight(1f))
-            TextButton(onClick = { scope.launch { load() } }) { Text("Reload", color = Accent) }
+    /**
+     * The page after the one on screen. The list had no paging at all: `nextThreadId` came back on
+     * every result and was thrown away, so the bottom of the first page was the end of the forum.
+     */
+    suspend fun appendNextPage() {
+        val from = nextThreadId ?: return
+        if (isAppending) return
+        isAppending = true
+        runCatching {
+            wiring.threads.loadMainPage(fromThread = from, filter = wiring.settings.filter.value)
+        }.onSuccess { result ->
+            threads = (threads + result.items.values)
+                .distinctBy { it.id }
+                .sortedByDescending { it.idLong }
+            nextThreadId = result.nextThreadId.takeIf { it.isNotEmpty() }
+        }.onFailure {
+            status = it.message ?: "Could not load more"
         }
+        isAppending = false
+    }
 
-        when (val current = state) {
-            is ListState.Loading -> Centered { CircularProgressIndicator(color = Accent) }
-
-            is ListState.Failed -> Centered {
-                Text("Could not load: ${current.message}", color = Color.Red)
-            }
-
-            is ListState.Loaded -> LazyColumn(Modifier.fillMaxSize()) {
-                itemsIndexed(current.threads, key = { _, t -> t.id }) { index, thread ->
-                    ThreadRow(thread, isEven = index % 2 == 0)
+    suspend fun download() {
+        status = "Downloading..."
+        runCatching {
+            var downloaded: LinkedHashMap<String, ZumpaThread>? = null
+            wiring.downloader.run(
+                pages = DOWNLOAD_PAGES,
+                downloadImages = false,
+                outJsonFile = wiring.offlineSnapshotPath,
+            ).collect { progress ->
+                when (progress) {
+                    is OfflineProgress.Threads ->
+                        status = "Downloading ${progress.done}/${progress.total}"
+                    is OfflineProgress.Done -> downloaded = progress.data
+                    is OfflineProgress.Images -> Unit
                 }
             }
+            downloaded
+        }.onSuccess { data ->
+            //an empty result is a failed download, not a new snapshot - as on Android
+            if (data.isNullOrEmpty()) {
+                status = "Download failed"
+            } else {
+                wiring.applyDownloaded(data)
+                status = "Downloaded ${data.size} threads"
+                reload()
+            }
+        }.onFailure {
+            status = it.message ?: "Download failed"
         }
     }
-}
 
-@Composable
-private fun ThreadRow(thread: ZumpaThread, isEven: Boolean) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(if (isEven) RowEven else RowOdd)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(thread.subject, color = Color.White, fontSize = 15.sp)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(thread.author, color = Accent, fontSize = 12.sp)
-                Text(thread.time.formatThreadListTime(useShortFormat = false), color = Color.Gray, fontSize = 12.sp)
+    //the switch changes where the list comes from, so the list has to be read again
+    LaunchedEffect(isOffline) { reload() }
+
+    Column(Modifier.fillMaxSize().background(Background)) {
+        //Sticky, never collapsing. A desktop window has no shortage of height to reclaim, and a bar
+        //that moved while the wheel turned would only be something to chase with the pointer.
+        TopAppBar(
+            title = {
+                Text(
+                    text = if (isOffline) "Zumpa (offline)" else "Zumpa",
+                    color = Accent,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = Background),
+            actions = {
+                if (isAppending || listState is Loadable.Loading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.padding(horizontal = 12.dp).size(18.dp),
+                        color = Accent,
+                        strokeWidth = 2.dp,
+                    )
+                }
+                OverflowMenu(
+                    isOffline = isOffline,
+                    isLoggedIn = isLoggedIn,
+                    onReload = { scope.launch { reload() } },
+                    onLogin = { isLoginOpen = true },
+                    onLogout = {
+                        scope.launch {
+                            wiring.auth.logout()
+                            status = "Signed out"
+                            reload()
+                        }
+                    },
+                    onToggleOffline = { wiring.setOffline(!isOffline) },
+                    onDownload = { scope.launch { download() } },
+                )
+            },
+        )
+
+        Row(Modifier.fillMaxSize()) {
+            Box(Modifier.weight(LIST_WEIGHT)) {
+                ThreadList(
+                    state = listState,
+                    threads = threads,
+                    selectedId = selected,
+                    hasMore = nextThreadId != null,
+                    onSelect = { selected = it },
+                    onEndReached = { scope.launch { appendNextPage() } },
+                    onRetry = { scope.launch { reload() } },
+                )
+            }
+            Box(Modifier.width(1.dp).fillMaxHeight().background(DividerColor))
+            Box(Modifier.weight(DETAIL_WEIGHT)) {
+                ThreadDetail(wiring, selected)
             }
         }
-        Text(thread.items.toString(), color = Color.White, fontSize = 15.sp)
+    }
+
+    status?.let { StatusToast(it) { status = null } }
+
+    if (isLoginOpen) {
+        LoginDialog(
+            onDismiss = { isLoginOpen = false },
+            onSubmit = { user, password ->
+                isLoginOpen = false
+                scope.launch {
+                    status = "Signing in..."
+                    runCatching { wiring.auth.login(user, password) }
+                        .onSuccess {
+                            status = if (it.isLoggedIn) "Signed in as $user" else "Sign in refused"
+                        }
+                        .onFailure { status = it.message ?: "Sign in failed" }
+                    reload()
+                }
+            },
+        )
     }
 }
 
-@Composable
-private fun Centered(content: @Composable () -> Unit) {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { content() }
-}
+/** Enough of the forum to be worth having offline without making the user wait for all of it. */
+private const val DOWNLOAD_PAGES = 3
+
+private const val LIST_WEIGHT = 0.4f
+private const val DETAIL_WEIGHT = 0.6f
 
 //the android app's palette, close enough that the two look like the same product
-private val Background = Color(0xFF000000)
-private val Accent = Color(0xFFF0A030)
-private val RowEven = Color(0xFF000000)
-private val RowOdd = Color(0xFF1A1A1A)
+internal val Background = Color(0xFF000000)
+internal val Accent = Color(0xFFFFA710)
+internal val RowEven = Color(0xFF000000)
+internal val RowOdd = Color(0xFF1A1A1A)
+internal val DividerColor = Color(0x40FFA710)
+internal val SelectedRow = Color(0x30FFA710)
