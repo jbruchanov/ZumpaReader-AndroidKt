@@ -1,12 +1,14 @@
 package com.scurab.zumpareader.desktop
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FloatingActionButton
@@ -20,6 +22,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isAltPressed
@@ -153,9 +157,32 @@ internal fun WriteFab(modifier: Modifier = Modifier, onClick: () -> Unit) {
         contentColor = Content,
         shape = CircleShape,
     ) {
-        //a label rather than an icon: the material icon artifacts are an Android-app dependency
-        //this module does not carry, which is why the overflow menu is worded too
-        Text(text = "+", fontSize = 22.sp)
+        /*
+         * Drawn, not written. A `Text("+")` sits on a text baseline and is sized by the font's
+         * metrics, so it came out small and a little above centre - the glyph's ink is nowhere near
+         * the middle of the box the font reserves for it. Two lines through the middle of a known
+         * box have neither problem, and there is no icon artifact to reach for: the material icons
+         * are an Android-app dependency this module does not carry, which is why the overflow menu
+         * is worded rather than iconed too.
+         */
+        Canvas(Modifier.size(FAB_ICON_SIZE)) {
+            val mid = size.minDimension / 2f
+            val arm = size.minDimension / 2f
+            drawLine(
+                color = Content,
+                start = Offset(mid - arm, mid),
+                end = Offset(mid + arm, mid),
+                strokeWidth = FAB_ICON_STROKE.toPx(),
+                cap = StrokeCap.Round,
+            )
+            drawLine(
+                color = Content,
+                start = Offset(mid, mid - arm),
+                end = Offset(mid, mid + arm),
+                strokeWidth = FAB_ICON_STROKE.toPx(),
+                cap = StrokeCap.Round,
+            )
+        }
     }
 }
 
@@ -189,6 +216,9 @@ private fun Modifier.sendOnAltEnter(onSend: () -> Unit): Modifier = onPreviewKey
         false
     }
 }
+
+private val FAB_ICON_SIZE = 20.dp
+private val FAB_ICON_STROKE = 2.dp
 
 /** Room for a few lines without the box growing by one every time a line is added. */
 private val MESSAGE_MIN_HEIGHT = 96.dp
