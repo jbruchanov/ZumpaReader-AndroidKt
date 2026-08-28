@@ -2,6 +2,7 @@ package com.scurab.zumpareader.desktop
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -31,6 +33,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.scurab.android.zumpareader.model.ZumpaThread
+import com.scurab.android.zumpareader.arch.WindowLayout
 import com.scurab.android.zumpareader.usecase.OfflineProgress
 import kotlinx.coroutines.launch
 
@@ -146,47 +149,89 @@ private fun App(wiring: Wiring) {
     //the switch changes where the list comes from, so the list has to be read again
     LaunchedEffect(isOffline) { reload() }
 
-    Column(Modifier.fillMaxSize().background(Background)) {
-        //Sticky, never collapsing. A desktop window has no shortage of height to reclaim, and a bar
-        //that moved while the wheel turned would only be something to chase with the pointer.
-        TopAppBar(
-            title = {
-                Text(
-                    text = if (isOffline) "Zumpa (offline)" else "Zumpa",
-                    color = Accent,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-            },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = Background),
-            actions = {
-                if (isAppending || listState is Loadable.Loading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.padding(horizontal = 12.dp).size(18.dp),
-                        color = Accent,
-                        strokeWidth = 2.dp,
-                    )
-                }
-                OverflowMenu(
-                    isOffline = isOffline,
-                    isLoggedIn = isLoggedIn,
-                    onReload = { scope.launch { reload() } },
-                    onLogin = { isLoginOpen = true },
-                    onLogout = {
-                        scope.launch {
-                            wiring.auth.logout()
-                            status = "Signed out"
-                            reload()
-                        }
-                    },
-                    onToggleOffline = { wiring.setOffline(!isOffline) },
-                    onDownload = { scope.launch { download() } },
-                )
-            },
-        )
+    /*
+     * One pane or two, off the width of the window rather than the fact that it is a desktop.
+     *
+     * A window is not a device: it opens wide enough for two panes and can be dragged narrower than
+     * either of them is worth, and at that point two panes of three hundred points each are worse
+     * than one. Same threshold as Android - `WindowLayout.TWO_PANE_MIN_WIDTH_DP`, read out of
+     * `:shared` so the two apps cannot drift on the number - and measured with BoxWithConstraints,
+     * which recomposes as the window is dragged without anything having to listen for it.
+     *
+     * Narrow, the selected thread is the whole window and the bar grows a way back to the list.
+     * Selection is kept either way, so widening the window again shows it in the second pane.
+     */
+    BoxWithConstraints(Modifier.fillMaxSize().background(Background)) {
+        val isTwoPane = maxWidth >= WindowLayout.TWO_PANE_MIN_WIDTH_DP.dp
+        val isShowingDetail = !isTwoPane && selected != null
 
-        Row(Modifier.fillMaxSize()) {
-            Box(Modifier.weight(LIST_WEIGHT)) {
+        Column(Modifier.fillMaxSize()) {
+            //Sticky, never collapsing. A desktop window has no shortage of height to reclaim, and
+            //a bar that moved while the wheel turned would be something to chase with the pointer.
+            TopAppBar(
+                title = {
+                    Text(
+                        text = if (isOffline) "Zumpa (offline)" else "Zumpa",
+                        color = Accent,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Background),
+                navigationIcon = {
+                    if (isShowingDetail) {
+                        TextButton(onClick = { selected = null }) {
+                            Text("< List", color = Accent)
+                        }
+                    }
+                },
+                actions = {
+                    if (isAppending || listState is Loadable.Loading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.padding(horizontal = 12.dp).size(18.dp),
+                            color = Accent,
+                            strokeWidth = 2.dp,
+                        )
+                    }
+                    OverflowMenu(
+                        isOffline = isOffline,
+                        isLoggedIn = isLoggedIn,
+                        onReload = { scope.launch { reload() } },
+                        onLogin = { isLoginOpen = true },
+                        onLogout = {
+                            scope.launch {
+                                wiring.auth.logout()
+                                status = "Signed out"
+                                reload()
+                            }
+                        },
+                        onToggleOffline = { wiring.setOffline(!isOffline) },
+                        onDownload = { scope.launch { download() } },
+                    )
+                },
+            )
+
+            if (isTwoPane) {
+                Row(Modifier.fillMaxSize()) {
+                    Box(Modifier.weight(LIST_WEIGHT)) {
+                        ThreadList(
+                            state = listState,
+                            threads = threads,
+                            selectedId = selected,
+                            hasMore = nextThreadId != null,
+                            onSelect = { selected = it },
+                            onEndReached = { scope.launch { appendNextPage() } },
+                            onRetry = { scope.launch { reload() } },
+                        )
+                    }
+                    Box(Modifier.width(1.dp).fillMaxHeight().background(DividerColor))
+                    Box(Modifier.weight(DETAIL_WEIGHT)) {
+                        ThreadDetail(wiring, selected)
+                    }
+                }
+            } else if (isShowingDetail) {
+                ThreadDetail(wiring, selected)
+            } else {
                 ThreadList(
                     state = listState,
                     threads = threads,
@@ -196,10 +241,6 @@ private fun App(wiring: Wiring) {
                     onEndReached = { scope.launch { appendNextPage() } },
                     onRetry = { scope.launch { reload() } },
                 )
-            }
-            Box(Modifier.width(1.dp).fillMaxHeight().background(DividerColor))
-            Box(Modifier.weight(DETAIL_WEIGHT)) {
-                ThreadDetail(wiring, selected)
             }
         }
     }
