@@ -65,7 +65,7 @@ fun main() {
             onCloseRequest = ::exitApplication,
             title = "ZumpaReader (desktop)",
         ) {
-            App()
+            DesktopTheme { App() }
         }
     }
 }
@@ -99,6 +99,7 @@ private fun App() {
     var selected by remember { mutableStateOf<String?>(null) }
     var isLoginOpen by remember { mutableStateOf(false) }
     var isSending by remember { mutableStateOf(false) }
+    var isNewThreadOpen by remember { mutableStateOf(false) }
     var status by remember { mutableStateOf<String?>(null) }
 
     suspend fun reload() {
@@ -197,6 +198,10 @@ private fun App() {
         isSending = false
     }
 
+    //Signed in and online is the whole condition for writing anything: the forum will not take a
+    //post from anyone else, and an offline snapshot is a read of something that already happened.
+    val canWrite = isLoggedIn && !isOffline
+
     //the switch changes where the list comes from, so the list has to be read again
     LaunchedEffect(isOffline) { reload() }
 
@@ -262,13 +267,23 @@ private fun App() {
                 },
             )
 
-            //Signed in and online is the whole condition: the forum will not take a post from
-            //anyone else, and an offline snapshot is a read of something that has already happened.
-            val canWrite = isLoggedIn && !isOffline
-            val newThread: @Composable () -> Unit = {
-                if (canWrite) {
-                    WritePanel(Composing.NewThread, isSending) { subject, message ->
-                        scope.launch { send(Composing.NewThread, subject, message) }
+            //the list keeps its fab and a dialog behind it; only a thread gets a box that is
+            //always up, because only a thread is something to be permanently answering
+            val list: @Composable () -> Unit = {
+                Box(Modifier.fillMaxSize()) {
+                    ThreadList(
+                        state = listState,
+                        threads = threads,
+                        selectedId = selected,
+                        hasMore = nextThreadId != null,
+                        onSelect = { selected = it },
+                        onEndReached = { scope.launch { appendNextPage() } },
+                        onRetry = { scope.launch { reload() } },
+                    )
+                    if (canWrite) {
+                        WriteFab(Modifier.align(Alignment.BottomEnd).padding(24.dp)) {
+                            isNewThreadOpen = true
+                        }
                     }
                 }
             }
@@ -276,7 +291,7 @@ private fun App() {
                 val id = selected
                 if (canWrite && id != null) {
                     val target = Composing.Reply(id, subjectOf(threads, id))
-                    WritePanel(target, isSending) { _, message ->
+                    ReplyPanel(target, isSending) { message ->
                         scope.launch { send(target, "", message) }
                     }
                 }
@@ -284,20 +299,7 @@ private fun App() {
 
             if (isTwoPane) {
                 Row(Modifier.fillMaxSize()) {
-                    Column(Modifier.weight(LIST_WEIGHT)) {
-                        Box(Modifier.weight(1f)) {
-                        ThreadList(
-                            state = listState,
-                            threads = threads,
-                            selectedId = selected,
-                            hasMore = nextThreadId != null,
-                            onSelect = { selected = it },
-                            onEndReached = { scope.launch { appendNextPage() } },
-                            onRetry = { scope.launch { reload() } },
-                        )
-                        }
-                        newThread()
-                    }
+                    Box(Modifier.weight(LIST_WEIGHT)) { list() }
                     Box(Modifier.width(1.dp).fillMaxHeight().background(DividerColor))
                     Column(Modifier.weight(DETAIL_WEIGHT)) {
                         Box(Modifier.weight(1f)) { ThreadDetail(selected) }
@@ -310,22 +312,22 @@ private fun App() {
                     reply()
                 }
             } else {
-                Column(Modifier.fillMaxSize()) {
-                    Box(Modifier.weight(1f)) {
-                        ThreadList(
-                            state = listState,
-                            threads = threads,
-                            selectedId = selected,
-                            hasMore = nextThreadId != null,
-                            onSelect = { selected = it },
-                            onEndReached = { scope.launch { appendNextPage() } },
-                            onRetry = { scope.launch { reload() } },
-                        )
-                    }
-                    newThread()
-                }
+                list()
             }
         }
+    }
+
+    if (isNewThreadOpen && canWrite) {
+        NewThreadDialog(
+            isSending = isSending,
+            onDismiss = { isNewThreadOpen = false },
+            onSend = { subject, message ->
+                scope.launch {
+                    send(Composing.NewThread, subject, message)
+                    isNewThreadOpen = false
+                }
+            },
+        )
     }
 
     status?.let { StatusToast(it) { status = null } }
@@ -355,14 +357,8 @@ private const val DOWNLOAD_PAGES = 3
 private const val LIST_WEIGHT = 0.4f
 private const val DETAIL_WEIGHT = 0.6f
 
-//the android app's palette, close enough that the two look like the same product
-internal val Background = Color(0xFF000000)
-internal val Accent = Color(0xFFFFA710)
-internal val RowEven = Color(0xFF000000)
-internal val RowOdd = Color(0xFF1A1A1A)
-internal val DividerColor = Color(0x40FFA710)
-internal val SelectedRow = Color(0x30FFA710)
-
-/** The subject of a thread the list already knows about - the reply dialog says what it answers. */
+/**
+ * The subject of a thread the list already knows about - a reply carries the subject it answers.
+ */
 private fun subjectOf(threads: List<ZumpaThread>, id: String): String =
     threads.firstOrNull { it.id == id }?.subject.orEmpty()
