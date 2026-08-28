@@ -29,7 +29,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -60,7 +59,7 @@ internal fun ThreadList(
     if (state is Loadable.Failed && threads.isEmpty()) {
         Centered {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Could not load: ${state.message}", color = Color.Red)
+                Text("Could not load: ${state.message}", color = Error)
                 TextButton(onClick = onRetry) { Text("Retry", color = Accent) }
             }
         }
@@ -71,7 +70,7 @@ internal fun ThreadList(
             if (state is Loadable.Loading) {
                 CircularProgressIndicator(color = Accent)
             } else {
-                Text("Nothing here", color = Color.Gray)
+                Text("Nothing here", color = Muted)
             }
         }
         return
@@ -128,17 +127,17 @@ private fun ThreadRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(thread.subject, color = Color.White, fontSize = 15.sp)
+            Text(thread.subject, color = Content, fontSize = 15.sp)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(thread.author, color = Accent, fontSize = 12.sp)
                 Text(
                     text = thread.time.formatThreadListTime(useShortFormat = false),
-                    color = Color.Gray,
+                    color = Muted,
                     fontSize = 12.sp,
                 )
             }
         }
-        Text(thread.items.toString(), color = Color.White, fontSize = 15.sp)
+        Text(thread.items.toString(), color = Content, fontSize = 15.sp)
     }
 }
 
@@ -146,7 +145,7 @@ private fun ThreadRow(
 @Composable
 internal fun ThreadDetail(threadId: String?) {
     if (threadId == null) {
-        Centered { Text("Pick a thread", color = Color.Gray) }
+        Centered { Text("Pick a thread", color = Muted) }
         return
     }
 
@@ -169,7 +168,7 @@ internal fun ThreadDetail(threadId: String?) {
     when (val current = state) {
         is Loadable.Loading -> Centered { CircularProgressIndicator(color = Accent) }
         is Loadable.Failed -> Centered {
-            Text("Could not load: ${current.message}", color = Color.Red)
+            Text("Could not load: ${current.message}", color = Error)
         }
 
         is Loadable.Loaded -> LazyColumn(Modifier.fillMaxSize()) {
@@ -183,9 +182,9 @@ internal fun ThreadDetail(threadId: String?) {
                 ) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(item.author, color = Accent, fontSize = 12.sp)
-                        Text(item.time.formatPostTime(), color = Color.Gray, fontSize = 12.sp)
+                        Text(item.time.formatPostTime(), color = Muted, fontSize = 12.sp)
                     }
-                    Text(item.body, color = Color.White, fontSize = 14.sp)
+                    Text(item.body, color = Content, fontSize = 14.sp)
                 }
             }
         }
@@ -275,7 +274,7 @@ internal fun StatusToast(message: String, onDone: () -> Unit) {
     Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.BottomCenter) {
         Text(
             text = message,
-            color = Color.White,
+            color = Content,
             fontSize = 13.sp,
             modifier = Modifier.background(RowOdd).padding(horizontal = 16.dp, vertical = 8.dp),
         )
