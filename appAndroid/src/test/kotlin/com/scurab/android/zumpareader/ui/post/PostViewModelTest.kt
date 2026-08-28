@@ -129,10 +129,13 @@ class PostViewModelTest {
     @Test
     fun `every picture adds a tab of its own`() {
         val vm = viewModel()
+        val picks =
+            listOf(pick(fromCamera = false), pick(fromCamera = false), pick(fromCamera = true))
 
-        vm.onImagePicked(mockk<android.net.Uri>(relaxed = true), fromCamera = false)
-        vm.onImagePicked(mockk<android.net.Uri>(relaxed = true), fromCamera = false)
-        vm.onImagePicked(mockk<android.net.Uri>(relaxed = true), fromCamera = true)
+        //as the screen hands them over: the whole list, growing by one each time
+        vm.applyPicks(picks.take(1))
+        vm.applyPicks(picks.take(2))
+        vm.applyPicks(picks)
 
         //the message tab and one per picture, none of them replacing an earlier one
         val tabs = vm.uiState.value.tabs
@@ -140,6 +143,21 @@ class PostViewModelTest {
         assertEquals(3, tabs.filterIsInstance<PostTabUiState.Image>().size)
         //distinct tags, or two tabs would share one image ViewModel
         assertEquals(tabs.size, tabs.map { it.tag }.toSet().size)
+    }
+
+    @Test
+    fun `the same picks rebuild the same tabs`() {
+        val vm = viewModel()
+        val picks = listOf(pick(fromCamera = false), pick(fromCamera = true))
+
+        vm.applyPicks(picks)
+        val first = vm.uiState.value.tabs.map { it.tag }
+        //what a recreation does: the screen still has the list and hands it over again
+        vm.applyPicks(picks)
+
+        //same tags, so the per tab upload ViewModels are the same ones and nothing restarts
+        assertEquals(first, vm.uiState.value.tabs.map { it.tag })
+        assertEquals(3, vm.uiState.value.tabs.size)
     }
 
     @Test
@@ -158,9 +176,7 @@ class PostViewModelTest {
     fun `a picked picture opens on its own tab`() {
         val vm = viewModel()
 
-        //mockk rather than Uri.parse: android.net.Uri is a stub on the jvm, and the ViewModel only
-        //ever stores this one and prints it into the tab tag
-        vm.onImagePicked(mockk<android.net.Uri>(relaxed = true), fromCamera = true)
+        vm.applyPicks(listOf(pick(fromCamera = true)))
 
         val tabs = vm.uiState.value.tabs
         assertEquals(2, tabs.size)
@@ -220,4 +236,11 @@ class PostViewModelTest {
 
         assertEquals("edited by the user", viewModel.uiState.value.subject)
     }
+
+    /**
+     * mockk rather than Uri.parse: android.net.Uri is a stub on the jvm, and nothing here does more
+     * with it than hold on to it.
+     */
+    private fun pick(fromCamera: Boolean) =
+        PickedImage(mockk<android.net.Uri>(relaxed = true), fromCamera)
 }

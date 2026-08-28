@@ -98,25 +98,58 @@ class PostViewModel(
 
     private var isStarted = false
 
+    /** Pictures that arrived as arguments - a share - as opposed to ones picked in the screen. */
+    private var sharedUris: List<Uri> = emptyList()
+
     fun start(args: PostArgs) {
         if (isStarted) return
         isStarted = true
         threadId = args.threadId
+        sharedUris = args.uris
         setState {
             copy(
                 subject = args.subject.orEmpty(),
                 //bare urls in a shared message become zumpa links
                 message = ZumpaSimpleParser.replaceLinksByZumpaLinks(args.message).orEmpty(),
                 isSubjectEditable = args.threadId == null,
-                tabs = buildList {
-                    add(PostTabUiState.Message)
-                    args.uris.forEachIndexed { index, uri ->
-                        add(PostTabUiState.Image("${index + 2}", uri, fromCamera = false))
-                    }
-                },
+                tabs = tabsFor(picks = emptyList()),
                 //a single shared image goes straight to its tab
-                selectedTabTag = if (args.uris.size == 1) "2" else null,
+                selectedTabTag = if (args.uris.size == 1) sharedTag(0) else null,
             )
+        }
+    }
+
+    /**
+     * The pictures the screen is holding, in the order they were picked.
+     *
+     * Handed over whole rather than one at a time, because the screen is what remembers them across
+     * a recreation and this cannot: a ViewModel that came back empty used to have [start] rebuild
+     * the tabs from the arguments alone, throwing away every picture picked before it. So this is
+     * told the lot and rebuilds from the lot - the same list twice is the same tabs twice.
+     *
+     * Tags are positional and stable for that reason too. They used to include the tab count and
+     * the uri, so the same picture came back under a different tag after a recreation and the
+     * per-tab upload ViewModel keyed on it started again from nothing.
+     */
+    fun applyPicks(picks: List<PickedImage>) {
+        val rebuilt = tabsFor(picks)
+        val isNew = rebuilt.size > state.tabs.size
+        setState {
+            copy(
+                tabs = rebuilt,
+                //a picture just added is the one to be looking at; otherwise leave the choice alone
+                selectedTabTag = if (isNew) rebuilt.last().tag else selectedTabTag,
+            )
+        }
+    }
+
+    private fun tabsFor(picks: List<PickedImage>): List<PostTabUiState> = buildList {
+        add(PostTabUiState.Message)
+        sharedUris.forEachIndexed { index, uri ->
+            add(PostTabUiState.Image(sharedTag(index), uri, fromCamera = false))
+        }
+        picks.forEachIndexed { index, pick ->
+            add(PostTabUiState.Image(pickTag(index), pick.uri, pick.fromCamera))
         }
     }
 
@@ -134,19 +167,7 @@ class PostViewModel(
 
     override fun onPhotoClicked() = effect(PostEffect.RequestGalleryImage)
 
-    fun onImagePicked(uri: Uri, fromCamera: Boolean) {
-        val tag = "${state.tabs.size + 1} - $uri"
-        setState {
-            copy(
-                tabs = tabs + PostTabUiState.Image(
-                    tag = tag,
-                    uri = uri,
-                    fromCamera = fromCamera,
-                ),
-                selectedTabTag = tag,
-            )
-        }
-    }
+
 
     /**
      * A giphy pick and a finished upload are the same thing to the message: a zumpa link on its own
@@ -232,3 +253,10 @@ data class PostArgs(
     val uris: List<Uri> = emptyList(),
     val threadId: String? = null,
 )
+
+/** One picture the reader chose, and where it came from. */
+data class PickedImage(val uri: Uri, val fromCamera: Boolean)
+
+private fun sharedTag(index: Int) = "shared-$index"
+
+private fun pickTag(index: Int) = "picked-$index"

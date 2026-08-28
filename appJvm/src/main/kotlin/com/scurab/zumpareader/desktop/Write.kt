@@ -209,8 +209,8 @@ private fun SendRow(isSending: Boolean, canSend: Boolean, onSend: () -> Unit) {
  * hand: the material icon artifacts are an Android-app dependency this module does not carry, which
  * is why the fab's plus is drawn too.
  *
- * The paper dart is one path - the outline of the arrow with the notch cut into its tail - scaled off
- * the canvas so the size is the only thing to change.
+ * The paper dart is one path - the arrow's outline with the notch cut into its tail - scaled off
+ * the canvas, so the size is the only thing to change.
  */
 @Composable
 private fun SendGlyph(tint: Color) {
