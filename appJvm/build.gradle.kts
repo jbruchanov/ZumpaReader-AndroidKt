@@ -35,6 +35,11 @@ dependencies {
     implementation(compose.material3)
     implementation(compose.components.resources)
 
+    //the same image loader the android app uses - coil 3 is multiplatform
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.ktor3)
+    implementation(libs.ktor.client.okhttp)
+
     implementation(platform(libs.koin.bom))
     implementation(libs.koin.core)
     implementation(libs.koin.compose)

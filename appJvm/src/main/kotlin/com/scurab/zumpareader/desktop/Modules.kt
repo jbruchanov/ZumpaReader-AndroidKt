@@ -1,10 +1,14 @@
 package com.scurab.zumpareader.desktop
 
+import coil3.ImageLoader
+import coil3.PlatformContext
+import coil3.network.ktor3.KtorNetworkFetcherFactory
 import com.scurab.android.zumpareader.ZumpaAPI
 import com.scurab.android.zumpareader.ZumpaOfflineApi
 import com.scurab.android.zumpareader.ZumpaPHPAPI
 import com.scurab.android.zumpareader.data.ZumpaApiImpl
 import com.scurab.android.zumpareader.data.ZumpaPHPApiImpl
+import com.scurab.android.zumpareader.data.buildImageHttpClient
 import com.scurab.android.zumpareader.data.buildZumpaHttpClient
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.repository.AuthRepository
@@ -29,6 +33,9 @@ import java.io.File
 
 /** The online api, qualified because the unqualified [ZumpaAPI] is the one that switches. */
 internal val ONLINE_API = named("online")
+
+/** The client images go over - see `buildImageHttpClient` for why it is not the api one. */
+internal val IMAGE_CLIENT = named("images")
 
 /**
  * The desktop object graph.
@@ -87,6 +94,22 @@ internal fun desktopModule(home: File = defaultHome()) = module {
             offlineApi = get(),
             json = get(),
         )
+    }
+
+    single<HttpClient>(IMAGE_CLIENT) { buildImageHttpClient(OkHttp.create(), get()) }
+
+    /**
+     * Coil over the app's own client, so an image request carries the same cookies as everything
+     * else - the same arrangement `:appAndroid`'s `buildImageLoader` makes. Coil would find the
+     * ktor fetcher on the classpath by itself and build a client of its own, which would work and
+     * would not be signed in.
+     */
+    single {
+        ImageLoader.Builder(PlatformContext.INSTANCE)
+            .components {
+                add(KtorNetworkFetcherFactory(httpClient = get<HttpClient>(IMAGE_CLIENT)))
+            }
+            .build()
     }
 
     single<PushTokenProvider> { NoPushTokenProvider }

@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
+import coil3.SingletonImageLoader
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.repository.AuthRepository
 import com.scurab.android.zumpareader.repository.OfflineDataRepository
@@ -58,7 +59,9 @@ import org.koin.core.context.startKoin
  * than the same screens. Merging them is phase 3 in `KMP_PLAN.md`.
  */
 fun main() {
-    startKoin { modules(desktopModule()) }
+    val koin = startKoin { modules(desktopModule()) }.koin
+    //the loader every AsyncImage resolves to, so none of them has to be handed one
+    SingletonImageLoader.setSafe { koin.get() }
     application {
         Window(
             state = rememberWindowState(width = 1200.dp, height = 800.dp),
