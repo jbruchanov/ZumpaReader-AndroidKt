@@ -5,7 +5,9 @@ import com.scurab.android.zumpareader.ZR
 import com.scurab.android.zumpareader.arch.BaseViewModel
 import com.scurab.android.zumpareader.arch.UiEffect
 import com.scurab.android.zumpareader.arch.WindowLayout
+import com.scurab.android.zumpareader.model.ThreadState
 import com.scurab.android.zumpareader.model.ZumpaThread
+import com.scurab.android.zumpareader.model.stateFor
 import com.scurab.android.zumpareader.repository.AppEvent
 import com.scurab.android.zumpareader.repository.AppEventBus
 import com.scurab.android.zumpareader.repository.SelectedThreadStore
@@ -13,12 +15,6 @@ import com.scurab.android.zumpareader.repository.ZumpaReadStateRepository
 import com.scurab.android.zumpareader.repository.ZumpaSettingsRepository
 import com.scurab.android.zumpareader.repository.ZumpaThreadRepository
 import kotlinx.coroutines.launch
-
-/**
- * The order matters: the ordinal is the level of the LevelListDrawable behind the state bar on a
- * row, so it has to keep matching the old `ZumpaThread.STATE_*` constants.
- */
-enum class ThreadState { None, New, Updated, Own, ResponseForYou }
 
 data class ThreadRowUiState(
     val id: String,
@@ -213,7 +209,7 @@ class MainListViewModel(
                 val userName = settings.loggedUserName.value
                 result.items.values.forEach { thread ->
                     rowStates[thread.id] =
-                        thread.stateFor(readStates.readCount(thread.id), userName)
+                        thread.rowStateFor(readStates.readCount(thread.id), userName)
                 }
                 publishRows()
                 //after publishRows, so the rows the list is being sent to the top of are already
@@ -255,7 +251,7 @@ class MainListViewModel(
     override fun onThreadClicked(threadId: String) {
         val thread = loaded[threadId] ?: return
         //opening a thread marks everything in it as seen
-        rowStates[threadId] = thread.stateFor(
+        rowStates[threadId] = thread.rowStateFor(
             readCount = thread.items,
             userName = settings.loggedUserName.value,
         )
@@ -353,19 +349,9 @@ class MainListViewModel(
     }
 
     /**
-     * The original `ZumpaThread.setStateBasedOnReadValue` as a pure function. The `items < readCount`
-     * case has no branch there either - it leaves the previous value alone, which the comment
-     * attributes to offline mode - so it returns [current] here.
+     * [stateFor] with the remembered value filled in. The rule itself is in `:shared` - the desktop
+     * draws the same bar off the same read counts, and two copies of it would have drifted.
      */
-    private fun ZumpaThread.stateFor(
-        readCount: Int?,
-        userName: String?,
-        current: ThreadState = rowStates[id] ?: ThreadState.New,
-    ): ThreadState = when {
-        hasResponseForYou -> ThreadState.ResponseForYou
-        readCount == null -> ThreadState.New
-        items == readCount -> if (userName != null && userName == author) ThreadState.Own else ThreadState.None
-        items > readCount -> ThreadState.Updated
-        else -> current
-    }
+    private fun ZumpaThread.rowStateFor(readCount: Int?, userName: String?): ThreadState =
+        stateFor(readCount, userName, current = rowStates[id] ?: ThreadState.New)
 }

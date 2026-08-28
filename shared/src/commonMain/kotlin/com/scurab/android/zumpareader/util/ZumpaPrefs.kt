@@ -1,5 +1,8 @@
 package com.scurab.android.zumpareader.util
 
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
+
 /**
  * Created by JBruchanov on 29/12/2015.
  *
@@ -17,7 +20,6 @@ class ZumpaPrefs(private val store: KeyValueStore) {
         val KEY_OFFLINE = "KEY_OFFLINE"
         val KEY_FILTER = "KEY_FILTER"
         val KEY_NOTIFICATIONS = "KEY_NOTIFICATIONS"
-        val KEY_CRASHYLYTICS = "KEY_CRASHYLYTICS"
 
         //observed by ZumpaSettingsRepository, which needs the key a write lands on
         val KEY_IS_LOGGED_IN = "KEY_IS_LOGGED_IN"
@@ -87,7 +89,20 @@ class ZumpaPrefs(private val store: KeyValueStore) {
         get() = store.getBoolean(KEY_OFFLINE, false)
         set(value) = store.putBoolean(KEY_OFFLINE, value)
 
-    var userId: String?
-        get() = loggedUserName?.takeIf { it.isNotEmpty() } ?: store.getString(KEY_USER_ID, null)
-        set(value) = store.putString(KEY_USER_ID, value)
+    /**
+     * Who a crash report belongs to - `CrashReporter` in `:appAndroid`, which is where Crashlytics
+     * lives. The signed-in name once there is one, so a report can be tied to the person who filed
+     * it, and a per-install id before that, so one anonymous user's reports still group together.
+     *
+     * The anonymous id is minted on first read rather than at startup. Reading the derived value to
+     * decide whether to mint used to hide the fact that it was never stored while signed in, so
+     * logging out left no id at all until the next launch.
+     */
+    val userId: String get() = loggedUserName?.takeIf { it.isNotEmpty() } ?: anonymousUserId
+
+    private val anonymousUserId: String
+        //kotlin.uuid rather than java.util.UUID - same hyphenated form, no jvm dependency
+        @OptIn(ExperimentalUuidApi::class)
+        get() = store.getString(KEY_USER_ID, null)
+            ?: Uuid.random().toString().also { store.putString(KEY_USER_ID, it) }
 }

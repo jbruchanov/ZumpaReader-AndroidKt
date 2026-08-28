@@ -227,7 +227,7 @@ private fun SettingsScreen(uiState: SettingsUiState, eventHandler: SettingsEvent
             HorizontalDivider(color = AppTheme.colorScheme.context25p)
             SectionHeader(stringResource(R.string.crashlytics))
             ClickRow(
-                label = uiState.userId.orEmpty(),
+                label = uiState.userId,
                 value = "",
                 onClick = eventHandler::onUserIdClicked,
             )

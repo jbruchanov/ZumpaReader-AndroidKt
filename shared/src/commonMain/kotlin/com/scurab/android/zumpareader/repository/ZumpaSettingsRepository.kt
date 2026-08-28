@@ -50,7 +50,7 @@ class ZumpaSettingsRepository(private val prefs: ZumpaPrefs) {
     val nick: StateFlow<String> = flowOf(ZumpaPrefs.KEY_NICK_NAME) { prefs.nickName }
 
     val nickName: String get() = prefs.nickName
-    val userId: String? get() = prefs.userId
+    val userId: String get() = prefs.userId
 
     fun setOffline(value: Boolean) {
         prefs.isOffline = value

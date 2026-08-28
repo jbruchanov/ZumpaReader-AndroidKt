@@ -41,7 +41,7 @@ class SettingsViewModelTest {
         every { this@mockk.loadImages } returns this@SettingsViewModelTest.loadImages
         every { this@mockk.showLastAuthor } returns this@SettingsViewModelTest.showLastAuthor
         every { this@mockk.isLoggedIn } returns this@SettingsViewModelTest.isLoggedIn
-        every { userId } returns null
+        every { userId } returns "an-id"
     }
     private val auth = mockk<AuthRepository>(relaxed = true)
     private val notifications = mockk<NotificationState> {

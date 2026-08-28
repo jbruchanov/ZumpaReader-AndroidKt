@@ -3,15 +3,12 @@ package com.scurab.android.zumpareader
 import android.app.Activity
 import android.app.Application
 import android.os.Bundle
-import com.google.firebase.FirebaseApp
 import com.scurab.android.zumpareader.di.ONLINE_API
 import com.scurab.android.zumpareader.di.appModules
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.repository.ZumpaReadStateRepository
-import com.scurab.android.zumpareader.usecase.CreateNotificationChannelsUseCase
+import com.scurab.android.zumpareader.usecase.InitAppUseCase
 import com.scurab.android.zumpareader.util.ZumpaPrefs
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 import org.koin.android.ext.android.get
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
@@ -38,8 +35,10 @@ class ZumpaReaderApp : Application() {
             androidContext(this@ZumpaReaderApp)
             modules(appModules)
         }
-        CreateNotificationChannelsUseCase(this)()
-
+        //the whole startup list, per platform - see AndroidInitAppUseCase. The offline snapshot is
+        //not among it: the api factory reads it lazily, so a toggle into offline mode picks it up
+        //and an online start does not pay for the parse.
+        get<InitAppUseCase>()()
 
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             private var activities = 0
@@ -69,14 +68,6 @@ class ZumpaReaderApp : Application() {
                 }
             }
         })
-        //the offline snapshot is not read here any more - the api factory does it lazily, so a
-        //toggle into offline mode picks it up and an online start does not pay for the parse
-        FirebaseApp.initializeApp(this)
-        if (zumpaPrefs.userId == null) {
-            //kotlin.uuid rather than java.util.UUID - same hyphenated form, no jvm dependency
-            @OptIn(ExperimentalUuidApi::class)
-            zumpaPrefs.userId = Uuid.random().toString()
-        }
     }
 
     /**

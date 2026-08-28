@@ -8,6 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 /**
  * The mobile palette, and a Material theme built out of it.
@@ -68,7 +70,65 @@ internal val Accent = Color(0xFFFFA710)
 internal val Content = Color(0xFFFFFFFF)
 internal val Muted = Color(0xFF808080)
 internal val RowEven = Color(0xFF000000)
-internal val RowOdd = Color(0xFF1A1A1A)
+
+/** `Palette.Dark`. Was `0xFF1A1A1A` here, which is a slightly different grey for no reason. */
+internal val RowOdd = Color(0xFF202020)
 internal val DividerColor = Color(0x40FFA710)
-internal val SelectedRow = Color(0x30FFA710)
+
+/** `selectedBackground`, which is the 25% orange - it was 0x30 here, again for no reason. */
+internal val SelectedRow = Color(0x40FFA710)
 internal val Error = Color(0xFFDD0000)
+
+/**
+ * The bar down the left of a thread row - `AppColorScheme.threadState*`, which the `LevelListDrawable`
+ * before it drew. Green is deliberately translucent, as it always was.
+ */
+internal val StateNew = Color(0x7000FF00)
+internal val StateUpdated = Color(0xFFFFFF00)
+internal val StateOwn = Color(0xFF00FFFF)
+internal val StateResponseForYou = Color(0xFFFF0000)
+
+/**
+ * `:appAndroid`'s `AppSpaces` and the `AppSizes` this module has any use for.
+ *
+ * Plain constants rather than a CompositionLocal-backed theme: there is one set of them and nothing
+ * here overrides them, so the indirection would buy nothing. Named after the Android properties so
+ * the two files can be read against each other.
+ *
+ * Rows were being padded 16dp horizontally against the phone's 8dp, which is what made the desktop
+ * list look loose next to it.
+ */
+internal object Spaces {
+    val tiny = 2.dp
+    val small = 4.dp
+    val normal = 8.dp
+    val large = 16.dp
+    val fabMargin = 16.dp
+
+    /** `?listItemPadding`. The one number to change if the desktop list should sit tighter. */
+    val listItemPadding = 8.dp
+}
+
+internal object Sizes {
+    /** `?itemStateWidth`. */
+    val threadStateBar = 2.dp
+    val divider = 1.dp
+    val progressBar = 24.dp
+
+    /** `subjectTextMinHeight` - 16sp used as a dimension, so a one-line subject has a fixed height. */
+    val subjectMinHeight = 16.dp
+}
+
+/** `AppTypography`, sized the same. The desktop had its own slightly smaller numbers. */
+internal object FontSizes {
+    val title = 20.sp
+    val subject = 16.sp
+    val author = 12.sp
+    val date = 12.sp
+    val nickName = 12.sp
+    val message = 13.sp
+    val button = 12.sp
+}
+
+/** `threadsTextSize` is 14sp **bold** - the answer count always was. */
+internal val ThreadCountSize = 14.sp

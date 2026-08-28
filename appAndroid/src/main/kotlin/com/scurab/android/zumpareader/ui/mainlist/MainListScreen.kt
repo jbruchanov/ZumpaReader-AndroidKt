@@ -72,6 +72,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.arch.ShowToast
+import com.scurab.android.zumpareader.model.ThreadState
 import com.scurab.android.zumpareader.ext.toast
 import com.scurab.android.zumpareader.test.Fixtures
 import com.scurab.android.zumpareader.test.empty
@@ -388,7 +389,6 @@ private fun ThreadRow(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = subject.text,
-                        inlineContent = subject.inlineContent,
                         style = AppTheme.typography.subject,
                         color = AppTheme.colorScheme.subject,
                         maxLines = SUBJECT_MAX_LINES,

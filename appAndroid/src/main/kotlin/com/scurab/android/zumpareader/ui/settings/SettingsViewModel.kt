@@ -20,7 +20,8 @@ data class SettingsUiState(
     val loadImages: Boolean = true,
     val showLastAuthor: Boolean = false,
     val areNotificationsEnabled: Boolean = false,
-    val userId: String? = null,
+    /** The crash-report id - see [com.scurab.android.zumpareader.util.ZumpaPrefs.userId]. */
+    val userId: String = "",
     val isBusy: Boolean = false,
     /** Never persisted - the password goes back to hidden every time the screen is opened. */
     val isPasswordVisible: Boolean = false,
@@ -182,9 +183,7 @@ class SettingsViewModel(
     }
 
     override fun onUserIdClicked() {
-        state.userId?.let {
-            effect(CopyToClipboard(it))
-        }
+        state.userId.takeIf { it.isNotEmpty() }?.let { effect(CopyToClipboard(it)) }
     }
 }
 

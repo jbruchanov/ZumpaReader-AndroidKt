@@ -201,7 +201,6 @@ private fun SubListScreen(
                             text = title?.text ?: androidx.compose.ui.text.AnnotatedString(
                                 stringResource(R.string.app_name)
                             ),
-                            inlineContent = title?.inlineContent.orEmpty(),
                             style = AppTheme.typography.title,
                             color = AppTheme.colorScheme.primaryText,
                             maxLines = 1,
@@ -491,7 +490,6 @@ private fun MessageRow(
             //the body was a ?subjectTextSize TextView, not the 13sp the post editor uses
             Text(
                 text = body.text,
-                inlineContent = body.inlineContent,
                 style = AppTheme.typography.subject,
                 color = AppTheme.colorScheme.subject,
                 modifier = Modifier.padding(top = AppTheme.spaces.small),

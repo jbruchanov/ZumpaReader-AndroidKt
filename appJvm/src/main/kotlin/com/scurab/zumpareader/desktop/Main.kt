@@ -22,25 +22,27 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
-import coil3.SingletonImageLoader
+import com.scurab.android.zumpareader.arch.WindowLayout
+import com.scurab.android.zumpareader.model.ThreadState
 import com.scurab.android.zumpareader.model.ZumpaThread
+import com.scurab.android.zumpareader.model.ZumpaThreadBody
+import com.scurab.android.zumpareader.model.stateFor
 import com.scurab.android.zumpareader.repository.AuthRepository
 import com.scurab.android.zumpareader.repository.OfflineDataRepository
+import com.scurab.android.zumpareader.repository.ZumpaReadStateRepository
 import com.scurab.android.zumpareader.repository.ZumpaSettingsRepository
 import com.scurab.android.zumpareader.repository.ZumpaThreadRepository
-import com.scurab.android.zumpareader.model.ZumpaThreadBody
-import com.scurab.android.zumpareader.arch.WindowLayout
+import com.scurab.android.zumpareader.usecase.InitAppUseCase
 import com.scurab.android.zumpareader.usecase.OfflineDownloadUseCase
 import com.scurab.android.zumpareader.usecase.OfflineProgress
 import com.scurab.android.zumpareader.util.ZumpaPrefs
@@ -60,12 +62,18 @@ import org.koin.core.context.startKoin
  */
 fun main() {
     val koin = startKoin { modules(desktopModule()) }.koin
-    //the loader every AsyncImage resolves to, so none of them has to be handed one
-    SingletonImageLoader.setSafe { koin.get() }
+    //the whole startup list, per platform - see DesktopInitAppUseCase
+    koin.get<InitAppUseCase>()()
     application {
         Window(
             state = rememberWindowState(width = 1200.dp, height = 800.dp),
-            onCloseRequest = ::exitApplication,
+            //the read states live in memory until something writes them out. On Android that
+            //is the last activity stopping; here it is the window going away, and without it
+            //every thread came back unread on the next launch.
+            onCloseRequest = {
+                koin.get<ZumpaReadStateRepository>().persist()
+                exitApplication()
+            },
             title = "ZumpaReader (desktop)",
         ) {
             DesktopTheme { App() }
@@ -91,11 +99,17 @@ private fun App() {
     val auth = koinInject<AuthRepository>()
     val downloader = koinInject<OfflineDownloadUseCase>()
     val offlineData = koinInject<OfflineDataRepository>()
+    val readStates = koinInject<ZumpaReadStateRepository>()
     val prefs = koinInject<ZumpaPrefs>()
     val isOffline by settings.isOffline.collectAsState()
     val isLoggedIn by settings.isLoggedIn.collectAsState()
 
     var threads by remember { mutableStateOf<List<ZumpaThread>>(emptyList()) }
+    //the new/updated/own decoration per thread, which is the coloured bar down the left of a
+    //row. Held here rather than on the ZumpaThread, the way the Android list holds it: the model
+    //is shared and mutable, and the rule deliberately keeps the previous value when
+    //`items < readCount` - which only makes sense with a memory.
+    var threadStates by remember { mutableStateOf<Map<String, ThreadState>>(emptyMap()) }
     var listState by remember { mutableStateOf<Loadable>(Loadable.Loading) }
     var nextThreadId by remember { mutableStateOf<String?>(null) }
     var isAppending by remember { mutableStateOf(false) }
@@ -110,12 +124,30 @@ private fun App() {
     var detailReloads by remember { mutableStateOf(0) }
     var status by remember { mutableStateOf<String?>(null) }
 
+    /**
+     * The state bar for every thread on screen, worked out again from the read counts - which is
+     * what the Android list does on every load. [keeping] is what a thread already showed, and the
+     * rule falls back to it for the one case it has no answer for.
+     */
+    fun decorate(items: List<ZumpaThread>, keeping: Map<String, ThreadState>) {
+        val userName = prefs.loggedUserName
+        threadStates = items.associate { thread ->
+            thread.id to thread.stateFor(
+                readCount = readStates.readCount(thread.id),
+                userName = userName,
+                current = keeping[thread.id] ?: ThreadState.New,
+            )
+        }
+    }
+
     suspend fun reload() {
         listState = Loadable.Loading
         runCatching {
             threadsRepo.loadMainPage(fromThread = null, filter = settings.filter.value)
         }.onSuccess { result ->
             threads = result.items.values.sortedByDescending { it.idLong }
+            //a reload replaces the list, so a thread that fell off it takes its decoration with it
+            decorate(threads, keeping = threadStates)
             nextThreadId = result.nextThreadId.takeIf { it.isNotEmpty() }
             listState = Loadable.Loaded
         }.onFailure {
@@ -137,6 +169,7 @@ private fun App() {
             threads = (threads + result.items.values)
                 .distinctBy { it.id }
                 .sortedByDescending { it.idLong }
+            decorate(threads, keeping = threadStates)
             nextThreadId = result.nextThreadId.takeIf { it.isNotEmpty() }
         }.onFailure {
             status = it.message ?: "Could not load more"
@@ -177,16 +210,47 @@ private fun App() {
         }
     }
 
-    /** A new thread, or an answer to one - the same call the Android post screen makes. */
     /**
+     * Opening a thread marks everything in it as seen, which is what turns its bar off - the same
+     * thing `MainListViewModel` does on a click. The count is written out when the window closes;
+     * what is on screen is updated here.
+     */
+    fun select(threadId: String) {
+        selected = threadId
+        val thread = threadsRepo.thread(threadId) ?: return
+        readStates.markRead(threadId, thread.items)
+        val state = thread.stateFor(
+            readCount = thread.items,
+            userName = prefs.loggedUserName,
+            current = threadStates[threadId] ?: ThreadState.New,
+        )
+        threadStates = threadStates + (threadId to state)
+    }
+
+    /**
+     * A new thread, or an answer to one - the same call the Android post screen makes.
+     *
      * @return whether the forum took it, so a caller can leave what was written alone when it did
      * not. Both send calls answer with a Boolean and this used to throw it away, reporting "Sent"
      * for a post the forum had turned down - which is why a reply could seem to go and leave no
      * trace of itself anywhere.
      */
     suspend fun send(target: Composing, subject: String, message: String): Boolean {
-        isSending = true
         val nick = settings.nickName
+        /*
+         * A session signed in before the user name was being stored has cookies and an
+         * `isLoggedIn` flag but no name - see the login dialog below. The forum turns down a post
+         * whose `author` is empty, and it does it by answering 200 with the post form again rather
+         * than with an error, so `ignoringZumpaRedirect` reads that as a success and the reader is
+         * told "Sent" about a reply that never appeared anywhere. Which is the whole symptom.
+         *
+         * So it is refused here instead, where the reason is known and can be said out loud.
+         */
+        if (nick.isBlank()) {
+            status = "Sign in again - this session has no user name to post under"
+            return false
+        }
+        isSending = true
         val outcome = runCatching {
             when (target) {
                 is Composing.NewThread ->
@@ -301,9 +365,10 @@ private fun App() {
                     ThreadList(
                         state = listState,
                         threads = threads,
+                        states = threadStates,
                         selectedId = selected,
                         hasMore = nextThreadId != null,
-                        onSelect = { selected = it },
+                        onSelect = ::select,
                         onEndReached = { scope.launch { appendNextPage() } },
                         onRetry = { scope.launch { reload() } },
                     )
@@ -371,6 +436,21 @@ private fun App() {
                 isLoginOpen = false
                 scope.launch {
                     status = "Signing in..."
+                    /*
+                     * Before the call, because the call reads it back out of preferences.
+                     *
+                     * `AuthRepository.login` does not store the name it is handed - on Android the
+                     * settings screen has already written it as it was typed - and everything
+                     * downstream reads it from there: `ZumpaPrefs.nickName`, which is the `author`
+                     * field of every post, and `parser.userName`, which is how a reply addressed to
+                     * you is spotted. Signing in here left both empty, and that is why a reply
+                     * could not be sent: the forum was being handed `author=` with nothing after it.
+                     *
+                     * The password is deliberately not stored. Android keeps it to re-offer in its
+                     * settings screen; nothing here ever reads it, and a password in a plain
+                     * properties file next to the offline snapshot is not worth writing for nobody.
+                     */
+                    settings.setUserName(user)
                     runCatching { auth.login(user, password) }
                         .onSuccess {
                             status = if (it.isLoggedIn) "Signed in as $user" else "Sign in refused"

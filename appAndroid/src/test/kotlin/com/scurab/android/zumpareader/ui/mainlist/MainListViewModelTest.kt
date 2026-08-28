@@ -2,6 +2,7 @@ package com.scurab.android.zumpareader.ui.mainlist
 
 import app.cash.turbine.test
 import com.scurab.android.zumpareader.arch.WindowLayout
+import com.scurab.android.zumpareader.model.ThreadState
 import com.scurab.android.zumpareader.model.ZumpaMainPageResult
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.repository.AppEvent

@@ -1,6 +1,7 @@
 package com.scurab.android.zumpareader.text
 
 import androidx.compose.ui.graphics.Color
+import com.scurab.android.zumpareader.reader.Smiley
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -18,43 +19,37 @@ class AnnotatedTextRendererTest {
         val rendered = renderer.body("nothing special here")
 
         assertEquals("nothing special here", rendered.text.text)
-        assertTrue(rendered.inlineContent.isEmpty())
     }
 
     @Test
-    fun `a smiley becomes inline content and leaves no stray characters`() {
+    fun `a smiley becomes its character and leaves the text around it alone`() {
         val rendered = renderer.body("ahoj :) jak je")
 
-        assertEquals(1, rendered.inlineContent.size)
-        assertTrue(rendered.text.text.startsWith("ahoj "))
-        assertTrue(rendered.text.text.endsWith(" jak je"))
+        assertEquals("ahoj ${Smiley.SMILEY.glyph} jak je", rendered.text.text)
     }
 
     /**
      * The off-by-one this pins would leave the smiley's last character behind as text, giving
-     * `:))abc`. The smiley keeps its own `:)` as the placeholder's alternate text, which is what
-     * ImageSpan did too - the underlying text still reads `:)` when the message is copied.
+     * `🙂)abc`.
      */
     @Test
     fun `text after a smiley is not duplicated or clipped`() {
         val rendered = renderer.body(":)abc")
 
-        assertEquals(":)abc", rendered.text.text)
-        assertEquals(1, rendered.inlineContent.size)
+        assertEquals("${Smiley.SMILEY.glyph}abc", rendered.text.text)
     }
 
     @Test
-    fun `two smileys both become inline content`() {
+    fun `two smileys both become characters`() {
         val rendered = renderer.body(":) and ;)")
 
-        assertEquals(2, rendered.inlineContent.size)
+        assertEquals("${Smiley.SMILEY.glyph} and ${Smiley.WINK.glyph}", rendered.text.text)
     }
 
     @Test
     fun `a smiley inside a url is left alone`() {
         val rendered = renderer.body("http://x/a:)b")
 
-        assertTrue(rendered.inlineContent.isEmpty())
         assertEquals("http://x/a:)b", rendered.text.text)
     }
 
