@@ -56,20 +56,21 @@ internal sealed interface Composing {
  * picking a file would mean an upload path this module has not got - `ImageUploadRepository` is in
  * `:shared`, but nothing here is wired to it and half a picker is worse than none.
  *
- * The draft is keyed on [target], so moving to another thread starts a new one - and coming back to
- * a thread whose id and subject are unchanged does not, because [Composing.Reply] is a data class.
+ * The draft is held by the caller, not here: clearing it on a successful send needs to know whether
+ * the forum took the reply, and this does not.
  */
 @Composable
 internal fun ReplyPanel(
     target: Composing.Reply,
+    message: String,
     isSending: Boolean,
-    onSend: (message: String) -> Unit,
+    onMessageChange: (String) -> Unit,
+    onSend: () -> Unit,
 ) {
-    var message by remember(target) { mutableStateOf("") }
     val canSend = !isSending && message.isNotBlank()
 
     fun send() {
-        if (canSend) onSend(message)
+        if (canSend) onSend()
     }
 
     Column(
@@ -78,7 +79,7 @@ internal fun ReplyPanel(
     ) {
         OutlinedTextField(
             value = message,
-            onValueChange = { message = it },
+            onValueChange = onMessageChange,
             label = { Text("Reply") },
             enabled = !isSending,
             maxLines = MESSAGE_MAX_LINES,
