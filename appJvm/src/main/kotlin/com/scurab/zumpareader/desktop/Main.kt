@@ -100,6 +100,8 @@ private fun App() {
     var isLoginOpen by remember { mutableStateOf(false) }
     var isSending by remember { mutableStateOf(false) }
     var isNewThreadOpen by remember { mutableStateOf(false) }
+    //bumped to make the open thread load again - see ThreadDetail
+    var detailReloads by remember { mutableStateOf(0) }
     var status by remember { mutableStateOf<String?>(null) }
 
     suspend fun reload() {
@@ -187,10 +189,9 @@ private fun App() {
             status = "Sent"
             //the forum has something new on it either way, so what is on screen is stale
             reload()
-            //and a reply is in the thread that is open, which reloads by being re-selected
+            //and a reply is in the thread that is open, which has to be told to load again
             if (target is Composing.Reply) {
-                selected = null
-                selected = target.threadId
+                detailReloads++
             }
         }.onFailure {
             status = it.message ?: "Could not send"
@@ -302,13 +303,13 @@ private fun App() {
                     Box(Modifier.weight(LIST_WEIGHT)) { list() }
                     Box(Modifier.width(1.dp).fillMaxHeight().background(DividerColor))
                     Column(Modifier.weight(DETAIL_WEIGHT)) {
-                        Box(Modifier.weight(1f)) { ThreadDetail(selected) }
+                        Box(Modifier.weight(1f)) { ThreadDetail(selected, detailReloads) }
                         reply()
                     }
                 }
             } else if (isShowingDetail) {
                 Column(Modifier.fillMaxSize()) {
-                    Box(Modifier.weight(1f)) { ThreadDetail(selected) }
+                    Box(Modifier.weight(1f)) { ThreadDetail(selected, detailReloads) }
                     reply()
                 }
             } else {
