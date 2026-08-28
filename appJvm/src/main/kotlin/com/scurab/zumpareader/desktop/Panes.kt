@@ -198,6 +198,8 @@ internal fun ThreadDetail(threadId: String?, reloadToken: Int = 0) {
                         Text(item.time.formatPostTime(), color = Muted, fontSize = 12.sp)
                     }
                     Text(item.body, color = Content, fontSize = 14.sp)
+                    //the pictures and links the shared parser pulled out of the body
+                    PostUrls(item.urls.orEmpty())
                 }
             }
         }
