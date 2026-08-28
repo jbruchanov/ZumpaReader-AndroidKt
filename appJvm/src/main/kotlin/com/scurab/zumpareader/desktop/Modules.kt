@@ -18,9 +18,11 @@ import com.scurab.android.zumpareader.repository.NoImagePrefetcher
 import com.scurab.android.zumpareader.repository.NoPushTokenProvider
 import com.scurab.android.zumpareader.repository.OfflineDataRepository
 import com.scurab.android.zumpareader.repository.PushTokenProvider
+import com.scurab.android.zumpareader.repository.ZumpaReadStateRepository
 import com.scurab.android.zumpareader.repository.ZumpaSettingsRepository
 import com.scurab.android.zumpareader.repository.ZumpaThreadRepository
 import com.scurab.android.zumpareader.repository.ZumpaThreadRepositoryImpl
+import com.scurab.android.zumpareader.usecase.InitAppUseCase
 import com.scurab.android.zumpareader.usecase.OfflineDownloadUseCase
 import com.scurab.android.zumpareader.util.KeyValueStore
 import com.scurab.android.zumpareader.util.ZumpaPrefs
@@ -42,9 +44,10 @@ internal val IMAGE_CLIENT = named("images")
  *
  * The same shape as `:appAndroid`'s module, down to the qualifier on the online api and the factory
  * that resolves the switching one, so the two hosts can be read against each other. What differs is
- * only what the platform has to answer for: the http engine, the key-value store, and the two seams
+ * only what the platform has to answer for: the http engine, the key-value store, the two seams
  * `:shared` declares for push and an image cache - `NoPushTokenProvider` and `NoImagePrefetcher`,
- * which exist in `commonMain` for a host that has neither.
+ * which exist in `commonMain` for a host that has neither - and the startup work, which is
+ * `InitAppUseCase`.
  */
 internal fun desktopModule(home: File = defaultHome()) = module {
 
@@ -69,6 +72,15 @@ internal fun desktopModule(home: File = defaultHome()) = module {
     single { CookieRepository(get()) }
 
     single { ZumpaSettingsRepository(get()) }
+
+    /**
+     * How much of each thread has been read, which is the whole input to the coloured state bar down
+     * the left of a list row. Missing from this graph, which is why the desktop list had no bars.
+     *
+     * [ZumpaReadStateRepository.persist] is not called from here - see the window's close handler in
+     * `main`, which is this host's equivalent of the last activity stopping.
+     */
+    single { ZumpaReadStateRepository(get(), get()) }
 
     single {
         val prefs = get<ZumpaPrefs>()
@@ -115,6 +127,9 @@ internal fun desktopModule(home: File = defaultHome()) = module {
     single<PushTokenProvider> { NoPushTokenProvider }
 
     single<ImagePrefetcher> { NoImagePrefetcher }
+
+    //the desktop half of the startup seam - see DesktopInitAppUseCase
+    single<InitAppUseCase> { DesktopInitAppUseCase(imageLoader = { get() }) }
 
     single {
         AuthRepository(

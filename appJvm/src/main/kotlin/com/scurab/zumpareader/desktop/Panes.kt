@@ -6,10 +6,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -29,11 +34,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.scurab.android.zumpareader.model.ThreadState
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.model.ZumpaThreadItem
+import com.scurab.android.zumpareader.reader.Smileys
 import com.scurab.android.zumpareader.repository.ZumpaThreadRepository
 import com.scurab.android.zumpareader.util.formatPostTime
 import com.scurab.android.zumpareader.util.formatThreadListTime
@@ -45,11 +55,16 @@ import org.koin.compose.koinInject
  *
  * Rows are clickable, which they were not: `ThreadRow` had no click handler at all, so there was
  * nothing for a pointer to do with one and no second pane for it to open.
+ *
+ * @param states the new/updated/own decoration per thread id, which is what the coloured bar down
+ * the left of a row is. Handed in rather than worked out here: it depends on how much of each thread
+ * has been read, which is a repository's business - see `App`.
  */
 @Composable
 internal fun ThreadList(
     state: Loadable,
     threads: List<ZumpaThread>,
+    states: Map<String, ThreadState>,
     selectedId: String?,
     hasMore: Boolean,
     onSelect: (String) -> Unit,
@@ -91,6 +106,7 @@ internal fun ThreadList(
         itemsIndexed(threads, key = { _, thread -> thread.id }) { index, thread ->
             ThreadRow(
                 thread = thread,
+                state = states[thread.id] ?: ThreadState.New,
                 isEven = index % 2 == 0,
                 isSelected = thread.id == selectedId,
                 onClick = { onSelect(thread.id) },
@@ -98,11 +114,14 @@ internal fun ThreadList(
         }
         if (hasMore) {
             item(key = "next-page") {
-                Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(Spaces.large),
+                    contentAlignment = Alignment.Center,
+                ) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(Sizes.progressBar),
                         color = Accent,
-                        strokeWidth = 2.dp,
+                        strokeWidth = Sizes.divider * 2,
                     )
                 }
             }
@@ -110,35 +129,101 @@ internal fun ThreadList(
     }
 }
 
+/**
+ * One thread, laid out as the phone lays it out: the state bar hard against the left edge, then the
+ * subject, then the author, the last author, the answer count and the time on one line.
+ *
+ * The subject goes through [Smileys] - the same table `:appAndroid`'s renderer uses - so `:)` in a
+ * subject is a face here too. That is only possible now that a smiley is a character rather than a
+ * drawable this module cannot reach.
+ */
 @Composable
 private fun ThreadRow(
     thread: ZumpaThread,
+    state: ThreadState,
     isEven: Boolean,
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {
+    val subject = remember(thread.subject) { Smileys.replaceIn(thread.subject) }
+    val lastAuthor = thread.lastAuthor
+    val time = remember(thread.time, lastAuthor) {
+        //only the time when a last author is present - as on the phone, there is no room for both
+        thread.time.formatThreadListTime(useShortFormat = lastAuthor != null)
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            //so the state bar has something for its fillMaxHeight to measure against
+            .height(IntrinsicSize.Min)
             .background(if (isEven) RowEven else RowOdd)
             .then(if (isSelected) Modifier.background(SelectedRow) else Modifier)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .clickable(onClick = onClick),
     ) {
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(thread.subject, color = Content, fontSize = 15.sp)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(thread.author, color = Accent, fontSize = 12.sp)
+        //before the padding, so the line keeps the window edge and the text clears it
+        ThreadStateBar(state)
+        Column(Modifier.weight(1f).padding(Spaces.listItemPadding)) {
+            Text(
+                text = subject,
+                color = Content,
+                fontSize = FontSizes.subject,
+                maxLines = SUBJECT_MAX_LINES,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.heightIn(min = Sizes.subjectMinHeight),
+            )
+            //the author takes the slack, so the count and the time sit against the right edge
+            Row(
+                modifier = Modifier.padding(top = Spaces.small),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text(
-                    text = thread.time.formatThreadListTime(useShortFormat = false),
-                    color = Muted,
-                    fontSize = 12.sp,
+                    text = thread.author,
+                    color = Accent,
+                    fontSize = FontSizes.author,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
                 )
+                lastAuthor?.let {
+                    Text(
+                        text = it,
+                        color = Accent,
+                        fontSize = FontSizes.nickName,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(start = Spaces.normal),
+                    )
+                }
+                Text(
+                    text = thread.items.toString(),
+                    color = Content,
+                    fontSize = ThreadCountSize,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = Spaces.normal),
+                )
+                Text(text = time, color = Content, fontSize = FontSizes.date)
             }
         }
-        Text(thread.items.toString(), color = Content, fontSize = 15.sp)
     }
+}
+
+/**
+ * The `LevelListDrawable` down the left of a row, as a coloured bar - the same four colours the
+ * phone uses, off the same [ThreadState].
+ *
+ * A read thread gets no bar at all, because level 0 of that drawable was transparent.
+ */
+@Composable
+private fun ThreadStateBar(state: ThreadState) {
+    val color = when (state) {
+        ThreadState.None -> Color.Transparent
+        ThreadState.New -> StateNew
+        ThreadState.Updated -> StateUpdated
+        ThreadState.Own -> StateOwn
+        ThreadState.ResponseForYou -> StateResponseForYou
+    }
+    Box(Modifier.width(Sizes.threadStateBar).fillMaxHeight().background(color))
 }
 
 /** The detail pane: whatever the list has selected, or an invitation to select something. */
@@ -185,24 +270,44 @@ internal fun ThreadDetail(threadId: String?, reloadToken: Int = 0) {
         }
 
         is Loadable.Loaded -> LazyColumn(Modifier.fillMaxSize(), state = listState) {
-            itemsIndexed(items) { index, item ->
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(if (index % 2 == 0) RowEven else RowOdd)
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(item.author, color = Accent, fontSize = 12.sp)
-                        Text(item.time.formatPostTime(), color = Muted, fontSize = 12.sp)
-                    }
-                    Text(item.body, color = Content, fontSize = 14.sp)
-                    //the pictures and links the shared parser pulled out of the body
-                    PostUrls(item.urls.orEmpty())
-                }
-            }
+            itemsIndexed(items) { index, item -> PostRow(item, isEven = index % 2 == 0) }
         }
+    }
+}
+
+/**
+ * One message, laid out as the phone lays it out: author and time on a line, then the body at the
+ * subject size - which is what that `TextView` always was, not the 13sp of the post editor.
+ */
+@Composable
+private fun PostRow(item: ZumpaThreadItem, isEven: Boolean) {
+    val body = remember(item.body) { Smileys.replaceIn(item.body) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(if (isEven) RowEven else RowOdd)
+            .padding(Spaces.listItemPadding),
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(Spaces.small)) {
+            Text(
+                text = item.author,
+                color = Accent,
+                fontSize = FontSizes.author,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
+            Text(item.time.formatPostTime(), color = Content, fontSize = FontSizes.date)
+        }
+        Text(
+            text = body,
+            color = Content,
+            fontSize = FontSizes.subject,
+            modifier = Modifier.padding(top = Spaces.small),
+        )
+        //the pictures and links the shared parser pulled out of the body
+        PostUrls(item.urls.orEmpty())
     }
 }
 
@@ -303,5 +408,7 @@ private fun Centered(content: @Composable () -> Unit) {
 
 /** The Android list fires its next page 15 rows from the end; so does this one. */
 private const val LOAD_MORE_OFFSET = 15
+
+private const val SUBJECT_MAX_LINES = 3
 
 private const val STATUS_MILLIS = 3_000L

@@ -2,7 +2,7 @@ package com.scurab.android.zumpareader.test
 
 import com.scurab.android.zumpareader.ui.mainlist.MainListUiState
 import com.scurab.android.zumpareader.ui.mainlist.ThreadRowUiState
-import com.scurab.android.zumpareader.ui.mainlist.ThreadState
+import com.scurab.android.zumpareader.model.ThreadState
 
 fun Fixtures.MainList.uiState(rows: Int = 8) = MainListUiState(
     rows = List(rows) { index -> row(index) },

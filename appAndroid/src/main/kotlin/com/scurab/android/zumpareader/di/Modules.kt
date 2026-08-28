@@ -8,6 +8,8 @@ import com.scurab.android.zumpareader.arch.WindowLayout
 import android.content.Context
 import android.os.Environment
 import com.scurab.android.zumpareader.repository.CoilImagePrefetcher
+import com.scurab.android.zumpareader.repository.CrashReporter
+import com.scurab.android.zumpareader.repository.FirebaseCrashReporter
 import com.scurab.android.zumpareader.repository.FirebasePushTokenProvider
 import com.scurab.android.zumpareader.repository.ImagePrefetcher
 import com.scurab.android.zumpareader.repository.PushTokenProvider
@@ -41,6 +43,9 @@ import com.scurab.android.zumpareader.ui.settings.AndroidNotificationState
 import com.scurab.android.zumpareader.ui.settings.NotificationState
 import com.scurab.android.zumpareader.ui.settings.SettingsViewModel
 import com.scurab.android.zumpareader.ui.sublist.SubListViewModel
+import com.scurab.android.zumpareader.usecase.AndroidInitAppUseCase
+import com.scurab.android.zumpareader.usecase.CreateNotificationChannelsUseCase
+import com.scurab.android.zumpareader.usecase.InitAppUseCase
 import com.scurab.android.zumpareader.usecase.OfflineDownloadUseCase
 import com.scurab.android.zumpareader.util.ZumpaPrefs
 import io.ktor.client.engine.HttpClientEngine
@@ -110,6 +115,10 @@ val coreModule = module {
     single { buildImageLoader(androidContext(), get(IMAGE_CLIENT)) }
     single { CookieRepository(get()) }
     single<PushTokenProvider> { FirebasePushTokenProvider() }
+    single<CrashReporter> { FirebaseCrashReporter() }
+    single { CreateNotificationChannelsUseCase(androidContext()) }
+    //everything ZumpaReaderApp.onCreate used to do inline
+    single<InitAppUseCase> { AndroidInitAppUseCase(get(), get(), get()) }
     single { AuthRepository(get(ONLINE_API), get(), get(), get(), get(), get()) }
     single<NotificationState> { AndroidNotificationState(androidContext()) }
 

@@ -36,15 +36,14 @@
             </intent-filter>
         </activity>
 
-        <meta-data
-            android:name="io.fabric.ApiKey"
-            android:value="1dcf380e1e5890c2c982152db1933ee9d7e8bde8" />
-
-        <!--android:permission="com.google.android.c2dm.permission.SEND"-->
-        <service android:name=".MyFirebaseService"
-            android:exported="true">
+        <!-- exported=false is what the FCM docs specify: the message is dispatched inside the
+             app by the library's own receiver, so nothing outside needs to reach this service.
+             Exported, any app on the device could hand it a MESSAGING_EVENT and post a
+             notification that looks like it came from the forum. -->
+        <service
+            android:name=".MyFirebaseService"
+            android:exported="false">
             <intent-filter>
-                <!--<action android:name="com.google.android.c2dm.intent.RECEIVE" />-->
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
