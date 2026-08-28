@@ -35,9 +35,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.model.ZumpaThreadItem
+import com.scurab.android.zumpareader.repository.ZumpaThreadRepository
 import com.scurab.android.zumpareader.util.formatPostTime
 import com.scurab.android.zumpareader.util.formatThreadListTime
 import kotlinx.coroutines.delay
+import org.koin.compose.koinInject
 
 /**
  * The list pane.
@@ -142,18 +144,19 @@ private fun ThreadRow(
 
 /** The detail pane: whatever the list has selected, or an invitation to select something. */
 @Composable
-internal fun ThreadDetail(wiring: Wiring, threadId: String?) {
+internal fun ThreadDetail(threadId: String?) {
     if (threadId == null) {
         Centered { Text("Pick a thread", color = Color.Gray) }
         return
     }
 
+    val threads = koinInject<ZumpaThreadRepository>()
     var state by remember(threadId) { mutableStateOf<Loadable>(Loadable.Loading) }
     var items by remember(threadId) { mutableStateOf<List<ZumpaThreadItem>>(emptyList()) }
 
     LaunchedEffect(threadId) {
         state = Loadable.Loading
-        runCatching { wiring.threads.loadThread(threadId) }
+        runCatching { threads.loadThread(threadId) }
             .onSuccess {
                 items = it
                 state = Loadable.Loaded

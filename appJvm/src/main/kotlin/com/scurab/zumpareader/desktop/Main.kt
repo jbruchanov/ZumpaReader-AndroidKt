@@ -34,30 +34,39 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.scurab.android.zumpareader.model.ZumpaThread
+import com.scurab.android.zumpareader.repository.AuthRepository
+import com.scurab.android.zumpareader.repository.OfflineDataRepository
+import com.scurab.android.zumpareader.repository.ZumpaSettingsRepository
+import com.scurab.android.zumpareader.repository.ZumpaThreadRepository
 import com.scurab.android.zumpareader.model.ZumpaThreadBody
 import com.scurab.android.zumpareader.arch.WindowLayout
+import com.scurab.android.zumpareader.usecase.OfflineDownloadUseCase
 import com.scurab.android.zumpareader.usecase.OfflineProgress
+import com.scurab.android.zumpareader.util.ZumpaPrefs
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
+import org.koin.core.context.startKoin
 
 /**
  * The desktop entry point.
  *
- * Two panes, always: a desktop window is never the narrow case the Android app switches layout for,
- * so there is nothing to decide - the list on the left, whatever is selected on the right. That is
- * the tablet layout of `:appAndroid`, which is why this has no navigation of any kind.
+ * The graph is built before the window, so anything the ui resolves is already there - see
+ * [desktopModule], which is the same shape as `:appAndroid`'s koin module.
  *
  * The UI is not shared with Android - `:appAndroid` is on `androidx.compose` and this is on Compose
  * Multiplatform - so this is a second, smaller implementation over the same `:shared` stack rather
  * than the same screens. Merging them is phase 3 in `KMP_PLAN.md`.
  */
-fun main() = application {
-    val wiring = remember { Wiring() }
-    Window(
-        onCloseRequest = ::exitApplication,
-        title = "ZumpaReader (desktop)",
-        state = rememberWindowState(width = 1200.dp, height = 800.dp),
-    ) {
-        App(wiring)
+fun main() {
+    startKoin { modules(desktopModule()) }
+    application {
+        Window(
+            state = rememberWindowState(width = 1200.dp, height = 800.dp),
+            onCloseRequest = ::exitApplication,
+            title = "ZumpaReader (desktop)",
+        ) {
+            App()
+        }
     }
 }
 
@@ -70,10 +79,18 @@ internal sealed interface Loadable {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun App(wiring: Wiring) {
+private fun App() {
     val scope = rememberCoroutineScope()
-    val isOffline by wiring.settings.isOffline.collectAsState()
-    val isLoggedIn by wiring.settings.isLoggedIn.collectAsState()
+    //resolved out of composition, which is what koin-compose is here for - there is no Activity to
+    //hang an injector off and no ViewModels to scope anything to
+    val settings = koinInject<ZumpaSettingsRepository>()
+    val threadsRepo = koinInject<ZumpaThreadRepository>()
+    val auth = koinInject<AuthRepository>()
+    val downloader = koinInject<OfflineDownloadUseCase>()
+    val offlineData = koinInject<OfflineDataRepository>()
+    val prefs = koinInject<ZumpaPrefs>()
+    val isOffline by settings.isOffline.collectAsState()
+    val isLoggedIn by settings.isLoggedIn.collectAsState()
 
     var threads by remember { mutableStateOf<List<ZumpaThread>>(emptyList()) }
     var listState by remember { mutableStateOf<Loadable>(Loadable.Loading) }
@@ -81,14 +98,13 @@ private fun App(wiring: Wiring) {
     var isAppending by remember { mutableStateOf(false) }
     var selected by remember { mutableStateOf<String?>(null) }
     var isLoginOpen by remember { mutableStateOf(false) }
-    var composing by remember { mutableStateOf<Composing?>(null) }
     var isSending by remember { mutableStateOf(false) }
     var status by remember { mutableStateOf<String?>(null) }
 
     suspend fun reload() {
         listState = Loadable.Loading
         runCatching {
-            wiring.threads.loadMainPage(fromThread = null, filter = wiring.settings.filter.value)
+            threadsRepo.loadMainPage(fromThread = null, filter = settings.filter.value)
         }.onSuccess { result ->
             threads = result.items.values.sortedByDescending { it.idLong }
             nextThreadId = result.nextThreadId.takeIf { it.isNotEmpty() }
@@ -107,7 +123,7 @@ private fun App(wiring: Wiring) {
         if (isAppending) return
         isAppending = true
         runCatching {
-            wiring.threads.loadMainPage(fromThread = from, filter = wiring.settings.filter.value)
+            threadsRepo.loadMainPage(fromThread = from, filter = settings.filter.value)
         }.onSuccess { result ->
             threads = (threads + result.items.values)
                 .distinctBy { it.id }
@@ -123,10 +139,10 @@ private fun App(wiring: Wiring) {
         status = "Downloading..."
         runCatching {
             var downloaded: LinkedHashMap<String, ZumpaThread>? = null
-            wiring.downloader.run(
+            downloader.run(
                 pages = DOWNLOAD_PAGES,
                 downloadImages = false,
-                outJsonFile = wiring.offlineSnapshotPath,
+                outJsonFile = offlineData.path,
             ).collect { progress ->
                 when (progress) {
                     is OfflineProgress.Threads ->
@@ -141,7 +157,9 @@ private fun App(wiring: Wiring) {
             if (data.isNullOrEmpty()) {
                 status = "Download failed"
             } else {
-                wiring.applyDownloaded(data)
+                //what the download landing does: the api serves it, and the list is rebuilt from it
+                offlineData.setData(data)
+                threadsRepo.replaceAll(data)
                 status = "Downloaded ${data.size} threads"
                 reload()
             }
@@ -153,19 +171,18 @@ private fun App(wiring: Wiring) {
     /** A new thread, or an answer to one - the same call the Android post screen makes. */
     suspend fun send(target: Composing, subject: String, message: String) {
         isSending = true
-        val nick = wiring.settings.nickName
+        val nick = settings.nickName
         runCatching {
             when (target) {
                 is Composing.NewThread ->
-                    wiring.threads.sendThread(ZumpaThreadBody(nick, subject, message))
+                    threadsRepo.sendThread(ZumpaThreadBody(nick, subject, message))
 
-                is Composing.Reply -> wiring.threads.sendResponse(
+                is Composing.Reply -> threadsRepo.sendResponse(
                     threadId = target.threadId,
                     body = ZumpaThreadBody(nick, target.subject, message, target.threadId),
                 )
             }
         }.onSuccess {
-            composing = null
             status = "Sent"
             //the forum has something new on it either way, so what is on screen is stale
             reload()
@@ -234,12 +251,12 @@ private fun App(wiring: Wiring) {
                         onLogin = { isLoginOpen = true },
                         onLogout = {
                             scope.launch {
-                                wiring.auth.logout()
+                                auth.logout()
                                 status = "Signed out"
                                 reload()
                             }
                         },
-                        onToggleOffline = { wiring.setOffline(!isOffline) },
+                        onToggleOffline = { prefs.isOffline = !isOffline },
                         onDownload = { scope.launch { download() } },
                     )
                 },
@@ -248,17 +265,53 @@ private fun App(wiring: Wiring) {
             //Signed in and online is the whole condition: the forum will not take a post from
             //anyone else, and an offline snapshot is a read of something that has already happened.
             val canWrite = isLoggedIn && !isOffline
-            val writeTarget: Composing? = when {
-                !canWrite -> null
-                //answering the thread on screen, or starting one from the list
-                isShowingDetail -> selected?.let { Composing.Reply(it, subjectOf(threads, it)) }
-                else -> Composing.NewThread
+            val newThread: @Composable () -> Unit = {
+                if (canWrite) {
+                    WritePanel(Composing.NewThread, isSending) { subject, message ->
+                        scope.launch { send(Composing.NewThread, subject, message) }
+                    }
+                }
+            }
+            val reply: @Composable () -> Unit = {
+                val id = selected
+                if (canWrite && id != null) {
+                    val target = Composing.Reply(id, subjectOf(threads, id))
+                    WritePanel(target, isSending) { _, message ->
+                        scope.launch { send(target, "", message) }
+                    }
+                }
             }
 
-            Box(Modifier.weight(1f)) {
             if (isTwoPane) {
                 Row(Modifier.fillMaxSize()) {
-                    Box(Modifier.weight(LIST_WEIGHT)) {
+                    Column(Modifier.weight(LIST_WEIGHT)) {
+                        Box(Modifier.weight(1f)) {
+                        ThreadList(
+                            state = listState,
+                            threads = threads,
+                            selectedId = selected,
+                            hasMore = nextThreadId != null,
+                            onSelect = { selected = it },
+                            onEndReached = { scope.launch { appendNextPage() } },
+                            onRetry = { scope.launch { reload() } },
+                        )
+                        }
+                        newThread()
+                    }
+                    Box(Modifier.width(1.dp).fillMaxHeight().background(DividerColor))
+                    Column(Modifier.weight(DETAIL_WEIGHT)) {
+                        Box(Modifier.weight(1f)) { ThreadDetail(selected) }
+                        reply()
+                    }
+                }
+            } else if (isShowingDetail) {
+                Column(Modifier.fillMaxSize()) {
+                    Box(Modifier.weight(1f)) { ThreadDetail(selected) }
+                    reply()
+                }
+            } else {
+                Column(Modifier.fillMaxSize()) {
+                    Box(Modifier.weight(1f)) {
                         ThreadList(
                             state = listState,
                             threads = threads,
@@ -269,41 +322,10 @@ private fun App(wiring: Wiring) {
                             onRetry = { scope.launch { reload() } },
                         )
                     }
-                    Box(Modifier.width(1.dp).fillMaxHeight().background(DividerColor))
-                    Box(Modifier.weight(DETAIL_WEIGHT)) {
-                        ThreadDetail(wiring, selected)
-                    }
+                    newThread()
                 }
-            } else if (isShowingDetail) {
-                ThreadDetail(wiring, selected)
-            } else {
-                ThreadList(
-                    state = listState,
-                    threads = threads,
-                    selectedId = selected,
-                    hasMore = nextThreadId != null,
-                    onSelect = { selected = it },
-                    onEndReached = { scope.launch { appendNextPage() } },
-                    onRetry = { scope.launch { reload() } },
-                )
-            }
-            writeTarget?.let { target ->
-                WriteFab(
-                    isReply = target is Composing.Reply,
-                    modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp),
-                ) { composing = target }
-            }
             }
         }
-    }
-
-    composing?.let { target ->
-        ComposeDialog(
-            composing = target,
-            isSending = isSending,
-            onDismiss = { composing = null },
-            onSend = { subject, message -> scope.launch { send(target, subject, message) } },
-        )
     }
 
     status?.let { StatusToast(it) { status = null } }
@@ -315,7 +337,7 @@ private fun App(wiring: Wiring) {
                 isLoginOpen = false
                 scope.launch {
                     status = "Signing in..."
-                    runCatching { wiring.auth.login(user, password) }
+                    runCatching { auth.login(user, password) }
                         .onSuccess {
                             status = if (it.isLoggedIn) "Signed in as $user" else "Sign in refused"
                         }

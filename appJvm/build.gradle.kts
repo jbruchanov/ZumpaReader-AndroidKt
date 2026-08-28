@@ -35,6 +35,10 @@ dependencies {
     implementation(compose.material3)
     implementation(compose.components.resources)
 
+    implementation(platform(libs.koin.bom))
+    implementation(libs.koin.core)
+    implementation(libs.koin.compose)
+
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlin.stdlib)
 }

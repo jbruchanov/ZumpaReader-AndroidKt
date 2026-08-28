@@ -1,6 +1,8 @@
 package com.scurab.zumpareader.desktop
 
+import com.scurab.android.zumpareader.repository.ZumpaThreadRepository
 import kotlinx.coroutines.runBlocking
+import org.koin.core.context.startKoin
 
 /**
  * `./gradlew :appJvm:smoke` - loads the forum through `:shared` and prints what came back, without
@@ -10,8 +12,8 @@ import kotlinx.coroutines.runBlocking
  * whatever the string holds, so the text alone cannot tell a console problem from a decoding one.
  */
 fun main() = runBlocking {
-    val wiring = Wiring()
-    val result = wiring.threads.loadMainPage(fromThread = null, filter = "0")
+    val koin = startKoin { modules(desktopModule()) }.koin
+    val result = koin.get<ZumpaThreadRepository>().loadMainPage(fromThread = null, filter = "0")
     println("SMOKE threads=${result.items.size} next=${result.nextThreadId}")
     result.items.values.take(3).forEach {
         println("SMOKE row id=${it.id} items=${it.items} author=${it.author} subject=${it.subject}")
