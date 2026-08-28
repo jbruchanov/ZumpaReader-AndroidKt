@@ -4,7 +4,7 @@
 
 android-base = ["androidx-core-ktx", "androidx-annotation", "google-material", "androidx-window"]
 android-lifecycle = ["androidx-lifecycle-runtime", "androidx-lifecycle-viewmodel"]
-compose = ["androidx-compose-ui", "androidx-compose-ui-graphics", "androidx-compose-ui-tooling-preview", "androidx-compose-foundation", "androidx-compose-material3", "androidx-activity-compose", "androidx-lifecycle-runtime-compose", "androidx-lifecycle-viewmodel-compose", "koin-androidx-compose", "androidx-compose-material-icons-extended", "coil-compose", "coil-network-ktor3", "androidx-navigation3-runtime", "androidx-navigation3-ui", "androidx-lifecycle-viewmodel-navigation3"]
+compose = ["androidx-compose-ui", "androidx-compose-ui-graphics", "androidx-compose-ui-tooling-preview", "androidx-compose-foundation", "androidx-compose-material3", "androidx-activity-compose", "androidx-lifecycle-runtime-compose", "androidx-lifecycle-viewmodel-compose", "koin-androidx-compose", "androidx-compose-material-icons-extended", "coil-compose", "coil-network-ktor3", "coil-gif", "androidx-navigation3-runtime", "androidx-navigation3-ui", "androidx-lifecycle-viewmodel-navigation3"]
 coroutines = ["kotlinx-coroutines-core", "kotlinx-coroutines-android"]
 firebase = ["firebase-crashlytics", "firebase-messaging"]
 koin = ["koin-core", "koin-android"]
@@ -30,36 +30,36 @@ google-services = { id = "com.google.gms.google-services", version.ref = "google
 
 android-sdk-compile = "37"
 android-sdk-min = "26"
-android-sdk-target = "36"
+android-sdk-target = "37"
 
 kotlin = "2.4.10"
-compose-multiplatform = "1.11.1"
+compose-multiplatform = "1.12.0"
 jvmtarget = "17"
-android-gradle-plugin = "9.3.1"
+android-gradle-plugin = "9.3.2"
 
 androidx-activity-compose = "1.13.0"
 androidx-annotation = "1.10.0"
-androidx-compose-bom = "2026.06.01"
-androidx-navigation3 = "1.1.5"
+androidx-compose-bom = "2026.08.00"
+androidx-navigation3 = "1.1.7"
 coil = "3.5.0"
-kotlinx-serialization = "1.9.0"
+kotlinx-serialization = "1.11.0"
 androidx-core-ktx = "1.19.0"
-androidx-window = "1.5.0"
+androidx-window = "1.5.1"
 androidx-lifecycle = "2.11.0"
-firebase-bom = "34.17.0"
-firebase-plugin-crashlytics = "3.0.7"
+firebase-bom = "34.18.0"
+firebase-plugin-crashlytics = "3.0.8"
 google-services = "4.5.0"
 google-material = "1.14.0"
 koin = "4.2.2"
 ksoup = "0.2.6"
 kotlinx-coroutines = "1.11.0"
 kotlinx-datetime = "0.8.0"
-kotlinx-io = "0.9.0"
-ktor = "3.5.0"
+kotlinx-io = "0.9.1"
+ktor = "3.5.2"
 
 junit-jupiter = "5.11.4"
-mockk = "1.13.13"
-turbine = "1.2.0"
+mockk = "1.14.11"
+turbine = "1.2.1"
 
 [libraries]
 
@@ -90,6 +90,9 @@ androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecy
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coil-network-ktor3 = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
+#animated gifs. Android only - it rides in the `compose` bundle, which only :appAndroid uses, and
+#the desktop app draws the first frame as both did before. See buildImageLoader for the decoder.
+coil-gif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coil" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 #versions of firebase libraries are managed by the bom
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
