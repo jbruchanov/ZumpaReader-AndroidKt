@@ -127,6 +127,34 @@ class PostViewModelTest {
     }
 
     @Test
+    fun `every picture adds a tab of its own`() {
+        val vm = viewModel()
+
+        vm.onImagePicked(mockk<android.net.Uri>(relaxed = true), fromCamera = false)
+        vm.onImagePicked(mockk<android.net.Uri>(relaxed = true), fromCamera = false)
+        vm.onImagePicked(mockk<android.net.Uri>(relaxed = true), fromCamera = true)
+
+        //the message tab and one per picture, none of them replacing an earlier one
+        val tabs = vm.uiState.value.tabs
+        assertEquals(4, tabs.size)
+        assertEquals(3, tabs.filterIsInstance<PostTabUiState.Image>().size)
+        //distinct tags, or two tabs would share one image ViewModel
+        assertEquals(tabs.size, tabs.map { it.tag }.toSet().size)
+    }
+
+    @Test
+    fun `every uploaded link is appended to the message`() {
+        val vm = viewModel()
+
+        vm.onLinkShared("http://x.com/1.jpg")
+        vm.onLinkShared("http://x.com/2.jpg")
+
+        val message = vm.uiState.value.message
+        assertTrue(message.contains("<http://x.com/1.jpg>"), message)
+        assertTrue(message.contains("<http://x.com/2.jpg>"), message)
+    }
+
+    @Test
     fun `a picked picture opens on its own tab`() {
         val vm = viewModel()
 
