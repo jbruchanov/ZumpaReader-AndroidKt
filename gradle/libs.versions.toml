@@ -28,6 +28,10 @@ google-services = { id = "com.google.gms.google-services", version.ref = "google
 
 [versions]
 
+#the app's own identity, not a dependency - here so the store listing and the catalog agree
+app-version-code = "69"
+app-version-name = "4.0.0-SNAPSHOT"
+
 android-sdk-compile = "37"
 android-sdk-min = "26"
 android-sdk-target = "37"

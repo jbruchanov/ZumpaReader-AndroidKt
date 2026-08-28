@@ -38,8 +38,8 @@ android {
         buildConfigField("String", "Authority", "\"$fileProviderAuthority\"")
         minSdk = libs.versions.android.sdk.min.get().toInt()
         targetSdk = libs.versions.android.sdk.target.get().toInt()
-        versionCode = 68
-        versionName = "3.3.0"
+        versionCode = libs.versions.app.version.code.get().toInt()
+        versionName = libs.versions.app.version.name.get()
         manifestPlaceholders["authority"] = fileProviderAuthority
         multiDexEnabled = true
     }
@@ -92,21 +92,20 @@ kotlin {
 dependencies {
     implementation(project(":shared"))
 
+    implementation(platform(libs.firebase.bom))
+    implementation(platform(libs.koin.bom))
+    implementation(platform(libs.androidx.compose.bom))
     implementation(libs.kotlin.stdlib)
     implementation(libs.bundles.coroutines)
-    implementation(platform(libs.firebase.bom))
     implementation(libs.bundles.firebase)
-    implementation(platform(libs.koin.bom))
     implementation(libs.bundles.koin)
     implementation(libs.bundles.android.base)
     implementation(libs.bundles.android.lifecycle)
-    implementation(platform(libs.androidx.compose.bom))
     implementation(libs.bundles.compose)
-    debugImplementation(libs.androidx.compose.ui.tooling)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.bundles.ktor)
+    debugImplementation(libs.androidx.compose.ui.tooling)
 
-    testImplementation(platform(libs.koin.bom))
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.junit.platform.launcher)
