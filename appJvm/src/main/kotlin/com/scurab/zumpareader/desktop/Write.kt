@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -23,6 +24,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -84,7 +87,7 @@ internal fun ReplyPanel(
                 .heightIn(min = MESSAGE_MIN_HEIGHT)
                 .sendOnAltEnter(::send),
         )
-        SendRow(isSending = isSending, canSend = canSend, label = "Reply", onSend = ::send)
+        SendRow(isSending = isSending, canSend = canSend, onSend = ::send)
     }
 }
 
@@ -187,7 +190,7 @@ internal fun WriteFab(modifier: Modifier = Modifier, onClick: () -> Unit) {
 }
 
 @Composable
-private fun SendRow(isSending: Boolean, canSend: Boolean, label: String, onSend: () -> Unit) {
+private fun SendRow(isSending: Boolean, canSend: Boolean, onSend: () -> Unit) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = if (isSending) "Sending..." else "Alt+Enter to send",
@@ -195,9 +198,34 @@ private fun SendRow(isSending: Boolean, canSend: Boolean, label: String, onSend:
             fontSize = 11.sp,
         )
         Spacer(Modifier.weight(1f))
-        TextButton(onClick = onSend, enabled = canSend) {
-            Text(text = label, color = if (canSend) Accent else Muted)
+        IconButton(onClick = onSend, enabled = canSend) {
+            SendGlyph(tint = if (canSend) Accent else Muted)
         }
+    }
+}
+
+/**
+ * `Icons.AutoMirrored.Filled.Send` is what the phone puts here, and this is that shape drawn by
+ * hand: the material icon artifacts are an Android-app dependency this module does not carry, which
+ * is why the fab's plus is drawn too.
+ *
+ * The paper dart is one path - the outline of the arrow with the notch cut into its tail - scaled off
+ * the canvas so the size is the only thing to change.
+ */
+@Composable
+private fun SendGlyph(tint: Color) {
+    Canvas(Modifier.size(SEND_ICON_SIZE)) {
+        val w = size.width
+        val h = size.height
+        val path = Path().apply {
+            moveTo(0f, 0f)
+            lineTo(w, h / 2f)
+            lineTo(0f, h)
+            //the notch, which is what makes it a dart rather than a triangle
+            lineTo(w * 0.28f, h / 2f)
+            close()
+        }
+        drawPath(path, color = tint)
     }
 }
 
@@ -217,6 +245,7 @@ private fun Modifier.sendOnAltEnter(onSend: () -> Unit): Modifier = onPreviewKey
     }
 }
 
+private val SEND_ICON_SIZE = 18.dp
 private val FAB_ICON_SIZE = 20.dp
 private val FAB_ICON_STROKE = 2.dp
 

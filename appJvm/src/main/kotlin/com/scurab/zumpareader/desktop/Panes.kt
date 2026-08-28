@@ -143,17 +143,22 @@ private fun ThreadRow(
 
 /** The detail pane: whatever the list has selected, or an invitation to select something. */
 @Composable
-internal fun ThreadDetail(threadId: String?) {
+internal fun ThreadDetail(threadId: String?, reloadToken: Int = 0) {
     if (threadId == null) {
         Centered { Text("Pick a thread", color = Muted) }
         return
     }
 
     val threads = koinInject<ZumpaThreadRepository>()
+    val listState = rememberLazyListState()
     var state by remember(threadId) { mutableStateOf<Loadable>(Loadable.Loading) }
     var items by remember(threadId) { mutableStateOf<List<ZumpaThreadItem>>(emptyList()) }
 
-    LaunchedEffect(threadId) {
+    //[reloadToken] as well as the id: a reply lands in the thread already on screen, so the id has
+    //not changed and there would be nothing for this to react to. Bumping a counter is also why the
+    //caller no longer sets `selected` to null and back - two writes to one state in a single
+    //coroutine are coalesced into one snapshot, so that never registered as a change at all.
+    LaunchedEffect(threadId, reloadToken) {
         state = Loadable.Loading
         runCatching { threads.loadThread(threadId) }
             .onSuccess {
@@ -165,13 +170,21 @@ internal fun ThreadDetail(threadId: String?) {
             }
     }
 
+    //a reload the reader asked for by writing something lands on what they wrote; opening a thread
+    //cold does not, which matches the phone - it scrolls to the top when switching threads
+    LaunchedEffect(items, reloadToken) {
+        if (reloadToken > 0 && items.isNotEmpty()) {
+            listState.animateScrollToItem(items.lastIndex)
+        }
+    }
+
     when (val current = state) {
         is Loadable.Loading -> Centered { CircularProgressIndicator(color = Accent) }
         is Loadable.Failed -> Centered {
             Text("Could not load: ${current.message}", color = Error)
         }
 
-        is Loadable.Loaded -> LazyColumn(Modifier.fillMaxSize()) {
+        is Loadable.Loaded -> LazyColumn(Modifier.fillMaxSize(), state = listState) {
             itemsIndexed(items) { index, item ->
                 Column(
                     modifier = Modifier
