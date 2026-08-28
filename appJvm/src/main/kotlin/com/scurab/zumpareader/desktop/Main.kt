@@ -103,6 +103,9 @@ private fun App() {
     var isLoginOpen by remember { mutableStateOf(false) }
     var isSending by remember { mutableStateOf(false) }
     var isNewThreadOpen by remember { mutableStateOf(false) }
+    //out here rather than in the panel, because sending is what clears it and the panel is not what
+    //knows whether the forum took it. Keyed on the thread, so moving to another one starts fresh.
+    var replyDraft by remember(selected) { mutableStateOf("") }
     //bumped to make the open thread load again - see ThreadDetail
     var detailReloads by remember { mutableStateOf(0) }
     var status by remember { mutableStateOf<String?>(null) }
@@ -175,10 +178,16 @@ private fun App() {
     }
 
     /** A new thread, or an answer to one - the same call the Android post screen makes. */
-    suspend fun send(target: Composing, subject: String, message: String) {
+    /**
+     * @return whether the forum took it, so a caller can leave what was written alone when it did
+     * not. Both send calls answer with a Boolean and this used to throw it away, reporting "Sent"
+     * for a post the forum had turned down - which is why a reply could seem to go and leave no
+     * trace of itself anywhere.
+     */
+    suspend fun send(target: Composing, subject: String, message: String): Boolean {
         isSending = true
         val nick = settings.nickName
-        runCatching {
+        val outcome = runCatching {
             when (target) {
                 is Composing.NewThread ->
                     threadsRepo.sendThread(ZumpaThreadBody(nick, subject, message))
@@ -188,18 +197,32 @@ private fun App() {
                     body = ZumpaThreadBody(nick, target.subject, message, target.threadId),
                 )
             }
-        }.onSuccess {
-            status = "Sent"
-            //the forum has something new on it either way, so what is on screen is stale
-            reload()
-            //and a reply is in the thread that is open, which has to be told to load again
-            if (target is Composing.Reply) {
-                detailReloads++
-            }
-        }.onFailure {
-            status = it.message ?: "Could not send"
         }
         isSending = false
+
+        val accepted = outcome.getOrNull() == true
+        when {
+            accepted -> {
+                status = "Sent"
+                //nothing else clears this - the panel's draft is out here so that it can be
+                replyDraft = ""
+                //the forum has something new on it either way, so what is on screen is stale
+                reload()
+                //and a reply is in the thread that is open, which has to be told to load again
+                if (target is Composing.Reply) {
+                    detailReloads++
+                }
+            }
+
+            outcome.isFailure -> {
+                status = outcome.exceptionOrNull()?.message ?: "Could not send"
+            }
+
+            //the call itself went through and the answer was no. A stale session is what that
+            //usually means, and there is nothing here to tell the reader apart from saying so.
+            else -> status = "The forum did not accept it - still signed in?"
+        }
+        return accepted
     }
 
     //Signed in and online is the whole condition for writing anything: the forum will not take a
@@ -294,10 +317,13 @@ private fun App() {
             val reply: @Composable () -> Unit = {
                 val id = selected
                 if (canWrite && id != null) {
-                    val target = Composing.Reply(id, subjectOf(threads, id))
-                    ReplyPanel(target, isSending) { message ->
-                        scope.launch { send(target, "", message) }
-                    }
+                    val target = Composing.Reply(id, threadsRepo.thread(id)?.subject.orEmpty())
+                    ReplyPanel(
+                        target = target,
+                        message = replyDraft,
+                        isSending = isSending,
+                        onMessageChange = { replyDraft = it },
+                    ) { scope.launch { send(target, "", replyDraft) } }
                 }
             }
 
@@ -325,10 +351,12 @@ private fun App() {
         NewThreadDialog(
             isSending = isSending,
             onDismiss = { isNewThreadOpen = false },
+            //closed only when it was taken, so a rejected post is not lost with the dialog
             onSend = { subject, message ->
                 scope.launch {
-                    send(Composing.NewThread, subject, message)
-                    isNewThreadOpen = false
+                    if (send(Composing.NewThread, subject, message)) {
+                        isNewThreadOpen = false
+                    }
                 }
             },
         )
@@ -360,9 +388,3 @@ private const val DOWNLOAD_PAGES = 3
 
 private const val LIST_WEIGHT = 0.4f
 private const val DETAIL_WEIGHT = 0.6f
-
-/**
- * The subject of a thread the list already knows about - a reply carries the subject it answers.
- */
-private fun subjectOf(threads: List<ZumpaThread>, id: String): String =
-    threads.firstOrNull { it.id == id }?.subject.orEmpty()
