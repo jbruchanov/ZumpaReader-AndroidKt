@@ -12,6 +12,7 @@ import com.scurab.android.zumpareader.repository.ImageUploadRepository
 import com.scurab.android.zumpareader.repository.OfflineDataRepository
 import com.scurab.android.zumpareader.usecase.OfflineDownloadUseCase
 import com.scurab.android.zumpareader.repository.SelectedThreadStore
+import com.scurab.android.zumpareader.repository.SentDraftRepository
 import com.scurab.android.zumpareader.repository.ZumpaReadStateRepository
 import com.scurab.android.zumpareader.repository.ZumpaSettingsRepository
 import com.scurab.android.zumpareader.repository.ZumpaThreadRepository
@@ -45,6 +46,7 @@ class ModulesTest {
                 ZumpaSettingsRepository::class,
                 ZumpaReadStateRepository::class,
                 SelectedThreadStore::class,
+                SentDraftRepository::class,
                 AppEventBus::class,
                 ImageUploadRepository::class,
                 ImageCacheRepository::class,

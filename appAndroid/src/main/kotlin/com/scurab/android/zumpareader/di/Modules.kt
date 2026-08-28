@@ -29,6 +29,8 @@ import com.scurab.android.zumpareader.ui.compose.buildImageLoader
 import com.scurab.android.zumpareader.repository.ImageUploadRepository
 import com.scurab.android.zumpareader.repository.OfflineDataRepository
 import com.scurab.android.zumpareader.repository.SelectedThreadStore
+import com.scurab.android.zumpareader.repository.SentDraftRepository
+import com.scurab.android.zumpareader.repository.StoredSentDraftRepository
 import com.scurab.android.zumpareader.repository.ZumpaReadStateRepository
 import com.scurab.android.zumpareader.repository.ZumpaSettingsRepository
 import com.scurab.android.zumpareader.repository.ZumpaThreadRepository
@@ -104,6 +106,8 @@ val coreModule = module {
     single { ZumpaSettingsRepository(get()) }
     single { ZumpaReadStateRepository(get(), get()) }
     single { SelectedThreadStore() }
+    //shared preferences, so the last thing sent outlives the app being killed behind a browser
+    single<SentDraftRepository> { StoredSentDraftRepository(get()) }
     single { AppEventBus() }
     single { ImageUploadRepository(get()) }
     single { OfflineDataRepository(offlineSnapshotPath(androidContext()), get(), get()) }
@@ -171,8 +175,8 @@ val networkModule = module {
 val viewModelModule = module {
     viewModel { MainViewModel(get()) }
     viewModel { MainListViewModel(get(), get(), get(), get(), get(), get()) }
-    viewModel { SubListViewModel(get(), get(), get(), get(), get(), get()) }
-    viewModel { PostViewModel(get(), get(), get()) }
+    viewModel { SubListViewModel(get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { PostViewModel(get(), get(), get(), get()) }
     viewModel { PostImageViewModel(androidContext(), get()) }
     viewModel { OfflineDownloadViewModel(get(), get(), get(), get()) }
     viewModel { ImageViewModel(get()) }

@@ -12,7 +12,13 @@ import com.scurab.android.zumpareader.model.ZumpaVoteSurveyBody
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.repository.AppEvent
 import com.scurab.android.zumpareader.repository.AppEventBus
+import com.scurab.android.zumpareader.repository.Draft
+import com.scurab.android.zumpareader.repository.RestoreMode
 import com.scurab.android.zumpareader.repository.SelectedThreadStore
+import com.scurab.android.zumpareader.repository.SentDraft
+import com.scurab.android.zumpareader.repository.SentDraftRepository
+import com.scurab.android.zumpareader.repository.restoredInto
+import com.scurab.android.zumpareader.ui.compose.RestoreDraftEventHandler
 import com.scurab.android.zumpareader.ui.post.PostPicker
 import com.scurab.android.zumpareader.repository.ZumpaReadStateRepository
 import com.scurab.android.zumpareader.repository.ZumpaSettingsRepository
@@ -92,9 +98,13 @@ data class SubListUiState(
     val isPostPanelVisible: Boolean = false,
     val draft: DraftUiState = DraftUiState(),
     val canPost: Boolean = false,
+    /** The last thing sent, if anything has been - what the restore button offers. */
+    val sentDraft: SentDraft? = null,
+    /** Non-null while the restore dialog is up, which only happens over a field with text in it. */
+    val restorePrompt: SentDraft? = null,
 )
 
-interface SubListEventHandler {
+interface SubListEventHandler : RestoreDraftEventHandler {
     fun onRefreshRequested()
     fun onMessageClicked(row: SubListRowUiState.Message)
     fun onMessageLongPressed(row: SubListRowUiState.Message)
@@ -145,6 +155,7 @@ class SubListViewModel(
     private val selectedThread: SelectedThreadStore,
     private val eventBus: AppEventBus,
     private val windowLayout: WindowLayout,
+    private val sentDrafts: SentDraftRepository,
 ) : BaseViewModel<SubListUiState>(SubListUiState()), SubListEventHandler {
 
     private var items: List<ZumpaThreadItem> = emptyList()
@@ -152,6 +163,9 @@ class SubListViewModel(
     private var openMenuIndex: Int? = null
 
     init {
+        viewModelScope.launch {
+            sentDrafts.draft.collect { setState { copy(sentDraft = it) } }
+        }
         viewModelScope.launch {
             settings.isLoggedInNotOffline.collect { canPost ->
                 setState { copy(canPost = canPost) }
@@ -163,6 +177,15 @@ class SubListViewModel(
         viewModelScope.launch {
             eventBus.events.collect { event ->
                 if (event is AppEvent.ContentPosted) {
+                    //the full-screen writer opened from this panel's photo or camera button, and
+                    //the post went through over there. What is still in the panel has been said, so
+                    //it goes the same way it would have if send had been pressed here.
+                    //
+                    //Only for this thread: a new thread posted from the list is somebody else's
+                    //business, and clearing on that would throw away a draft over an unrelated post.
+                    if (event.threadId == state.threadId) {
+                        clearDraft()
+                    }
                     reload()
                 }
             }
@@ -329,6 +352,16 @@ class SubListViewModel(
         }
     }
 
+    /**
+     * What a sent reply leaves behind: nothing in the box, and the box put away.
+     *
+     * Shared by the two ways a reply reaches the forum - pressing send here, and sending from the
+     * full-screen writer this panel's image buttons open - so the two cannot drift.
+     */
+    private fun clearDraft() {
+        setState { copy(draft = DraftUiState(), isPostPanelVisible = false) }
+    }
+
     /** True when it had something to close, which is what the back gesture consumes. */
     fun onBackPressed(): Boolean {
         if (state.canPost && state.isPostPanelVisible && !windowLayout.isTwoPane.value) {
@@ -346,12 +379,16 @@ class SubListViewModel(
         val threadId = state.threadId
         val subject = threads.thread(threadId)?.subject ?: ""
         val body = ZumpaThreadBody(settings.nickName, subject, draft.text, threadId)
+        //before the call: the forum sometimes accepts a reply, says so and does nothing with it,
+        //so a draft kept only on success would be missing for the posts this exists for. A reply
+        //carries no subject of its own - the thread owns it.
+        sentDrafts.save(message = draft.text, subject = null)
         setState { copy(isSending = true) }
         effect(HideKeyboard)
         viewModelScope.launch {
             try {
                 threads.sendResponse(threadId, body)
-                setState { copy(draft = DraftUiState(), isPostPanelVisible = false) }
+                clearDraft()
                 load(scrollToBottom = true)
             } catch (err: Throwable) {
                 onError(err)
@@ -359,6 +396,41 @@ class SubListViewModel(
                 setState { copy(isSending = false) }
             }
         }
+    }
+
+    //region restoring the last sent message - see RestoreDraftEventHandler
+    /**
+     * A blank field is filled without asking; anything already written gets the dialog.
+     *
+     * The restored text lands in the draft's [DraftUiState.body], not over its headers: the
+     * `@author:` prefixes are the reply's addressing, and a message being written again is still
+     * addressed to whoever it was addressed to.
+     */
+    override fun onRestoreDraftClicked() {
+        val saved = state.sentDraft ?: return
+        if (state.draft.body.isBlank()) {
+            restore(saved, RestoreMode.Fill)
+        } else {
+            setState { copy(restorePrompt = saved) }
+        }
+    }
+
+    override fun onRestoreDraftDismissed() = setState { copy(restorePrompt = null) }
+
+    override fun onRestoreDraftAppended() = answerPrompt(RestoreMode.Append)
+
+    override fun onRestoreDraftOverwritten() = answerPrompt(RestoreMode.Overwrite)
+
+    private fun answerPrompt(mode: RestoreMode) {
+        val saved = state.restorePrompt ?: return
+        restore(saved, mode)
+        setState { copy(restorePrompt = null) }
+    }
+
+    private fun restore(saved: SentDraft, mode: RestoreMode) {
+        //a null subject says "a reply", which is what makes the rules drop a saved one
+        val restored = saved.restoredInto(Draft(state.draft.body, subject = null), mode)
+        setState { copy(draft = draft.copy(body = restored.message)) }
     }
     //endregion
 

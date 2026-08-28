@@ -20,8 +20,11 @@ import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
+import com.scurab.android.zumpareader.repository.InMemorySentDraftRepository
+import com.scurab.android.zumpareader.repository.SentDraft
 import org.junit.jupiter.api.Test
 
 class PostViewModelTest {
@@ -33,8 +36,12 @@ class PostViewModelTest {
         every { nickName } returns "me"
     }
 
+    //the real one - it is a MutableStateFlow behind an interface, and a mock would only be a
+    //slower way of writing the same thing
+    private val sentDrafts = InMemorySentDraftRepository()
+
     private fun viewModel(args: PostArgs = PostArgs()) =
-        PostViewModel(threads, settings, AppEventBus()).also { it.start(args) }
+        PostViewModel(threads, settings, AppEventBus(), sentDrafts).also { it.start(args) }
 
     @BeforeEach
     fun setUp() = Dispatchers.setMain(UnconfinedTestDispatcher())
@@ -236,6 +243,145 @@ class PostViewModelTest {
 
         assertEquals("edited by the user", viewModel.uiState.value.subject)
     }
+
+    //region the last sent message
+    /**
+     * Saved as send is pressed, not when the forum answers. The forum sometimes accepts a post,
+     * reports success and does nothing with it - a draft kept only on a failure would be missing
+     * for exactly the posts this exists for.
+     */
+    @Test
+    fun `a new thread is saved with its subject the moment send is pressed`() {
+        val viewModel = viewModel()
+        viewModel.onSubjectChanged("a subject")
+        viewModel.onMessageChanged("a message")
+
+        viewModel.onSendClicked()
+
+        assertEquals(SentDraft("a message", "a subject"), sentDrafts.draft.value)
+    }
+
+    /** A reply's subject belongs to the thread, so there is none of the writer's to keep. */
+    @Test
+    fun `a reply is saved without a subject`() {
+        val viewModel = viewModel(PostArgs(threadId = "42"))
+        viewModel.onMessageChanged("an answer")
+
+        viewModel.onSendClicked()
+
+        assertEquals(SentDraft("an answer", null), sentDrafts.draft.value)
+    }
+
+    @Test
+    fun `nothing is saved by a send the screen refuses`() {
+        val viewModel = viewModel()
+        viewModel.onSubjectChanged("a subject")
+
+        //no message, so the screen turns it down before it reaches the forum
+        viewModel.onSendClicked()
+
+        assertNull(sentDrafts.draft.value)
+    }
+
+    @Test
+    fun `an empty field is filled without asking`() {
+        sentDrafts.save("what was sent", "the old subject")
+        val viewModel = viewModel()
+
+        viewModel.onRestoreDraftClicked()
+
+        assertEquals("what was sent", viewModel.uiState.value.message)
+        assertEquals("the old subject", viewModel.uiState.value.subject)
+        assertNull(viewModel.uiState.value.restorePrompt)
+    }
+
+    @Test
+    fun `a field with something in it asks first`() {
+        sentDrafts.save("what was sent", null)
+        val viewModel = viewModel()
+        viewModel.onMessageChanged("half a thought")
+
+        viewModel.onRestoreDraftClicked()
+
+        assertEquals(SentDraft("what was sent", null), viewModel.uiState.value.restorePrompt)
+        assertEquals("half a thought", viewModel.uiState.value.message)
+    }
+
+    @Test
+    fun `append adds the saved message to what is already written`() {
+        sentDrafts.save("what was sent", null)
+        val viewModel = viewModel()
+        viewModel.onMessageChanged("half a thought")
+        viewModel.onRestoreDraftClicked()
+
+        viewModel.onRestoreDraftAppended()
+
+        assertEquals("half a thought\nwhat was sent", viewModel.uiState.value.message)
+        assertNull(viewModel.uiState.value.restorePrompt)
+    }
+
+    @Test
+    fun `overwrite replaces it`() {
+        sentDrafts.save("what was sent", null)
+        val viewModel = viewModel()
+        viewModel.onMessageChanged("half a thought")
+        viewModel.onRestoreDraftClicked()
+
+        viewModel.onRestoreDraftOverwritten()
+
+        assertEquals("what was sent", viewModel.uiState.value.message)
+    }
+
+    @Test
+    fun `cancel leaves what was written alone`() {
+        sentDrafts.save("what was sent", null)
+        val viewModel = viewModel()
+        viewModel.onMessageChanged("half a thought")
+        viewModel.onRestoreDraftClicked()
+
+        viewModel.onRestoreDraftDismissed()
+
+        assertEquals("half a thought", viewModel.uiState.value.message)
+        assertNull(viewModel.uiState.value.restorePrompt)
+    }
+
+    /** The subject of a thread being answered is not the writer's, whatever was saved. */
+    @Test
+    fun `a saved subject does not reach a reply`() {
+        sentDrafts.save("what was sent", "the old subject")
+        val viewModel = viewModel(PostArgs(threadId = "42", subject = "the original subject"))
+
+        viewModel.onRestoreDraftClicked()
+
+        assertEquals("what was sent", viewModel.uiState.value.message)
+        assertEquals("the original subject", viewModel.uiState.value.subject)
+    }
+
+    /** Saved from a reply, so there is no subject to offer and the typed one stands. */
+    @Test
+    fun `restoring a reply into a new thread fills only the message`() {
+        sentDrafts.save("what was sent", null)
+        val viewModel = viewModel()
+        viewModel.onSubjectChanged("what I am writing now")
+
+        viewModel.onRestoreDraftClicked()
+
+        assertEquals("what was sent", viewModel.uiState.value.message)
+        assertEquals("what I am writing now", viewModel.uiState.value.subject)
+    }
+
+    @Test
+    fun `there is nothing to restore before anything has been sent`() {
+        val viewModel = viewModel()
+        viewModel.onMessageChanged("half a thought")
+
+        viewModel.onRestoreDraftClicked()
+
+        assertNull(viewModel.uiState.value.sentDraft)
+        assertNull(viewModel.uiState.value.restorePrompt)
+        assertEquals("half a thought", viewModel.uiState.value.message)
+    }
+    //endregion
 
     /**
      * mockk rather than Uri.parse: android.net.Uri is a stub on the jvm, and nothing here does more

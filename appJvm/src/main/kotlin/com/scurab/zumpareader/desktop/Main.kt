@@ -39,6 +39,7 @@ import com.scurab.android.zumpareader.model.ZumpaThreadBody
 import com.scurab.android.zumpareader.model.stateFor
 import com.scurab.android.zumpareader.repository.AuthRepository
 import com.scurab.android.zumpareader.repository.OfflineDataRepository
+import com.scurab.android.zumpareader.repository.SentDraftRepository
 import com.scurab.android.zumpareader.repository.ZumpaReadStateRepository
 import com.scurab.android.zumpareader.repository.ZumpaSettingsRepository
 import com.scurab.android.zumpareader.repository.ZumpaThreadRepository
@@ -101,6 +102,8 @@ private fun App() {
     val offlineData = koinInject<OfflineDataRepository>()
     val readStates = koinInject<ZumpaReadStateRepository>()
     val prefs = koinInject<ZumpaPrefs>()
+    val sentDrafts = koinInject<SentDraftRepository>()
+    val sentDraft by sentDrafts.draft.collectAsState()
     val isOffline by settings.isOffline.collectAsState()
     val isLoggedIn by settings.isLoggedIn.collectAsState()
 
@@ -250,6 +253,13 @@ private fun App() {
             status = "Sign in again - this session has no user name to post under"
             return false
         }
+        //before the call: the forum sometimes accepts a post, says so and does nothing with it, so
+        //a draft kept only on success would be missing for exactly the posts this is here for. A
+        //reply carries no subject of its own - the thread owns it.
+        sentDrafts.save(
+            message = message,
+            subject = subject.takeIf { target is Composing.NewThread },
+        )
         isSending = true
         val outcome = runCatching {
             when (target) {
@@ -387,6 +397,7 @@ private fun App() {
                         target = target,
                         message = replyDraft,
                         isSending = isSending,
+                        sentDraft = sentDraft,
                         onMessageChange = { replyDraft = it },
                     ) { scope.launch { send(target, "", replyDraft) } }
                 }
@@ -415,6 +426,7 @@ private fun App() {
     if (isNewThreadOpen && canWrite) {
         NewThreadDialog(
             isSending = isSending,
+            sentDraft = sentDraft,
             onDismiss = { isNewThreadOpen = false },
             //closed only when it was taken, so a rejected post is not lost with the dialog
             onSend = { subject, message ->

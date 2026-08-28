@@ -47,6 +47,9 @@ import com.scurab.android.zumpareader.test.newThread
 import com.scurab.android.zumpareader.test.reply
 import com.scurab.android.zumpareader.test.sending
 import com.scurab.android.zumpareader.ui.compose.ActionIcon
+import com.scurab.android.zumpareader.ui.compose.RestoreDraftDialog
+import com.scurab.android.zumpareader.ui.compose.RestoreDraftIcon
+import com.scurab.android.zumpareader.ui.compose.rememberFieldValue
 import com.scurab.android.zumpareader.ui.compose.theme.AppTheme
 import org.koin.androidx.compose.koinViewModel
 
@@ -145,6 +148,8 @@ private fun PostMessageScreen(uiState: PostUiState, eventHandler: PostMessageEve
             }
         }
     }
+
+    uiState.restorePrompt?.let { RestoreDraftDialog(it, eventHandler) }
 }
 
 /**
@@ -176,29 +181,6 @@ private fun MessageField(
 }
 
 /**
- * A [TextFieldValue] mirroring a string the ViewModel owns, whose selection survives a recreation.
- *
- * The `String` overload of the text fields keeps its [TextFieldValue] - and so the caret - in a
- * plain `remember`, so after a rotation the text came back from the ViewModel while the caret
- * jumped to whatever the field inferred. The text is still the ViewModel`s; this adds only the
- * selection, and only that is saved.
- */
-@Composable
-private fun rememberFieldValue(text: String): MutableState<TextFieldValue> {
-    val state = rememberSaveable(stateSaver = TextFieldValue.Saver) {
-        mutableStateOf(TextFieldValue(text, TextRange(text.length)))
-    }
-    //the ViewModel changing the text underneath - a finished image upload appends its link to the
-    //draft - puts the caret at the end, which is where whatever is typed next belongs
-    LaunchedEffect(text) {
-        if (text != state.value.text) {
-            state.value = state.value.copy(text = text, selection = TextRange(text.length))
-        }
-    }
-    return state
-}
-
-/**
  * @param spaced pushes send to the far end. Wanted when the icons are a row of their own, not when
  * something beside them already takes the slack.
  */
@@ -218,6 +200,15 @@ private fun RowScope.PostActionIcons(
         enabled = !uiState.isSending,
         onClick = eventHandler::onCameraClicked,
     )
+    //with the others rather than in the field: this screen has the room for a row of actions, and
+    //the reply panel - which has not - is the one that keeps it as a trailing icon. Only once
+    //something has been sent; see RestoreDraft.kt for what it is for.
+    if (uiState.sentDraft != null) {
+        RestoreDraftIcon(
+            enabled = !uiState.isSending,
+            onClick = eventHandler::onRestoreDraftClicked,
+        )
+    }
     if (spaced) Spacer(Modifier.weight(1f))
     ActionIcon(
         icon = rememberVectorPainter(Icons.AutoMirrored.Filled.Send),

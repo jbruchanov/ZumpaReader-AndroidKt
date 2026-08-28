@@ -100,11 +100,14 @@ import com.scurab.android.zumpareader.ui.compose.RevealRow
 import com.scurab.android.zumpareader.ui.compose.RevealRowMenuButton
 import com.scurab.android.zumpareader.ui.compose.quickHide
 import com.scurab.android.zumpareader.ui.compose.rememberAnnotatedTextRenderer
+import com.scurab.android.zumpareader.ui.compose.rememberFieldValue
 import com.scurab.android.zumpareader.ui.compose.rememberQuickHideState
 import com.scurab.android.zumpareader.ui.compose.rememberSyncedTopAppBarScroll
 import com.scurab.android.zumpareader.ui.compose.sharedImage
 import com.scurab.android.zumpareader.ui.compose.shimmer
 import com.scurab.android.zumpareader.ui.compose.ActionIcon
+import com.scurab.android.zumpareader.ui.compose.RestoreDraftDialog
+import com.scurab.android.zumpareader.ui.compose.RestoreDraftIcon
 import com.scurab.android.zumpareader.ui.compose.UrlButton
 import com.scurab.android.zumpareader.ui.compose.zumpaRowBackground
 import com.scurab.android.zumpareader.ui.compose.zumpaRowColor
@@ -417,6 +420,8 @@ private fun SubListScreen(
             }
         }
     }
+
+    uiState.restorePrompt?.let { RestoreDraftDialog(it, eventHandler) }
 }
 
 private fun SubListRowUiState.key(): String = when (this) {
@@ -727,7 +732,7 @@ private fun ReplyField(
     eventHandler: SubListEventHandler,
     modifier: Modifier = Modifier,
 ) {
-    Box(
+    Row(
         modifier = modifier
             .heightIn(min = AppTheme.sizes.responseEditTextMinHeight)
             .border(
@@ -736,14 +741,20 @@ private fun ReplyField(
                 //hint of a box rather than a box
                 color = AppTheme.colorScheme.context,
                 shape = AppTheme.shapes.editText,
-            )
-            .padding(AppTheme.spaces.small),
+            ),
         //centred while it is one line, and it grows downwards from there
-        contentAlignment = Alignment.CenterStart,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
+        //a TextFieldValue rather than the String overload, so the caret can be put at the end of
+        //text the ViewModel changed underneath - the last sent message being appended, and the
+        //reply header being pushed onto the front. See rememberFieldValue.
+        val value = rememberFieldValue(uiState.draft.text)
         BasicTextField(
-            value = uiState.draft.text,
-            onValueChange = eventHandler::onDraftChanged,
+            value = value.value,
+            onValueChange = {
+                value.value = it
+                eventHandler.onDraftChanged(it.text)
+            },
             enabled = !uiState.isSending,
             //primaryText, not colorScheme.message: that one is Black, because the legacy field it
             //came from was a solid white rounded rect. This field is dark, so the text on it is
@@ -754,8 +765,20 @@ private fun ReplyField(
             ),
             cursorBrush = SolidColor(AppTheme.colorScheme.context),
             maxLines = REPLY_MAX_LINES,
-            modifier = Modifier.fillMaxWidth(),
+            //the padding is the field's rather than the row's: an IconButton carries a 48dp touch
+            //target, so a row that padded it too would stand 48dp plus the padding tall and the
+            //whole panel would grow the first time the restore button appeared
+            modifier = Modifier.weight(1f).padding(AppTheme.spaces.small),
         )
+        //only once something has been sent - see RestoreDraft.kt for what it is for. Inside the
+        //outline, at the end of the field, which is where OutlinedTextField puts its trailing icon
+        //on the post screen.
+        if (uiState.sentDraft != null) {
+            RestoreDraftIcon(
+                enabled = !uiState.isSending,
+                onClick = eventHandler::onRestoreDraftClicked,
+            )
+        }
     }
 }
 

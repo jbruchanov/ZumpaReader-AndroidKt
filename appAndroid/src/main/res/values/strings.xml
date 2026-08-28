@@ -50,4 +50,10 @@
     <string name="notifications">Notifications</string>
     <string name="enabled">Enabled</string>
     <string name="disabled">Disabled</string>
+    <string name="cancel">Cancel</string>
+    <!-- the last thing sent, kept in case the forum accepted it and did nothing with it -->
+    <string name="restore_draft">Write the last sent message again</string>
+    <string name="restore_draft_title">Last sent message</string>
+    <string name="restore_draft_append">Append</string>
+    <string name="restore_draft_overwrite">Overwrite</string>
 </resources>

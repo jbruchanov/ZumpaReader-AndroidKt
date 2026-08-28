@@ -251,7 +251,17 @@ class ZumpaSimpleParser {
             sb.append(line).append("\n")
         }
 
-        val body = if (sb.isNotEmpty()) sb.substring(0, sb.length - 1) else ""
+        /*
+         * Trimmed of the newlines at either end, not just the one the loop leaves at the end.
+         *
+         * The `<br>` that closes the date line is itself a separator, so `lines[3]` is empty on
+         * every post and the body came out starting with a blank line. Nothing downstream trimmed
+         * it, so every message on the thread screen was drawn one empty line below its author -
+         * which reads as the row having too much padding rather than as a stray line.
+         *
+         * Only the newlines: the leading spaces of an indented line are the writer's.
+         */
+        val body = sb.toString().trim('\n')
 
         return ZumpaThreadItem(author, body, date).apply {
             this.rating = rating

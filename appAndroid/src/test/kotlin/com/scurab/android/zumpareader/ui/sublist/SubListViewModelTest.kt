@@ -8,8 +8,11 @@ import com.scurab.android.zumpareader.model.SurveyItem
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.model.ZumpaThreadBody
 import com.scurab.android.zumpareader.model.ZumpaThreadItem
+import com.scurab.android.zumpareader.repository.AppEvent
 import com.scurab.android.zumpareader.repository.AppEventBus
+import com.scurab.android.zumpareader.repository.InMemorySentDraftRepository
 import com.scurab.android.zumpareader.repository.SelectedThreadStore
+import com.scurab.android.zumpareader.repository.SentDraft
 import com.scurab.android.zumpareader.repository.ZumpaReadStateRepository
 import com.scurab.android.zumpareader.repository.ZumpaSettingsRepository
 import com.scurab.android.zumpareader.repository.ZumpaThreadRepository
@@ -27,6 +30,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -58,8 +62,14 @@ class SubListViewModelTest {
         this.survey = survey
     }
 
+    private val sentDrafts = InMemorySentDraftRepository()
+
+    //held rather than built inline: the tests below post from "somewhere else" by emitting on it
+    private val eventBus = AppEventBus()
+
     private fun viewModel(isTwoPane: Boolean = false) = SubListViewModel(
-        threads, settings, readStates, selectedThread, AppEventBus(), WindowLayout(isTwoPane)
+        threads, settings, readStates, selectedThread, eventBus, WindowLayout(isTwoPane),
+        sentDrafts,
     ).also { it.start("1") }
 
     @BeforeEach
@@ -329,4 +339,141 @@ class SubListViewModelTest {
         assertEquals("42", viewModel.uiState.value.threadId)
         coVerify { threads.loadThread("42") }
     }
+
+    //region the last sent message
+    /**
+     * Saved as send is pressed, not when the forum answers - the forum sometimes accepts a reply,
+     * reports success and does nothing with it, which is the whole reason this exists.
+     */
+    @Test
+    fun `a sent reply is saved without a subject of its own`() {
+        val viewModel = viewModel()
+        viewModel.onDraftChanged("an answer")
+
+        viewModel.onSendClicked()
+
+        assertEquals(SentDraft("an answer", null), sentDrafts.draft.value)
+    }
+
+    @Test
+    fun `an empty field is filled without asking`() {
+        sentDrafts.save("what was sent", null)
+        val viewModel = viewModel()
+
+        viewModel.onRestoreDraftClicked()
+
+        assertEquals("what was sent", viewModel.uiState.value.draft.text)
+        assertNull(viewModel.uiState.value.restorePrompt)
+    }
+
+    @Test
+    fun `a field with something in it asks first`() {
+        sentDrafts.save("what was sent", null)
+        val viewModel = viewModel()
+        viewModel.onDraftChanged("half a thought")
+
+        viewModel.onRestoreDraftClicked()
+
+        assertEquals(SentDraft("what was sent", null), viewModel.uiState.value.restorePrompt)
+        assertEquals("half a thought", viewModel.uiState.value.draft.text)
+    }
+
+    @Test
+    fun `overwrite replaces what was written`() {
+        sentDrafts.save("what was sent", null)
+        val viewModel = viewModel()
+        viewModel.onDraftChanged("half a thought")
+        viewModel.onRestoreDraftClicked()
+
+        viewModel.onRestoreDraftOverwritten()
+
+        assertEquals("what was sent", viewModel.uiState.value.draft.text)
+        assertNull(viewModel.uiState.value.restorePrompt)
+    }
+
+    /**
+     * The `@author: ` prefixes are the reply's addressing, not part of what was written, so a
+     * restore lands in the body and leaves them where they are.
+     */
+    @Test
+    fun `restoring keeps the reply headers`() {
+        sentDrafts.save("what was sent", null)
+        val viewModel = viewModel()
+        viewModel.onReplyClicked("someone")
+
+        viewModel.onRestoreDraftClicked()
+
+        //the header carries its own newline - see REPLY_HEADER
+        assertEquals(listOf("@someone: \n"), viewModel.uiState.value.draft.headers)
+        assertEquals("what was sent", viewModel.uiState.value.draft.body)
+    }
+    /**
+     * Load-bearing for the caret: the field mirrors `draft.text` and puts the caret at the end
+     * whenever it differs from what is in the box, so that a restored message is typed into from
+     * the end. If reparsing what was typed did not give it back verbatim, that would fire on every
+     * keystroke instead and the caret would jump to the end mid-word.
+     */
+    @Test
+    fun `what is typed into the reply comes back out of the draft verbatim`() {
+        val viewModel = viewModel()
+        viewModel.onReplyClicked("someone")
+
+        val typed = viewModel.uiState.value.draft.text + "an answer"
+        viewModel.onDraftChanged(typed)
+
+        assertEquals(typed, viewModel.uiState.value.draft.text)
+
+        //and again with the header half deleted, which is the case reparse exists for
+        val edited = typed.removePrefix("@")
+        viewModel.onDraftChanged(edited)
+
+        assertEquals(edited, viewModel.uiState.value.draft.text)
+    }
+    //endregion
+
+    //region a post made from the full-screen writer
+    /**
+     * The panel's photo and camera buttons open the full-screen writer, and the post goes through
+     * over there. What is still sitting in the panel has been said by then, so it goes the same way
+     * pressing send here would have sent it.
+     */
+    @Test
+    fun `a post into this thread from elsewhere clears and hides the reply panel`() = runTest {
+        coEvery { threads.loadThread("1") } returns listOf(item())
+        val viewModel = viewModel()
+        viewModel.onPostPanelRequested()
+        viewModel.onDraftChanged("what I was writing")
+
+        eventBus.emit(AppEvent.ContentPosted(threadId = "1"))
+
+        assertEquals("", viewModel.uiState.value.draft.text)
+        assertFalse(viewModel.uiState.value.isPostPanelVisible)
+    }
+
+    /** Somebody else's post is not a reason to throw away what is being written here. */
+    @Test
+    fun `a new thread posted from the list leaves this draft alone`() = runTest {
+        coEvery { threads.loadThread("1") } returns listOf(item())
+        val viewModel = viewModel()
+        viewModel.onPostPanelRequested()
+        viewModel.onDraftChanged("what I was writing")
+
+        eventBus.emit(AppEvent.ContentPosted(threadId = null))
+
+        assertEquals("what I was writing", viewModel.uiState.value.draft.text)
+        assertTrue(viewModel.uiState.value.isPostPanelVisible)
+    }
+
+    @Test
+    fun `a post into a different thread leaves this draft alone`() = runTest {
+        coEvery { threads.loadThread("1") } returns listOf(item())
+        val viewModel = viewModel()
+        viewModel.onPostPanelRequested()
+        viewModel.onDraftChanged("what I was writing")
+
+        eventBus.emit(AppEvent.ContentPosted(threadId = "99"))
+
+        assertEquals("what I was writing", viewModel.uiState.value.draft.text)
+    }
+    //endregion
 }

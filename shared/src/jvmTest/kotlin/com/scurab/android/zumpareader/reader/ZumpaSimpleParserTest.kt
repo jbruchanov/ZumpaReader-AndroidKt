@@ -176,6 +176,32 @@ class ZumpaSimpleParserTest {
         }
     }
 
+    /**
+     * The `<br>` closing the date line is a separator too, so `lines[3]` is empty on every post and
+     * the body used to come out starting with a blank line. Nothing downstream trimmed it, so every
+     * message on the thread screen was drawn one empty line below its author - which reads as the
+     * row being badly padded rather than as a stray line.
+     */
+    @Test
+    fun `a body does not start or end with a blank line`() {
+        val result = ZumpaSimpleParser().parseThread(fixture("thread_page.html"), null)
+
+        result.items.forEachIndexed { index, item ->
+            assertFalse(item.body.startsWith("\n"), "leading blank line on post $index")
+            assertFalse(item.body.endsWith("\n"), "trailing blank line on post $index")
+        }
+    }
+
+    /** The newlines between the lines of a message are the message. Only the ends are trimmed. */
+    @Test
+    fun `the line breaks inside a message are kept`() {
+        val result = ZumpaSimpleParser().parseThread(fixture("thread_page.html"), null)
+
+        val multiLine = result.items.first { it.body.contains("\n") }
+        assertTrue(multiLine.body.lines().size > 1)
+        assertFalse(multiLine.body.lines().first().isEmpty())
+    }
+
     @Test
     fun `own posts are flagged when the user name matches`() {
         val result = ZumpaSimpleParser().parseThread(fixture("thread_page.html"), "peta")

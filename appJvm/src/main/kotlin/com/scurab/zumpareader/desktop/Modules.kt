@@ -14,10 +14,12 @@ import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.repository.AuthRepository
 import com.scurab.android.zumpareader.repository.CookieRepository
 import com.scurab.android.zumpareader.repository.ImagePrefetcher
+import com.scurab.android.zumpareader.repository.InMemorySentDraftRepository
 import com.scurab.android.zumpareader.repository.NoImagePrefetcher
 import com.scurab.android.zumpareader.repository.NoPushTokenProvider
 import com.scurab.android.zumpareader.repository.OfflineDataRepository
 import com.scurab.android.zumpareader.repository.PushTokenProvider
+import com.scurab.android.zumpareader.repository.SentDraftRepository
 import com.scurab.android.zumpareader.repository.ZumpaReadStateRepository
 import com.scurab.android.zumpareader.repository.ZumpaSettingsRepository
 import com.scurab.android.zumpareader.repository.ZumpaThreadRepository
@@ -127,6 +129,10 @@ internal fun desktopModule(home: File = defaultHome()) = module {
     single<PushTokenProvider> { NoPushTokenProvider }
 
     single<ImagePrefetcher> { NoImagePrefetcher }
+
+    //in memory, not the file-backed store the settings use: this is a safety net for the session
+    //you are in, and one that survived a restart would offer something written days ago
+    single<SentDraftRepository> { InMemorySentDraftRepository() }
 
     //the desktop half of the startup seam - see DesktopInitAppUseCase
     single<InitAppUseCase> { DesktopInitAppUseCase(imageLoader = { get() }) }

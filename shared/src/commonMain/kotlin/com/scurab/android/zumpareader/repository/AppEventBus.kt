@@ -13,8 +13,14 @@ sealed interface AppEvent {
     /** The offline download finished or was cleared, whoever shows a list should reload. */
     data object OfflineDataChanged : AppEvent
 
-    /** A thread or an answer was posted, whatever list is up is now stale. */
-    data object ContentPosted : AppEvent
+    /**
+     * A thread or an answer was posted, whatever list is up is now stale.
+     *
+     * @param threadId the thread it went into, or null for a new thread. Carried so a screen can
+     * tell a post that was its own from someone else's: the thread screen clears its reply box on
+     * the former, and clearing it on the latter would throw away a draft over an unrelated post.
+     */
+    data class ContentPosted(val threadId: String?) : AppEvent
 }
 
 class AppEventBus {

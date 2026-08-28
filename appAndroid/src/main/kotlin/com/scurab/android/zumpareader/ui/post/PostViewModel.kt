@@ -11,8 +11,14 @@ import com.scurab.android.zumpareader.model.ZumpaThreadBody
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.repository.AppEvent
 import com.scurab.android.zumpareader.repository.AppEventBus
+import com.scurab.android.zumpareader.repository.Draft
+import com.scurab.android.zumpareader.repository.RestoreMode
+import com.scurab.android.zumpareader.repository.SentDraft
+import com.scurab.android.zumpareader.repository.SentDraftRepository
 import com.scurab.android.zumpareader.repository.ZumpaSettingsRepository
 import com.scurab.android.zumpareader.repository.ZumpaThreadRepository
+import com.scurab.android.zumpareader.repository.restoredInto
+import com.scurab.android.zumpareader.ui.compose.RestoreDraftEventHandler
 import kotlinx.coroutines.launch
 
 const val POST_MESSAGE_TAB = "1"
@@ -48,6 +54,10 @@ data class PostUiState(
     /** False when replying into an existing thread - the subject is fixed then. */
     val isSubjectEditable: Boolean = true,
     val isSending: Boolean = false,
+    /** The last thing sent, if anything has been - what the restore button offers. */
+    val sentDraft: SentDraft? = null,
+    /** Non-null while the restore dialog is up, which only happens over a field with text in it. */
+    val restorePrompt: SentDraft? = null,
 ) {
     val canSend: Boolean
         get() = message.isNotBlank() && (!isSubjectEditable || subject.isNotBlank())
@@ -65,7 +75,7 @@ interface PostEventHandler : PostMessageEventHandler {
 }
 
 /** The message tab's interactions. The image tabs have their own, see [PostImageEventHandler]. */
-interface PostMessageEventHandler {
+interface PostMessageEventHandler : RestoreDraftEventHandler {
     fun onSubjectChanged(subject: String)
     fun onMessageChanged(message: String)
     fun onSendClicked()
@@ -83,7 +93,16 @@ class PostViewModel(
     private val threads: ZumpaThreadRepository,
     private val settings: ZumpaSettingsRepository,
     private val eventBus: AppEventBus,
+    private val sentDrafts: SentDraftRepository,
 ) : BaseViewModel<PostUiState>(PostUiState()), PostEventHandler {
+
+    init {
+        //collected rather than read once: sending from the thread's reply panel while this dialog
+        //is open is exactly the case the button is for
+        viewModelScope.launch {
+            sentDrafts.draft.collect { setState { copy(sentDraft = it) } }
+        }
+    }
 
     private var threadId: String? = null
 
@@ -212,6 +231,13 @@ class PostViewModel(
             return
         }
 
+        //before the call, not after it: the whole point is that the answer cannot be trusted, and a
+        //draft saved only on success would be missing for exactly the posts this is here for
+        sentDrafts.save(
+            message = current.message.trim(),
+            subject = current.subject.trim().takeIf { current.isSubjectEditable },
+        )
+
         setState { copy(isSending = true) }
         effect(HideKeyboard)
         val id = threadId
@@ -228,7 +254,8 @@ class PostViewModel(
                         ZumpaThreadBody(settings.nickName, subject, current.message.trim(), id)
                     )
                 }
-                eventBus.emit(AppEvent.ContentPosted)
+                //the thread it went into, so the screen showing that thread knows it was this post
+                eventBus.emit(AppEvent.ContentPosted(id))
                 effect(PostEffect.Dismiss)
             } catch (err: Throwable) {
                 onError(err)
@@ -237,6 +264,54 @@ class PostViewModel(
             }
         }
     }
+
+    //region restoring the last sent message - see RestoreDraftEventHandler
+    /**
+     * A blank field has nothing to lose, so it is filled without asking. Anything already written
+     * gets the dialog, which is the only place the append/overwrite choice exists.
+     */
+    override fun onRestoreDraftClicked() {
+        val saved = state.sentDraft ?: return
+        if (state.message.isBlank()) {
+            restore(saved, RestoreMode.Fill)
+        } else {
+            setState { copy(restorePrompt = saved) }
+        }
+    }
+
+    override fun onRestoreDraftDismissed() = setState { copy(restorePrompt = null) }
+
+    override fun onRestoreDraftAppended() = answerPrompt(RestoreMode.Append)
+
+    override fun onRestoreDraftOverwritten() = answerPrompt(RestoreMode.Overwrite)
+
+    private fun answerPrompt(mode: RestoreMode) {
+        val saved = state.restorePrompt ?: return
+        restore(saved, mode)
+        setState { copy(restorePrompt = null) }
+    }
+
+    private fun restore(saved: SentDraft, mode: RestoreMode) {
+        val current = state
+        //null subject means "not this writer's to set", which is what tells the restore rules this
+        //is a reply and a saved subject has to be dropped
+        val restored = saved.restoredInto(
+            current = Draft(
+                message = current.message,
+                subject = current.subject.takeIf { current.isSubjectEditable },
+            ),
+            mode = mode,
+        )
+        setState {
+            copy(
+                message = restored.message,
+                subject = restored.subject ?: subject,
+                //the message tab is where the restored text landed, so that is where to look
+                selectedTabTag = POST_MESSAGE_TAB,
+            )
+        }
+    }
+    //endregion
 }
 
 /**

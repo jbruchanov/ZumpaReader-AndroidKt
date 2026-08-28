@@ -2,6 +2,8 @@ package com.scurab.zumpareader.desktop
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +19,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,17 +28,26 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isAltPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.scurab.android.zumpareader.repository.Draft
+import com.scurab.android.zumpareader.repository.RestoreMode
+import com.scurab.android.zumpareader.repository.SentDraft
+import com.scurab.android.zumpareader.repository.restoredInto
 
 /**
  * What is being written and where it goes: a new thread from the list, or an answer to the thread
@@ -64,6 +77,7 @@ internal fun ReplyPanel(
     target: Composing.Reply,
     message: String,
     isSending: Boolean,
+    sentDraft: SentDraft?,
     onMessageChange: (String) -> Unit,
     onSend: () -> Unit,
 ) {
@@ -77,12 +91,25 @@ internal fun ReplyPanel(
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
+        val value = rememberFieldValue(message)
         OutlinedTextField(
-            value = message,
-            onValueChange = onMessageChange,
+            value = value.value,
+            onValueChange = {
+                value.value = it
+                onMessageChange(it.text)
+            },
             label = { Text("Reply") },
             enabled = !isSending,
             maxLines = MESSAGE_MAX_LINES,
+            //a reply's subject is the thread's, so null - which is what drops a saved one
+            trailingIcon = {
+                RestoreDraftButton(
+                    sentDraft = sentDraft,
+                    current = Draft(message, subject = null),
+                    enabled = !isSending,
+                    onRestored = { onMessageChange(it.message) },
+                )
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = MESSAGE_MIN_HEIGHT)
@@ -99,6 +126,7 @@ internal fun ReplyPanel(
 @Composable
 internal fun NewThreadDialog(
     isSending: Boolean,
+    sentDraft: SentDraft?,
     onDismiss: () -> Unit,
     onSend: (subject: String, message: String) -> Unit,
 ) {
@@ -124,12 +152,28 @@ internal fun NewThreadDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().sendOnAltEnter(::send),
                 )
+                val messageValue = rememberFieldValue(message)
                 OutlinedTextField(
-                    value = message,
-                    onValueChange = { message = it },
+                    value = messageValue.value,
+                    onValueChange = {
+                        messageValue.value = it
+                        message = it.text
+                    },
                     label = { Text("Message") },
                     enabled = !isSending,
                     maxLines = MESSAGE_MAX_LINES,
+                    trailingIcon = {
+                        RestoreDraftButton(
+                            sentDraft = sentDraft,
+                            current = Draft(message, subject),
+                            enabled = !isSending,
+                            onRestored = {
+                                message = it.message
+                                //null means the rules left it alone
+                                subject = it.subject ?: subject
+                            },
+                        )
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = MESSAGE_MIN_HEIGHT)
@@ -149,6 +193,126 @@ internal fun NewThreadDialog(
             TextButton(onClick = onDismiss, enabled = !isSending) { Text("Cancel", color = Muted) }
         },
     )
+}
+
+/**
+ * A [TextFieldValue] mirroring a string held above it, whose caret goes to the end when that string
+ * changes from underneath - which here means the last sent message being put back or appended.
+ * `:appAndroid` has the same thing, and the same reason for it; the two ui layers are separate.
+ */
+@Composable
+private fun rememberFieldValue(text: String): MutableState<TextFieldValue> {
+    val state = remember { mutableStateOf(TextFieldValue(text, TextRange(text.length))) }
+    LaunchedEffect(text) {
+        if (text != state.value.text) {
+            state.value = state.value.copy(text = text, selection = TextRange(text.length))
+        }
+    }
+    return state
+}
+
+/**
+ * Putting the last sent message back in the box.
+ *
+ * The forum sometimes accepts a post, reports success and does nothing with it, and the field is
+ * cleared on the answer - so what was written is gone. This offers it back. See
+ * [com.scurab.android.zumpareader.repository.SentDraftRepository]; Android has the same button.
+ *
+ * Nothing is drawn until something has been sent. A blank field is filled outright - there is
+ * nothing there to lose - and anything already written gets the dialog, which is the only place the
+ * append/overwrite choice exists. The rules for what happens to the subject live in
+ * [restoredInto]; this only applies the answer.
+ */
+@Composable
+private fun RestoreDraftButton(
+    sentDraft: SentDraft?,
+    current: Draft,
+    enabled: Boolean,
+    onRestored: (Draft) -> Unit,
+) {
+    if (sentDraft == null) return
+    var isPrompting by remember { mutableStateOf(false) }
+
+    fun restore(mode: RestoreMode) {
+        onRestored(sentDraft.restoredInto(current, mode))
+        isPrompting = false
+    }
+
+    IconButton(
+        onClick = {
+            if (current.message.isBlank()) restore(RestoreMode.Fill) else isPrompting = true
+        },
+        enabled = enabled,
+    ) {
+        RepeatGlyph(tint = if (enabled) Accent else Muted)
+    }
+
+    if (isPrompting) {
+        AlertDialog(
+            onDismissRequest = { isPrompting = false },
+            containerColor = Background,
+            title = { Text("Last sent message", color = Accent) },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .heightIn(max = PREVIEW_MAX_HEIGHT)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    //only a new thread saved one - seeing it is also what says which kind it was
+                    sentDraft.subject?.let { Text(it, color = Content, fontWeight = FontWeight.Bold) }
+                    Text(sentDraft.message, color = Content)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { restore(RestoreMode.Overwrite) }) {
+                    Text("Overwrite", color = Accent)
+                }
+            },
+            dismissButton = {
+                //two in the one slot - AlertDialog lays its own button row out. Cancel first, so
+                //the two harmless answers sit together and away from overwrite.
+                TextButton(onClick = { isPrompting = false }) { Text("Cancel", color = Muted) }
+                TextButton(onClick = { restore(RestoreMode.Append) }) {
+                    Text("Append", color = Accent)
+                }
+            },
+        )
+    }
+}
+
+/**
+ * A circular arrow - `Icons.Filled.Replay`, which is what Android puts here. Drawn rather than
+ * imported for the same reason the fab's plus and the paper dart are: the material icon artifacts
+ * are an Android-app dependency this module does not carry.
+ */
+@Composable
+private fun RepeatGlyph(tint: Color) {
+    Canvas(Modifier.size(REPEAT_ICON_SIZE)) {
+        val stroke = REPEAT_ICON_STROKE.toPx()
+        val inset = stroke / 2f + size.minDimension * 0.12f
+        //an arc with a gap at the top right, and a head on the end of it
+        drawArc(
+            color = tint,
+            startAngle = -50f,
+            sweepAngle = 290f,
+            useCenter = false,
+            topLeft = Offset(inset, inset),
+            size = Size(size.width - inset * 2f, size.height - inset * 2f),
+            style = Stroke(width = stroke, cap = StrokeCap.Round),
+        )
+        val head = size.minDimension * 0.22f
+        val tip = Offset(size.width - inset, inset + head * 0.35f)
+        drawPath(
+            Path().apply {
+                moveTo(tip.x, tip.y)
+                lineTo(tip.x - head, tip.y)
+                lineTo(tip.x, tip.y + head)
+                close()
+            },
+            color = tint,
+        )
+    }
 }
 
 /** The way in to a new thread, over the list. Only there when there is an account to write with. */
@@ -247,6 +411,11 @@ private fun Modifier.sendOnAltEnter(onSend: () -> Unit): Modifier = onPreviewKey
 }
 
 private val SEND_ICON_SIZE = 18.dp
+private val REPEAT_ICON_SIZE = 18.dp
+private val REPEAT_ICON_STROKE = 2.dp
+
+/** A long saved message must not push the dialog's buttons off the screen. */
+private val PREVIEW_MAX_HEIGHT = 240.dp
 private val FAB_ICON_SIZE = 20.dp
 private val FAB_ICON_STROKE = 2.dp
 
