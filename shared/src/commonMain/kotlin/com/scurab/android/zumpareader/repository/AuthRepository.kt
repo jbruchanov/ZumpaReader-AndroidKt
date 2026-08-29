@@ -72,13 +72,39 @@ class AuthRepository(
         cookies.reset()
     }
 
+    /**
+     * A token the platform handed over rather than one we went and asked for - firebase refreshing
+     * it, which arrives at the messaging service.
+     *
+     * Public for that one caller. It used to have its own copy of the registration below, which is
+     * how it came to read the *switching* api rather than the online one - so a token refreshed
+     * while offline mode was on looked for a uid in the offline snapshot, never found one, and gave
+     * up without telling anybody. It also never stored the new token.
+     */
+    suspend fun onPushTokenRefreshed(token: String): Boolean = withContext(Dispatchers.IO) {
+        val userName = prefs.loggedUserName ?: return@withContext false
+        prefs.pushRegId = token
+        registerToken(userName, token)
+    }
+
     private suspend fun registerForPush(userName: String): Boolean {
+        val token = try {
+            pushTokens.token()
+        } catch (e: Throwable) {
+            e.printStackTrace()
+            null
+        }
+        prefs.pushRegId = token
+        return token != null && registerToken(userName, token)
+    }
+
+    /**
+     * The forum wants the uid off the main page alongside the token, which is why this needs the
+     * session and not just the token. [onlineApi] explicitly - the offline snapshot has no uid in
+     * it, and registering for push is not something offline mode should be trying to do at all.
+     */
+    private suspend fun registerToken(userName: String, token: String): Boolean {
         return try {
-            val token = pushTokens.token()
-            prefs.pushRegId = token
-            if (token == null) {
-                return false
-            }
             val html = onlineApi.getMainPageHtml().asString()
             val uid = ZumpaSimpleParser.parseUID(html) ?: return false
             "[OK]" == phpApi.register(userName, uid, token).asUTFString()

@@ -30,12 +30,29 @@ android {
     buildFeatures {
         buildConfig = true
         compose = true
+        //off by default from agp 9. On for the notification channel id, which is declared once
+        //below and written into both BuildConfig and the string the manifest points firebase at.
+        resValues = true
     }
     val fileProviderAuthority = "com.scurab.android.zumpareader.fileprovider"
+
+    /*
+     * The notification channel, defined once and handed to both the code and the resources, the way
+     * the authority above is. They used to be written out separately and had drifted: the manifest
+     * told firebase the default channel was "Zumpa", which nothing has ever created.
+     *
+     * `_v2` because a channel is immutable once it exists - importance included - so the only way to
+     * change one is to publish a new id and delete the old. See CreateNotificationChannelsUseCase.
+     */
+    val notificationChannelId = "notifications_v2"
+
     defaultConfig {
         applicationId = "com.scurab.zumpareader"
         buildConfigField("String", "BUILD_DETAIL", "\"build-${buildDate()},git-${gitSha()}\"")
         buildConfigField("String", "Authority", "\"$fileProviderAuthority\"")
+        buildConfigField("String", "NotificationChannelId", "\"$notificationChannelId\"")
+        //what the manifest hands firebase as `default_notification_channel_id`
+        resValue("string", "default_notification_channel_id", notificationChannelId)
         minSdk = libs.versions.android.sdk.min.get().toInt()
         targetSdk = libs.versions.android.sdk.target.get().toInt()
         versionCode = libs.versions.app.version.code.get().toInt()

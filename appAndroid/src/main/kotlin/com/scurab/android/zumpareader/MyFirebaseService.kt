@@ -1,12 +1,9 @@
 package com.scurab.android.zumpareader
 
 import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.media.RingtoneManager
 import android.text.Html
 import android.util.Log
 import android.view.ContextThemeWrapper
@@ -14,15 +11,22 @@ import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.scurab.android.zumpareader.ext.notificationManager
-import com.scurab.android.zumpareader.ext.app
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
+import com.scurab.android.zumpareader.repository.AuthRepository
 import com.scurab.android.zumpareader.ui.main.MainActivity
 import com.scurab.android.zumpareader.util.obtainStyledColor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
 
+/**
+ * Sound and vibration are the channel's, not the notification's: on api 26+ - which is every
+ * install, minSdk being 26 - the channel wins and a `setSound`/`setVibrate` here does nothing. Both
+ * used to be set on the builders below and had done nothing for years. See
+ * [com.scurab.android.zumpareader.usecase.CreateNotificationChannelsUseCase].
+ */
 private const val ZUMPA_CHANNEL = AppConfig.NotificationChannel.Notifications
 
 /**
@@ -31,42 +35,41 @@ private const val ZUMPA_CHANNEL = AppConfig.NotificationChannel.Notifications
  */
 private val pushRegistrationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+private const val TAG = "MyFirebaseService"
+
 class MyFirebaseService : FirebaseMessagingService() {
 
-    private val VIBRATE_TEMPLATE = longArrayOf(100L, 600L, 200L, 200L, 200L, 200L)
+    private val auth: AuthRepository by inject()
+
     private val NOTIFY_ID = 974561
 
     override fun onMessageReceived(msg: RemoteMessage) {
-        Log.i("MyFirebaseService", "Received")
+        Log.i(TAG, "Received")
         msg.data.let { n ->
             try {
-                onReceiveMessage(n.getValue("subject") ?: "", n.getValue("body"))
+                //indexing, not getValue: getValue throws on a missing key rather than answering
+                //null, so the elvis that used to be here could never fire and a push without a
+                //`subject` threw into the catch below and vanished without a notification
+                onReceiveMessage(n["subject"].orEmpty(), n["body"])
             } catch (e: Throwable) {
                 e.printStackTrace()
             }
         }
     }
 
+    /**
+     * Firebase refreshed the token, so the forum has to be told the new one.
+     *
+     * Handed straight to [AuthRepository], which is where the same call for a fresh login lives -
+     * this used to be a second copy of it and had drifted: it read the online/offline api switch
+     * instead of the online api, so a refresh while offline quietly failed, and it never stored
+     * the token it had just registered.
+     */
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        //we need to
-        val app = baseContext.app()
-        val userName = app.zumpaPrefs.loggedUserName
-        if (userName != null) {
-            pushRegistrationScope.launch {
-                try {
-                    val body = app.zumpaAPI.getMainPageHtml().asString()
-                    val uid = ZumpaSimpleParser.parseUID(body)
-                    if (uid != null) {
-                        val response = app.zumpaPHPAPI.register(userName, uid, token).asUTFString()
-                        Log.i("MyFirebaseService", "Result:" + ("[OK]" == response))
-                    }
-                } catch (e: Throwable) {
-                    //just ignore it
-                    Log.i("MyFirebaseService", "Unable to send newToken to server")
-                    e.printStackTrace()
-                }
-            }
+        pushRegistrationScope.launch {
+            val isRegistered = auth.onPushTokenRefreshed(token)
+            Log.i(TAG, "Refreshed token registered: $isRegistered")
         }
     }
 
@@ -81,14 +84,12 @@ class MyFirebaseService : FirebaseMessagingService() {
                 else -> onCreateSimpleNotification(context, subject, msg)
             }
 
-            val nc = NotificationChannel(
-                ZUMPA_CHANNEL,
-                ZUMPA_CHANNEL,
-                NotificationManager.IMPORTANCE_DEFAULT,
-            )
-            notificationManager.createNotificationChannel(nc)
-            ContextThemeWrapper(context, R.style.ThemeBlack)
-                    .notificationManager.notify(NOTIFY_ID, notification)
+            //the channel is not created here. CreateNotificationChannelsUseCase makes it at
+            //startup - and firebase starts the process, so that has always run by the time this
+            //has. Re-creating it could not change the importance, which is fixed once a channel
+            //exists, but it did overwrite the name: the entry in the system settings went from
+            //the localised "Notifications" to the literal channel id on every push received.
+            notificationManager.notify(NOTIFY_ID, notification)
         }
     }
 
@@ -98,11 +99,9 @@ class MyFirebaseService : FirebaseMessagingService() {
         return NotificationCompat.Builder(context, ZUMPA_CHANNEL)
                 .setSmallIcon(icon)
                 .setChannelId(ZUMPA_CHANNEL)
-                .setVibrate(VIBRATE_TEMPLATE)
                 .setColor(context.obtainStyledColor(R.attr.contextColor))
                 .setContentTitle(subject)
                 .setContentText(msg)
-                .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
                 .build()
     }
 
@@ -116,13 +115,11 @@ class MyFirebaseService : FirebaseMessagingService() {
         return NotificationCompat.Builder(context, ZUMPA_CHANNEL)
                 .setSmallIcon(icon)
                 .setChannelId(ZUMPA_CHANNEL)
-                .setVibrate(VIBRATE_TEMPLATE)
                 .setColor(context.obtainStyledColor(R.attr.contextColor))
                 .setContentTitle(context.getString(R.string.notification_header))
                 .setContentText(pushMsg.from)
                 .setContentIntent(pIntent)
                 .setAutoCancel(true)
-                .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
                 .build()
     }
 }

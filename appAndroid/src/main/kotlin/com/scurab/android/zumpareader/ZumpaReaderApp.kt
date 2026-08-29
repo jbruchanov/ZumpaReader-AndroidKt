@@ -3,12 +3,9 @@ package com.scurab.android.zumpareader
 import android.app.Activity
 import android.app.Application
 import android.os.Bundle
-import com.scurab.android.zumpareader.di.ONLINE_API
 import com.scurab.android.zumpareader.di.appModules
-import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
 import com.scurab.android.zumpareader.repository.ZumpaReadStateRepository
 import com.scurab.android.zumpareader.usecase.InitAppUseCase
-import com.scurab.android.zumpareader.util.ZumpaPrefs
 import org.koin.android.ext.android.get
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
@@ -20,11 +17,6 @@ import org.koin.core.logger.Level
  * Created by JBruchanov on 24/11/2015.
  */
 class ZumpaReaderApp : Application() {
-
-    //everything below is built by koin now, see di/Modules.kt, these are kept so the existing
-    //`app().zumpaSomething` call sites keep working; new code should inject what it needs
-    val zumpaParser: ZumpaSimpleParser by inject()
-    val zumpaPrefs: ZumpaPrefs by inject()
 
     private val readStateRepository: ZumpaReadStateRepository by inject()
 
@@ -69,12 +61,4 @@ class ZumpaReaderApp : Application() {
             }
         })
     }
-
-    /**
-     * Resolved on every access, the definition picks online or offline by the current setting.
-     */
-    val zumpaAPI: ZumpaAPI get() = get()
-
-    val zumpaOnlineAPI: ZumpaAPI by inject(ONLINE_API)
-    val zumpaPHPAPI: ZumpaPHPAPI by inject()
 }
