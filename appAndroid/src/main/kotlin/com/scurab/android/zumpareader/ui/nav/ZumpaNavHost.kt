@@ -1,7 +1,14 @@
 package com.scurab.android.zumpareader.ui.nav
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection
+import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -18,7 +25,9 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.scene.DialogSceneStrategy
+import androidx.navigation3.scene.Scene
 import androidx.navigation3.ui.NavDisplay
+import androidx.navigationevent.NavigationEvent
 import com.scurab.android.zumpareader.arch.ShowToast
 import com.scurab.android.zumpareader.arch.WindowLayout
 import com.scurab.android.zumpareader.ext.toast
@@ -144,12 +153,15 @@ fun ZumpaNavHost(launches: Flow<LaunchPayload>, onExit: () -> Unit) {
                     rememberViewModelStoreNavEntryDecorator(),
                 ),
                 sceneStrategies = listOf(DialogSceneStrategy()),
+                transitionSpec = slideForward(),
+                popTransitionSpec = slideBack(),
+                predictivePopTransitionSpec = slideBackWithTheGesture(),
                 entryProvider = entryProvider {
                     //one root for both layouts, so rotating keeps the list's ViewModel and its
                     //place in the back stack instead of swapping one root key for another
                     entry<MainListKey> { if (isTwoPane) TwoPaneScreen() else MainListScreen() }
                     entry<SubListKey> { key -> SubListScreen(key.threadId) }
-                    entry<ImageKey> { key -> ImageScreen(key.url) }
+                    entry<ImageKey>(metadata = SHARED_IMAGE) { key -> ImageScreen(key.url) }
                     entry<SettingsKey> { SettingsScreen() }
                     entry<OfflineDownloadKey>(metadata = DIALOG) { OfflineDownloadScreen() }
                     //a dialog where there is room for one, a full screen where not
@@ -177,3 +189,70 @@ fun ZumpaNavHost(launches: Flow<LaunchPayload>, onExit: () -> Unit) {
 private val DIALOG = DialogSceneStrategy.dialog(
     DialogProperties(dismissOnClickOutside = false, decorFitsSystemWindows = false)
 )
+
+/**
+ * How long a screen takes to cross when it is not a finger doing the moving. Navigation3's own
+ * default is 700ms, which is a long time to watch a whole screen travel; this is the quarter-second
+ * a platform push has always been.
+ */
+private const val SLIDE_MILLIS = 250
+
+/**
+ * Forward: the screen being opened arrives from the end and pushes the one below it off towards the
+ * start, so the stack reads as a stack rather than as one picture dissolving into another - which
+ * is what navigation3 does if it is left alone.
+ *
+ * Start and end rather than left and right, because the manifest says `supportsRtl` - the same
+ * reason [com.scurab.android.zumpareader.ui.tablet.TwoPaneScreen] consumes its insets by start and
+ * end. In an rtl layout the whole movement mirrors with the reading direction.
+ */
+private fun <T : Any> slideForward():
+    AnimatedContentTransitionScope<Scene<T>>.() -> ContentTransform = {
+    slideIntoContainer(SlideDirection.Start, tween(SLIDE_MILLIS)) togetherWith
+        slideOutOfContainer(SlideDirection.Start, tween(SLIDE_MILLIS))
+}
+
+/** Back: the same movement run the other way, for a back that is a press rather than a drag. */
+private fun <T : Any> slideBack():
+    AnimatedContentTransitionScope<Scene<T>>.() -> ContentTransform = {
+    slideIntoContainer(SlideDirection.End, tween(SLIDE_MILLIS)) togetherWith
+        slideOutOfContainer(SlideDirection.End, tween(SLIDE_MILLIS))
+}
+
+/**
+ * Back under a gesture: the same slide again, with the finger driving it. No duration, and that is
+ * the point - navigation3 *seeks* this transition to the gesture's progress rather than playing it,
+ * so the screen sits wherever the drag has got to and comes back if the drag is abandoned. The
+ * spring left in the defaults is only what finishes the movement once the finger lifts.
+ *
+ * The direction follows the edge that was grabbed, and an edge is a physical thing - so `Left` and
+ * `Right` here where the two above use start and end. A swipe from the left edge pushes the screen
+ * to the right whichever way the layout runs, because that is where the hand is going. `EDGE_NONE`
+ * falls in with the left edge, which is the direction [slideBack] would have taken anyway.
+ */
+private fun <T : Any> slideBackWithTheGesture():
+    AnimatedContentTransitionScope<Scene<T>>.(Int) -> ContentTransform = { edge ->
+    val towards =
+        if (edge == NavigationEvent.EDGE_RIGHT) SlideDirection.Left else SlideDirection.Right
+    slideIntoContainer(towards) togetherWith slideOutOfContainer(towards)
+}
+
+/**
+ * The image viewer keeps a crossfade instead, in all three directions.
+ *
+ * Opening it is the shared element's job - see [com.scurab.android.zumpareader.ui.compose.sharedImage],
+ * which grows the tapped picture out of the row it was in. That movement is aimed at where the
+ * picture will end up, and sliding the screen it is landing on moves the target while the picture is
+ * still travelling to it: the two read as fighting rather than as one gesture. A crossfade underneath
+ * leaves the shared element as the only thing moving, which is what it was written to be.
+ *
+ * On the entry rather than on the display because navigation3 takes the spec from whichever scene is
+ * on top - which is this one both going in and coming back out.
+ */
+private val CROSSFADE =
+    fadeIn(tween(SLIDE_MILLIS)) togetherWith fadeOut(tween(SLIDE_MILLIS))
+
+private val SHARED_IMAGE: Map<String, Any> =
+    NavDisplay.transitionSpec { CROSSFADE } +
+        NavDisplay.popTransitionSpec { CROSSFADE } +
+        NavDisplay.predictivePopTransitionSpec { CROSSFADE }
