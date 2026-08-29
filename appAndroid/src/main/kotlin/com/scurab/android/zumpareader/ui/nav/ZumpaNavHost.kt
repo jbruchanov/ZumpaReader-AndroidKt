@@ -170,8 +170,9 @@ fun ZumpaNavHost(launches: Flow<LaunchPayload>, onExit: () -> Unit) {
  * `decorFitsSystemWindows = false` is what makes the keyboard animate rather than jump. Left true -
  * the default - the platform fits the dialog window to the system windows itself, which means it
  * resizes the dialog in one step when the ime appears and reports `WindowInsets.ime` as zero inside
- * it. Turning it off hands the insets to the content, which is already set up to take them:
- * PostScreen pads the top and the sides, PostMessageScreen pads the bottom.
+ * it. Turning it off hands the insets to the content, which is set up to take them: PostScreen
+ * pads the top and the sides and PostMessageScreen the bottom, and OfflineDownloadScreen - the
+ * other screen that lands here - pads all four round its frame.
  */
 private val DIALOG = DialogSceneStrategy.dialog(
     DialogProperties(dismissOnClickOutside = false, decorFitsSystemWindows = false)

@@ -3,7 +3,9 @@ package com.scurab.android.zumpareader.ui.main
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -47,6 +49,18 @@ class MainActivity : ComponentActivity() {
             statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
         )
+        //The manifest asks for adjustNothing, which is what an edge to edge window wants: the
+        //screens take the keyboard as a WindowInsets.ime out of safeDrawing and pad themselves for
+        //it, and a platform resize on top of that adjusts for the same keyboard twice.
+        //
+        //Below api 30 there is no ime inset to take. Androidx derives one instead - see
+        //WindowInsetsCompat.Impl20, which reads it out of the difference between the system window
+        //inset and the stable one, and so only has one while something resizes. Left at
+        //adjustNothing there, safeDrawing reports no keyboard at all and the message field sits
+        //behind it.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+        }
         super.onCreate(savedInstanceState)
         //before the first composition, so the list ViewModel's first load already knows whether it
         //has a detail pane to select a thread into

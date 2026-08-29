@@ -7,10 +7,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
@@ -65,6 +68,14 @@ private fun OfflineDownloadScreen(
 
     Column(
         modifier = Modifier
+            //decorFitsSystemWindows is off for this dialog as it is for the post one - see
+            //ZumpaNavHost - so nothing above has inset the window and the content owns the job.
+            //Ahead of the background, so the frame stops at the safe area rather than running on
+            //under the bars.
+            //
+            //safeDrawing and not the bars alone because the pages field opens the keyboard, and a
+            //dialog centred in a window nothing resizes has nothing else to lift it clear of one.
+            .windowInsetsPadding(WindowInsets.safeDrawing)
             .widthIn(min = AppTheme.sizes.dialogOfflineMinWidth)
             //a frame, so the dialog is not black on black - the xml used ?buttonBackground
             .background(AppTheme.colorScheme.secondaryBackground, AppTheme.shapes.button)
