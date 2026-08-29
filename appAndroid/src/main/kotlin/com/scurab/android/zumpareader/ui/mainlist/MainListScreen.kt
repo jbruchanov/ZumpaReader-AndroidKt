@@ -224,13 +224,19 @@ private fun MainListScreen(
                     .quickHide(quickHideState),
             ) {
                 //the alternating background is keyed on list position, as the level-list was
+                //- which is also why it snaps rather than travels when a row is inserted or
+                //removed below. The stripe belongs to the place in the list, the row slides
+                //through it.
                 itemsIndexed(uiState.rows, key = { _, row -> row.id }) { index, row ->
-                    ThreadRow(row, index, rowPadding, eventHandler)
+                    //keyed on the thread id above, which is what lets this animate at all: a
+                    //refresh that brings the same threads back moves the ones that were bumped
+                    //instead of redrawing the lot
+                    ThreadRow(row, index, rowPadding, eventHandler, Modifier.animateItem())
                 }
                 //Online only: a snapshot is the whole list, and the offline api answers with an
                 //empty next thread id, so there is never a page on its way to wait for.
                 if (uiState.isLoadingNextPage && !uiState.isOffline) {
-                    item(key = NEXT_PAGE_ROW_KEY) { NextPageRow() }
+                    item(key = NEXT_PAGE_ROW_KEY) { NextPageRow(Modifier.animateItem()) }
                 }
             }
         }
@@ -327,9 +333,9 @@ private fun MainListTopBar(
 
 /** The end of the list while the page after it is on its way. */
 @Composable
-private fun NextPageRow() {
+private fun NextPageRow(modifier: Modifier = Modifier) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(AppTheme.spaces.large),
         contentAlignment = Alignment.Center,
@@ -348,6 +354,8 @@ private fun ThreadRow(
     index: Int,
     contentPadding: PaddingValues,
     eventHandler: MainListEventHandler,
+    /** The list hands the row its own appearance and movement through here. */
+    modifier: Modifier = Modifier,
 ) {
     val renderer = rememberAnnotatedTextRenderer()
     val subject = remember(row.subject, renderer) { renderer.subject(row.subject) }
@@ -358,7 +366,7 @@ private fun ThreadRow(
     RevealRow(
         isOpen = row.isMenuOpen,
         background = zumpaRowColor(index),
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         menuStartPadding = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
         menu = { ThreadRowMenu(row, eventHandler) },
     ) {
@@ -402,7 +410,9 @@ private fun ThreadRow(
                             imageVector = Icons.Filled.Star,
                             contentDescription = null,
                             tint = AppTheme.colorScheme.context,
-                            modifier = Modifier.padding(start = AppTheme.spaces.tiny),
+                            modifier = Modifier
+                                .padding(start = AppTheme.spaces.tiny)
+                                .size(AppTheme.sizes.favoriteStar),
                         )
                     }
                 }
