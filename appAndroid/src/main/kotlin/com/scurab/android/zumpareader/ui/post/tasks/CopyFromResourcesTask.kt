@@ -17,13 +17,14 @@ import kotlinx.coroutines.withContext
  */
 class CopyFromResourcesTask(private val context: Context, val uri: Uri) {
 
-    private var imageStorage: File? = null
-    private var hash: String? = null
-
     suspend fun execute(): CopyFromResourcesTaskResult = withContext(Dispatchers.IO) {
         val result = CopyFromResourcesTaskResult()
-        imageStorage = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-        hash = ParseUtils.MD5(uri.toString())
+        val imageStorage = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        //locals, where these were two fields nothing outside this function ever read. As a
+        //nullable field the hash went straight into `File(parent, child)`, a java constructor that
+        //does not accept null - so a device with no MD5 would have thrown there, and the thumbnail
+        //beside it would have been named "null_thumbnail".
+        val hash = requireNotNull(ParseUtils.MD5(uri.toString())) { "no MD5 digest on this device" }
         val output = File(imageStorage, hash)
         val thumb = File(imageStorage, hash + "_thumbnail")
         result.thumbnail = thumb

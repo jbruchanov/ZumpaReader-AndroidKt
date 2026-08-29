@@ -19,7 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.filled.AspectRatio
 import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.RotateRight
+import androidx.compose.material.icons.automirrored.filled.RotateRight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.CircularProgressIndicator
@@ -27,7 +27,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -218,7 +218,7 @@ private fun ImagePanel(uiState: PostImageUiState, eventHandler: PostImageEventHa
                 eventHandler::onResizeClicked,
             )
             PanelIcon(
-                rememberVectorPainter(Icons.Filled.RotateRight),
+                rememberVectorPainter(Icons.AutoMirrored.Filled.RotateRight),
                 !uiState.isBusy,
                 eventHandler::onRotateClicked,
             )
@@ -277,7 +277,7 @@ private fun SampleSizeSelector(uiState: PostImageUiState, eventHandler: PostImag
             readOnly = true,
             textStyle = AppTheme.typography.button,
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable),
+            modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
         )
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             ImageMetaFormat.sampleLabels.forEachIndexed { index, label ->

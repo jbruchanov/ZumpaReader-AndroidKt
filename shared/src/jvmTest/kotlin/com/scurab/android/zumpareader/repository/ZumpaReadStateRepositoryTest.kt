@@ -3,6 +3,7 @@ package com.scurab.android.zumpareader.repository
 import com.scurab.android.zumpareader.model.ZumpaThreadItem
 import com.scurab.android.zumpareader.util.InMemoryKeyValueStore
 import com.scurab.android.zumpareader.util.ZumpaPrefs
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -18,6 +19,9 @@ import org.junit.jupiter.api.Test
  * phone's thread screen and the desktop's detail pane - and an off-by-one kept in two places is one
  * that drifts.
  */
+//UnconfinedTestDispatcher, so a collector below runs the moment it is launched rather than a
+//dispatch later - the point of every flow case here being what was published and when
+@OptIn(ExperimentalCoroutinesApi::class)
 class ZumpaReadStateRepositoryTest {
 
     private val repository = ZumpaReadStateRepository(ZumpaPrefs(InMemoryKeyValueStore()), Json)

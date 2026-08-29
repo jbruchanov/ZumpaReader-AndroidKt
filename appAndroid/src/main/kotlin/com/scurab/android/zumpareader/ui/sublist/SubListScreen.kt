@@ -34,7 +34,7 @@ import androidx.compose.material.icons.automirrored.filled.Reply
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material.icons.filled.SpeakerNotes
+import androidx.compose.material.icons.automirrored.filled.SpeakerNotes
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -513,7 +513,7 @@ private fun MessageRowMenu(row: SubListRowUiState.Message, eventHandler: SubList
         eventHandler.onCopyClicked(row.body)
     }
     //`speaker_notes` is the bubble-with-lines the quote button always had
-    RevealRowMenuButton(rememberVectorPainter(Icons.Filled.SpeakerNotes)) {
+    RevealRowMenuButton(rememberVectorPainter(Icons.AutoMirrored.Filled.SpeakerNotes)) {
         eventHandler.onQuoteClicked(row.author, row.body)
     }
 }

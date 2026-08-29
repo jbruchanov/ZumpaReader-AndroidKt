@@ -4,7 +4,7 @@ import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.text.Html
+import androidx.core.text.HtmlCompat
 import android.util.Log
 import android.view.ContextThemeWrapper
 import androidx.core.app.NotificationCompat
@@ -64,7 +64,15 @@ class MyFirebaseService : FirebaseMessagingService() {
      * this used to be a second copy of it and had drifted: it read the online/offline api switch
      * instead of the online api, so a refresh while offline quietly failed, and it never stored
      * the token it had just registered.
+     *
+     * Deprecated by firebase in favour of `onRegistered`, and deliberately not migrated. The two do
+     * not carry the same thing: `onNewToken` hands over the FCM registration token, `onRegistered`
+     * hands over the Firebase installation id, and moving to it needs a manifest opt-in that makes
+     * `FirebaseMessaging.getToken` throw. The forum is told this value by `phpApi.register` and its
+     * push server sends to a registration token, so the migration is the server's to make first -
+     * and the server is somebody else's.
      */
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         pushRegistrationScope.launch {
@@ -76,8 +84,10 @@ class MyFirebaseService : FirebaseMessagingService() {
     fun onReceiveMessage(subject: String, message: String?) {
         message?.let { it ->
             val context = ContextThemeWrapper(this, R.style.ThemeBlack)
-            var msg = Html.fromHtml(it).toString()
-            msg = Html.fromHtml(msg).toString()//dvojite protoze se to
+            //FROM_HTML_MODE_LEGACY is what the one-argument `Html.fromHtml` this replaces did, so
+            //the two passes below come out byte for byte as they did before
+            var msg = HtmlCompat.fromHtml(it, HtmlCompat.FROM_HTML_MODE_LEGACY).toString()
+            msg = HtmlCompat.fromHtml(msg, HtmlCompat.FROM_HTML_MODE_LEGACY).toString()//dvojite protoze se to
 
             val notification = when (subject) {
                 "ZUMPA" -> onCreateZumpaNotification(context, msg)

@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.core.content.IntentCompat
 import com.scurab.android.zumpareader.arch.WindowLayout
 import com.scurab.android.zumpareader.ui.compose.theme.AppTheme
 import com.scurab.android.zumpareader.ui.nav.ZumpaNavHost
@@ -85,8 +86,12 @@ class MainActivity : ComponentActivity() {
         val intent = this ?: return LaunchPayload()
         intent.getStringExtra(EXTRA_THREAD_ID)?.let { return LaunchPayload(threadId = it) }
 
-        val single = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
-        val multiple = intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
+        //IntentCompat, the Intent methods without a Class argument being deprecated. A share comes
+        //from another app, so it is untrusted: the typed calls drop anything that is not a Uri
+        //here rather than handing back something that fails somewhere later.
+        val single = IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)
+        val multiple =
+            IntentCompat.getParcelableArrayListExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)
         return LaunchPayload(
             subject = intent.getStringExtra(Intent.EXTRA_SUBJECT),
             text = intent.getStringExtra(Intent.EXTRA_TEXT),

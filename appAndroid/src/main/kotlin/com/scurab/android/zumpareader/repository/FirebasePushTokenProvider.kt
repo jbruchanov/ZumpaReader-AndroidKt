@@ -11,6 +11,12 @@ import kotlinx.coroutines.suspendCancellableCoroutine
  */
 class FirebasePushTokenProvider : PushTokenProvider {
 
+    /**
+     * `getToken` is deprecated in favour of `register`, and deliberately not migrated - see
+     * `MyFirebaseService.onNewToken` for the whole of it. The two are mutually exclusive: opting
+     * into the new one makes this one throw.
+     */
+    @Suppress("DEPRECATION")
     override suspend fun token(): String? = FirebaseMessaging.getInstance().token.awaitResultOrNull()
 }
 
