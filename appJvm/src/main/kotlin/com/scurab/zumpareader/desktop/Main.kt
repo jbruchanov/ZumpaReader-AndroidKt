@@ -36,6 +36,7 @@ import com.scurab.android.zumpareader.arch.WindowLayout
 import com.scurab.android.zumpareader.model.ThreadState
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.model.ZumpaThreadBody
+import com.scurab.android.zumpareader.model.ZumpaThreadItem
 import com.scurab.android.zumpareader.model.stateFor
 import com.scurab.android.zumpareader.repository.AuthRepository
 import com.scurab.android.zumpareader.repository.OfflineDataRepository
@@ -213,21 +214,22 @@ private fun App() {
         }
     }
 
-    /**
-     * Opening a thread marks everything in it as seen, which is what turns its bar off - the same
-     * thing `MainListViewModel` does on a click. The count is written out when the window closes;
-     * what is on screen is updated here.
-     */
+    /** Picking a thread only opens it. Reading it is [onThreadLoaded], once the messages are in. */
     fun select(threadId: String) {
         selected = threadId
-        val thread = threadsRepo.thread(threadId) ?: return
-        readStates.markRead(threadId, thread.items)
-        val state = thread.stateFor(
-            readCount = thread.items,
-            userName = prefs.loggedUserName,
-            current = threadStates[threadId] ?: ThreadState.New,
-        )
-        threadStates = threadStates + (threadId to state)
+    }
+
+    /**
+     * The thread's messages arrived, so everything in it has been seen - which is what turns its
+     * bar off. The count is written out when the window closes.
+     *
+     * Here rather than in [select], and for the reason `MainListViewModel` does the same: a tap is
+     * a request to read and a request can fail. A thread that did not load has not been read, and
+     * its bar should go on saying so.
+     */
+    fun onThreadLoaded(threadId: String, items: List<ZumpaThreadItem>) {
+        readStates.markRead(threadId, items)
+        decorate(threads, keeping = threadStates)
     }
 
     /**
@@ -408,13 +410,17 @@ private fun App() {
                     Box(Modifier.weight(LIST_WEIGHT)) { list() }
                     Box(Modifier.width(1.dp).fillMaxHeight().background(DividerColor))
                     Column(Modifier.weight(DETAIL_WEIGHT)) {
-                        Box(Modifier.weight(1f)) { ThreadDetail(selected, detailReloads) }
+                        Box(Modifier.weight(1f)) {
+                            ThreadDetail(selected, detailReloads, onLoaded = ::onThreadLoaded)
+                        }
                         reply()
                     }
                 }
             } else if (isShowingDetail) {
                 Column(Modifier.fillMaxSize()) {
-                    Box(Modifier.weight(1f)) { ThreadDetail(selected, detailReloads) }
+                    Box(Modifier.weight(1f)) {
+                        ThreadDetail(selected, detailReloads, onLoaded = ::onThreadLoaded)
+                    }
                     reply()
                 }
             } else {

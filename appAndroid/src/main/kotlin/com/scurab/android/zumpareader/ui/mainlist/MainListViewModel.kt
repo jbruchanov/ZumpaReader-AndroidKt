@@ -143,6 +143,13 @@ class MainListViewModel(
             }
         }
         viewModelScope.launch {
+            //What actually turns a bar off. The count behind it is written when a thread's
+            //messages arrive rather than when its row is tapped, so an opened thread stops being
+            //New or Updated here - and one that could not be loaded goes on saying it has
+            //something to read, which it does.
+            readStates.readStates.collect { restateLoadedRows() }
+        }
+        viewModelScope.launch {
             eventBus.events.collect { event ->
                 when (event) {
                     //force, rather than the `lastOffline = null` this used to do. That trick got
@@ -248,13 +255,13 @@ class MainListViewModel(
         threads.lastThread()?.let { selectedThread.select(it.id, explicit = false) }
     }
 
+    /**
+     * The bar is deliberately not touched here. A tap is not a read - it is a request for one, and
+     * the request can fail. The read count is written when the thread's messages actually arrive,
+     * and the collector above is what brings the answer back to this row.
+     */
     override fun onThreadClicked(threadId: String) {
-        val thread = loaded[threadId] ?: return
-        //opening a thread marks everything in it as seen
-        rowStates[threadId] = thread.rowStateFor(
-            readCount = thread.items,
-            userName = settings.loggedUserName.value,
-        )
+        if (threadId !in loaded) return
         openMenuId = null
         publishRows()
         if (windowLayout.isTwoPane.value) {
@@ -354,4 +361,18 @@ class MainListViewModel(
      */
     private fun ZumpaThread.rowStateFor(readCount: Int?, userName: String?): ThreadState =
         stateFor(readCount, userName, current = rowStates[id] ?: ThreadState.New)
+
+    /**
+     * The decoration for everything on screen, worked out again from the read counts - what [load]
+     * does for a page it has just fetched, for the case where the counts changed underneath it
+     * instead.
+     */
+    private fun restateLoadedRows() {
+        if (loaded.isEmpty()) return
+        val userName = settings.loggedUserName.value
+        loaded.values.forEach { thread ->
+            rowStates[thread.id] = thread.rowStateFor(readStates.readCount(thread.id), userName)
+        }
+        publishRows()
+    }
 }

@@ -133,12 +133,26 @@ class SubListViewModelTest {
     }
 
     @Test
-    fun `loading a thread records everything but the opening post as read`() = runTest {
-        coEvery { threads.loadThread("1") } returns listOf(item(), item(), item())
+    fun `loading a thread hands its messages over as read`() = runTest {
+        val loaded = listOf(item(), item(), item())
+        coEvery { threads.loadThread("1") } returns loaded
 
         viewModel()
 
-        coVerify { readStates.markRead("1", 2) }
+        //the arithmetic - the opening post not being one of the answers - belongs to the
+        //repository now, the desktop marking threads read as well. See its own test.
+        coVerify { readStates.markRead("1", loaded) }
+    }
+
+    /** The whole point of this happening here and not on the tap in the list. */
+    @Test
+    fun `a thread that fails to load is not recorded as read`() = runTest {
+        coEvery { threads.loadThread("1") } throws IllegalStateException("no network")
+
+        viewModel()
+
+        coVerify(exactly = 0) { readStates.markRead(any(), any<List<ZumpaThreadItem>>()) }
+        coVerify(exactly = 0) { readStates.markRead(any(), any<Int>()) }
     }
     //endregion
 

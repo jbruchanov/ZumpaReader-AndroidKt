@@ -228,7 +228,12 @@ private fun ThreadStateBar(state: ThreadState) {
 
 /** The detail pane: whatever the list has selected, or an invitation to select something. */
 @Composable
-internal fun ThreadDetail(threadId: String?, reloadToken: Int = 0) {
+internal fun ThreadDetail(
+    threadId: String?,
+    reloadToken: Int = 0,
+    /** The messages arrived, which is when a thread counts as read - not when it was picked. */
+    onLoaded: (threadId: String, items: List<ZumpaThreadItem>) -> Unit = { _, _ -> },
+) {
     if (threadId == null) {
         Centered { Text("Pick a thread", color = Muted) }
         return
@@ -249,6 +254,7 @@ internal fun ThreadDetail(threadId: String?, reloadToken: Int = 0) {
             .onSuccess {
                 items = it
                 state = Loadable.Loaded
+                onLoaded(threadId, it)
             }
             .onFailure {
                 state = Loadable.Failed(it.message ?: it::class.simpleName ?: "failed")

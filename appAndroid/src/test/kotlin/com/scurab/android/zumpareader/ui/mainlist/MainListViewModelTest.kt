@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import com.scurab.android.zumpareader.arch.WindowLayout
 import com.scurab.android.zumpareader.model.ThreadState
 import com.scurab.android.zumpareader.model.ZumpaMainPageResult
+import com.scurab.android.zumpareader.model.ZumpaReadState
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.repository.AppEvent
 import com.scurab.android.zumpareader.repository.AppEventBus
@@ -45,8 +46,12 @@ class MainListViewModelTest {
         every { this@mockk.loggedUserName } returns this@MainListViewModelTest.loggedUserName
     }
 
+    /** What the repository publishes when a thread is recorded as read. */
+    private val readStateChanges = MutableStateFlow<Map<String, ZumpaReadState>>(emptyMap())
+
     private val readStates = mockk<ZumpaReadStateRepository> {
         every { readCount(any()) } returns null
+        every { this@mockk.readStates } returns this@MainListViewModelTest.readStateChanges
     }
 
     private val threads = mockk<ZumpaThreadRepository>(relaxed = true)
@@ -327,14 +332,32 @@ class MainListViewModelTest {
         assertEquals(ThreadState.Updated, viewModel().uiState.value.rows.single().state)
     }
 
+    /**
+     * A tap is a request to read and a request can fail, so the bar is left alone until the
+     * messages have actually arrived - which is the case below.
+     */
     @Test
-    fun `opening a thread clears its updated mark`() = runTest {
+    fun `opening a thread leaves its updated mark alone`() = runTest {
         coEvery { threads.loadMainPage(any(), any()) } returns page("9", thread("10", items = 7))
         every { readStates.readCount("10") } returns 5
         val viewModel = viewModel()
         assertEquals(ThreadState.Updated, viewModel.uiState.value.rows.single().state)
 
         viewModel.onThreadClicked("10")
+
+        assertEquals(ThreadState.Updated, viewModel.uiState.value.rows.single().state)
+    }
+
+    @Test
+    fun `a thread loses its updated mark once it has actually been read`() = runTest {
+        coEvery { threads.loadMainPage(any(), any()) } returns page("9", thread("10", items = 7))
+        every { readStates.readCount("10") } returns 5
+        val viewModel = viewModel()
+        viewModel.onThreadClicked("10")
+
+        //what the thread screen does once the messages are in
+        every { readStates.readCount("10") } returns 7
+        readStateChanges.value = mapOf("10" to ZumpaReadState("10", 7))
 
         assertEquals(ThreadState.None, viewModel.uiState.value.rows.single().state)
     }

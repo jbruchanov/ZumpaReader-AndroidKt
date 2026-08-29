@@ -205,7 +205,7 @@ data class ZumpaPushMessage(val threadId: String, val from: String, val message:
 @Serializable
 data class ZumpaReadState(
     @SerialName("threadId") val threadId: String,
-    @SerialName("count") var count: Int,
+    @SerialName("count") val count: Int,
 )
 
 /**

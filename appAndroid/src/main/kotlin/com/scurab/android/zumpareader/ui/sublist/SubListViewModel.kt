@@ -239,8 +239,9 @@ class SubListViewModel(
         viewModelScope.launch {
             try {
                 items = threads.loadThread(threadId)
-                //don't count the opening post, it is not an answer
-                readStates.markRead(threadId, items.size - 1)
+                //here, and not where the row was tapped: a thread that did not load has not been
+                //read, and the list behind this should go on saying so
+                readStates.markRead(threadId, items)
                 setState { copy(title = threads.thread(threadId)?.subject ?: title) }
                 publishRows()
                 when {

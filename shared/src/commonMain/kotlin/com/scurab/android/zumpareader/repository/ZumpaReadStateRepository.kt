@@ -1,6 +1,7 @@
 package com.scurab.android.zumpareader.repository
 
 import com.scurab.android.zumpareader.model.ZumpaReadState
+import com.scurab.android.zumpareader.model.ZumpaThreadItem
 import com.scurab.android.zumpareader.util.ZumpaPrefs
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,13 +25,23 @@ class ZumpaReadStateRepository(private val prefs: ZumpaPrefs, private val json: 
 
     fun readCount(threadId: String): Int? = states[threadId]?.count
 
+    /**
+     * Everything a thread currently holds has been seen.
+     *
+     * The opening post is not an answer and is not counted, which is the arithmetic the list rows
+     * are compared against. The rule lives here rather than at each caller because there are two of
+     * them - the phone and the desktop - and an off-by-one kept in two places is one that drifts.
+     */
+    fun markRead(threadId: String, items: List<ZumpaThreadItem>) =
+        markRead(threadId, maxOf(0, items.size - 1))
+
     fun markRead(threadId: String, count: Int) {
-        val existing = states[threadId]
-        if (existing != null) {
-            existing.count = count
-        } else {
-            states[threadId] = ZumpaReadState(threadId, count)
-        }
+        if (states[threadId]?.count == count) return
+        //replaced rather than written through. The count used to be a `var` assigned in place,
+        //which left the map published below holding the very objects the previous value held - so
+        //the new map compared equal to the old and the StateFlow dropped the change. Nothing
+        //collected it at the time; MainListViewModel does now.
+        states[threadId] = ZumpaReadState(threadId, count)
         publish()
     }
 
