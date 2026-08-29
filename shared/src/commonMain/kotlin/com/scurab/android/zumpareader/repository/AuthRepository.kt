@@ -27,6 +27,8 @@ class AuthRepository(
     private val cookies: CookieRepository,
     /** Firebase on Android - see [PushTokenProvider], which is what keeps this file platform-free. */
     private val pushTokens: PushTokenProvider,
+    /** Firebase on Android too, and nothing at all on the desktop - see [NoAnalyticsReporter]. */
+    private val analytics: AnalyticsReporter,
 ) {
 
     suspend fun login(userName: String, password: String): LoginResult = withContext(Dispatchers.IO) {
@@ -82,12 +84,15 @@ class AuthRepository(
      * up without telling anybody. It also never stored the new token.
      */
     suspend fun onPushTokenRefreshed(token: String): Boolean = withContext(Dispatchers.IO) {
-        val userName = prefs.loggedUserName ?: return@withContext false
+        val source = PushRegistrationSource.TokenRefresh
+        val userName = prefs.loggedUserName
+            ?: return@withContext report(source, PushRegistrationOutcome.NoUser)
         prefs.pushRegId = token
-        registerToken(userName, token)
+        registerToken(userName, token, source)
     }
 
     private suspend fun registerForPush(userName: String): Boolean {
+        val source = PushRegistrationSource.Login
         val token = try {
             pushTokens.token()
         } catch (e: Throwable) {
@@ -95,7 +100,11 @@ class AuthRepository(
             null
         }
         prefs.pushRegId = token
-        return token != null && registerToken(userName, token)
+        return if (token == null) {
+            report(source, PushRegistrationOutcome.NoToken)
+        } else {
+            registerToken(userName, token, source)
+        }
     }
 
     /**
@@ -103,15 +112,39 @@ class AuthRepository(
      * session and not just the token. [onlineApi] explicitly - the offline snapshot has no uid in
      * it, and registering for push is not something offline mode should be trying to do at all.
      */
-    private suspend fun registerToken(userName: String, token: String): Boolean {
-        return try {
+    private suspend fun registerToken(
+        userName: String,
+        token: String,
+        source: PushRegistrationSource,
+    ): Boolean {
+        val outcome = try {
             val html = onlineApi.getMainPageHtml().asString()
-            val uid = ZumpaSimpleParser.parseUID(html) ?: return false
-            "[OK]" == phpApi.register(userName, uid, token).asUTFString()
+            val uid = ZumpaSimpleParser.parseUID(html)
+            when {
+                uid == null -> PushRegistrationOutcome.NoUid
+                "[OK]" == phpApi.register(userName, uid, token).asUTFString() ->
+                    PushRegistrationOutcome.Ok
+
+                else -> PushRegistrationOutcome.Rejected
+            }
         } catch (e: Throwable) {
             e.printStackTrace()
-            false
+            PushRegistrationOutcome.Exception
         }
+        return report(source, outcome)
+    }
+
+    /**
+     * Every exit of a registration goes through here, so the boolean the caller reads and the
+     * outcome the console counts are one decision rather than two that can come apart.
+     *
+     * Reported at all because none of this shows: the app carries on exactly as it would have, and
+     * a forum with nothing to say is indistinguishable from one whose pushes are going nowhere.
+     * See [AnalyticsEvent.PushRegistration].
+     */
+    private fun report(source: PushRegistrationSource, outcome: PushRegistrationOutcome): Boolean {
+        analytics.log(AnalyticsEvent.PushRegistration(source, outcome))
+        return outcome == PushRegistrationOutcome.Ok
     }
 }
 

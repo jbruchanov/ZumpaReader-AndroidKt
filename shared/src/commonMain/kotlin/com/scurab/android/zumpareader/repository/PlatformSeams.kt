@@ -1,7 +1,9 @@
 package com.scurab.android.zumpareader.repository
 
 /**
- * The two things the shared repositories need from the platform that have no common implementation.
+ * Two of the things the shared repositories need from the platform and cannot implement in common.
+ * The third, [AnalyticsReporter], is next door in `Analytics.kt` - it carries a vocabulary of its
+ * own and is more than the one method these two are.
  *
  * Interfaces rather than `expect`/`actual` on purpose: these have to be substitutable in a test as
  * well as per platform, and an `expect class` is neither.

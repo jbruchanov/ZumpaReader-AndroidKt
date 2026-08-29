@@ -19,14 +19,21 @@ class NotificationStateProvider(private val notificationManager: NotificationMan
     fun isChannelEnabled(channel: String): Boolean {
         //the global switch being off still leaves a channel with an importance of its own, which
         //is why both are asked about rather than just the one
-        return if (hasNotificationsPermissionGranted()) {
-            val channelImportance = notificationManager.notificationChannelsCompat
-                .firstOrNull { it.id == channel }
-                ?.importance
-                ?: NotificationManagerCompat.IMPORTANCE_NONE
-            channelImportance != NotificationManagerCompat.IMPORTANCE_NONE
-        } else {
-            false
-        }
+        return hasNotificationsPermissionGranted() &&
+            importanceOf(channel) != NotificationManagerCompat.IMPORTANCE_NONE
     }
+
+    /**
+     * How loudly the channel is set to arrive, whatever the global switch says - the two are
+     * separate settings and a silent app can be either of them. Null when there is no such channel,
+     * which for this app means the startup that creates it has not run.
+     *
+     * Read rather than assumed because importance is fixed when a channel is created and the user
+     * can lower it afterwards, so what the app asked for is not what it necessarily has.
+     */
+    fun channelImportance(channel: String): Int? =
+        notificationManager.notificationChannelsCompat.firstOrNull { it.id == channel }?.importance
+
+    private fun importanceOf(channel: String) =
+        channelImportance(channel) ?: NotificationManagerCompat.IMPORTANCE_NONE
 }

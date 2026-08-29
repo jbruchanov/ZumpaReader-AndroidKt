@@ -11,10 +11,12 @@ import com.scurab.android.zumpareader.data.ZumpaPHPApiImpl
 import com.scurab.android.zumpareader.data.buildImageHttpClient
 import com.scurab.android.zumpareader.data.buildZumpaHttpClient
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
+import com.scurab.android.zumpareader.repository.AnalyticsReporter
 import com.scurab.android.zumpareader.repository.AuthRepository
 import com.scurab.android.zumpareader.repository.CookieRepository
 import com.scurab.android.zumpareader.repository.ImagePrefetcher
 import com.scurab.android.zumpareader.repository.InMemorySentDraftRepository
+import com.scurab.android.zumpareader.repository.NoAnalyticsReporter
 import com.scurab.android.zumpareader.repository.NoImagePrefetcher
 import com.scurab.android.zumpareader.repository.NoPushTokenProvider
 import com.scurab.android.zumpareader.repository.OfflineDataRepository
@@ -128,6 +130,9 @@ internal fun desktopModule(home: File = defaultHome()) = module {
 
     single<PushTokenProvider> { NoPushTokenProvider }
 
+    //nothing to report to off Android, and no second implementation worth writing for one event
+    single<AnalyticsReporter> { NoAnalyticsReporter }
+
     single<ImagePrefetcher> { NoImagePrefetcher }
 
     //in memory, not the file-backed store the settings use: this is a safety net for the session
@@ -145,6 +150,7 @@ internal fun desktopModule(home: File = defaultHome()) = module {
             parser = get(),
             cookies = get(),
             pushTokens = get(),
+            analytics = get(),
         )
     }
 

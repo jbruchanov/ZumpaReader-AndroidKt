@@ -6,7 +6,7 @@ android-base = ["androidx-core-ktx", "androidx-annotation", "google-material", "
 android-lifecycle = ["androidx-lifecycle-runtime", "androidx-lifecycle-viewmodel"]
 compose = ["androidx-compose-ui", "androidx-compose-ui-graphics", "androidx-compose-ui-tooling-preview", "androidx-compose-foundation", "androidx-compose-material3", "androidx-activity-compose", "androidx-lifecycle-runtime-compose", "androidx-lifecycle-viewmodel-compose", "koin-androidx-compose", "androidx-compose-material-icons-extended", "coil-compose", "coil-network-ktor3", "coil-gif", "androidx-navigation3-runtime", "androidx-navigation3-ui", "androidx-lifecycle-viewmodel-navigation3"]
 coroutines = ["kotlinx-coroutines-core", "kotlinx-coroutines-android"]
-firebase = ["firebase-crashlytics", "firebase-messaging"]
+firebase = ["firebase-analytics", "firebase-crashlytics", "firebase-messaging"]
 koin = ["koin-core", "koin-android"]
 #okhttp is only the ktor engine now - nothing outside ZumpaHttpClient references it
 ktor = ["ktor-client-core", "ktor-client-okhttp", "ktor-client-logging"]
@@ -99,6 +99,7 @@ coil-network-ktor3 = { module = "io.coil-kt.coil3:coil-network-ktor3", version.r
 coil-gif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coil" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 #versions of firebase libraries are managed by the bom
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
 firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
 google-material = { module = "com.google.android.material:material", version.ref = "google-material" }

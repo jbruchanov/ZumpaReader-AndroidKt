@@ -24,6 +24,11 @@ import org.junit.jupiter.api.Test
  * of this living in `MyFirebaseService`, and it had drifted - it read the online/offline api switch
  * rather than the online api, so a refresh while offline mode was on never found a uid and gave up
  * silently, and it never stored the token it registered.
+ *
+ * The same invisibility is why every outcome is reported, and why each case here asserts the
+ * reported one as well as the boolean. The two come out of a single decision in `report` so that
+ * they cannot disagree, and this is what holds them to it - a wrong outcome would leave the console
+ * saying registrations succeed while installs get no pushes, which is the failure this is all for.
  */
 class AuthRepositoryTest {
 
@@ -32,6 +37,7 @@ class AuthRepositoryTest {
 
     private val onlineApi = mockk<ZumpaAPI>()
     private val phpApi = mockk<ZumpaPHPAPI>()
+    private val analytics = RecordingAnalyticsReporter()
 
     private fun repository() = AuthRepository(
         onlineApi = onlineApi,
@@ -40,6 +46,7 @@ class AuthRepositoryTest {
         parser = ZumpaSimpleParser(),
         cookies = mockk<CookieRepository>(relaxed = true),
         pushTokens = NoPushTokenProvider,
+        analytics = analytics,
     )
 
     private fun signIn() {
@@ -60,6 +67,15 @@ class AuthRepositoryTest {
 
     private fun response(body: String) = ZumpaGenericResponse(body.toByteArray(), contentType = null)
 
+    /** Exactly one registration reported - a second would double every count in the console. */
+    private fun assertReported(
+        source: PushRegistrationSource,
+        outcome: PushRegistrationOutcome,
+    ) = assertEquals(
+        listOf(AnalyticsEvent.PushRegistration(source, outcome)),
+        analytics.events,
+    )
+
     @Test
     fun `a refreshed token is registered against the signed-in user`() = runTest {
         signIn()
@@ -70,6 +86,7 @@ class AuthRepositoryTest {
 
         assertTrue(result)
         coVerify { phpApi.register("honza", "abc123", "the-new-token") }
+        assertReported(PushRegistrationSource.TokenRefresh, PushRegistrationOutcome.Ok)
     }
 
     /** It stored nothing before, so a later login had no idea which token was live. */
@@ -91,6 +108,7 @@ class AuthRepositoryTest {
         assertFalse(result)
         assertNull(prefs.pushRegId)
         coVerify(exactly = 0) { phpApi.register(any(), any(), any()) }
+        assertReported(PushRegistrationSource.TokenRefresh, PushRegistrationOutcome.NoUser)
     }
 
     @Test
@@ -100,6 +118,7 @@ class AuthRepositoryTest {
         phpAnswers("nope")
 
         assertFalse(repository().onPushTokenRefreshed("the-new-token"))
+        assertReported(PushRegistrationSource.TokenRefresh, PushRegistrationOutcome.Rejected)
     }
 
     /** No uid on the page means no call worth making - and no crash either. */
@@ -110,6 +129,7 @@ class AuthRepositoryTest {
 
         assertFalse(repository().onPushTokenRefreshed("the-new-token"))
         coVerify(exactly = 0) { phpApi.register(any(), any(), any()) }
+        assertReported(PushRegistrationSource.TokenRefresh, PushRegistrationOutcome.NoUid)
     }
 
     @Test
@@ -118,5 +138,48 @@ class AuthRepositoryTest {
         coEvery { onlineApi.getMainPageHtml() } throws IllegalStateException("no network")
 
         assertFalse(repository().onPushTokenRefreshed("the-new-token"))
+        assertReported(PushRegistrationSource.TokenRefresh, PushRegistrationOutcome.Exception)
     }
+
+    /**
+     * The other source. [NoPushTokenProvider] is what the desktop has and what firebase failing
+     * looks like on Android, so a login gets as far as having nobody to register.
+     */
+    @Test
+    fun `a login with no token to offer is reported against the login`() = runTest {
+        coEvery { onlineApi.login(any()) } returns ZumpaGenericResponse(
+            byteArrayOf(),
+            contentType = null,
+            //zumpa answers a successful login with a redirect
+            status = 302,
+        )
+
+        val result = repository().login("honza", "hunter2")
+
+        assertTrue(result.isLoggedIn)
+        assertFalse(result.isPushRegistered)
+        assertReported(PushRegistrationSource.Login, PushRegistrationOutcome.NoToken)
+    }
+
+    /** The schema a console query is written against, so it is worth one test of its own. */
+    @Test
+    fun `the event carries the source and the outcome as the values the console groups by`() {
+        val event = AnalyticsEvent.PushRegistration(
+            PushRegistrationSource.TokenRefresh,
+            PushRegistrationOutcome.NoUid,
+        )
+
+        assertEquals("push_registration", event.name)
+        assertEquals(mapOf("source" to "token_refresh", "outcome" to "no_uid"), event.params)
+    }
+}
+
+private class RecordingAnalyticsReporter : AnalyticsReporter {
+    val events = mutableListOf<AnalyticsEvent>()
+
+    override fun log(event: AnalyticsEvent) {
+        events += event
+    }
+
+    override fun setUserProperty(property: AnalyticsUserProperty, value: String) = Unit
 }

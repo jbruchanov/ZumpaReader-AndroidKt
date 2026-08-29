@@ -1,12 +1,19 @@
 package com.scurab.android.zumpareader.usecase
 
+import androidx.core.app.NotificationManagerCompat
+import com.scurab.android.zumpareader.component.NotificationStateProvider
+import com.scurab.android.zumpareader.repository.AnalyticsEvent
+import com.scurab.android.zumpareader.repository.AnalyticsReporter
+import com.scurab.android.zumpareader.repository.AnalyticsUserProperty
 import com.scurab.android.zumpareader.repository.CrashReporter
 import com.scurab.android.zumpareader.repository.ZumpaSettingsRepository
 import com.scurab.android.zumpareader.util.KeyValueStore
 import com.scurab.android.zumpareader.util.ZumpaPrefs
+import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.verify
+import io.mockk.verifyOrder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -24,6 +31,10 @@ import org.junit.jupiter.api.Test
  * report filed under the wrong id looks exactly like a report filed under the right one until
  * somebody goes looking in the console for a name that is not there.
  *
+ * The notification user properties are the same kind of thing one step removed. They are what every
+ * push number gets segmented by, so a wrong one does not look wrong - it makes something else look
+ * wrong.
+ *
  * `runBlocking` rather than `runTest`: [ZumpaSettingsRepository] shares its flows on a scope of its
  * own on `Dispatchers.Default`, which virtual time cannot advance - so a write has to be waited for
  * in real time. The two cases that read the value a `StateFlow` already holds need no wait at all.
@@ -39,6 +50,13 @@ class AndroidInitAppUseCaseTest {
         }
     }
     private val channels = mockk<CreateNotificationChannelsUseCase>().also { justRun { it() } }
+    private val analytics = RecordingAnalyticsReporter()
+
+    /** Permitted and at the importance the app asks for, unless a case below says otherwise. */
+    private val notifications = mockk<NotificationStateProvider>().also {
+        every { it.hasNotificationsPermissionGranted() } returns true
+        every { it.channelImportance(any()) } returns NotificationManagerCompat.IMPORTANCE_DEFAULT
+    }
 
     /** Unconfined, so the collector runs the moment it is launched rather than a dispatch later. */
     private fun useCase() = AndroidInitAppUseCase(
@@ -46,6 +64,8 @@ class AndroidInitAppUseCaseTest {
         //built here, so a test that has already written to prefs gets a flow that starts from it
         settings = ZumpaSettingsRepository(prefs),
         crashReporter = crashReporter,
+        notifications = notifications,
+        analytics = analytics,
         scope = CoroutineScope(Dispatchers.Unconfined),
     )
 
@@ -101,6 +121,75 @@ class AndroidInitAppUseCaseTest {
         verify(exactly = 1) { channels() }
     }
 
+    @Test
+    fun `an install that may be notified says so`() {
+        useCase()()
+
+        assertEquals("true", analytics.properties[AnalyticsUserProperty.NotificationsEnabled])
+    }
+
+    /** A refused permission is the innocent explanation for an install that gets no pushes. */
+    @Test
+    fun `an install that may not be notified says so`() {
+        every { notifications.hasNotificationsPermissionGranted() } returns false
+
+        useCase()()
+
+        assertEquals("false", analytics.properties[AnalyticsUserProperty.NotificationsEnabled])
+    }
+
+    /** A word rather than the 3 the platform calls it - the console groups by the value. */
+    @Test
+    fun `the channel importance is reported by name`() {
+        useCase()()
+
+        assertEquals("default", analytics.properties[AnalyticsUserProperty.ChannelImportance])
+    }
+
+    /**
+     * The user quietening the channel themselves. Told apart from a refused permission on purpose:
+     * both come out as an install that never makes a sound.
+     */
+    @Test
+    fun `a channel the user has turned down is reported at the importance it now has`() {
+        every {
+            notifications.channelImportance(any())
+        } returns NotificationManagerCompat.IMPORTANCE_NONE
+
+        useCase()()
+
+        assertEquals("none", analytics.properties[AnalyticsUserProperty.ChannelImportance])
+    }
+
+    /** Not `none` - no channel and a channel switched off are different states. */
+    @Test
+    fun `no channel at all is reported as missing rather than as silent`() {
+        every { notifications.channelImportance(any()) } returns null
+
+        useCase()()
+
+        assertEquals("missing", analytics.properties[AnalyticsUserProperty.ChannelImportance])
+    }
+
+    /** On a first run there is nothing to read an importance off until the channel is made. */
+    @Test
+    fun `the channel is created before its importance is read`() {
+        useCase()()
+
+        verifyOrder {
+            channels()
+            notifications.channelImportance(any())
+        }
+    }
+
+    /** Nothing at startup logs an event - the properties are all this use case has to say. */
+    @Test
+    fun `startup reports no events of its own`() {
+        useCase()()
+
+        assertEquals(emptyList<AnalyticsEvent>(), analytics.events)
+    }
+
     /** The last reported id once it satisfies [predicate], or a failure once the wait runs out. */
     private suspend fun awaitReported(predicate: (String) -> Boolean): String =
         withTimeoutOrNull(AWAIT_TIMEOUT_MS) {
@@ -113,6 +202,19 @@ class AndroidInitAppUseCaseTest {
 
 private const val AWAIT_TIMEOUT_MS = 2_000L
 private const val POLL_MS = 5L
+
+private class RecordingAnalyticsReporter : AnalyticsReporter {
+    val events = mutableListOf<AnalyticsEvent>()
+    val properties = mutableMapOf<AnalyticsUserProperty, String>()
+
+    override fun log(event: AnalyticsEvent) {
+        events += event
+    }
+
+    override fun setUserProperty(property: AnalyticsUserProperty, value: String) {
+        properties[property] = value
+    }
+}
 
 /** `InMemoryKeyValueStore` lives in `:shared`'s jvm target, which `:appAndroid` does not see. */
 private class FakeKeyValueStore : KeyValueStore {
