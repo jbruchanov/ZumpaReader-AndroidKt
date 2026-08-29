@@ -16,21 +16,20 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:theme="@style/ThemeBlack"
         tools:ignore="GoogleAppIndexingWarning,UnusedAttribute">
-        <!-- adjustNothing, not adjustResize: the window is edge to edge - enableEdgeToEdge in
-             MainActivity clears decorFitsSystemWindows - so the screens read the keyboard as a
-             WindowInsets.ime inside safeDrawing and pad themselves for it. Letting the platform
-             resize the window as well is a second, unanimated adjustment for the same keyboard.
+        <!-- adjustResize, and it has to be. The window is edge to edge, so decorFitsSystemWindows
+             is false and nothing here actually resizes it - what this buys is the ime being
+             dispatched to the view tree as an animated WindowInsets.ime, which is what safeDrawing
+             carries and what every screen pads itself by.
 
-             The activity window only. The post and offline dialogs are windows of their own with
-             their own softInputMode, which compose sets for them.
-
-             The cost is api 26-29, where androidx derives the ime inset from exactly the resize
-             this turns off and so reports it as zero. MainActivity puts the resize back there. -->
+             adjustNothing was tried and reverted. It stopped the dispatch rather than only the
+             resize: the reply panel jumped to its new place instead of travelling there, and did
+             not come back when the keyboard closed. Compose's own insets guidance asks for
+             adjustResize and this is why. -->
         <activity
             android:name=".ui.main.MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
-            android:windowSoftInputMode="adjustNothing">
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
