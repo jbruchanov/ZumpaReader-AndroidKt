@@ -441,7 +441,7 @@ private fun ThreadRow(
                     }
                     Text(
                         text = row.answerCount.toString(),
-                        style = AppTheme.typography.threads,
+                        style = AppTheme.typography.answerCount,
                         color = AppTheme.colorScheme.threads,
                         modifier = Modifier.padding(horizontal = AppTheme.spaces.normal),
                     )

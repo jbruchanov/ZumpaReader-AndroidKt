@@ -39,6 +39,7 @@ import com.scurab.android.zumpareader.test.running
 import com.scurab.android.zumpareader.test.mock
 import com.scurab.android.zumpareader.ui.compose.LocalNavigator
 import com.scurab.android.zumpareader.ui.compose.theme.AppTheme
+import java.util.Locale
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -100,14 +101,14 @@ private fun OfflineDownloadScreen(
             )
             Text(
                 text = stringResource(R.string.download_images),
-                style = AppTheme.typography.threads,
+                style = AppTheme.typography.body,
                 color = AppTheme.colorScheme.primaryText,
             )
         }
 
         Text(
             text = stringResource(R.string.pages),
-            style = AppTheme.typography.threads,
+            style = AppTheme.typography.body,
             color = AppTheme.colorScheme.primaryText,
         )
         OutlinedTextField(
@@ -115,7 +116,7 @@ private fun OfflineDownloadScreen(
             onValueChange = { if (it.length <= PAGES_MAX_LENGTH) eventHandler.onPagesChanged(it) },
             enabled = !uiState.isRunning,
             singleLine = true,
-            textStyle = AppTheme.typography.threads.copy(textAlign = TextAlign.Center),
+            textStyle = AppTheme.typography.body.copy(textAlign = TextAlign.Center),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             shape = AppTheme.shapes.editText,
             modifier = Modifier.align(Alignment.CenterHorizontally),
@@ -154,7 +155,9 @@ private fun OfflineDownloadScreen(
                 modifier = Modifier.weight(1f),
             ) {
                 Text(
-                    text = stringResource(R.string.action_start),
+                    //upper case as the <Button> it was: AppCompat sets android:textAllCaps on a
+                    //button, so these read START and STOP
+                    text = stringResource(R.string.action_start).uppercase(Locale.getDefault()),
                     style = AppTheme.typography.button,
                     color = if (uiState.canStart) {
                         AppTheme.colorScheme.buttonText
@@ -168,7 +171,7 @@ private fun OfflineDownloadScreen(
                 modifier = Modifier.weight(1f),
             ) {
                 Text(
-                    text = stringResource(R.string.action_stop),
+                    text = stringResource(R.string.action_stop).uppercase(Locale.getDefault()),
                     style = AppTheme.typography.button,
                     color = AppTheme.colorScheme.buttonText,
                 )
@@ -182,13 +185,13 @@ private fun CounterRow(label: String, value: String) {
     Row(Modifier.fillMaxWidth()) {
         Text(
             text = label,
-            style = AppTheme.typography.threads,
+            style = AppTheme.typography.body,
             color = AppTheme.colorScheme.primaryText,
             modifier = Modifier.weight(1f),
         )
         Text(
             text = value,
-            style = AppTheme.typography.threads,
+            style = AppTheme.typography.body,
             color = AppTheme.colorScheme.primaryText,
             modifier = Modifier.weight(1f),
         )

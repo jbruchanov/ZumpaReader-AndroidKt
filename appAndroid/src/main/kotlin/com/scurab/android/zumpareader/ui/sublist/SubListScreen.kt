@@ -115,6 +115,7 @@ import com.scurab.android.zumpareader.ui.compose.theme.AppTheme
 import com.scurab.android.zumpareader.util.saveToClipboard
 import org.koin.androidx.compose.koinViewModel
 import com.scurab.android.zumpareader.util.formatPostTime
+import java.util.Locale
 
 @Composable
 fun SubListScreen(threadId: String, vm: SubListViewModel = koinViewModel()) {
@@ -627,8 +628,11 @@ private fun SurveyCard(
     ) {
         Text(
             text = "${survey.question}\n${survey.responses}",
-            style = AppTheme.typography.subject,
-            color = AppTheme.colorScheme.primaryText,
+            //`survey_text` carried no textSize of its own, so it drew at the platform
+            //default of 14sp - and its colour was ?contextColorText, the orange, not the white
+            //the rest of a row is set in
+            style = AppTheme.typography.body,
+            color = AppTheme.colorScheme.contextText,
         )
         survey.items.forEach { item ->
             SurveyOption(item, eventHandler)
@@ -667,7 +671,10 @@ private fun SurveyOption(item: SurveyItemUiState, eventHandler: SubListEventHand
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(
-                text = "${item.text} (${item.percents}%)",
+                //upper case because this was a <Button>, and AppCompat's button text appearance
+                //sets android:textAllCaps - the same reason UrlButton upper cases a link. The
+                //default locale, which is the one AppCompat's own transformation used.
+                text = "${item.text} (${item.percents}%)".uppercase(Locale.getDefault()),
                 style = AppTheme.typography.surveyButton,
                 color = AppTheme.colorScheme.buttonText,
                 modifier = Modifier.fillMaxWidth(),

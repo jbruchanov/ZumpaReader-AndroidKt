@@ -269,7 +269,7 @@ private fun SwitchRow(
     ) {
         Text(
             text = label,
-            style = AppTheme.typography.threads,
+            style = AppTheme.typography.body,
             color = if (enabled) {
                 AppTheme.colorScheme.primaryText
             } else {
@@ -300,7 +300,7 @@ private fun ClickRow(label: String, value: String, onClick: () -> Unit) {
     ) {
         Text(
             text = label,
-            style = AppTheme.typography.threads,
+            style = AppTheme.typography.body,
             color = AppTheme.colorScheme.primaryText,
             modifier = Modifier.weight(1f),
         )
