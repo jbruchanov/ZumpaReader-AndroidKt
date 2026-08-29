@@ -37,13 +37,15 @@ android-sdk-min = "26"
 android-sdk-target = "37"
 
 kotlin = "2.4.10"
-compose-multiplatform = "1.12.0"
+#https://youtrack.jetbrains.com/issue/CMP-10689/Android-IME-focus-transfer-leaves-WindowInsets.ime-retained-across-screens-in-Compose-Multiplatform-1.12.0
+compose-multiplatform = "1.11.1"
 jvmtarget = "17"
 android-gradle-plugin = "9.3.2"
 
 androidx-activity-compose = "1.13.0"
 androidx-annotation = "1.10.0"
-androidx-compose-bom = "2026.08.00"
+#2026.08.xx brings 1.12.0 compose an causes ^ the keyboard issue
+androidx-compose-bom = "2026.06.01"
 androidx-navigation3 = "1.1.7"
 coil = "3.5.0"
 kotlinx-serialization = "1.11.0"
