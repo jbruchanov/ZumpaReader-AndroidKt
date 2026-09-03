@@ -6,8 +6,6 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.net.toUri
 import android.util.TypedValue
-import com.scurab.android.zumpareader.R
-import com.scurab.android.zumpareader.ext.toast
 import java.io.File
 
 /**
@@ -38,13 +36,13 @@ fun Context.saveToClipboard(text: String?) {
 
 //looksLikeImageUrl moved to the shared module - the offline download classifies urls too
 
-fun Context.startLinkActivity(url: String) {
+fun Context.startLinkActivity(url: String, onError: () -> Unit) {
     try {
         val intent = Intent(Intent.ACTION_VIEW)
         intent.data = url.toUri()
         startActivity(intent)
     } catch (e: Throwable) {
         e.printStackTrace()
-        toast(R.string.unable_to_finish_operation)
+        onError()
     }
 }

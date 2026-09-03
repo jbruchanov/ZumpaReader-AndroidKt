@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.arch.BaseViewModel
 import com.scurab.android.zumpareader.arch.CopyToClipboard
-import com.scurab.android.zumpareader.arch.ShowToast
+import com.scurab.android.zumpareader.arch.ShowSnackbar
 import com.scurab.android.zumpareader.arch.UiEffect
 import com.scurab.android.zumpareader.repository.ImageUploadRepository
 import com.scurab.android.zumpareader.ui.post.tasks.CopyFromResourcesTask
@@ -117,14 +117,14 @@ class PostImageViewModel(
                 //the resized file if there is one, otherwise the original
                 val link = uploads.upload(outputFile, source)
                 if (link.isEmpty()) {
-                    effect(ShowToast(resId = R.string.err_fail))
+                    effect(ShowSnackbar(resId = R.string.err_fail))
                 } else {
                     setState { copy(uploadedLink = link) }
                     effect(PostImageEffect.ImageUploaded(link))
                 }
             } catch (err: Throwable) {
                 err.printStackTrace()
-                effect(ShowToast(resId = R.string.err_fail))
+                effect(ShowSnackbar(resId = R.string.err_fail))
             } finally {
                 setState { copy(isBusy = false) }
             }

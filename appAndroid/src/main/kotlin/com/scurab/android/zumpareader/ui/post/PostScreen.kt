@@ -46,13 +46,13 @@ import kotlinx.coroutines.flow.drop
 import com.scurab.android.zumpareader.BuildConfig
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.arch.HideKeyboard
-import com.scurab.android.zumpareader.arch.ShowToast
-import com.scurab.android.zumpareader.ext.toast
+import com.scurab.android.zumpareader.arch.ShowSnackbar
 import com.scurab.android.zumpareader.test.Fixtures
 import com.scurab.android.zumpareader.test.mock
 import com.scurab.android.zumpareader.test.newThread
 import com.scurab.android.zumpareader.test.tabs
 import com.scurab.android.zumpareader.ui.compose.LocalNavigator
+import com.scurab.android.zumpareader.ui.compose.LocalSnackbarController
 import com.scurab.android.zumpareader.ui.compose.theme.AppTheme
 import com.scurab.android.zumpareader.util.getRandomCameraFileUri
 import org.koin.androidx.compose.koinViewModel
@@ -72,6 +72,7 @@ fun PostScreen(
 ) {
     val navigator = LocalNavigator.current
     val context = LocalContext.current
+    val snackbar = LocalSnackbarController.current
     val keyboard = LocalSoftwareKeyboardController.current
     //saveable, not remembered: the camera is a separate activity in front of this one, and turning
     //the phone to frame a shot is the obvious thing to do while it is. A plain remember loses the
@@ -118,15 +119,15 @@ fun PostScreen(
                     val uri = FileProvider.getUriForFile(context, BuildConfig.Authority, file)
                     cameraTarget = uri
                     takePicture.launch(uri)
-                }.onFailure { context.toast(R.string.err_fail) }
+                }.onFailure { snackbar.show(R.string.err_fail) }
 
                 is PostEffect.RequestGalleryImage -> runCatching {
                     pickImage.launch("image/*")
-                }.onFailure { context.toast(R.string.err_fail) }
+                }.onFailure { snackbar.show(R.string.err_fail) }
 
                 is PostEffect.Dismiss -> navigator.back()
                 is HideKeyboard -> keyboard?.hide()
-                is ShowToast -> effect.text?.let { context.toast(it) } ?: context.toast(effect.resId)
+                is ShowSnackbar -> effect.text?.let { snackbar.show(it) } ?: snackbar.show(effect.resId)
                 else -> Unit
             }
         }

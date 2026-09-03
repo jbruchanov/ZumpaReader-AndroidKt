@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.arch.BaseViewModel
 import com.scurab.android.zumpareader.arch.HideKeyboard
-import com.scurab.android.zumpareader.arch.ShowToast
+import com.scurab.android.zumpareader.arch.ShowSnackbar
 import com.scurab.android.zumpareader.arch.UiEffect
 import com.scurab.android.zumpareader.model.ZumpaThreadBody
 import com.scurab.android.zumpareader.reader.ZumpaSimpleParser
@@ -223,11 +223,11 @@ class PostViewModel(
         val current = state
         if (current.isSending) return
         if (current.isSubjectEditable && current.subject.isBlank()) {
-            effect(ShowToast(resId = R.string.err_empty_subject))
+            effect(ShowSnackbar(resId = R.string.err_empty_subject))
             return
         }
         if (current.message.isBlank()) {
-            effect(ShowToast(resId = R.string.err_empty_msg))
+            effect(ShowSnackbar(resId = R.string.err_empty_msg))
             return
         }
 

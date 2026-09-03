@@ -3,7 +3,7 @@ package com.scurab.android.zumpareader.ui.offline
 import androidx.lifecycle.viewModelScope
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.arch.BaseViewModel
-import com.scurab.android.zumpareader.arch.ShowToast
+import com.scurab.android.zumpareader.arch.ShowSnackbar
 import com.scurab.android.zumpareader.arch.UiEffect
 import com.scurab.android.zumpareader.repository.AppEvent
 import com.scurab.android.zumpareader.repository.AppEventBus
@@ -88,14 +88,14 @@ class OfflineDownloadViewModel(
                             //an empty result is a failed download, not a new snapshot - it must
                             //not replace whatever is already there
                             is OfflineProgress.Done -> if (progress.data.isEmpty()) {
-                                effect(ShowToast(resId = R.string.err_fail))
+                                effect(ShowSnackbar(resId = R.string.err_fail))
                             } else {
                                 offlineData.setData(progress.data)
                                 threads.replaceAll(progress.data)
                                 eventBus.emit(AppEvent.OfflineDataChanged)
                                 if (!progress.snapshotWritten) {
                                     //in memory for this session, but nothing to load next time
-                                    effect(ShowToast(resId = R.string.err_fail))
+                                    effect(ShowSnackbar(resId = R.string.err_fail))
                                 }
                             }
                         }

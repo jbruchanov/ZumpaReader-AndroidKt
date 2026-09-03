@@ -52,14 +52,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.arch.CopyToClipboard
-import com.scurab.android.zumpareader.arch.ShowToast
-import com.scurab.android.zumpareader.ext.toast
+import com.scurab.android.zumpareader.arch.ShowSnackbar
 import com.scurab.android.zumpareader.test.Fixtures
 import com.scurab.android.zumpareader.test.busy
 import com.scurab.android.zumpareader.test.fresh
 import com.scurab.android.zumpareader.test.mock
 import com.scurab.android.zumpareader.test.resized
 import com.scurab.android.zumpareader.test.uploaded
+import com.scurab.android.zumpareader.ui.compose.LocalSnackbarController
 import com.scurab.android.zumpareader.ui.compose.theme.AppTheme
 import com.scurab.android.zumpareader.util.saveToClipboard
 import org.koin.androidx.compose.koinViewModel
@@ -81,21 +81,19 @@ fun PostImageScreen(
     vm: PostImageViewModel = koinViewModel(),
 ) {
     val context = LocalContext.current
+    val snackbar = LocalSnackbarController.current
 
     LaunchedEffect(Unit) {
         vm.effects.collect { effect ->
             when (effect) {
                 is PostImageEffect.ImageUploaded -> {
                     onLinkUploaded(effect.link)
-                    context.toast(R.string.done)
+                    snackbar.show(R.string.done)
                 }
 
-                is CopyToClipboard -> {
-                    context.saveToClipboard(effect.text.toString())
-                    context.toast(R.string.saved_into_clipboard)
-                }
+                is CopyToClipboard -> context.saveToClipboard(effect.text.toString())
 
-                is ShowToast -> effect.text?.let { context.toast(it) } ?: context.toast(effect.resId)
+                is ShowSnackbar -> effect.text?.let { snackbar.show(it) } ?: snackbar.show(effect.resId)
                 else -> Unit
             }
         }

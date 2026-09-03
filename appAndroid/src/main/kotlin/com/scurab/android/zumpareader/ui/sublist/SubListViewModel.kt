@@ -347,8 +347,8 @@ class SubListViewModel(
 
     /**
      * Holding a link or a picture copies its address, which is what `onItemClick(url, longClick)`
-     * did before the compose migration - the screen toasts `saved_into_clipboard` off the back of
-     * the effect, as it did then.
+     * did before the compose migration. The system shows its own confirmation for a clipboard write
+     * from Android 13 on, so the app no longer says anything of its own.
      */
     override fun onLinkLongPressed(url: String) = effect(CopyToClipboard(url))
 

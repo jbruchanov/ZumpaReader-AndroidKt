@@ -19,6 +19,8 @@ class BackStackNavigator(
     private val context: Context,
     /** Back at the root leaves the app, and only the activity can do that. */
     private val onExit: () -> Unit,
+    /** How to say that a link could not be opened, since the navigator is not itself in compose. */
+    private val onLinkError: () -> Unit,
 ) : Navigator {
 
     override fun openThread(threadId: String) {
@@ -30,7 +32,7 @@ class BackStackNavigator(
     }
 
     /** Out of the app entirely, so it is an Intent rather than a key. */
-    override fun openLink(url: String) = context.startLinkActivity(url)
+    override fun openLink(url: String) = context.startLinkActivity(url, onLinkError)
 
     override fun openSettings() {
         backStack.add(SettingsKey)

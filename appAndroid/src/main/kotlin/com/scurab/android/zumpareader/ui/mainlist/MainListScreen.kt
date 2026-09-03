@@ -73,9 +73,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.scurab.android.zumpareader.R
-import com.scurab.android.zumpareader.arch.ShowToast
+import com.scurab.android.zumpareader.arch.ShowSnackbar
 import com.scurab.android.zumpareader.model.ThreadState
-import com.scurab.android.zumpareader.ext.toast
 import com.scurab.android.zumpareader.test.Fixtures
 import com.scurab.android.zumpareader.test.empty
 import com.scurab.android.zumpareader.test.loading
@@ -86,6 +85,7 @@ import com.scurab.android.zumpareader.test.uiState
 import android.content.Context
 import android.content.Intent
 import com.scurab.android.zumpareader.ui.compose.LocalNavigator
+import com.scurab.android.zumpareader.ui.compose.LocalSnackbarController
 import com.scurab.android.zumpareader.ui.compose.QuickHideFab
 import com.scurab.android.zumpareader.ui.compose.RevealRow
 import com.scurab.android.zumpareader.ui.compose.RevealRowMenuButton
@@ -104,6 +104,7 @@ import com.scurab.android.zumpareader.util.formatThreadListTime
 fun MainListScreen(vm: MainListViewModel = koinViewModel()) {
     val navigator = LocalNavigator.current
     val context = LocalContext.current
+    val snackbar = LocalSnackbarController.current
     //hoisted so the effect handler below can reach it, the way SubListScreen already takes one
     val listState = rememberLazyListState()
     //hoisted alongside the list state: a scroll-to-top has to bring the top app bar back with it,
@@ -124,7 +125,9 @@ fun MainListScreen(vm: MainListViewModel = koinViewModel()) {
                 is MainListEffect.OpenSettings -> navigator.openSettings()
                 is MainListEffect.OpenPostDialog -> navigator.openPostDialog()
                 is MainListEffect.ShowOfflineDownloadDialog -> navigator.openOfflineDownload()
-                is MainListEffect.ShareThread -> context.shareLink(effect.link)
+                is MainListEffect.ShareThread -> context.shareLink(effect.link) {
+                    snackbar.show(R.string.unable_to_finish_operation)
+                }
                 //not animated: the rows underneath have just been replaced, so there is nothing
                 //meaningful to travel through - and from far down the list it would be a long trip.
                 //The bar is reset too - `heightOffset` back to 0 opens it, `contentOffset` back to
@@ -134,7 +137,7 @@ fun MainListScreen(vm: MainListViewModel = koinViewModel()) {
                     scrollBehavior.state.heightOffset = 0f
                     scrollBehavior.state.contentOffset = 0f
                 }
-                is ShowToast -> effect.text?.let { context.toast(it) } ?: context.toast(effect.resId)
+                is ShowSnackbar -> effect.text?.let { snackbar.show(it) } ?: snackbar.show(effect.resId)
                 else -> Unit
             }
         }
@@ -518,7 +521,7 @@ private fun ThreadRowMenu(row: ThreadRowUiState, eventHandler: MainListEventHand
     }
 }
 
-private fun Context.shareLink(link: String) {
+private fun Context.shareLink(link: String, onError: () -> Unit) {
     try {
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
@@ -526,7 +529,7 @@ private fun Context.shareLink(link: String) {
         }
         startActivity(Intent.createChooser(intent, getString(R.string.share)))
     } catch (e: Exception) {
-        toast(R.string.unable_to_finish_operation)
+        onError()
     }
 }
 

@@ -3,7 +3,7 @@ package com.scurab.android.zumpareader.ui.main
 import android.net.Uri
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.arch.BaseViewModel
-import com.scurab.android.zumpareader.arch.ShowToast
+import com.scurab.android.zumpareader.arch.ShowSnackbar
 import com.scurab.android.zumpareader.arch.UiEffect
 import com.scurab.android.zumpareader.repository.ZumpaSettingsRepository
 
@@ -52,7 +52,7 @@ class MainViewModel(
             return
         }
         if (!settings.isLoggedIn.value) {
-            effect(ShowToast(resId = R.string.err_login_first))
+            effect(ShowSnackbar(resId = R.string.err_login_first))
             return
         }
         effect(MainEffect.OpenPostDialog(payload.subject, payload.text, payload.uris))

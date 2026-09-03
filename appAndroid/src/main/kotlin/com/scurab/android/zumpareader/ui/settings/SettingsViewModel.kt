@@ -4,7 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.arch.BaseViewModel
 import com.scurab.android.zumpareader.arch.CopyToClipboard
-import com.scurab.android.zumpareader.arch.ShowToast
+import com.scurab.android.zumpareader.arch.ShowSnackbar
 import com.scurab.android.zumpareader.arch.UiEffect
 import com.scurab.android.zumpareader.repository.AuthRepository
 import com.scurab.android.zumpareader.repository.ZumpaSettingsRepository
@@ -129,11 +129,11 @@ class SettingsViewModel(
         val current = state
         if (current.isBusy) return
         if (current.userName.isBlank()) {
-            effect(ShowToast(resId = R.string.err_no_username))
+            effect(ShowSnackbar(resId = R.string.err_no_username))
             return
         }
         if (current.password.isBlank()) {
-            effect(ShowToast(resId = R.string.err_no_password))
+            effect(ShowSnackbar(resId = R.string.err_no_password))
             return
         }
 
@@ -141,9 +141,9 @@ class SettingsViewModel(
         viewModelScope.launch {
             try {
                 val result = auth.login(current.userName, current.password)
-                effect(ShowToast(resId = if (result.isLoggedIn) R.string.ok else R.string.err_fail))
+                effect(ShowSnackbar(resId = if (result.isLoggedIn) R.string.ok else R.string.err_fail))
                 if (result.isLoggedIn && !result.isPushRegistered) {
-                    effect(ShowToast(resId = R.string.err_no_push_reg))
+                    effect(ShowSnackbar(resId = R.string.err_no_push_reg))
                 }
             } catch (err: Throwable) {
                 onError(err)
@@ -161,7 +161,7 @@ class SettingsViewModel(
                 auth.logout()
                 //the "show last author" cookie is meaningless without a session
                 settings.setShowLastAuthor(false)
-                effect(ShowToast(resId = R.string.done))
+                effect(ShowSnackbar(resId = R.string.done))
             } catch (err: Throwable) {
                 onError(err)
             } finally {

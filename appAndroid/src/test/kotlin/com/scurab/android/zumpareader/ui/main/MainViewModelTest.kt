@@ -2,7 +2,7 @@ package com.scurab.android.zumpareader.ui.main
 
 import app.cash.turbine.test
 import com.scurab.android.zumpareader.R
-import com.scurab.android.zumpareader.arch.ShowToast
+import com.scurab.android.zumpareader.arch.ShowSnackbar
 import com.scurab.android.zumpareader.repository.ZumpaSettingsRepository
 import io.mockk.every
 import io.mockk.mockk
@@ -60,7 +60,7 @@ class MainViewModelTest {
         viewModel().run {
             effects.test {
                 onLaunch(LaunchPayload(text = "something to post"))
-                assertEquals(ShowToast(resId = R.string.err_login_first), awaitItem())
+                assertEquals(ShowSnackbar(resId = R.string.err_login_first), awaitItem())
             }
         }
     }

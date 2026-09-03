@@ -2,7 +2,7 @@ package com.scurab.android.zumpareader.ui.post
 
 import app.cash.turbine.test
 import com.scurab.android.zumpareader.R
-import com.scurab.android.zumpareader.arch.ShowToast
+import com.scurab.android.zumpareader.arch.ShowSnackbar
 import com.scurab.android.zumpareader.model.ZumpaThread
 import com.scurab.android.zumpareader.model.ZumpaThreadBody
 import com.scurab.android.zumpareader.repository.AppEventBus
@@ -90,7 +90,7 @@ class PostViewModelTest {
 
         viewModel.effects.test {
             viewModel.onSendClicked()
-            assertEquals(ShowToast(resId = R.string.err_empty_subject), awaitItem())
+            assertEquals(ShowSnackbar(resId = R.string.err_empty_subject), awaitItem())
         }
         coVerify(exactly = 0) { threads.sendThread(any()) }
     }
@@ -102,7 +102,7 @@ class PostViewModelTest {
 
         viewModel.effects.test {
             viewModel.onSendClicked()
-            assertEquals(ShowToast(resId = R.string.err_empty_msg), awaitItem())
+            assertEquals(ShowSnackbar(resId = R.string.err_empty_msg), awaitItem())
         }
     }
 

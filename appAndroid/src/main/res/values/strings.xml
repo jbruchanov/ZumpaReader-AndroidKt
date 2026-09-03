@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">Žum&#x3c0;čka</string>
-    <string name="saved_into_clipboard">Saved into clipboard</string>
     <string name="unable_to_finish_operation">Unable to finish operation</string>
 
     <string name="credentials">Credentials</string>

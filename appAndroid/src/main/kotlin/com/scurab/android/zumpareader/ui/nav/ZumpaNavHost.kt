@@ -9,11 +9,18 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -28,12 +35,15 @@ import androidx.navigation3.scene.DialogSceneStrategy
 import androidx.navigation3.scene.Scene
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigationevent.NavigationEvent
-import com.scurab.android.zumpareader.arch.ShowToast
+import com.scurab.android.zumpareader.R
+import com.scurab.android.zumpareader.arch.ShowSnackbar
 import com.scurab.android.zumpareader.arch.WindowLayout
-import com.scurab.android.zumpareader.ext.toast
 import com.scurab.android.zumpareader.repository.SelectedThreadStore
 import com.scurab.android.zumpareader.ui.compose.LocalNavigator
 import com.scurab.android.zumpareader.ui.compose.LocalSharedTransitionScope
+import com.scurab.android.zumpareader.ui.compose.LocalSnackbarController
+import com.scurab.android.zumpareader.ui.compose.SnackbarController
+import com.scurab.android.zumpareader.ui.compose.theme.AppTheme
 import com.scurab.android.zumpareader.ui.image.ImageScreen
 import com.scurab.android.zumpareader.ui.main.LaunchPayload
 import com.scurab.android.zumpareader.ui.main.MainEffect
@@ -60,10 +70,24 @@ import org.koin.compose.koinInject
 @Composable
 fun ZumpaNavHost(launches: Flow<LaunchPayload>, onExit: () -> Unit) {
     val context = LocalContext.current
+    //one snackbar host for the whole app - the compose replacement for Toast - mounted below and
+    //reached from every screen through LocalSnackbarController
+    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarScope = rememberCoroutineScope()
+    val snackbarController = remember(snackbarHostState, snackbarScope, context) {
+        SnackbarController(snackbarHostState, snackbarScope, context.resources)
+    }
     //not scoped to an entry - this one belongs to the activity, like the intent it reacts to
     val mainViewModel = koinViewModel<MainViewModel>()
     val backStack = rememberNavBackStack(MainListKey)
-    val navigator = remember(backStack) { BackStackNavigator(backStack, context, onExit) }
+    val navigator = remember(backStack, snackbarController) {
+        BackStackNavigator(
+            backStack = backStack,
+            context = context,
+            onExit = onExit,
+            onLinkError = { snackbarController.show(R.string.unable_to_finish_operation) },
+        )
+    }
 
     //the window, not the device: a phone in landscape gets the two panes a tablet gets. Read from
     //the container rather than injected, because this is the one place that recomposes when it
@@ -125,7 +149,8 @@ fun ZumpaNavHost(launches: Flow<LaunchPayload>, onExit: () -> Unit) {
                     )
                 )
 
-                is ShowToast -> effect.text?.let { context.toast(it) } ?: context.toast(effect.resId)
+                is ShowSnackbar -> effect.text?.let { snackbarController.show(it) }
+                    ?: snackbarController.show(effect.resId)
                 else -> Unit
             }
         }
@@ -139,37 +164,56 @@ fun ZumpaNavHost(launches: Flow<LaunchPayload>, onExit: () -> Unit) {
         CompositionLocalProvider(
             LocalNavigator provides navigator,
             LocalSharedTransitionScope provides this@SharedTransitionLayout,
+            LocalSnackbarController provides snackbarController,
         ) {
-            NavDisplay(
-                backStack = backStack,
-                modifier = Modifier.fillMaxSize(),
-                onBack = {
-                    //the root never gets here, NavDisplay leaves back to the activity instead
-                    if (backStack.size > 1) backStack.removeAt(backStack.lastIndex)
-                },
-                entryDecorators = listOf(
-                    rememberSaveableStateHolderNavEntryDecorator(),
-                    //so koinViewModel() in a screen is scoped to its entry and dies with it
-                    rememberViewModelStoreNavEntryDecorator(),
-                ),
-                sceneStrategies = listOf(DialogSceneStrategy()),
-                transitionSpec = slideForward(),
-                popTransitionSpec = slideBack(),
-                predictivePopTransitionSpec = slideBackWithTheGesture(),
-                entryProvider = entryProvider {
-                    //one root for both layouts, so rotating keeps the list's ViewModel and its
-                    //place in the back stack instead of swapping one root key for another
-                    entry<MainListKey> { if (isTwoPane) TwoPaneScreen() else MainListScreen() }
-                    entry<SubListKey> { key -> SubListScreen(key.threadId) }
-                    entry<ImageKey>(metadata = SHARED_IMAGE) { key -> ImageScreen(key.url) }
-                    entry<SettingsKey> { SettingsScreen() }
-                    entry<OfflineDownloadKey>(metadata = DIALOG) { OfflineDownloadScreen() }
-                    //a dialog where there is room for one, a full screen where not
-                    entry<PostKey>(metadata = if (postAsDialog) DIALOG else emptyMap()) { key ->
-                        PostScreen(key.toArgs(), key.picker)
-                    }
-                },
-            )
+            Box(Modifier.fillMaxSize()) {
+                NavDisplay(
+                    backStack = backStack,
+                    modifier = Modifier.fillMaxSize(),
+                    onBack = {
+                        //the root never gets here, NavDisplay leaves back to the activity instead
+                        if (backStack.size > 1) backStack.removeAt(backStack.lastIndex)
+                    },
+                    entryDecorators = listOf(
+                        rememberSaveableStateHolderNavEntryDecorator(),
+                        //so koinViewModel() in a screen is scoped to its entry and dies with it
+                        rememberViewModelStoreNavEntryDecorator(),
+                    ),
+                    sceneStrategies = listOf(DialogSceneStrategy()),
+                    transitionSpec = slideForward(),
+                    popTransitionSpec = slideBack(),
+                    predictivePopTransitionSpec = slideBackWithTheGesture(),
+                    entryProvider = entryProvider {
+                        //one root for both layouts, so rotating keeps the list's ViewModel and its
+                        //place in the back stack instead of swapping one root key for another
+                        entry<MainListKey> { if (isTwoPane) TwoPaneScreen() else MainListScreen() }
+                        entry<SubListKey> { key -> SubListScreen(key.threadId) }
+                        entry<ImageKey>(metadata = SHARED_IMAGE) { key -> ImageScreen(key.url) }
+                        entry<SettingsKey> { SettingsScreen() }
+                        entry<OfflineDownloadKey>(metadata = DIALOG) { OfflineDownloadScreen() }
+                        //a dialog where there is room for one, a full screen where not
+                        entry<PostKey>(metadata = if (postAsDialog) DIALOG else emptyMap()) { key ->
+                            PostScreen(key.toArgs(), key.picker)
+                        }
+                    },
+                )
+                //the snackbar sits over every screen, above the ime and the navigation bar; being
+                //outside the NavDisplay means it survives a screen change and does not slide with it
+                SnackbarHost(
+                    hostState = snackbarHostState,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .safeDrawingPadding(),
+                ) { data ->
+                    //dark grey pane with white text - the M3 default is a light surface with dark
+                    //text, which reads as a stray light card over the app's dark theme
+                    Snackbar(
+                        snackbarData = data,
+                        containerColor = AppTheme.colorScheme.secondaryBackground,
+                        contentColor = AppTheme.colorScheme.primaryText,
+                    )
+                }
+            }
         }
     }
 }

@@ -90,9 +90,8 @@ import coil3.compose.rememberAsyncImagePainter
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.arch.CopyToClipboard
 import com.scurab.android.zumpareader.arch.HideKeyboard
-import com.scurab.android.zumpareader.arch.ShowToast
+import com.scurab.android.zumpareader.arch.ShowSnackbar
 import com.scurab.android.zumpareader.arch.WindowLayout
-import com.scurab.android.zumpareader.ext.toast
 import com.scurab.android.zumpareader.test.Fixtures
 import com.scurab.android.zumpareader.test.message
 import com.scurab.android.zumpareader.test.mock
@@ -102,6 +101,7 @@ import com.scurab.android.zumpareader.test.sending
 import com.scurab.android.zumpareader.test.uiState
 import com.scurab.android.zumpareader.test.withSurvey
 import com.scurab.android.zumpareader.ui.compose.LocalNavigator
+import com.scurab.android.zumpareader.ui.compose.LocalSnackbarController
 import com.scurab.android.zumpareader.ui.compose.QuickHideFab
 import com.scurab.android.zumpareader.ui.compose.RevealRow
 import com.scurab.android.zumpareader.ui.compose.RevealRowMenuButton
@@ -128,6 +128,7 @@ import java.util.Locale
 fun SubListScreen(threadId: String, vm: SubListViewModel = koinViewModel()) {
     val navigator = LocalNavigator.current
     val context = LocalContext.current
+    val snackbar = LocalSnackbarController.current
     val keyboard = LocalSoftwareKeyboardController.current
     val listState = rememberLazyListState()
 
@@ -142,13 +143,10 @@ fun SubListScreen(threadId: String, vm: SubListViewModel = koinViewModel()) {
                 is SubListEffect.OpenLink -> navigator.openLink(effect.url)
                 is SubListEffect.OpenPostDialog ->
                     navigator.openPostDialog(effect.threadId, effect.picker)
-                is CopyToClipboard -> {
-                    context.saveToClipboard(effect.text.toString())
-                    context.toast(R.string.saved_into_clipboard)
-                }
+                is CopyToClipboard -> context.saveToClipboard(effect.text.toString())
 
                 is HideKeyboard -> keyboard?.hide()
-                is ShowToast -> effect.text?.let { context.toast(it) } ?: context.toast(effect.resId)
+                is ShowSnackbar -> effect.text?.let { snackbar.show(it) } ?: snackbar.show(effect.resId)
                 else -> Unit
             }
         }

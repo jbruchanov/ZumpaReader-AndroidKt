@@ -11,13 +11,13 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 
 /**
- * A one-shot thing the view has to do - navigate, toast, scroll, touch the clipboard. Anything that
+ * A one-shot thing the view has to do - navigate, show a snackbar, scroll, touch the clipboard. Anything that
  * must not be replayed when the state is re-collected after a configuration change belongs here and
  * not in the ui state.
  */
 interface UiEffect
 
-data class ShowToast(val text: String? = null, @StringRes val resId: Int = 0) : UiEffect
+data class ShowSnackbar(val text: String? = null, @StringRes val resId: Int = 0) : UiEffect
 
 data object HideKeyboard : UiEffect
 
@@ -52,6 +52,6 @@ abstract class BaseViewModel<S : Any>(initialState: S) : ViewModel() {
      */
     protected fun onError(err: Throwable) {
         err.printStackTrace()
-        effect(ShowToast(text = err.message))
+        effect(ShowSnackbar(text = err.message))
     }
 }

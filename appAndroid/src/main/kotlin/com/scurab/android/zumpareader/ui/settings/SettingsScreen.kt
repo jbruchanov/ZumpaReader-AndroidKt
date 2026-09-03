@@ -57,13 +57,13 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.arch.CopyToClipboard
-import com.scurab.android.zumpareader.arch.ShowToast
-import com.scurab.android.zumpareader.ext.toast
+import com.scurab.android.zumpareader.arch.ShowSnackbar
 import com.scurab.android.zumpareader.test.Fixtures
 import com.scurab.android.zumpareader.test.busy
 import com.scurab.android.zumpareader.test.loggedIn
 import com.scurab.android.zumpareader.test.loggedOut
 import com.scurab.android.zumpareader.test.mock
+import com.scurab.android.zumpareader.ui.compose.LocalSnackbarController
 import com.scurab.android.zumpareader.ui.compose.theme.AppTheme
 import com.scurab.android.zumpareader.util.saveToClipboard
 import org.koin.androidx.compose.koinViewModel
@@ -71,6 +71,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun SettingsScreen(vm: SettingsViewModel = koinViewModel()) {
     val context = LocalContext.current
+    val snackbar = LocalSnackbarController.current
     val requestNotifications = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { vm.onResumed() }
@@ -88,12 +89,9 @@ fun SettingsScreen(vm: SettingsViewModel = koinViewModel()) {
                     requestNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
 
                 is SettingsEffect.OpenAppSettings -> context.openAppSettings()
-                is CopyToClipboard -> {
-                    context.saveToClipboard(effect.text.toString())
-                    context.toast("'${effect.text}' saved to clipboard")
-                }
+                is CopyToClipboard -> context.saveToClipboard(effect.text.toString())
 
-                is ShowToast -> effect.text?.let { context.toast(it) } ?: context.toast(effect.resId)
+                is ShowSnackbar -> effect.text?.let { snackbar.show(it) } ?: snackbar.show(effect.resId)
                 else -> Unit
             }
         }
