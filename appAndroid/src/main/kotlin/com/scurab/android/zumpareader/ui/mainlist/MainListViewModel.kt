@@ -72,10 +72,11 @@ sealed interface MainListEffect : UiEffect {
     data object ShowOfflineDownloadDialog : MainListEffect
 
     /**
-     * The list started over, so it belongs back at the top - a reload puts the new threads at index
-     * 0 and the rows are keyed, so a list left part way down would otherwise hold its old anchor
-     * and quietly keep the new ones off screen above it. Not sent for paging: appending a page must
-     * leave the reader where they were.
+     * A reload brought thread ids the list has not seen before, and the new ones sort to the top -
+     * with a keyed list the reader would otherwise hold their old anchor and quietly keep the new
+     * rows off screen above it. A reload that brings nothing new does not emit this: the same
+     * threads in the same order have nothing to travel to, so the reader stays where they are.
+     * Never sent for paging - appending a page onto the end must not fling the list to the top.
      */
     data object ScrollToTop : MainListEffect
 }
@@ -199,6 +200,9 @@ class MainListViewModel(
         }
         val filter = settings.filter.value
         val offline = settings.isOffline.value
+        //captured before the clear below: a reload that ends up with the same content should
+        //leave the reader where they are, even when the map was cleared on the way through
+        val knownIds = loaded.keys.toHashSet()
         if (force || lastFilter != filter || lastOffline != offline) {
             loaded.clear()
             rowStates.clear()
@@ -222,8 +226,11 @@ class MainListViewModel(
                 //after publishRows, so the rows the list is being sent to the top of are already
                 //there. `fromThread` is the whole distinction: null is a reload of the list from
                 //the beginning - pull to refresh, a new filter, the offline switch, a post landing
-                //- and non-null is the next page.
-                if (fromThread == null && !isFirstLoad) {
+                //- and non-null is the next page. Only sent when the reload actually brought a
+                //thread that was not on the list, so a reload finding nothing new stays put.
+                if (fromThread == null && !isFirstLoad &&
+                    result.items.keys.any { it !in knownIds }
+                ) {
                     effect(MainListEffect.ScrollToTop)
                 }
                 if (isFirstLoad) {

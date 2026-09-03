@@ -195,9 +195,13 @@ class MainListViewModelTest {
     }
 
     @Test
-    fun `a reload sends the list back to the top but paging does not`() = runTest {
+    fun `a reload that brings a new thread sends the list back to the top`() = runTest {
+        //first load: one thread already on screen
         coEvery { threads.loadMainPage(any(), any()) } returns page("9", thread("10"))
         val vm = viewModel()
+
+        //second load: a fresh thread at the head - the list has to travel up so it is visible
+        coEvery { threads.loadMainPage(any(), any()) } returns page("9", thread("11"), thread("10"))
 
         vm.effects.test {
             vm.onRefreshRequested()
@@ -205,6 +209,21 @@ class MainListViewModelTest {
 
             //appending the next page has to leave the reader where they were
             vm.onEndReached()
+            expectNoEvents()
+        }
+    }
+
+    /**
+     * A reload asked for while a thread the user has been reading was still open - or a manual
+     * pull with nothing new on the wire - has nothing to travel to. The list holds its place.
+     */
+    @Test
+    fun `a reload that brings the same threads stays where the reader was`() = runTest {
+        coEvery { threads.loadMainPage(any(), any()) } returns page("9", thread("10"))
+        val vm = viewModel()
+
+        vm.effects.test {
+            vm.onRefreshRequested()
             expectNoEvents()
         }
     }
