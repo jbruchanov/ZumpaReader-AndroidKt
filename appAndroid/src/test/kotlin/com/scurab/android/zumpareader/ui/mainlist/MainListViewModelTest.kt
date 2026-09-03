@@ -286,6 +286,35 @@ class MainListViewModelTest {
         assertEquals(listOf("21", "20"), vm.uiState.value.rows.map { it.id })
     }
 
+    /**
+     * `loaded` used to be cleared the moment a reset-branch reload started, before its fetch had
+     * anything to replace it with - so a tap on a still-visible row was silently dropped by the
+     * `threadId !in loaded` guard in [MainListViewModel.onThreadClicked]. What the reader saw was
+     * the ripple and no navigation; a failed fetch made it permanent, and only killing the app
+     * brought clicks back.
+     */
+    @Test
+    fun `a click during a reload still opens the thread`() = runTest {
+        //first load fills the list
+        coEvery { threads.loadMainPage(any(), any()) } returns page("", thread("10"))
+        val vm = viewModel()
+
+        //second load - the reset branch, triggered by the offline download event - is held mid-fetch
+        val gate = CompletableDeferred<Unit>()
+        coEvery { threads.loadMainPage(any(), any()) } coAnswers {
+            gate.await()
+            page("", thread("20"))
+        }
+        eventBus.emit(AppEvent.OfflineDataChanged)
+
+        //the reader sees the previous row and taps it while the fetch is still in flight
+        vm.effects.test {
+            vm.onThreadClicked("10")
+            assertEquals(MainListEffect.OpenThread("10"), awaitItem())
+        }
+        gate.complete(Unit)
+    }
+
     @Test
     fun `only a page being appended shows the next page row`() = runTest {
         val gate = CompletableDeferred<Unit>()

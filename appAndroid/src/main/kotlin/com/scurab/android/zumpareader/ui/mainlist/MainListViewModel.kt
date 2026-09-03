@@ -227,13 +227,16 @@ class MainListViewModel(
         }
         val filter = settings.filter.value
         val offline = settings.isOffline.value
-        //captured before the clear below: a reload that ends up with the same content should
+        //captured before the reset below: a reload that ends up with the same content should
         //leave the reader where they are, even when the map was cleared on the way through
         val knownIds = loaded.keys.toHashSet()
-        if (force || lastFilter != filter || lastOffline != offline) {
-            loaded.clear()
-            rowStates.clear()
-        }
+        //Deliberately not cleared yet: the UI still renders the previous rows from state.rows
+        //until the coroutine below publishes new ones, and `loaded` is what onThreadClicked
+        //checks against. Clearing here left a window - roughly the length of the fetch - where
+        //every tap on a still-visible row returned early because its id was no longer in the
+        //map; a fetch that failed made the window permanent, so the reader had to restart the
+        //app to get clicks back. Reset moves inside the try, right before putAll.
+        val shouldReset = force || lastFilter != filter || lastOffline != offline
         lastFilter = filter
         lastOffline = offline
         setState { copy(isLoading = true, isLoadingNextPage = fromThread != null) }
@@ -242,6 +245,10 @@ class MainListViewModel(
             try {
                 val result = threads.loadMainPage(fromThread, filter)
                 nextThreadId = result.nextThreadId
+                if (shouldReset) {
+                    loaded.clear()
+                    rowStates.clear()
+                }
                 loaded.putAll(result.items)
                 //the decoration is recomputed for the whole page on every load, as it was
                 val userName = settings.loggedUserName.value
