@@ -38,7 +38,7 @@ import androidx.compose.material.icons.automirrored.filled.SpeakerNotes
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -318,14 +318,14 @@ private fun SubListScreen(
                 FloatingActionButton(
                     onClick = eventHandler::onPostPanelRequested,
                     containerColor = AppTheme.colorScheme.context,
-                    //white on the orange, like the plus on the list - the icon takes this as its
-                    //LocalContentColor, so both fabs read the same way
+                    //white on the orange - the icon takes this as its LocalContentColor
                     contentColor = AppTheme.colorScheme.primaryText,
                     //M3 draws a squircle, the old Material fab was round
                     shape = CircleShape,
                 ) {
-                    //the same plus the list has, not a pen: one fab, one meaning
-                    Icon(Icons.Filled.Add, contentDescription = null)
+                    //a pen, not the list's plus: writing a reply into an existing thread is not
+                    //the same act as starting a new one, and the old app drew it this way
+                    Icon(Icons.Filled.Edit, contentDescription = null)
                 }
             }
         },
