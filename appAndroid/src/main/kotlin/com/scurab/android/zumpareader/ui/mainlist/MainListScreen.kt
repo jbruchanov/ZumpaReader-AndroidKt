@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.waterfall
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
@@ -470,9 +471,16 @@ private fun ThreadStateBar(state: ThreadState) {
         ThreadState.Own -> AppTheme.colorScheme.threadStateOwn
         ThreadState.ResponseForYou -> AppTheme.colorScheme.threadStateResponseForYou
     }
+    //widened by the waterfall inset on the start edge so the visible width of the bar past a
+    //curved-edge display is still `threadStateBarWidth` - on a flat screen the inset is zero
+    //and nothing changes
+    val startWaterfall = WindowInsets.waterfall
+        .only(WindowInsetsSides.Start)
+        .asPaddingValues()
+        .calculateStartPadding(LocalLayoutDirection.current)
     Box(
         Modifier
-            .width(AppTheme.sizes.threadStateBarWidth)
+            .width(AppTheme.sizes.threadStateBarWidth + startWaterfall)
             .fillMaxHeight()
             .background(color)
     )
