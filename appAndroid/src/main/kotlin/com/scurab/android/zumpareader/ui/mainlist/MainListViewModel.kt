@@ -108,6 +108,9 @@ class MainListViewModel(
     private var lastOffline: Boolean? = null
     private var isFirstLoad = true
 
+    /** When the last successful reload (not a paging load) finished. In memory only, by design. */
+    private var lastReloadAtMs: Long = 0L
+
     /** A reload asked for while one was already running - see [load]. */
     private var pendingReload = false
     private var openMenuId: String? = null
@@ -169,6 +172,19 @@ class MainListViewModel(
 
     override fun onRefreshRequested() = load()
 
+    /**
+     * Called from the screen on each `ON_RESUME`. Reloads the list when the reader has been away
+     * for [AUTO_RELOAD_THRESHOLD_MS] or more - anything shorter is not worth the request. The
+     * freshness stamp lives in memory only, so a process restart triggers the very first load
+     * anyway and there is nothing to persist. Offline mode reads a snapshot and gets nothing new
+     * from the wire, so this is a no-op there.
+     */
+    fun onResumed() {
+        if (state.isOffline || state.isLoading) return
+        if (System.currentTimeMillis() - lastReloadAtMs < AUTO_RELOAD_THRESHOLD_MS) return
+        load()
+    }
+
     override fun onEndReached() {
         val next = nextThreadId
         //the offline api answers with an empty next id, which is the end of the list
@@ -228,10 +244,15 @@ class MainListViewModel(
                 //the beginning - pull to refresh, a new filter, the offline switch, a post landing
                 //- and non-null is the next page. Only sent when the reload actually brought a
                 //thread that was not on the list, so a reload finding nothing new stays put.
-                if (fromThread == null && !isFirstLoad &&
-                    result.items.keys.any { it !in knownIds }
-                ) {
-                    effect(MainListEffect.ScrollToTop)
+                if (fromThread == null) {
+                    //stamped only on a successful reload of the list head, and only that: a paging
+                    //load leaves the head where it was, so the auto-reload countdown must not
+                    //restart. Not stamped on failure either - a broken load should not push the
+                    //next auto-reload out
+                    lastReloadAtMs = System.currentTimeMillis()
+                    if (!isFirstLoad && result.items.keys.any { it !in knownIds }) {
+                        effect(MainListEffect.ScrollToTop)
+                    }
                 }
                 if (isFirstLoad) {
                     fillEmptyDetailPane()
@@ -381,5 +402,10 @@ class MainListViewModel(
             rowStates[thread.id] = thread.rowStateFor(readStates.readCount(thread.id), userName)
         }
         publishRows()
+    }
+
+    private companion object {
+        /** How long the last reload has to have been for a resume to fetch again. */
+        const val AUTO_RELOAD_THRESHOLD_MS = 10_000L
     }
 }

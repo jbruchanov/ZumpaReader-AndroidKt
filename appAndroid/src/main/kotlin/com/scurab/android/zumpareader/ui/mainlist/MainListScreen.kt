@@ -70,6 +70,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.scurab.android.zumpareader.R
 import com.scurab.android.zumpareader.arch.ShowToast
@@ -104,6 +105,13 @@ fun MainListScreen(vm: MainListViewModel = koinViewModel()) {
     val context = LocalContext.current
     //hoisted so the effect handler below can reach it, the way SubListScreen already takes one
     val listState = rememberLazyListState()
+
+    //each return to the screen asks for a refresh; the ViewModel skips it if the last one was
+    //recent, so navigating between threads and the list does not spam the wire
+    LifecycleResumeEffect(Unit) {
+        vm.onResumed()
+        onPauseOrDispose { }
+    }
 
     LaunchedEffect(Unit) {
         vm.effects.collect { effect ->
