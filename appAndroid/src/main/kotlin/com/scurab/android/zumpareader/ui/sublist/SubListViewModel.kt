@@ -47,7 +47,16 @@ sealed interface SubListRowUiState {
         val isMenuOpen: Boolean = false,
     ) : SubListRowUiState
 
-    data class Link(override val itemIndex: Int, val url: String) : SubListRowUiState
+    /**
+     * @param isLastInGroup the row is the last one belonging to its message. A message's link
+     * rows use a tight vertical padding so consecutive buttons cluster together, but the tail one
+     * has to close the card off with the same 8dp gap a plain message ends with.
+     */
+    data class Link(
+        override val itemIndex: Int,
+        val url: String,
+        val isLastInGroup: Boolean = false,
+    ) : SubListRowUiState
 
     data class Image(override val itemIndex: Int, val url: String) : SubListRowUiState
 
@@ -490,7 +499,10 @@ class SubListViewModel(
                 //images before plain links, which is what the old sortBy(type) did
                 val (images, links) = urls.partition { it.looksLikeImageUrl() && loadImages }
                 images.forEach { rows += SubListRowUiState.Image(index, it) }
-                links.forEach { rows += SubListRowUiState.Link(index, it) }
+                //the last link closes the card; the row uses that to widen its bottom padding
+                links.forEachIndexed { i, url ->
+                    rows += SubListRowUiState.Link(index, url, isLastInGroup = i == links.lastIndex)
+                }
             }
             if (index == 0) {
                 item.survey?.let { survey ->

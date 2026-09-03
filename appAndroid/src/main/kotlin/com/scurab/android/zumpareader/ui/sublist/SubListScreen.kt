@@ -531,14 +531,20 @@ private fun LinkRow(
     contentPadding: PaddingValues,
     eventHandler: SubListEventHandler,
 ) {
+    //`tiny` between consecutive buttons so they cluster; the last one closes the card with the
+    //same `listItemPadding` a plain message ends with, so the seam under a link is the seam
+    //under a message rather than a thin sliver
+    val bottom = if (row.isLastInGroup) AppTheme.spaces.listItemPadding else AppTheme.spaces.tiny
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .zumpaRowBackground(row.itemIndex)
             .padding(contentPadding)
             .padding(
-                horizontal = AppTheme.spaces.listItemPadding,
-                vertical = AppTheme.spaces.tiny,
+                start = AppTheme.spaces.listItemPadding,
+                end = AppTheme.spaces.listItemPadding,
+                top = AppTheme.spaces.tiny,
+                bottom = bottom,
             ),
     ) {
         UrlButton(
