@@ -13,11 +13,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -132,7 +135,7 @@ private fun SettingsScreen(uiState: SettingsUiState, eventHandler: SettingsEvent
                 label = { Text(stringResource(R.string.user)) },
                 singleLine = true,
                 shape = AppTheme.shapes.editText,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = AppTheme.spaces.normal),
             )
             OutlinedTextField(
                 value = uiState.password,
@@ -167,14 +170,20 @@ private fun SettingsScreen(uiState: SettingsUiState, eventHandler: SettingsEvent
                     }
                 },
                 shape = AppTheme.shapes.editText,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = AppTheme.spaces.normal),
             )
             TextButton(
                 onClick = {
                     if (uiState.isLoggedIn) eventHandler.onLogoutClicked() else eventHandler.onLoginClicked()
                 },
                 enabled = !uiState.isBusy,
-                modifier = Modifier.fillMaxWidth(),
+                //the shared button radius the url buttons and reveal-row buttons wear - M3's default
+                //TextButton shape is much rounder and this one is next to those, one look for all
+                shape = AppTheme.shapes.button,
+                //outside the button, not its contentPadding: the button already carries its own
+                //ripple bound to its shape, and shrinking the button visually is what lines it up
+                //with the fields above and the rows below
+                modifier = Modifier.fillMaxWidth().padding(horizontal = AppTheme.spaces.normal),
             ) {
                 Text(
                     text = stringResource(if (uiState.isLoggedIn) R.string.logout else R.string.login),
@@ -193,7 +202,7 @@ private fun SettingsScreen(uiState: SettingsUiState, eventHandler: SettingsEvent
                 label = { Text(stringResource(R.string.nick_name)) },
                 singleLine = true,
                 shape = AppTheme.shapes.editText,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = AppTheme.spaces.normal),
             )
             SwitchRow(
                 label = stringResource(R.string.load_images),
@@ -262,9 +271,10 @@ private fun SwitchRow(
     onCheckedChange: (Boolean) -> Unit,
 ) {
     Row(
+        //horizontal to sit under the fields and above the click rows at the same offset
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = AppTheme.spaces.tiny),
+            .padding(horizontal = AppTheme.spaces.normal, vertical = AppTheme.spaces.tiny),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -292,10 +302,15 @@ private fun SwitchRow(
 @Composable
 private fun ClickRow(label: String, value: String, onClick: () -> Unit) {
     Row(
+        //clip before clickable so the ripple takes the rounded shape; the horizontal inset then
+        //sits inside the ripple so the ripple has breathing room around the label rather than
+        //stopping flush against its edge
         modifier = Modifier
             .fillMaxWidth()
+            .clip(AppTheme.shapes.button)
             .clickable(onClick = onClick)
-            .padding(vertical = AppTheme.spaces.normal),
+            .defaultMinSize(minHeight = ROW_MIN_TOUCH_HEIGHT)
+            .padding(horizontal = AppTheme.spaces.normal, vertical = AppTheme.spaces.small),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -313,6 +328,9 @@ private fun ClickRow(label: String, value: String, onClick: () -> Unit) {
         }
     }
 }
+
+/** Material's minimum recommended touch target, the size the row is padded up to when needed. */
+private val ROW_MIN_TOUCH_HEIGHT = 48.dp
 
 @Composable
 private fun FilterSelector(uiState: SettingsUiState, eventHandler: SettingsEventHandler) {

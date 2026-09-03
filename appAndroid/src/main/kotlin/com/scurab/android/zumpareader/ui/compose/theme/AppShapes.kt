@@ -18,7 +18,7 @@ data class AppShapes(
 
 val DefaultShapes = AppShapes(
     editText = RoundedCornerShape(2.dp),
-    button = RoundedCornerShape(5.dp),
+    button = RoundedCornerShape(4.dp),
     dialog = RoundedCornerShape(2.dp),
 )
 
