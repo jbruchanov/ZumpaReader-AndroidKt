@@ -38,6 +38,13 @@ import androidx.compose.material.icons.automirrored.filled.SpeakerNotes
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -314,7 +321,13 @@ private fun SubListScreen(
             //no QuickHideFab here, unlike the list: the way to answer a thread should not be
             //something you have to stop scrolling to get back. The list leaves room for it instead
             //of sliding it out of the way - see fabSpace below.
-            if (fabVisible) {
+            //scale+fade in sync with the panel below: the fab shrinks away as the panel expands up
+            //to take its place, and grows back once the panel collapses
+            AnimatedVisibility(
+                visible = fabVisible,
+                enter = scaleIn() + fadeIn(),
+                exit = scaleOut() + fadeOut(),
+            ) {
                 FloatingActionButton(
                     onClick = eventHandler::onPostPanelRequested,
                     containerColor = AppTheme.colorScheme.context,
@@ -419,7 +432,14 @@ private fun SubListScreen(
                         .padding(bottom = if (uiState.isPostPanelVisible) 0.dp else bottomInset),
                 )
             }
-            if (uiState.isPostPanelVisible) {
+            //expand+fade so the list above smoothly regains its bottom padding as the panel
+            //collapses, and gives it up as the panel grows. Paired with the fab's scale+fade
+            //above so the two read as one gesture: the fab folds down into the panel and back.
+            AnimatedVisibility(
+                visible = uiState.isPostPanelVisible,
+                enter = expandVertically(expandFrom = Alignment.Bottom) + fadeIn(),
+                exit = shrinkVertically(shrinkTowards = Alignment.Bottom) + fadeOut(),
+            ) {
                 ReplyPanel(uiState, eventHandler, bottomInset, rowPadding)
             }
         }
