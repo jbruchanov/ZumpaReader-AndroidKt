@@ -99,12 +99,16 @@ import com.scurab.android.zumpareader.ui.compose.theme.AppTheme
 import org.koin.androidx.compose.koinViewModel
 import com.scurab.android.zumpareader.util.formatThreadListTime
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainListScreen(vm: MainListViewModel = koinViewModel()) {
     val navigator = LocalNavigator.current
     val context = LocalContext.current
     //hoisted so the effect handler below can reach it, the way SubListScreen already takes one
     val listState = rememberLazyListState()
+    //hoisted alongside the list state: a scroll-to-top has to bring the top app bar back with it,
+    //otherwise the list can land at index 0 while the bar sits collapsed above the first row
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     //each return to the screen asks for a refresh; the ViewModel skips it if the last one was
     //recent, so navigating between threads and the list does not spam the wire
@@ -122,8 +126,14 @@ fun MainListScreen(vm: MainListViewModel = koinViewModel()) {
                 is MainListEffect.ShowOfflineDownloadDialog -> navigator.openOfflineDownload()
                 is MainListEffect.ShareThread -> context.shareLink(effect.link)
                 //not animated: the rows underneath have just been replaced, so there is nothing
-                //meaningful to travel through - and from far down the list it would be a long trip
-                is MainListEffect.ScrollToTop -> listState.scrollToItem(0)
+                //meaningful to travel through - and from far down the list it would be a long trip.
+                //The bar is reset too - `heightOffset` back to 0 opens it, `contentOffset` back to
+                //0 keeps the next downward scroll from immediately collapsing it again
+                is MainListEffect.ScrollToTop -> {
+                    listState.scrollToItem(0)
+                    scrollBehavior.state.heightOffset = 0f
+                    scrollBehavior.state.contentOffset = 0f
+                }
                 is ShowToast -> effect.text?.let { context.toast(it) } ?: context.toast(effect.resId)
                 else -> Unit
             }
@@ -132,7 +142,7 @@ fun MainListScreen(vm: MainListViewModel = koinViewModel()) {
 
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val eventHandler = vm
-    MainListScreen(uiState, eventHandler, listState)
+    MainListScreen(uiState, eventHandler, listState, scrollBehavior)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -141,6 +151,10 @@ private fun MainListScreen(
     uiState: MainListUiState,
     eventHandler: MainListEventHandler,
     listState: LazyListState = rememberLazyListState(),
+    //enterAlways, as on a thread: the bar goes as the list is read downwards and comes back on
+    //the first upward scroll, wherever in the list that is. Passed in so a scroll-to-top can
+    //re-open the bar in sync with the list
+    scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(),
 ) {
     //paging: the old adapter fired 15 rows from the end, so does this
     LaunchedEffect(listState, uiState.rows.size) {
@@ -155,9 +169,6 @@ private fun MainListScreen(
     val refreshState = rememberPullToRefreshState()
     val quickHideState = rememberQuickHideState()
 
-    //enterAlways, as on a thread: the bar goes as the list is read downwards and comes back on the
-    //first upward scroll, wherever in the list that is.
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     //not scrollBehavior.nestedScrollConnection: that one takes the gesture for the bar
     //before the content sees any of it - see rememberSyncedTopAppBarScroll
     val syncedScroll = rememberSyncedTopAppBarScroll(scrollBehavior.state)
@@ -525,24 +536,28 @@ private const val LOAD_MORE_OFFSET = 15
 private const val NEXT_PAGE_ROW_KEY = "next-page"
 private const val SUBJECT_MAX_LINES = 3
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 420)
 @Composable
 private fun MainListScreenPreview() = AppTheme {
     MainListScreen(Fixtures.MainList.uiState(), mock())
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 200)
 @Composable
 private fun MainListScreenEmptyPreview() = AppTheme {
     MainListScreen(Fixtures.MainList.empty(), mock())
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 200)
 @Composable
 private fun MainListScreenOfflinePreview() = AppTheme {
     MainListScreen(Fixtures.MainList.offline(), mock())
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 200)
 @Composable
 private fun MainListScreenLoadingPreview() = AppTheme {

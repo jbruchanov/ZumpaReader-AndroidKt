@@ -72,11 +72,14 @@ sealed interface MainListEffect : UiEffect {
     data object ShowOfflineDownloadDialog : MainListEffect
 
     /**
-     * A reload brought thread ids the list has not seen before, and the new ones sort to the top -
-     * with a keyed list the reader would otherwise hold their old anchor and quietly keep the new
-     * rows off screen above it. A reload that brings nothing new does not emit this: the same
-     * threads in the same order have nothing to travel to, so the reader stays where they are.
-     * Never sent for paging - appending a page onto the end must not fling the list to the top.
+     * The list should travel to its top. Emitted when a reload brought thread ids the list had
+     * not seen before (with a keyed list the reader would otherwise hold their old anchor and
+     * quietly keep the new rows off screen above it), and also when the reader is coming back to
+     * the screen from another app - the head is where they want to be, whether the wire brought
+     * anything new or not. A reload driven by pull-to-refresh or a post landing with nothing new
+     * to show does *not* emit this - the same threads in the same order have nothing to travel
+     * to, so the reader stays where they are. Never sent for paging - appending a page onto the
+     * end must not fling the list to the top.
      */
     data object ScrollToTop : MainListEffect
 }
@@ -178,11 +181,15 @@ class MainListViewModel(
      * freshness stamp lives in memory only, so a process restart triggers the very first load
      * anyway and there is nothing to persist. Offline mode reads a snapshot and gets nothing new
      * from the wire, so this is a no-op there.
+     *
+     * Coming back from another app is also the moment the reader wants the head of the list, not
+     * the middle of yesterday's read, so the load runs with `scrollToTop = true` - the list
+     * travels to the top regardless of whether anything new came back.
      */
     fun onResumed() {
         if (state.isOffline || state.isLoading) return
         if (System.currentTimeMillis() - lastReloadAtMs < AUTO_RELOAD_THRESHOLD_MS) return
-        load()
+        load(scrollToTop = true)
     }
 
     override fun onEndReached() {
@@ -198,11 +205,15 @@ class MainListViewModel(
      * @param force reload from the beginning even though nothing about the query changed - the data
      * underneath did. A finished offline download is the case: same filter, same offline flag, an
      * entirely different snapshot to read.
+     * @param scrollToTop travel the list to the top regardless of whether the reload brought a
+     * new thread. Used by [onResumed]: the reader is coming back to the list and the head is what
+     * they want. Ignored for a paging load, which never scrolls.
      */
     private fun load(
         fromThread: String? = null,
         isFirstLoad: Boolean = false,
         force: Boolean = false,
+        scrollToTop: Boolean = false,
     ) {
         if (state.isLoading) {
             //Asking for the next page while a load runs is nothing - it will still be there.
@@ -250,7 +261,8 @@ class MainListViewModel(
                     //restart. Not stamped on failure either - a broken load should not push the
                     //next auto-reload out
                     lastReloadAtMs = System.currentTimeMillis()
-                    if (!isFirstLoad && result.items.keys.any { it !in knownIds }) {
+                    val hasNewThread = result.items.keys.any { it !in knownIds }
+                    if (!isFirstLoad && (scrollToTop || hasNewThread)) {
                         effect(MainListEffect.ScrollToTop)
                     }
                 }
