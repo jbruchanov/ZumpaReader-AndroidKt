@@ -133,6 +133,36 @@ class PostViewModelTest {
         assertEquals("the original subject", body.captured.subject)
     }
 
+    /**
+     * The forum only makes a link clickable inside `<>`, so urls in the outgoing message are
+     * wrapped for it. The draft the writer saw stays as they typed it - see the next test.
+     */
+    @Test
+    fun `urls in the outgoing message are wrapped in angle brackets`() = runTest {
+        val viewModel = viewModel()
+        viewModel.onSubjectChanged("subj")
+        viewModel.onMessageChanged("see https://a.b/c and www.d.e")
+        val body = slot<ZumpaThreadBody>()
+
+        viewModel.onSendClicked()
+
+        coVerify { threads.sendThread(capture(body)) }
+        //`www.` needs a scheme too - see ZumpaSimpleParser.replaceLinksByZumpaLinks
+        assertEquals("see <https://a.b/c> and <https://www.d.e>", body.captured.body)
+    }
+
+    /** Restoring later has to give back what the writer typed, not the link-wrapped rewrite. */
+    @Test
+    fun `the saved draft is the writer's text - not the wrapped version`() {
+        val viewModel = viewModel()
+        viewModel.onSubjectChanged("subj")
+        viewModel.onMessageChanged("see https://a.b/c")
+
+        viewModel.onSendClicked()
+
+        assertEquals(SentDraft("see https://a.b/c", "subj"), sentDrafts.draft.value)
+    }
+
     @Test
     fun `every picture adds a tab of its own`() {
         val vm = viewModel()

@@ -322,13 +322,17 @@ class SubListViewModel(
      * Link routing. It lived in the fragment while the image viewer needed the tapped view for a
      * shared element transition; that transition is gone (UPGRADE_PLAN E1), so the decision is just
      * logic now.
+     *
+     * A `www.` link is stored without a scheme, and `ACTION_VIEW` on a schemeless uri does not open
+     * a browser, so it is completed with `http://` at the point it leaves for one.
      */
     override fun onLinkClicked(url: String) {
         val threadId = ZumpaSimpleParser.getZumpaThreadId(url)
+        val fullUrl = if (url.startsWith("www.", ignoreCase = true)) "http://$url" else url
         when {
             threadId != 0 -> onThreadLinkClicked(threadId.toString())
-            url.looksLikeImageUrl() -> effect(SubListEffect.OpenImage(url))
-            else -> effect(SubListEffect.OpenLink(url))
+            fullUrl.looksLikeImageUrl() -> effect(SubListEffect.OpenImage(fullUrl))
+            else -> effect(SubListEffect.OpenLink(fullUrl))
         }
     }
 
@@ -379,11 +383,16 @@ class SubListViewModel(
         }
         val threadId = state.threadId
         val subject = threads.thread(threadId)?.subject ?: ""
-        val body = ZumpaThreadBody(settings.nickName, subject, draft.text, threadId)
         //before the call: the forum sometimes accepts a reply, says so and does nothing with it,
         //so a draft kept only on success would be missing for the posts this exists for. A reply
-        //carries no subject of its own - the thread owns it.
+        //carries no subject of its own - the thread owns it. Also before the link-wrapping below,
+        //because a restored draft is meant to be the writer's own text - not the `<>`-decorated
+        //rewrite the forum needs to make a url clickable.
         sentDrafts.save(message = draft.text, subject = null)
+        //the forum only makes a link clickable when it sits inside `<>`, so every url in the
+        //message is wrapped on the way out - see PostViewModel.onSendClicked for the other path
+        val messageToSend = ZumpaSimpleParser.replaceLinksByZumpaLinks(draft.text).orEmpty()
+        val body = ZumpaThreadBody(settings.nickName, subject, messageToSend, threadId)
         setState { copy(isSending = true) }
         effect(HideKeyboard)
         viewModelScope.launch {

@@ -277,6 +277,25 @@ class SubListViewModelTest {
         coVerify(exactly = 0) { threads.sendResponse(any(), any()) }
     }
 
+    /**
+     * The reply panel goes out through this ViewModel, not [PostViewModel], so it needs the same
+     * link-wrapping treatment. A message with `www.foo` and `http://bar` on two lines reached the
+     * forum bare, and neither ever turned into a clickable link there.
+     */
+    @Test
+    fun `urls in the outgoing reply are wrapped in angle brackets`() = runTest {
+        coEvery { threads.loadThread("1") } returns listOf(item())
+        val viewModel = viewModel()
+        viewModel.onDraftChanged("www.prdel.cz\nhttp://hovno.cz")
+        val body = slot<ZumpaThreadBody>()
+
+        viewModel.onSendClicked()
+
+        coVerify { threads.sendResponse("1", capture(body)) }
+        //`www.` needs a scheme too - see ZumpaSimpleParser.replaceLinksByZumpaLinks
+        assertEquals("<https://www.prdel.cz>\n<http://hovno.cz>", body.captured.body)
+    }
+
     @Test
     fun `sending scrolls to the newest answer`() = runTest {
         coEvery { threads.loadThread("1") } returns listOf(item())

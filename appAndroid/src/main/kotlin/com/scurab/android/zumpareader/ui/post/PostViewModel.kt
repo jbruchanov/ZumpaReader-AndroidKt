@@ -232,11 +232,18 @@ class PostViewModel(
         }
 
         //before the call, not after it: the whole point is that the answer cannot be trusted, and a
-        //draft saved only on success would be missing for exactly the posts this is here for
+        //draft saved only on success would be missing for exactly the posts this is here for.
+        //Also before the link-wrapping below: a restored draft should be what the writer typed, not
+        //what the forum's link syntax rewrote it into.
         sentDrafts.save(
             message = current.message.trim(),
             subject = current.subject.trim().takeIf { current.isSubjectEditable },
         )
+
+        //the forum only makes a link clickable when it sits inside `<>`, so every url in the
+        //message is wrapped on the way out
+        val messageToSend = ZumpaSimpleParser.replaceLinksByZumpaLinks(current.message.trim())
+            .orEmpty()
 
         setState { copy(isSending = true) }
         effect(HideKeyboard)
@@ -245,13 +252,13 @@ class PostViewModel(
             try {
                 if (id == null) {
                     threads.sendThread(
-                        ZumpaThreadBody(settings.nickName, current.subject.trim(), current.message.trim())
+                        ZumpaThreadBody(settings.nickName, current.subject.trim(), messageToSend)
                     )
                 } else {
                     val subject = threads.thread(id)?.subject ?: current.subject
                     threads.sendResponse(
                         id,
-                        ZumpaThreadBody(settings.nickName, subject, current.message.trim(), id)
+                        ZumpaThreadBody(settings.nickName, subject, messageToSend, id)
                     )
                 }
                 //the thread it went into, so the screen showing that thread knows it was this post

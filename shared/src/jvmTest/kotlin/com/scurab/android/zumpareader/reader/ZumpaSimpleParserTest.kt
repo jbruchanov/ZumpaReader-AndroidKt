@@ -270,6 +270,42 @@ class ZumpaSimpleParserTest {
         assertEquals(setOf("http://a.b/x?y=1&z=2", "https://c.d/e"), links)
     }
 
+    /**
+     * Two urls on their own lines are two buttons - the collector picks both up. Regression: a bare
+     * `www.` link used to be dropped by the http-only pattern, so a message with `www.foo` and
+     * `http://bar` only ever showed one button.
+     */
+    @Test
+    fun `both http and www urls are collected`() {
+        val links = ZumpaSimpleParser.getLinks("www.prdel.cz\nhttp://hovno.cz")
+
+        assertEquals(setOf("www.prdel.cz", "http://hovno.cz"), links)
+    }
+
+    /**
+     * A url written inside `<url>` used to trail a `>` on its label - `[^<"\s]*` did not stop on
+     * `>`, so the closing bracket was swallowed and the button opened `www.a.b>`, which is not a
+     * url. Excluding `>` from the body class fixes it - a legitimate `>` in a url must be
+     * `%3E` anyway.
+     */
+    @Test
+    fun `an angle-wrapped url does not keep its closing bracket`() {
+        val links = ZumpaSimpleParser.getLinks("<www.a.b> and <http://c.d>")
+
+        assertEquals(setOf("www.a.b", "http://c.d"), links)
+    }
+
+    /**
+     * The wire form of `<url>` is `&lt;url&gt;`. Entities are decoded before the regex runs, not
+     * after - `&gt;` is four ordinary characters to `[^<>"\s]*` and used to be swept up as part of
+     * the url, leaving the button label reading `www.a.b>`.
+     */
+    @Test
+    fun `an entity-wrapped url is unescaped before the regex sees it`() {
+        assertEquals(setOf("www.a.b"), ZumpaSimpleParser.getLinks("&lt;www.a.b&gt;"))
+        assertEquals(setOf("http://c.d"), ZumpaSimpleParser.getLinks("&lt;http://c.d&gt;"))
+    }
+
     @Test
     fun `links are wrapped in angle brackets`() {
         assertEquals(
@@ -277,6 +313,46 @@ class ZumpaSimpleParserTest {
             ZumpaSimpleParser.replaceLinksByZumpaLinks("go to https://a.b/c now"),
         )
         assertNull(ZumpaSimpleParser.replaceLinksByZumpaLinks(null))
+    }
+
+    /**
+     * A bare `www.` counts too - the forum's link parser accepts one AND needs a scheme to make it
+     * clickable, so the wrapper adds `https://` on the way in. `http://a.b/c` already has one, so
+     * it is only bracketed.
+     */
+    @Test
+    fun `a bare www link is wrapped and given an https scheme`() {
+        assertEquals(
+            "see <https://www.test.com> and <https://a.b/c>",
+            ZumpaSimpleParser.replaceLinksByZumpaLinks("see www.test.com and https://a.b/c"),
+        )
+    }
+
+    /** Once wrapped, a url does not gain a second pair - `<<http://a.b>>` is not a link. */
+    @Test
+    fun `an already wrapped link is left alone`() {
+        assertEquals(
+            "keep <http://a.b/c> as is",
+            ZumpaSimpleParser.replaceLinksByZumpaLinks("keep <http://a.b/c> as is"),
+        )
+    }
+
+    /** Sentence punctuation the writer meant as punctuation, not as the tail of a url. */
+    @Test
+    fun `trailing punctuation stays outside the brackets`() {
+        assertEquals(
+            "look at <https://a.b/c>, then <https://www.d.e>.",
+            ZumpaSimpleParser.replaceLinksByZumpaLinks("look at https://a.b/c, then www.d.e."),
+        )
+    }
+
+    /** A `www` that is the tail of an unrelated word is not a link. */
+    @Test
+    fun `www embedded in a word is not wrapped`() {
+        assertEquals(
+            "notwww.test.com stays put",
+            ZumpaSimpleParser.replaceLinksByZumpaLinks("notwww.test.com stays put"),
+        )
     }
 
     @Test

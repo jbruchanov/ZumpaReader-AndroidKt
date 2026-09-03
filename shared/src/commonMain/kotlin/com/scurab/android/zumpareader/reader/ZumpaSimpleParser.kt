@@ -246,6 +246,9 @@ class ZumpaSimpleParser {
         val lines = content.split(BR_SEPARATOR)
         for (index in 3 until lines.size) {
             var line = lines[index]
+            //urls come off the html-ish text - the regex knows how to stop at the entity forms
+            //of the bracket characters, and `htmlToText` on the captured group decodes `&amp;` and
+            //friends inside the url
             urls = getLinks(line, urls)
             line = line.htmlToText()
             sb.append(line).append("\n")
@@ -343,7 +346,22 @@ class ZumpaSimpleParser {
 
     companion object {
         val RESPONSE_PATTERN = Regex("(.+)\\s?»", RegexOption.IGNORE_CASE)
-        val URL_PATTERN2 = Regex(">?(http[s]?://[^<\"\\s]*)<?", RegexOption.IGNORE_CASE)
+        //`www.` counts too - the forum lets writers post a link that way and `AnnotatedTextRenderer`
+        //feeds this same regex to style them in the body, so both sides find them together.
+        //
+        //The url body stops at:
+        // * the literal boundary chars `<`, `>`, `"`, whitespace, all excluded up front, and
+        // * the entity forms of the same brackets, `&lt;` and `&gt;`, which reach this regex
+        //   verbatim because the html decode happens on the captured group afterwards. Without
+        //   the negative lookahead on `&`, a url written on the wire as `&lt;url&gt;` used to
+        //   sweep the trailing `&gt;` into the url and read `url>` on the button.
+        //
+        //An `&amp;` is welcome inside the url - it is the html form of `&`, common in query
+        //strings, and `htmlToText` folds it back to `&` when the match is decoded.
+        val URL_PATTERN2 = Regex(
+            ">?((?:https?://|www\\.)(?:[^<>\"\\s&]|&(?!(?:lt|gt);))*)<?",
+            RegexOption.IGNORE_CASE,
+        )
         private val DATE_PATTERN = Regex("Datum:&nbsp;([^<]+)", RegexOption.IGNORE_CASE)
         private val SURVEY_RESPONSE_PATTERN = Regex("\\((\\d*) odp.\\)", RegexOption.IGNORE_CASE)
         private val ZUMPA_LINK = Regex("zunpa.cz/phorum/read.php.*t=(\\d+)", RegexOption.IGNORE_CASE)
@@ -429,13 +447,34 @@ class ZumpaSimpleParser {
         fun parseUID(content: String?): String? =
             content?.let { USER_ID_PATTERN.find(it)?.groupValues?.get(1) }
 
+        /**
+         * The forum only makes a link clickable when it sits inside `<>` AND carries a scheme, so
+         * an outgoing message is run through this on its way out: every url is wrapped, and a bare
+         * `www.` is completed with `https://` so `ACTION_VIEW` on the receiver's side can open it.
+         * An occurrence already wrapped is left alone, and trailing sentence punctuation is not
+         * swept in with the url.
+         */
         fun replaceLinksByZumpaLinks(text: String?): String? {
-            var result = text ?: return null
-            for (link in getLinks(result)) {
-                result = result.replace(link, "<$link>")
+            if (text == null) return null
+            return URL_TO_WRAP.replace(text) { match ->
+                val whole = match.value
+                //trailing punctuation almost always closes the sentence, not the url
+                val url = whole.trimEnd(*URL_TRIM_END)
+                val schemed = if (url.startsWith("www.", ignoreCase = true)) "https://$url" else url
+                "<$schemed>" + whole.substring(url.length)
             }
-            return result
         }
+
+        /**
+         * A url that has not already been wrapped in `<>`. The lookbehind rejects both a leading
+         * `<` (already wrapped) and a letter or digit (in the middle of a longer word, so not a
+         * url standing on its own).
+         */
+        private val URL_TO_WRAP = Regex(
+            "(?<![<A-Za-z0-9])((?:https?://|www\\.)[^\\s<>]+)",
+            RegexOption.IGNORE_CASE,
+        )
+        private val URL_TRIM_END = charArrayOf('.', ',', ';', ':', '!', '?', ')', ']', '}')
 
         fun getLinks(text: String): Set<String> = getLinks(text, HashSet())!!
 
@@ -447,7 +486,10 @@ class ZumpaSimpleParser {
                     if (links == null) {
                         links = HashSet()
                     }
-                    links.add(link.htmlToText()) // decode html escapes
+                    //html escapes inside the url (`&amp;` chief among them) are decoded here. The
+                    //regex knows to stop before `&lt;` and `&gt;`, so no closing bracket ever
+                    //reaches this decode.
+                    links.add(link.htmlToText())
                 }
             }
             return links
