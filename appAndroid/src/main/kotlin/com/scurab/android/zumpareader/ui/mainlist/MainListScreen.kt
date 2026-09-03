@@ -203,6 +203,9 @@ private fun MainListScreen(
                 PullToRefreshDefaults.Indicator(
                     state = refreshState,
                     isRefreshing = uiState.isLoading,
+                    //the spinner wears the brand orange, matching the fab and the state bars -
+                    //the M3 default is grey and read as broken next to those
+                    color = AppTheme.colorScheme.context,
                     //the box is the whole screen now, so the spinner starts below the app bar
                     modifier = Modifier
                         .align(Alignment.TopCenter)

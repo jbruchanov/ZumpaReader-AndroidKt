@@ -403,6 +403,8 @@ private fun SubListScreen(
                 PullToRefreshDefaults.Indicator(
                     state = topState,
                     isRefreshing = refreshingFromTop,
+                    //the spinner wears the brand orange, matching the fab and the state bars
+                    color = AppTheme.colorScheme.context,
                     //the box reaches under the app bar now, so the spinner starts below it
                     modifier = Modifier
                         .align(Alignment.TopCenter)
@@ -411,6 +413,7 @@ private fun SubListScreen(
                 BottomPullToRefreshIndicator(
                     state = bottomState,
                     isRefreshing = refreshingFromBottom,
+                    color = AppTheme.colorScheme.context,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .padding(bottom = if (uiState.isPostPanelVisible) 0.dp else bottomInset),
