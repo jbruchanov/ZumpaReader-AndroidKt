@@ -351,8 +351,16 @@ class ZumpaSimpleParser {
         private val AUTHOR_FROM_RESPONSE_PATTERN = Regex("reply2\\('@(.*):", RegexOption.MULTILINE)
         private val SURVEY_ID_PATTERN = Regex("ank\\d*")
 
-        /** The body is split on this before the tags are stripped, so `<br>` never reaches Ksoup. */
-        private const val BR_SEPARATOR = "<br>"
+        /**
+         * The body is split on this before the tags are stripped, so no `<br>` reaches
+         * [htmlToText]. `Ksoup.html()` pretty-prints - it lifts each `<br>` onto a line of its own
+         * and rewrites `<br />` to `<br>` - so the tag arrives here with a `\n` on both sides.
+         * Both are eaten with the tag: they are the pretty-printer's, not the writer's, and
+         * without eating them each output line would be drawn with a blank one after it - because
+         * Ksoup's `wholeText` renders `<br>` as `\n` and would then combine it with the leftover
+         * source newline into two.
+         */
+        private val BR_SEPARATOR = Regex("\\n?<br\\s*/?>\\n?")
 
         const val ZUMPA_PUSH_KEY_NOTIFICAION = "ZUMPA"
         const val ZUMPA_UPDATE_KEY_NOTIFICAION = "UPDATE"

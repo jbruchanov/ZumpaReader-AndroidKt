@@ -202,6 +202,22 @@ class ZumpaSimpleParserTest {
         assertFalse(multiLine.body.lines().first().isEmpty())
     }
 
+    /**
+     * The forum's message bodies close each line with `<br />`, sat on its own source line. The
+     * body used to split on the literal `<br>` only - so `<br />` slipped through, `htmlToText`
+     * turned the tag into a `\n` AND kept the source `\n` after it, and every line got a blank one
+     * after it (Ksoup's `wholeText` renders `<br>` as a newline; jsoup's did not). One
+     * source `<br />\n` should give one output `\n`, not two.
+     */
+    @Test
+    fun `two adjacent lines are not separated by a blank one`() {
+        val result = ZumpaSimpleParser().parseThread(fixture("thread_page.html"), null)
+
+        //peta's post is 'elem » <br />\nbrrrre' - one <br />, no blank line intended
+        val post = result.items.first { it.body.contains("brrrre") }
+        assertEquals(listOf("elem » ", "brrrre"), post.body.lines())
+    }
+
     @Test
     fun `own posts are flagged when the user name matches`() {
         val result = ZumpaSimpleParser().parseThread(fixture("thread_page.html"), "peta")
